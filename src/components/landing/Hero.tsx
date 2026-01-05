@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Smartphone, Package, TrendingUp } from "lucide-react";
-import heroImage from "@/assets/hero-illustration.png";
+import { Link } from "react-router-dom";
+import { ArrowLeft, Smartphone, Package, TrendingUp, Zap, Shield, Users } from "lucide-react";
 
 const Hero = () => {
   return (
@@ -11,7 +11,6 @@ const Hero = () => {
         <div className="absolute top-20 right-10 w-72 h-72 bg-secondary/20 rounded-full blur-3xl animate-float" />
         <div className="absolute bottom-20 left-10 w-96 h-96 bg-accent/10 rounded-full blur-3xl animate-float-delayed" />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-secondary/5 rounded-full blur-3xl" />
-        
         {/* Grid Pattern */}
         <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:60px_60px]" />
       </div>
@@ -62,13 +61,17 @@ const Hero = () => {
               transition={{ duration: 0.6, delay: 0.3 }}
               className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mb-10"
             >
-              <Button variant="hero" size="xl" className="group">
-                سجل كمسوّق الآن
-                <ArrowLeft className="w-5 h-5 transition-transform group-hover:-translate-x-1" />
-              </Button>
-              <Button variant="heroOutline" size="xl">
-                تسجيل الدخول
-              </Button>
+              <Link to="/auth">
+                <Button variant="hero" size="xl" className="group">
+                  سجل كمسوّق الآن
+                  <ArrowLeft className="w-5 h-5 transition-transform group-hover:-translate-x-1" />
+                </Button>
+              </Link>
+              <Link to="/auth">
+                <Button variant="heroOutline" size="xl">
+                  تسجيل الدخول
+                </Button>
+              </Link>
             </motion.div>
 
             {/* Feature Pills */}
@@ -94,7 +97,7 @@ const Hero = () => {
             </motion.div>
           </div>
 
-          {/* Hero Image */}
+          {/* Hero Visual - Abstract Design */}
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -105,12 +108,37 @@ const Hero = () => {
               {/* Glow Effect */}
               <div className="absolute inset-0 bg-gradient-to-br from-secondary/30 to-accent/20 rounded-full blur-3xl scale-75" />
               
-              {/* Image */}
-              <img
-                src={heroImage}
-                alt="شخص يستخدم التسويق بالعمولة"
-                className="relative z-10 w-full max-w-lg mx-auto drop-shadow-2xl"
-              />
+              {/* Abstract Visual */}
+              <div className="relative z-10 w-full max-w-lg mx-auto">
+                {/* Main Circle */}
+                <div className="w-80 h-80 mx-auto relative">
+                  <div className="absolute inset-0 bg-gradient-to-br from-secondary/40 to-accent/30 rounded-full animate-pulse" />
+                  <div className="absolute inset-4 bg-gradient-to-tr from-white/10 to-white/5 rounded-full backdrop-blur-sm border border-white/20" />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="text-center">
+                      <div className="w-20 h-20 mx-auto bg-gradient-to-br from-secondary to-emerald-600 rounded-2xl flex items-center justify-center shadow-2xl mb-4">
+                        <Zap className="w-10 h-10 text-white" />
+                      </div>
+                      <p className="text-white font-bold text-xl">LinkDZ</p>
+                      <p className="text-white/60 text-sm">منصة التسويق بالعمولة</p>
+                    </div>
+                  </div>
+                  
+                  {/* Orbiting Elements */}
+                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-12 h-12 bg-secondary/20 rounded-full flex items-center justify-center animate-float">
+                    <Users className="w-6 h-6 text-secondary" />
+                  </div>
+                  <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-12 h-12 bg-accent/20 rounded-full flex items-center justify-center animate-float-delayed">
+                    <Package className="w-6 h-6 text-accent" />
+                  </div>
+                  <div className="absolute top-1/2 -left-4 -translate-y-1/2 w-12 h-12 bg-primary/30 rounded-full flex items-center justify-center animate-float">
+                    <TrendingUp className="w-6 h-6 text-white" />
+                  </div>
+                  <div className="absolute top-1/2 -right-4 -translate-y-1/2 w-12 h-12 bg-white/10 rounded-full flex items-center justify-center animate-float-delayed">
+                    <Shield className="w-6 h-6 text-white" />
+                  </div>
+                </div>
+              </div>
 
               {/* Floating Cards */}
               <motion.div

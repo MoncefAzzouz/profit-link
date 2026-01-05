@@ -1,15 +1,33 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, Package, ShoppingCart, Wallet, Trophy, 
   HelpCircle, LogOut, Menu, X, Copy, Check, TrendingUp,
-  Clock, CheckCircle, XCircle, Truck, Eye, ChevronLeft
+  Clock, CheckCircle, XCircle, Truck, Eye, ChevronLeft,
+  Calendar, Filter, Search
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { format, parseISO, isAfter, isBefore, isEqual } from "date-fns";
+import { ar } from "date-fns/locale";
 import { mockProducts } from "@/data/mockProducts";
 import { mockOrders, mockAffiliateStats, Order } from "@/data/mockAffiliateData";
 import { useToast } from "@/hooks/use-toast";
+import EarningsChart from "@/components/dashboard/EarningsChart";
 
 type Tab = "overview" | "products" | "orders" | "earnings" | "levels" | "support";
 
@@ -28,6 +46,14 @@ const Dashboard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [user, setUser] = useState<any>(null);
+
+  // Filter states
+  const [orderSearch, setOrderSearch] = useState("");
+  const [orderStatus, setOrderStatus] = useState("all");
+  const [dateFrom, setDateFrom] = useState<Date | undefined>(undefined);
+  const [dateTo, setDateTo] = useState<Date | undefined>(undefined);
+  const [isDateFromOpen, setIsDateFromOpen] = useState(false);
+  const [isDateToOpen, setIsDateToOpen] = useState(false);
 
   useEffect(() => {
     const storedUser = localStorage.getItem("affiliate_user");
@@ -51,6 +77,34 @@ const Dashboard = () => {
     toast({ title: "تم نسخ الرابط! 🔗" });
     setTimeout(() => setCopiedId(null), 2000);
   };
+
+  const clearFilters = () => {
+    setOrderSearch("");
+    setOrderStatus("all");
+    setDateFrom(undefined);
+    setDateTo(undefined);
+  };
+
+  const hasActiveFilters = orderSearch || orderStatus !== "all" || dateFrom || dateTo;
+
+  const filteredOrders = useMemo(() => {
+    return mockOrders.filter((order) => {
+      // Search filter
+      const matchesSearch = order.productName.includes(orderSearch) || 
+                           order.customerName.includes(orderSearch) ||
+                           order.wilaya.includes(orderSearch);
+      
+      // Status filter
+      const matchesStatus = orderStatus === "all" || order.status === orderStatus;
+      
+      // Date filters
+      const orderDate = parseISO(order.date);
+      const matchesDateFrom = !dateFrom || isAfter(orderDate, dateFrom) || isEqual(orderDate, dateFrom);
+      const matchesDateTo = !dateTo || isBefore(orderDate, dateTo) || isEqual(orderDate, dateTo);
+      
+      return matchesSearch && matchesStatus && matchesDateFrom && matchesDateTo;
+    });
+  }, [orderSearch, orderStatus, dateFrom, dateTo]);
 
   const sidebarItems = [
     { id: "overview" as Tab, label: "نظرة عامة", icon: LayoutDashboard },
@@ -355,63 +409,183 @@ const Dashboard = () => {
             </div>
           )}
 
-          {/* Orders Tab */}
+          {/* Orders Tab with Advanced Filtering */}
           {activeTab === "orders" && (
-            <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-muted">
-                    <tr>
-                      <th className="text-right p-4 font-semibold text-foreground">المنتج</th>
-                      <th className="text-right p-4 font-semibold text-foreground">الزبون</th>
-                      <th className="text-right p-4 font-semibold text-foreground">الولاية</th>
-                      <th className="text-right p-4 font-semibold text-foreground">الحالة</th>
-                      <th className="text-right p-4 font-semibold text-foreground">العمولة</th>
-                      <th className="text-right p-4 font-semibold text-foreground">التاريخ</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border">
-                    {mockOrders.map((order) => {
-                      const status = statusConfig[order.status];
-                      return (
-                        <tr key={order.id} className="hover:bg-muted/50 transition-colors">
-                          <td className="p-4 font-medium text-foreground">{order.productName}</td>
-                          <td className="p-4 text-muted-foreground">{order.customerName}</td>
-                          <td className="p-4 text-muted-foreground">{order.wilaya}</td>
-                          <td className="p-4">
-                            <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium ${status.color}`}>
-                              <status.icon className="w-4 h-4" />
-                              {status.label}
-                            </span>
+            <div className="space-y-6">
+              {/* Filters */}
+              <div className="bg-card rounded-2xl p-4 shadow-sm">
+                <div className="flex flex-wrap items-center gap-3">
+                  {/* Search */}
+                  <div className="relative flex-1 min-w-[200px]">
+                    <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      placeholder="ابحث عن منتج أو زبون..."
+                      value={orderSearch}
+                      onChange={(e) => setOrderSearch(e.target.value)}
+                      className="pr-10"
+                    />
+                  </div>
+
+                  {/* Status Filter */}
+                  <Select value={orderStatus} onValueChange={setOrderStatus}>
+                    <SelectTrigger className="w-[160px]">
+                      <Filter className="w-4 h-4 ml-2" />
+                      <SelectValue placeholder="الحالة" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">جميع الحالات</SelectItem>
+                      <SelectItem value="pending">قيد الانتظار</SelectItem>
+                      <SelectItem value="confirmed">مؤكد</SelectItem>
+                      <SelectItem value="shipped">قيد التوصيل</SelectItem>
+                      <SelectItem value="delivered">تم التسليم</SelectItem>
+                      <SelectItem value="cancelled">ملغي</SelectItem>
+                    </SelectContent>
+                  </Select>
+
+                  {/* Date From */}
+                  <Popover open={isDateFromOpen} onOpenChange={setIsDateFromOpen}>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className="gap-2">
+                        <Calendar className="w-4 h-4" />
+                        {dateFrom ? format(dateFrom, "dd/MM/yyyy") : "من تاريخ"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <CalendarComponent
+                        mode="single"
+                        selected={dateFrom}
+                        onSelect={(date) => {
+                          setDateFrom(date);
+                          setIsDateFromOpen(false);
+                        }}
+                        locale={ar}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+
+                  {/* Date To */}
+                  <Popover open={isDateToOpen} onOpenChange={setIsDateToOpen}>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className="gap-2">
+                        <Calendar className="w-4 h-4" />
+                        {dateTo ? format(dateTo, "dd/MM/yyyy") : "إلى تاريخ"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <CalendarComponent
+                        mode="single"
+                        selected={dateTo}
+                        onSelect={(date) => {
+                          setDateTo(date);
+                          setIsDateToOpen(false);
+                        }}
+                        locale={ar}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+
+                  {/* Clear Filters */}
+                  {hasActiveFilters && (
+                    <Button variant="ghost" size="sm" onClick={clearFilters} className="gap-1 text-destructive">
+                      <X className="w-4 h-4" />
+                      مسح الفلاتر
+                    </Button>
+                  )}
+                </div>
+              </div>
+
+              {/* Results Count */}
+              <div className="flex items-center justify-between">
+                <p className="text-muted-foreground text-sm">
+                  عرض {filteredOrders.length} من {mockOrders.length} طلبية
+                </p>
+              </div>
+
+              {/* Orders Table */}
+              <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-muted">
+                      <tr>
+                        <th className="text-right p-4 font-semibold text-foreground">المنتج</th>
+                        <th className="text-right p-4 font-semibold text-foreground">الزبون</th>
+                        <th className="text-right p-4 font-semibold text-foreground">الولاية</th>
+                        <th className="text-right p-4 font-semibold text-foreground">الحالة</th>
+                        <th className="text-right p-4 font-semibold text-foreground">العمولة</th>
+                        <th className="text-right p-4 font-semibold text-foreground">التاريخ</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border">
+                      {filteredOrders.length > 0 ? (
+                        filteredOrders.map((order) => {
+                          const status = statusConfig[order.status];
+                          return (
+                            <tr key={order.id} className="hover:bg-muted/50 transition-colors">
+                              <td className="p-4 font-medium text-foreground">{order.productName}</td>
+                              <td className="p-4 text-muted-foreground">{order.customerName}</td>
+                              <td className="p-4 text-muted-foreground">{order.wilaya}</td>
+                              <td className="p-4">
+                                <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium ${status.color}`}>
+                                  <status.icon className="w-4 h-4" />
+                                  {status.label}
+                                </span>
+                              </td>
+                              <td className="p-4 font-bold text-secondary">{order.commission.toLocaleString()} دج</td>
+                              <td className="p-4 text-muted-foreground">{order.date}</td>
+                            </tr>
+                          );
+                        })
+                      ) : (
+                        <tr>
+                          <td colSpan={6} className="p-8 text-center text-muted-foreground">
+                            لا توجد طلبيات تطابق الفلاتر المحددة
                           </td>
-                          <td className="p-4 font-bold text-secondary">{order.commission.toLocaleString()} دج</td>
-                          <td className="p-4 text-muted-foreground">{order.date}</td>
                         </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           )}
 
-          {/* Earnings Tab */}
+          {/* Earnings Tab with Charts */}
           {activeTab === "earnings" && (
             <div className="space-y-6">
               <div className="grid md:grid-cols-3 gap-4">
-                <div className="bg-card rounded-2xl p-6 shadow-sm">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="bg-card rounded-2xl p-6 shadow-sm"
+                >
                   <p className="text-muted-foreground">الأرباح الإجمالية</p>
                   <p className="text-4xl font-bold text-foreground mt-2">{mockAffiliateStats.totalEarnings.toLocaleString()} دج</p>
-                </div>
-                <div className="bg-card rounded-2xl p-6 shadow-sm">
+                </motion.div>
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 }}
+                  className="bg-card rounded-2xl p-6 shadow-sm"
+                >
                   <p className="text-muted-foreground">الأرباح المعلّقة</p>
                   <p className="text-4xl font-bold text-accent mt-2">{mockAffiliateStats.pendingEarnings.toLocaleString()} دج</p>
-                </div>
-                <div className="bg-card rounded-2xl p-6 shadow-sm">
+                </motion.div>
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="bg-card rounded-2xl p-6 shadow-sm"
+                >
                   <p className="text-muted-foreground">الأرباح المدفوعة</p>
                   <p className="text-4xl font-bold text-secondary mt-2">{mockAffiliateStats.paidEarnings.toLocaleString()} دج</p>
-                </div>
+                </motion.div>
               </div>
+
+              {/* Charts */}
+              <EarningsChart />
+
               <div className="bg-card rounded-2xl p-6 shadow-sm">
                 <h3 className="text-lg font-bold text-foreground mb-4">معلومات الدفع</h3>
                 <p className="text-muted-foreground">
