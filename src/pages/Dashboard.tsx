@@ -1,0 +1,513 @@
+import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import { Link, useNavigate } from "react-router-dom";
+import {
+  LayoutDashboard, Package, ShoppingCart, Wallet, Trophy, 
+  HelpCircle, LogOut, Menu, X, Copy, Check, TrendingUp,
+  Clock, CheckCircle, XCircle, Truck, Eye, ChevronLeft
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { mockProducts } from "@/data/mockProducts";
+import { mockOrders, mockAffiliateStats, Order } from "@/data/mockAffiliateData";
+import { useToast } from "@/hooks/use-toast";
+
+type Tab = "overview" | "products" | "orders" | "earnings" | "levels" | "support";
+
+const statusConfig = {
+  pending: { label: "قيد الانتظار", icon: Clock, color: "text-yellow-600 bg-yellow-100" },
+  confirmed: { label: "مؤكد", icon: CheckCircle, color: "text-blue-600 bg-blue-100" },
+  shipped: { label: "قيد التوصيل", icon: Truck, color: "text-purple-600 bg-purple-100" },
+  delivered: { label: "تم التسليم", icon: CheckCircle, color: "text-secondary bg-secondary/10" },
+  cancelled: { label: "ملغي", icon: XCircle, color: "text-destructive bg-destructive/10" }
+};
+
+const Dashboard = () => {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const [activeTab, setActiveTab] = useState<Tab>("overview");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem("affiliate_user");
+    if (!storedUser) {
+      navigate("/auth");
+    } else {
+      setUser(JSON.parse(storedUser));
+    }
+  }, [navigate]);
+
+  const handleLogout = () => {
+    localStorage.removeItem("affiliate_user");
+    toast({ title: "تم تسجيل الخروج" });
+    navigate("/");
+  };
+
+  const copyAffiliateLink = (productId: string, productName: string) => {
+    const link = `${window.location.origin}/product/${productId}/${user?.id || "aff-demo"}`;
+    navigator.clipboard.writeText(link);
+    setCopiedId(productId);
+    toast({ title: "تم نسخ الرابط! 🔗" });
+    setTimeout(() => setCopiedId(null), 2000);
+  };
+
+  const sidebarItems = [
+    { id: "overview" as Tab, label: "نظرة عامة", icon: LayoutDashboard },
+    { id: "products" as Tab, label: "المنتجات", icon: Package },
+    { id: "orders" as Tab, label: "طلبياتي", icon: ShoppingCart },
+    { id: "earnings" as Tab, label: "الأرباح", icon: Wallet },
+    { id: "levels" as Tab, label: "المستويات", icon: Trophy },
+    { id: "support" as Tab, label: "الدعم", icon: HelpCircle },
+  ];
+
+  if (!user) return null;
+
+  return (
+    <div className="min-h-screen bg-muted/30 flex">
+      {/* Sidebar */}
+      <aside className={`fixed lg:static inset-y-0 right-0 z-50 w-72 bg-card border-l border-border transform transition-transform duration-300 ${
+        sidebarOpen ? "translate-x-0" : "translate-x-full lg:translate-x-0"
+      }`}>
+        <div className="flex flex-col h-full">
+          {/* Logo */}
+          <div className="p-6 border-b border-border">
+            <Link to="/" className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-secondary to-emerald-600 rounded-xl flex items-center justify-center">
+                <span className="text-white font-bold text-lg">L</span>
+              </div>
+              <span className="text-xl font-bold text-foreground">LinkDZ</span>
+            </Link>
+          </div>
+
+          {/* User Info */}
+          <div className="p-4 border-b border-border">
+            <div className="bg-muted rounded-xl p-4">
+              <p className="font-semibold text-foreground">{user.name}</p>
+              <p className="text-sm text-muted-foreground">{user.email}</p>
+              <div className="mt-2 flex items-center gap-2">
+                <span className="px-2 py-1 bg-secondary/10 text-secondary text-xs rounded-full font-medium">
+                  المستوى {mockAffiliateStats.currentLevel}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Navigation */}
+          <nav className="flex-1 p-4 space-y-1">
+            {sidebarItems.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => {
+                  setActiveTab(item.id);
+                  setSidebarOpen(false);
+                }}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+                  activeTab === item.id
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                }`}
+              >
+                <item.icon className="w-5 h-5" />
+                <span className="font-medium">{item.label}</span>
+              </button>
+            ))}
+          </nav>
+
+          {/* Logout */}
+          <div className="p-4 border-t border-border">
+            <button
+              onClick={handleLogout}
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-destructive hover:bg-destructive/10 transition-all"
+            >
+              <LogOut className="w-5 h-5" />
+              <span className="font-medium">تسجيل الخروج</span>
+            </button>
+          </div>
+        </div>
+      </aside>
+
+      {/* Mobile Overlay */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* Main Content */}
+      <main className="flex-1 min-h-screen">
+        {/* Top Bar */}
+        <header className="sticky top-0 z-30 bg-card/80 backdrop-blur-xl border-b border-border px-6 py-4">
+          <div className="flex items-center justify-between">
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="lg:hidden p-2 rounded-lg hover:bg-muted"
+            >
+              <Menu className="w-6 h-6" />
+            </button>
+            <h1 className="text-xl font-bold text-foreground">
+              {sidebarItems.find(item => item.id === activeTab)?.label}
+            </h1>
+            <div className="flex items-center gap-3">
+              <Link to="/products">
+                <Button variant="outline" size="sm" className="gap-2">
+                  <Package className="w-4 h-4" />
+                  عرض المنتجات
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </header>
+
+        <div className="p-6">
+          {/* Overview Tab */}
+          {activeTab === "overview" && (
+            <div className="space-y-6">
+              {/* Stats Grid */}
+              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="bg-card rounded-2xl p-6 shadow-sm"
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-muted-foreground text-sm">إجمالي الأرباح</p>
+                      <p className="text-3xl font-bold text-foreground mt-1">
+                        {mockAffiliateStats.totalEarnings.toLocaleString()}
+                      </p>
+                      <p className="text-sm text-muted-foreground">دج</p>
+                    </div>
+                    <div className="w-14 h-14 bg-secondary/10 rounded-2xl flex items-center justify-center">
+                      <Wallet className="w-7 h-7 text-secondary" />
+                    </div>
+                  </div>
+                </motion.div>
+
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 }}
+                  className="bg-card rounded-2xl p-6 shadow-sm"
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-muted-foreground text-sm">الأرباح المعلّقة</p>
+                      <p className="text-3xl font-bold text-foreground mt-1">
+                        {mockAffiliateStats.pendingEarnings.toLocaleString()}
+                      </p>
+                      <p className="text-sm text-muted-foreground">دج</p>
+                    </div>
+                    <div className="w-14 h-14 bg-accent/10 rounded-2xl flex items-center justify-center">
+                      <Clock className="w-7 h-7 text-accent" />
+                    </div>
+                  </div>
+                </motion.div>
+
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="bg-card rounded-2xl p-6 shadow-sm"
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-muted-foreground text-sm">إجمالي الطلبيات</p>
+                      <p className="text-3xl font-bold text-foreground mt-1">
+                        {mockAffiliateStats.totalOrders}
+                      </p>
+                      <p className="text-sm text-secondary">+{mockAffiliateStats.confirmedOrders} مؤكد</p>
+                    </div>
+                    <div className="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center">
+                      <ShoppingCart className="w-7 h-7 text-primary" />
+                    </div>
+                  </div>
+                </motion.div>
+
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                  className="bg-card rounded-2xl p-6 shadow-sm"
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-muted-foreground text-sm">نسبة التأكيد</p>
+                      <p className="text-3xl font-bold text-foreground mt-1">
+                        {mockAffiliateStats.confirmationRate}%
+                      </p>
+                      <p className="text-sm text-secondary">ممتاز</p>
+                    </div>
+                    <div className="w-14 h-14 bg-secondary/10 rounded-2xl flex items-center justify-center">
+                      <TrendingUp className="w-7 h-7 text-secondary" />
+                    </div>
+                  </div>
+                </motion.div>
+              </div>
+
+              {/* Level Progress */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+                className="bg-gradient-to-r from-primary to-navy-800 rounded-2xl p-6 text-primary-foreground"
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <p className="text-primary-foreground/70">مستواك الحالي</p>
+                    <p className="text-2xl font-bold">المستوى {mockAffiliateStats.currentLevel} - فضي</p>
+                  </div>
+                  <Trophy className="w-12 h-12 text-accent" />
+                </div>
+                <div className="bg-white/20 rounded-full h-3 mb-2">
+                  <div
+                    className="bg-accent h-full rounded-full transition-all"
+                    style={{ width: `${((30 - mockAffiliateStats.ordersToNextLevel) / 30) * 100}%` }}
+                  />
+                </div>
+                <p className="text-sm text-primary-foreground/70">
+                  باقي {mockAffiliateStats.ordersToNextLevel} طلبيات للترقية للمستوى التالي
+                </p>
+              </motion.div>
+
+              {/* Recent Orders */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+                className="bg-card rounded-2xl shadow-sm"
+              >
+                <div className="p-6 border-b border-border flex items-center justify-between">
+                  <h2 className="text-lg font-bold text-foreground">آخر الطلبيات</h2>
+                  <button
+                    onClick={() => setActiveTab("orders")}
+                    className="text-secondary text-sm font-medium flex items-center gap-1 hover:underline"
+                  >
+                    عرض الكل
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
+                </div>
+                <div className="divide-y divide-border">
+                  {mockOrders.slice(0, 5).map((order) => {
+                    const status = statusConfig[order.status];
+                    return (
+                      <div key={order.id} className="p-4 flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${status.color}`}>
+                            <status.icon className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <p className="font-medium text-foreground">{order.productName}</p>
+                            <p className="text-sm text-muted-foreground">{order.customerName} - {order.wilaya}</p>
+                          </div>
+                        </div>
+                        <div className="text-left">
+                          <p className="font-bold text-secondary">{order.commission.toLocaleString()} دج</p>
+                          <p className="text-xs text-muted-foreground">{order.date}</p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </motion.div>
+            </div>
+          )}
+
+          {/* Products Tab */}
+          {activeTab === "products" && (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {mockProducts.map((product, index) => (
+                <motion.div
+                  key={product.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                  className="bg-card rounded-2xl overflow-hidden shadow-sm hover-lift"
+                >
+                  <div className="aspect-video relative">
+                    <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
+                    <div className="absolute top-3 left-3 bg-accent text-accent-foreground px-3 py-1 rounded-full text-sm font-bold">
+                      {product.commission.toLocaleString()} دج عمولة
+                    </div>
+                  </div>
+                  <div className="p-5">
+                    <h3 className="font-bold text-foreground">{product.name}</h3>
+                    <p className="text-xl font-bold text-secondary mt-2">{product.price.toLocaleString()} دج</p>
+                    <div className="flex gap-2 mt-4">
+                      <Button
+                        onClick={() => copyAffiliateLink(product.id, product.name)}
+                        className="flex-1 gap-2"
+                        variant={copiedId === product.id ? "secondary" : "default"}
+                      >
+                        {copiedId === product.id ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                        {copiedId === product.id ? "تم النسخ" : "نسخ الرابط"}
+                      </Button>
+                      <Link to={`/product/${product.id}/${user.id}`}>
+                        <Button variant="outline" size="icon">
+                          <Eye className="w-4 h-4" />
+                        </Button>
+                      </Link>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          )}
+
+          {/* Orders Tab */}
+          {activeTab === "orders" && (
+            <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-muted">
+                    <tr>
+                      <th className="text-right p-4 font-semibold text-foreground">المنتج</th>
+                      <th className="text-right p-4 font-semibold text-foreground">الزبون</th>
+                      <th className="text-right p-4 font-semibold text-foreground">الولاية</th>
+                      <th className="text-right p-4 font-semibold text-foreground">الحالة</th>
+                      <th className="text-right p-4 font-semibold text-foreground">العمولة</th>
+                      <th className="text-right p-4 font-semibold text-foreground">التاريخ</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {mockOrders.map((order) => {
+                      const status = statusConfig[order.status];
+                      return (
+                        <tr key={order.id} className="hover:bg-muted/50 transition-colors">
+                          <td className="p-4 font-medium text-foreground">{order.productName}</td>
+                          <td className="p-4 text-muted-foreground">{order.customerName}</td>
+                          <td className="p-4 text-muted-foreground">{order.wilaya}</td>
+                          <td className="p-4">
+                            <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium ${status.color}`}>
+                              <status.icon className="w-4 h-4" />
+                              {status.label}
+                            </span>
+                          </td>
+                          <td className="p-4 font-bold text-secondary">{order.commission.toLocaleString()} دج</td>
+                          <td className="p-4 text-muted-foreground">{order.date}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* Earnings Tab */}
+          {activeTab === "earnings" && (
+            <div className="space-y-6">
+              <div className="grid md:grid-cols-3 gap-4">
+                <div className="bg-card rounded-2xl p-6 shadow-sm">
+                  <p className="text-muted-foreground">الأرباح الإجمالية</p>
+                  <p className="text-4xl font-bold text-foreground mt-2">{mockAffiliateStats.totalEarnings.toLocaleString()} دج</p>
+                </div>
+                <div className="bg-card rounded-2xl p-6 shadow-sm">
+                  <p className="text-muted-foreground">الأرباح المعلّقة</p>
+                  <p className="text-4xl font-bold text-accent mt-2">{mockAffiliateStats.pendingEarnings.toLocaleString()} دج</p>
+                </div>
+                <div className="bg-card rounded-2xl p-6 shadow-sm">
+                  <p className="text-muted-foreground">الأرباح المدفوعة</p>
+                  <p className="text-4xl font-bold text-secondary mt-2">{mockAffiliateStats.paidEarnings.toLocaleString()} دج</p>
+                </div>
+              </div>
+              <div className="bg-card rounded-2xl p-6 shadow-sm">
+                <h3 className="text-lg font-bold text-foreground mb-4">معلومات الدفع</h3>
+                <p className="text-muted-foreground">
+                  يتم تحويل الأرباح كل نهاية أسبوع تلقائياً. الطلبيات المؤكدة والمسلّمة فقط تُحتسب.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Levels Tab */}
+          {activeTab === "levels" && (
+            <div className="grid md:grid-cols-3 gap-6">
+              {[
+                { level: 1, name: "برونزي", orders: 0, commission: "50%", color: "from-amber-600 to-amber-800" },
+                { level: 2, name: "فضي", orders: 30, commission: "50% + امتيازات", color: "from-gray-400 to-gray-600" },
+                { level: 3, name: "ذهبي", orders: 100, commission: "50% + دعم VIP", color: "from-yellow-400 to-yellow-600" },
+              ].map((tier, index) => (
+                <motion.div
+                  key={tier.level}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  className={`bg-gradient-to-br ${tier.color} rounded-2xl p-6 text-white ${
+                    mockAffiliateStats.currentLevel === tier.level ? "ring-4 ring-secondary" : ""
+                  }`}
+                >
+                  <Trophy className="w-12 h-12 mb-4" />
+                  <h3 className="text-2xl font-bold">المستوى {tier.level}</h3>
+                  <p className="text-xl font-semibold mt-1">{tier.name}</p>
+                  <div className="mt-4 space-y-2 text-white/90">
+                    <p>• {tier.orders}+ طلبية مؤكدة</p>
+                    <p>• عمولة: {tier.commission}</p>
+                  </div>
+                  {mockAffiliateStats.currentLevel === tier.level && (
+                    <div className="mt-4 bg-white/20 rounded-lg px-3 py-1.5 text-sm font-medium inline-block">
+                      ✓ مستواك الحالي
+                    </div>
+                  )}
+                </motion.div>
+              ))}
+            </div>
+          )}
+
+          {/* Support Tab */}
+          {activeTab === "support" && (
+            <div className="max-w-2xl space-y-6">
+              <div className="bg-card rounded-2xl p-6 shadow-sm">
+                <h3 className="text-lg font-bold text-foreground mb-4">تواصل معنا</h3>
+                <div className="space-y-4">
+                  <a
+                    href="https://wa.me/213555123456"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-4 p-4 bg-secondary/10 rounded-xl hover:bg-secondary/20 transition-colors"
+                  >
+                    <div className="w-12 h-12 bg-secondary rounded-xl flex items-center justify-center">
+                      <span className="text-xl">💬</span>
+                    </div>
+                    <div>
+                      <p className="font-semibold text-foreground">واتساب</p>
+                      <p className="text-sm text-muted-foreground">رد سريع خلال 24 ساعة</p>
+                    </div>
+                  </a>
+                  <a
+                    href="mailto:support@linkdz.com"
+                    className="flex items-center gap-4 p-4 bg-primary/10 rounded-xl hover:bg-primary/20 transition-colors"
+                  >
+                    <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center">
+                      <span className="text-xl">📧</span>
+                    </div>
+                    <div>
+                      <p className="font-semibold text-foreground">البريد الإلكتروني</p>
+                      <p className="text-sm text-muted-foreground">support@linkdz.com</p>
+                    </div>
+                  </a>
+                </div>
+              </div>
+              <div className="bg-card rounded-2xl p-6 shadow-sm">
+                <h3 className="text-lg font-bold text-foreground mb-4">أسئلة شائعة</h3>
+                <div className="space-y-3">
+                  <div className="p-4 bg-muted rounded-xl">
+                    <p className="font-semibold text-foreground">متى تُحتسب العمولة؟</p>
+                    <p className="text-sm text-muted-foreground mt-1">تُحتسب العمولة فقط على الطلبيات المسلّمة بنجاح.</p>
+                  </div>
+                  <div className="p-4 bg-muted rounded-xl">
+                    <p className="font-semibold text-foreground">كيف يتم الدفع؟</p>
+                    <p className="text-sm text-muted-foreground mt-1">يتم التحويل تلقائياً كل نهاية أسبوع عبر CCP أو Baridimob.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </main>
+    </div>
+  );
+};
+
+export default Dashboard;
