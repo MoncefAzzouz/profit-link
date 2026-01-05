@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
@@ -38,11 +39,11 @@ const Navbar = () => {
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-20">
             {/* Logo */}
-            <a href="/" className="flex items-center">
+            <Link to="/" className="flex items-center">
               <span className={`text-2xl font-bold ${isScrolled ? 'text-primary' : 'text-white'}`}>
                 Link<span className="gradient-text">DZ</span>
               </span>
-            </a>
+            </Link>
 
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center gap-8">
@@ -63,18 +64,22 @@ const Navbar = () => {
 
             {/* CTA Buttons */}
             <div className="hidden md:flex items-center gap-3">
-              <Button
-                variant={isScrolled ? "ghost" : "glass"}
-                size="sm"
-              >
-                تسجيل الدخول
-              </Button>
-              <Button
-                variant={isScrolled ? "default" : "hero"}
-                size="sm"
-              >
-                سجل كمسوّق
-              </Button>
+              <Link to="/auth">
+                <Button
+                  variant={isScrolled ? "ghost" : "glass"}
+                  size="sm"
+                >
+                  تسجيل الدخول
+                </Button>
+              </Link>
+              <Link to="/auth">
+                <Button
+                  variant={isScrolled ? "default" : "hero"}
+                  size="sm"
+                >
+                  سجل كمسوّق
+                </Button>
+              </Link>
             </div>
 
             {/* Mobile Menu Button */}
@@ -113,12 +118,16 @@ const Navbar = () => {
                   </a>
                 ))}
                 <div className="flex flex-col gap-3 pt-4">
-                  <Button variant="outline" className="w-full">
-                    تسجيل الدخول
-                  </Button>
-                  <Button variant="default" className="w-full">
-                    سجل كمسوّق
-                  </Button>
+                  <Link to="/auth" onClick={() => setIsMobileMenuOpen(false)}>
+                    <Button variant="outline" className="w-full">
+                      تسجيل الدخول
+                    </Button>
+                  </Link>
+                  <Link to="/auth" onClick={() => setIsMobileMenuOpen(false)}>
+                    <Button variant="default" className="w-full">
+                      سجل كمسوّق
+                    </Button>
+                  </Link>
                 </div>
               </div>
             </div>
