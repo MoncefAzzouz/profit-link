@@ -10,6 +10,7 @@ import Products from "./pages/Products";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Admin from "./pages/Admin";
+import SellerRegister from "./pages/SellerRegister";
 
 const queryClient = new QueryClient();
 
