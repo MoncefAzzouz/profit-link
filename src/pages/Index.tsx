@@ -27,6 +27,9 @@ const Index = () => {
         <section id="levels">
           <LevelSystem />
         </section>
+        <section id="sellers">
+          <JoinAsSeller />
+        </section>
         <CTA />
         <section id="contact">
           <Contact />
