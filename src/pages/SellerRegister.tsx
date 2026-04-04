@@ -53,7 +53,7 @@ const SellerRegister = () => {
       title: "تم إنشاء حسابك بنجاح! 🎉",
       description: "سيتم مراجعة طلبك وتفعيل حسابك خلال 24 ساعة"
     });
-    navigate("/");
+    navigate("/seller-dashboard");
   };
 
   return (
