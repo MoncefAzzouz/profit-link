@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
-import { Trophy, Medal, Award, TrendingUp } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Trophy, Medal, Award, TrendingUp, ArrowLeft } from "lucide-react";
 
 const topAffiliates = [
   {
@@ -132,15 +133,15 @@ const TopAffiliates = () => {
           className="text-center mt-12"
         >
           <p className="text-muted-foreground mb-4">
-            هل تريد أن تكون في القائمة؟ 🔥
+            هل تريد أن تكون في القائمة؟
           </p>
-          <a
-            href="#"
-            className="inline-flex items-center gap-2 text-secondary font-semibold hover:underline"
+          <Link
+            to="/auth"
+            className="inline-flex items-center gap-2 rounded-xl bg-secondary/10 px-4 py-2.5 text-secondary font-bold transition-colors hover:bg-secondary/15"
           >
             سجّل الآن وابدأ المنافسة
-            <span className="text-xl">←</span>
-          </a>
+            <ArrowLeft className="h-4 w-4" aria-hidden />
+          </Link>
         </motion.div>
       </div>
     </section>

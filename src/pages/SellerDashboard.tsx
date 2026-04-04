@@ -7,7 +7,7 @@ import {
   CheckCircle, XCircle, Truck, ChevronLeft, Eye,
   BarChart3, AlertCircle, Pause, Play, Edit3, Trash2,
   Image, DollarSign, Layers, Tag, Save, X, Search,
-  MoreVertical, ArrowUpRight, Sparkles
+  MoreVertical, ArrowUpRight, Sparkles, Store
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -189,57 +189,62 @@ const SellerDashboard = () => {
   });
 
   return (
-    <div className="min-h-screen bg-muted/30 flex" dir="rtl">
+    <div className="dashboard-page-seller" dir="rtl">
       {/* Sidebar */}
-      <aside className={`fixed lg:static inset-y-0 right-0 z-50 w-72 bg-card border-l border-border transform transition-transform duration-300 ${
+      <aside className={`fixed lg:static inset-y-0 right-0 z-50 w-72 shrink-0 bg-gradient-to-b from-emerald-950 via-[hsl(160,35%,12%)] to-slate-950 text-white border-l border-emerald-500/15 shadow-[4px_0_40px_-12px_rgba(0,0,0,0.4)] transform transition-transform duration-300 ease-out ${
         sidebarOpen ? "translate-x-0" : "translate-x-full lg:translate-x-0"
       }`}>
         <div className="flex flex-col h-full">
-          <div className="p-6 border-b border-border">
-            <Link to="/" className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-primary to-primary/80 rounded-xl flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-lg">L</span>
-              </div>
-              <div>
-                <span className="text-xl font-bold text-foreground">LinkDZ</span>
-                <span className="block text-xs text-muted-foreground">لوحة البائع</span>
-              </div>
-            </Link>
+          <div className="p-4 pt-5">
+            <div className="rounded-2xl border border-white/10 bg-white/[0.07] p-4 backdrop-blur-md">
+              <Link to="/" className="flex items-center gap-3">
+                <div className="w-11 h-11 bg-gradient-to-br from-emerald-400 to-teal-600 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-600/35 ring-2 ring-white/15">
+                  <span className="text-white font-bold text-lg">L</span>
+                </div>
+                <div>
+                  <span className="text-lg font-bold tracking-tight">LinkDZ</span>
+                  <span className="block text-xs text-emerald-200/90 font-medium">لوحة البائع</span>
+                </div>
+              </Link>
+            </div>
           </div>
 
-          <div className="p-4 border-b border-border">
-            <div className="bg-gradient-to-br from-primary/5 to-secondary/5 rounded-2xl p-4 border border-border">
-              <p className="font-semibold text-foreground">{user.storeName || user.name}</p>
-              <p className="text-sm text-muted-foreground">{user.email}</p>
-              <div className="mt-2 flex items-center gap-2">
-                <span className="px-2.5 py-1 bg-primary/10 text-primary text-xs rounded-full font-semibold">
-                  بائع معتمد ✓
+          <div className="px-4 pb-4">
+            <div className="rounded-2xl border border-emerald-400/20 bg-gradient-to-br from-emerald-500/10 to-teal-900/20 p-4 backdrop-blur-sm">
+              <p className="font-semibold text-white truncate">{user.storeName || user.name}</p>
+              <p className="text-sm text-emerald-100/75 truncate">{user.email}</p>
+              <div className="mt-3 flex items-center gap-2">
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-500/25 text-emerald-100 text-xs rounded-full font-semibold ring-1 ring-emerald-400/30">
+                  <Sparkles className="w-3 h-3" />
+                  بائع معتمد
                 </span>
               </div>
             </div>
           </div>
 
-          <nav className="flex-1 p-4 space-y-1">
+          <nav className="flex-1 px-3 py-2 space-y-1 overflow-y-auto">
             {sidebarItems.map((item) => (
               <button
                 key={item.id}
+                type="button"
                 onClick={() => { setActiveTab(item.id); setSidebarOpen(false); }}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm transition-all duration-200 ${
                   activeTab === item.id
-                    ? "bg-gradient-to-l from-primary to-primary/90 text-primary-foreground shadow-md"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    ? "bg-emerald-500/25 text-white shadow-lg shadow-black/20 ring-1 ring-emerald-400/40"
+                    : "text-emerald-100/70 hover:bg-white/[0.07] hover:text-white"
                 }`}
               >
-                <item.icon className="w-5 h-5" />
+                <item.icon className="w-5 h-5 shrink-0 opacity-95" />
                 <span className="font-medium">{item.label}</span>
               </button>
             ))}
           </nav>
 
-          <div className="p-4 border-t border-border">
+          <div className="p-4 border-t border-white/[0.08]">
             <button
+              type="button"
               onClick={handleLogout}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-destructive hover:bg-destructive/10 transition-all"
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-rose-200 hover:bg-rose-500/15 hover:text-white border border-transparent hover:border-rose-400/25 transition-all"
             >
               <LogOut className="w-5 h-5" />
               <span className="font-medium">تسجيل الخروج</span>
@@ -249,24 +254,36 @@ const SellerDashboard = () => {
       </aside>
 
       {sidebarOpen && (
-        <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />
+        <div className="fixed inset-0 bg-black/55 backdrop-blur-[2px] z-40 lg:hidden" onClick={() => setSidebarOpen(false)} aria-hidden />
       )}
 
       {/* Main */}
-      <main className="flex-1 min-h-screen">
-        <header className="sticky top-0 z-30 bg-card/80 backdrop-blur-xl border-b border-border px-6 py-4">
-          <div className="flex items-center justify-between">
-            <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2 rounded-lg hover:bg-muted">
-              <Menu className="w-6 h-6" />
+      <main className="flex-1 min-h-screen flex flex-col min-w-0">
+        <header className="sticky top-0 z-30 border-b border-border/50 bg-white/90 backdrop-blur-xl px-4 md:px-6 py-3.5 shadow-sm supports-[backdrop-filter]:bg-white/80 dark:bg-slate-950/80">
+          <div className="flex items-center justify-between gap-3 max-w-[1600px] mx-auto w-full">
+            <button
+              type="button"
+              onClick={() => setSidebarOpen(true)}
+              className="lg:hidden p-2.5 rounded-xl hover:bg-muted/90 border border-transparent hover:border-border/60 transition-colors"
+              aria-label="فتح القائمة"
+            >
+              <Menu className="w-6 h-6 text-foreground" />
             </button>
-            <h1 className="text-xl font-bold text-foreground">
+            <h1 className="text-lg md:text-xl font-bold text-foreground tracking-tight truncate flex-1 text-center lg:text-right">
               {sidebarItems.find(i => i.id === activeTab)?.label}
             </h1>
-            <div />
+            <div className="flex items-center gap-2 shrink-0">
+              <span className="hidden sm:inline-flex text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+                متجر
+              </span>
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center ring-2 ring-emerald-400/30 shadow-md">
+                <Store className="w-5 h-5 text-white" />
+              </div>
+            </div>
           </div>
         </header>
 
-        <div className="p-6">
+        <div className="flex-1 p-4 md:p-6 lg:p-8 max-w-[1600px] w-full mx-auto">
           {/* ===== OVERVIEW ===== */}
           {activeTab === "overview" && (
             <div className="space-y-6">
@@ -277,7 +294,7 @@ const SellerDashboard = () => {
                   { label: "المسوّقون النشطون", value: mockSellerStats.activeAffiliates, icon: Users, iconBg: "bg-accent/10", iconColor: "text-accent", sub: "يروّجون لمنتجاتك" },
                   { label: "نسبة التأكيد", value: `${mockSellerStats.confirmationRate}%`, icon: TrendingUp, iconBg: "bg-secondary/10", iconColor: "text-secondary", sub: "أداء ممتاز" },
                 ].map((stat, i) => (
-                  <motion.div key={i} {...cardAnim(i * 0.08)} className="bg-card rounded-2xl p-6 shadow-sm border border-border/50 hover:shadow-md transition-shadow">
+                  <motion.div key={i} {...cardAnim(i * 0.08)} className="dash-card-interactive p-6">
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-muted-foreground text-sm">{stat.label}</p>
@@ -292,7 +309,7 @@ const SellerDashboard = () => {
                 ))}
               </div>
 
-              <motion.div {...cardAnim(0.3)} className="bg-card rounded-2xl p-6 shadow-sm border border-border/50">
+              <motion.div {...cardAnim(0.3)} className="dash-card-interactive p-6">
                 <h3 className="text-lg font-bold text-foreground mb-6">تطور الإيرادات</h3>
                 <div className="h-[300px]">
                   <ResponsiveContainer width="100%" height="100%">
@@ -313,7 +330,7 @@ const SellerDashboard = () => {
                 </div>
               </motion.div>
 
-              <motion.div {...cardAnim(0.4)} className="bg-card rounded-2xl shadow-sm border border-border/50">
+              <motion.div {...cardAnim(0.4)} className="dash-card">
                 <div className="p-6 border-b border-border flex items-center justify-between">
                   <h2 className="text-lg font-bold text-foreground">آخر الطلبيات</h2>
                   <button onClick={() => setActiveTab("orders")} className="text-secondary text-sm font-medium flex items-center gap-1 hover:underline">
@@ -366,7 +383,7 @@ const SellerDashboard = () => {
               </div>
 
               {/* Toolbar */}
-              <motion.div {...cardAnim(0.2)} className="bg-card rounded-2xl p-4 shadow-sm border border-border/50">
+              <motion.div {...cardAnim(0.2)} className="dash-card p-4">
                 <div className="flex flex-col sm:flex-row gap-3 items-center justify-between">
                   <div className="flex flex-1 gap-3 w-full sm:w-auto">
                     <div className="relative flex-1">
@@ -410,7 +427,7 @@ const SellerDashboard = () => {
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.9 }}
                         transition={{ delay: i * 0.05, duration: 0.4 }}
-                        className="bg-card rounded-2xl overflow-hidden shadow-sm border border-border/50 hover:shadow-lg hover:border-primary/20 transition-all duration-300 group"
+                        className="dash-card-interactive overflow-hidden hover:border-emerald-500/25 transition-all duration-300 group"
                       >
                         <div className="aspect-video relative overflow-hidden">
                           <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
@@ -486,10 +503,10 @@ const SellerDashboard = () => {
               <div className="flex items-center justify-between">
                 <p className="text-muted-foreground">{mockSellerOrders.length} طلبيات</p>
               </div>
-              <div className="bg-card rounded-2xl shadow-sm border border-border/50 overflow-hidden">
+              <div className="dash-card overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="w-full">
-                    <thead className="bg-muted/50">
+                    <thead className="bg-slate-100/95 dark:bg-slate-800/60 border-b border-border/50">
                       <tr>
                         <th className="text-right p-4 font-semibold text-foreground text-sm">المنتج</th>
                         <th className="text-right p-4 font-semibold text-foreground text-sm">المسوّق</th>
@@ -536,7 +553,7 @@ const SellerDashboard = () => {
                   { label: "العمولات المدفوعة للمسوّقين", value: `${(mockSellerStats.totalRevenue * 0.45).toLocaleString()} دج`, color: "text-accent" },
                   { label: "صافي الربح", value: `${(mockSellerStats.totalRevenue * 0.55).toLocaleString()} دج`, color: "text-secondary" },
                 ].map((stat, i) => (
-                  <motion.div key={i} {...cardAnim(i * 0.1)} className="bg-card rounded-2xl p-6 shadow-sm border border-border/50">
+                  <motion.div key={i} {...cardAnim(i * 0.1)} className="dash-card-interactive p-6">
                     <p className="text-muted-foreground text-sm">{stat.label}</p>
                     <p className={`text-3xl font-bold mt-2 ${stat.color}`}>{stat.value}</p>
                   </motion.div>
@@ -544,7 +561,7 @@ const SellerDashboard = () => {
               </div>
 
               <div className="grid md:grid-cols-2 gap-6">
-                <motion.div {...cardAnim(0.3)} className="bg-card rounded-2xl p-6 shadow-sm border border-border/50">
+                <motion.div {...cardAnim(0.3)} className="dash-card-interactive p-6">
                   <h3 className="text-lg font-bold text-foreground mb-6">الإيرادات الشهرية</h3>
                   <div className="h-[280px]">
                     <ResponsiveContainer width="100%" height="100%">
@@ -559,7 +576,7 @@ const SellerDashboard = () => {
                   </div>
                 </motion.div>
 
-                <motion.div {...cardAnim(0.4)} className="bg-card rounded-2xl p-6 shadow-sm border border-border/50">
+                <motion.div {...cardAnim(0.4)} className="dash-card-interactive p-6">
                   <h3 className="text-lg font-bold text-foreground mb-6">توزيع الطلبيات</h3>
                   <div className="h-[220px]">
                     <ResponsiveContainer width="100%" height="100%">
@@ -589,14 +606,18 @@ const SellerDashboard = () => {
           {/* ===== AFFILIATES ===== */}
           {activeTab === "affiliates" && (
             <div className="space-y-6">
-              <motion.div {...cardAnim()} className="bg-gradient-to-l from-primary to-primary/90 rounded-2xl p-6 text-primary-foreground">
-                <div className="flex items-center justify-between">
+              <motion.div
+                {...cardAnim()}
+                className="relative overflow-hidden rounded-2xl border border-emerald-400/25 bg-gradient-to-l from-emerald-600 via-teal-700 to-emerald-900 p-6 text-white shadow-lg shadow-emerald-900/20 ring-1 ring-white/10"
+              >
+                <div className="pointer-events-none absolute -left-8 -top-8 h-32 w-32 rounded-full bg-white/10 blur-2xl" />
+                <div className="relative flex items-center justify-between gap-4">
                   <div>
-                    <p className="text-primary-foreground/70">المسوّقون الذين يروّجون لمنتجاتك</p>
-                    <p className="text-4xl font-bold mt-1">{mockSellerStats.activeAffiliates}</p>
-                    <p className="text-primary-foreground/70 text-sm mt-1">مسوّق نشط</p>
+                    <p className="text-emerald-100/90 text-sm font-medium">المسوّقون الذين يروّجون لمنتجاتك</p>
+                    <p className="text-4xl font-bold mt-1 tabular-nums">{mockSellerStats.activeAffiliates}</p>
+                    <p className="text-emerald-100/80 text-sm mt-1">مسوّق نشط</p>
                   </div>
-                  <Users className="w-16 h-16 text-primary-foreground/20" />
+                  <Users className="w-16 h-16 text-white/25 shrink-0" />
                 </div>
               </motion.div>
 
@@ -609,7 +630,7 @@ const SellerDashboard = () => {
                   { name: "يوسف العمري", orders: 12, earnings: "18,500 دج", level: 1 },
                   { name: "نورة حدّاد", orders: 45, earnings: "56,000 دج", level: 2 },
                 ].map((aff, i) => (
-                  <motion.div key={i} {...cardAnim(i * 0.06)} className="bg-card rounded-2xl p-5 shadow-sm border border-border/50 hover:shadow-md transition-all">
+                  <motion.div key={i} {...cardAnim(i * 0.06)} className="dash-card-interactive p-5">
                     <div className="flex items-center gap-3 mb-3">
                       <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-secondary/20 to-secondary/5 flex items-center justify-center">
                         <span className="text-secondary font-bold">{aff.name.charAt(0)}</span>
@@ -634,7 +655,7 @@ const SellerDashboard = () => {
           {/* ===== SETTINGS ===== */}
           {activeTab === "settings" && (
             <div className="max-w-2xl space-y-6">
-              <motion.div {...cardAnim()} className="bg-card rounded-2xl p-6 shadow-sm border border-border/50">
+              <motion.div {...cardAnim()} className="dash-card-interactive p-6">
                 <h3 className="text-lg font-bold text-foreground mb-4">معلومات المتجر</h3>
                 <div className="space-y-3">
                   {[
@@ -651,7 +672,7 @@ const SellerDashboard = () => {
                 </div>
               </motion.div>
 
-              <motion.div {...cardAnim(0.1)} className="bg-card rounded-2xl p-6 shadow-sm border border-border/50">
+              <motion.div {...cardAnim(0.1)} className="dash-card-interactive p-6">
                 <h3 className="text-lg font-bold text-foreground mb-4">الدعم الفني</h3>
                 <div className="space-y-3">
                   <a href="https://wa.me/213555123456" target="_blank" rel="noopener noreferrer"

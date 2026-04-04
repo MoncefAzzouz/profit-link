@@ -1,8 +1,8 @@
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&display=swap');
 
 @layer base {
   :root {
@@ -154,6 +154,33 @@
   .glow-gold {
     box-shadow: var(--shadow-gold);
   }
+
+  /* Dashboard shells (admin / seller) */
+  .dashboard-page-admin {
+    @apply min-h-screen flex;
+    background-color: hsl(var(--background));
+    background-image:
+      radial-gradient(ellipse 100% 70% at 100% -5%, hsl(160 84% 39% / 0.11), transparent 52%),
+      radial-gradient(ellipse 70% 50% at 0% 100%, hsl(220 70% 28% / 0.09), transparent 48%),
+      linear-gradient(180deg, hsl(var(--muted) / 0.45) 0%, hsl(var(--background)) 38%);
+  }
+
+  .dashboard-page-seller {
+    @apply min-h-screen flex;
+    background-color: hsl(var(--background));
+    background-image:
+      radial-gradient(ellipse 90% 65% at 0% -8%, hsl(160 72% 38% / 0.12), transparent 50%),
+      radial-gradient(ellipse 80% 55% at 100% 100%, hsl(45 93% 48% / 0.07), transparent 45%),
+      linear-gradient(180deg, hsl(var(--muted) / 0.35) 0%, hsl(var(--background)) 40%);
+  }
+
+  .dash-card {
+    @apply rounded-2xl border border-border/55 bg-card/95 backdrop-blur-sm shadow-sm;
+  }
+
+  .dash-card-interactive {
+    @apply rounded-2xl border border-border/55 bg-card/95 backdrop-blur-sm shadow-sm transition-all duration-300 hover:border-emerald-500/25 hover:shadow-md;
+  }
 }
 
 @layer utilities {
@@ -249,4 +276,29 @@
   .delay-400 { animation-delay: 400ms; }
   .delay-500 { animation-delay: 500ms; }
   .delay-600 { animation-delay: 600ms; }
+
+  /* Hero mesh & spotlight (modern landing) */
+  .hero-mesh {
+    background:
+      radial-gradient(ellipse 80% 60% at 80% 20%, hsl(160 84% 39% / 0.18), transparent 55%),
+      radial-gradient(ellipse 70% 50% at 15% 75%, hsl(45 93% 47% / 0.12), transparent 50%),
+      radial-gradient(ellipse 50% 40% at 50% 50%, hsl(220 70% 35% / 0.25), transparent 60%);
+  }
+
+  @keyframes hero-text-shimmer {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+  }
+
+  .text-gradient-hero {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(
+      120deg,
+      hsl(0 0% 100%) 0%,
+      hsl(160 70% 75%) 45%,
+      hsl(45 95% 70%) 100%
+    );
+    background-size: 200% auto;
+    animation: hero-text-shimmer 10s ease infinite;
+  }
 }

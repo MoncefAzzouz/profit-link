@@ -2,14 +2,15 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Home, Workflow, Sparkles, Layers, MessageCircle, LogIn, UserPlus } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const navLinks = [
-  { name: "الرئيسية", href: "#" },
-  { name: "كيف يعمل", href: "#how-it-works" },
-  { name: "لماذا نحن", href: "#why-us" },
-  { name: "المستويات", href: "#levels" },
-  { name: "تواصل معنا", href: "#contact" },
+  { name: "الرئيسية", href: "#", icon: Home },
+  { name: "كيف يعمل", href: "#how-it-works", icon: Workflow },
+  { name: "لماذا نحن", href: "#why-us", icon: Sparkles },
+  { name: "المستويات", href: "#levels", icon: Layers },
+  { name: "تواصل معنا", href: "#contact", icon: MessageCircle },
 ];
 
 const Navbar = () => {
@@ -17,9 +18,7 @@ const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50);
-    };
+    const handleScroll = () => setIsScrolled(window.scrollY > 24);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
@@ -29,106 +28,112 @@ const Navbar = () => {
       <motion.nav
         initial={{ y: -100 }}
         animate={{ y: 0 }}
-        transition={{ duration: 0.5 }}
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+        transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+        className={cn(
+          "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
           isScrolled
-            ? "bg-white/80 backdrop-blur-xl shadow-lg border-b border-border"
-            : "bg-transparent"
-        }`}
+            ? "bg-white/75 backdrop-blur-xl shadow-soft border-b border-border/60"
+            : "bg-transparent",
+        )}
       >
         <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-20">
-            {/* Logo */}
-            <Link to="/" className="flex items-center">
-              <span className={`text-2xl font-bold ${isScrolled ? 'text-primary' : 'text-white'}`}>
+          <div className="flex h-[4.5rem] items-center justify-between">
+            <Link to="/" className="flex items-center gap-1 group">
+              <span
+                className={cn(
+                  "text-2xl font-extrabold tracking-tight transition-colors",
+                  isScrolled ? "text-primary" : "text-white drop-shadow-md",
+                )}
+              >
                 Link<span className="gradient-text">DZ</span>
               </span>
             </Link>
 
-            {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center gap-8">
-              {navLinks.map((link, index) => (
+            <div className="hidden md:flex items-center gap-1 lg:gap-2">
+              {navLinks.map((link) => (
                 <a
-                  key={index}
+                  key={link.name}
                   href={link.href}
-                  className={`text-sm font-medium transition-colors duration-300 ${
+                  className={cn(
+                    "group flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold transition-colors",
                     isScrolled
-                      ? "text-muted-foreground hover:text-foreground"
-                      : "text-white/80 hover:text-white"
-                  }`}
+                      ? "text-muted-foreground hover:text-foreground hover:bg-muted/80"
+                      : "text-white/85 hover:text-white hover:bg-white/10",
+                  )}
                 >
+                  <link.icon className="h-4 w-4 opacity-80 group-hover:opacity-100 transition-opacity" aria-hidden />
                   {link.name}
                 </a>
               ))}
             </div>
 
-            {/* CTA Buttons */}
-            <div className="hidden md:flex items-center gap-3">
+            <div className="hidden md:flex items-center gap-2">
               <Link to="/auth">
-                <Button
-                  variant={isScrolled ? "ghost" : "glass"}
-                  size="sm"
-                >
+                <Button variant={isScrolled ? "ghost" : "glass"} size="sm" className="gap-1.5">
+                  <LogIn className="h-4 w-4" />
                   تسجيل الدخول
                 </Button>
               </Link>
               <Link to="/auth">
-                <Button
-                  variant={isScrolled ? "default" : "hero"}
-                  size="sm"
-                >
-                  سجل كمسوّق
+                <Button variant={isScrolled ? "default" : "hero"} size="sm" className="gap-1.5 shadow-md">
+                  <UserPlus className="h-4 w-4" />
+                  سجّل كمسوّق
                 </Button>
               </Link>
             </div>
 
-            {/* Mobile Menu Button */}
             <button
+              type="button"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className={`md:hidden p-2 rounded-lg ${
-                isScrolled ? "text-foreground" : "text-white"
-              }`}
+              className={cn(
+                "md:hidden rounded-xl p-2.5 transition-colors",
+                isScrolled ? "text-foreground hover:bg-muted" : "text-white hover:bg-white/10",
+              )}
+              aria-expanded={isMobileMenuOpen}
+              aria-label={isMobileMenuOpen ? "إغلاق القائمة" : "فتح القائمة"}
             >
-              {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </button>
           </div>
         </div>
       </motion.nav>
 
-      {/* Mobile Menu */}
       <AnimatePresence>
         {isMobileMenuOpen && (
           <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.2 }}
-            className="fixed inset-x-0 top-20 z-40 bg-white/95 backdrop-blur-xl border-b border-border shadow-lg md:hidden"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.25 }}
+            className="fixed inset-x-0 top-[4.5rem] z-40 overflow-hidden border-b border-border bg-white/95 shadow-xl backdrop-blur-xl md:hidden"
           >
-            <div className="container mx-auto px-4 py-6">
-              <div className="flex flex-col gap-4">
-                {navLinks.map((link, index) => (
+            <div className="container mx-auto px-4 py-5">
+              <div className="flex flex-col gap-1">
+                {navLinks.map((link) => (
                   <a
-                    key={index}
+                    key={link.name}
                     href={link.href}
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className="text-foreground font-medium py-2 border-b border-border/50"
+                    className="flex items-center gap-3 rounded-xl px-3 py-3 font-semibold text-foreground hover:bg-muted"
                   >
+                    <link.icon className="h-5 w-5 text-secondary" aria-hidden />
                     {link.name}
                   </a>
                 ))}
-                <div className="flex flex-col gap-3 pt-4">
-                  <Link to="/auth" onClick={() => setIsMobileMenuOpen(false)}>
-                    <Button variant="outline" className="w-full">
-                      تسجيل الدخول
-                    </Button>
-                  </Link>
-                  <Link to="/auth" onClick={() => setIsMobileMenuOpen(false)}>
-                    <Button variant="default" className="w-full">
-                      سجل كمسوّق
-                    </Button>
-                  </Link>
-                </div>
+              </div>
+              <div className="mt-5 flex flex-col gap-2 border-t border-border pt-5">
+                <Link to="/auth" onClick={() => setIsMobileMenuOpen(false)}>
+                  <Button variant="outline" className="w-full gap-2 h-12">
+                    <LogIn className="h-4 w-4" />
+                    تسجيل الدخول
+                  </Button>
+                </Link>
+                <Link to="/auth" onClick={() => setIsMobileMenuOpen(false)}>
+                  <Button variant="default" className="w-full gap-2 h-12">
+                    <UserPlus className="h-4 w-4" />
+                    سجّل كمسوّق
+                  </Button>
+                </Link>
               </div>
             </div>
           </motion.div>

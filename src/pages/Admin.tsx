@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import {
   LayoutDashboard, Users, Package, ShoppingCart, Wallet,
   Settings, Menu, X, TrendingUp, CheckCircle, XCircle,
@@ -57,7 +57,6 @@ const orderDistribution = [
 ];
 
 const Admin = () => {
-  const navigate = useNavigate();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<Tab>("overview");
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -111,27 +110,29 @@ const Admin = () => {
   };
 
   return (
-    <div className="min-h-screen bg-muted/30 flex">
+    <div className="dashboard-page-admin">
       {/* Sidebar */}
-      <aside className={`fixed lg:static inset-y-0 right-0 z-50 w-72 bg-primary text-primary-foreground transform transition-transform duration-300 ${
+      <aside className={`fixed lg:static inset-y-0 right-0 z-50 w-72 shrink-0 bg-gradient-to-b from-slate-900 via-[hsl(222,47%,12%)] to-[hsl(222,47%,7%)] text-white border-l border-white/[0.07] shadow-[4px_0_40px_-12px_rgba(0,0,0,0.45)] transform transition-transform duration-300 ease-out ${
         sidebarOpen ? "translate-x-0" : "translate-x-full lg:translate-x-0"
       }`}>
         <div className="flex flex-col h-full">
           {/* Logo */}
-          <div className="p-6 border-b border-white/10">
-            <Link to="/" className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-secondary rounded-xl flex items-center justify-center">
-                <span className="text-white font-bold text-lg">L</span>
-              </div>
-              <div>
-                <span className="text-xl font-bold">LinkDZ</span>
-                <span className="block text-xs text-white/60">لوحة الإدارة</span>
-              </div>
-            </Link>
+          <div className="p-4 pt-5">
+            <div className="rounded-2xl border border-white/10 bg-white/[0.06] p-4 backdrop-blur-md">
+              <Link to="/" className="flex items-center gap-3">
+                <div className="w-11 h-11 bg-gradient-to-br from-emerald-400 to-emerald-700 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/30 ring-2 ring-white/10">
+                  <span className="text-white font-bold text-lg">L</span>
+                </div>
+                <div>
+                  <span className="text-lg font-bold tracking-tight">LinkDZ</span>
+                  <span className="block text-xs text-emerald-200/85 font-medium">لوحة الإدارة</span>
+                </div>
+              </Link>
+            </div>
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 p-4 space-y-1">
+          <nav className="flex-1 px-3 py-2 space-y-1 overflow-y-auto">
             {sidebarItems.map((item) => (
               <button
                 key={item.id}
@@ -139,22 +140,22 @@ const Admin = () => {
                   setActiveTab(item.id);
                   setSidebarOpen(false);
                 }}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm transition-all duration-200 ${
                   activeTab === item.id
-                    ? "bg-white/20 text-white"
-                    : "text-white/70 hover:bg-white/10 hover:text-white"
+                    ? "bg-white/[0.12] text-white shadow-lg shadow-black/25 ring-1 ring-emerald-400/35"
+                    : "text-white/65 hover:bg-white/[0.08] hover:text-white"
                 }`}
               >
-                <item.icon className="w-5 h-5" />
+                <item.icon className="w-5 h-5 shrink-0 opacity-90" />
                 <span className="font-medium">{item.label}</span>
               </button>
             ))}
           </nav>
 
           {/* Footer */}
-          <div className="p-4 border-t border-white/10">
+          <div className="p-4 border-t border-white/[0.08]">
             <Link to="/dashboard">
-              <Button variant="secondary" className="w-full gap-2">
+              <Button variant="secondary" className="w-full gap-2 rounded-xl bg-white/10 text-white border-white/15 hover:bg-white/20 hover:text-white">
                 <ChevronLeft className="w-4 h-4" />
                 العودة للداشبورد
               </Button>
@@ -166,34 +167,42 @@ const Admin = () => {
       {/* Mobile Overlay */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          className="fixed inset-0 z-40 bg-black/55 backdrop-blur-[2px] lg:hidden"
           onClick={() => setSidebarOpen(false)}
+          aria-hidden
         />
       )}
 
       {/* Main Content */}
-      <main className="flex-1 min-h-screen">
+      <main className="flex-1 min-h-screen flex flex-col min-w-0">
         {/* Top Bar */}
-        <header className="sticky top-0 z-30 bg-card/80 backdrop-blur-xl border-b border-border px-6 py-4">
-          <div className="flex items-center justify-between">
+        <header className="sticky top-0 z-30 border-b border-border/50 bg-white/90 backdrop-blur-xl px-4 md:px-6 py-3.5 shadow-sm supports-[backdrop-filter]:bg-white/80 dark:bg-slate-950/80">
+          <div className="flex items-center justify-between gap-3 max-w-[1600px] mx-auto w-full">
             <button
+              type="button"
               onClick={() => setSidebarOpen(true)}
-              className="lg:hidden p-2 rounded-lg hover:bg-muted"
+              className="lg:hidden p-2.5 rounded-xl hover:bg-muted/90 border border-transparent hover:border-border/60 transition-colors"
+              aria-label="فتح القائمة"
             >
-              <Menu className="w-6 h-6" />
+              <Menu className="w-6 h-6 text-foreground" />
             </button>
-            <h1 className="text-xl font-bold text-foreground">
-              {sidebarItems.find(item => item.id === activeTab)?.label}
-            </h1>
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
-                <span className="text-primary-foreground font-bold">A</span>
+            <div className="flex items-center gap-3 min-w-0 flex-1 justify-center lg:justify-start">
+              <h1 className="text-lg md:text-xl font-bold text-foreground tracking-tight truncate">
+                {sidebarItems.find(item => item.id === activeTab)?.label}
+              </h1>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <span className="hidden sm:inline-flex text-[11px] font-semibold uppercase tracking-wider text-muted-foreground px-2.5 py-1 rounded-full bg-muted/90 border border-border/50">
+                Admin
+              </span>
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-navy-800 flex items-center justify-center ring-2 ring-emerald-500/20 shadow-md">
+                <span className="text-primary-foreground font-bold text-sm">A</span>
               </div>
             </div>
           </div>
         </header>
 
-        <div className="p-6">
+        <div className="flex-1 p-4 md:p-6 lg:p-8 max-w-[1600px] w-full mx-auto">
           {/* Overview Tab */}
           {activeTab === "overview" && (
             <div className="space-y-6">
@@ -202,7 +211,7 @@ const Admin = () => {
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="bg-card rounded-2xl p-6 shadow-sm"
+                  className="dash-card-interactive p-6"
                 >
                   <div className="flex items-center justify-between">
                     <div>
@@ -222,7 +231,7 @@ const Admin = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.1 }}
-                  className="bg-card rounded-2xl p-6 shadow-sm"
+                  className="dash-card-interactive p-6"
                 >
                   <div className="flex items-center justify-between">
                     <div>
@@ -242,7 +251,7 @@ const Admin = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.2 }}
-                  className="bg-card rounded-2xl p-6 shadow-sm"
+                  className="dash-card-interactive p-6"
                 >
                   <div className="flex items-center justify-between">
                     <div>
@@ -262,7 +271,7 @@ const Admin = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3 }}
-                  className="bg-card rounded-2xl p-6 shadow-sm"
+                  className="dash-card-interactive p-6"
                 >
                   <div className="flex items-center justify-between">
                     <div>
@@ -285,7 +294,7 @@ const Admin = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.4 }}
-                  className="bg-card rounded-2xl p-6 shadow-sm"
+                  className="dash-card-interactive p-6"
                 >
                   <h3 className="text-lg font-bold text-foreground mb-4">الإيرادات والعمولات</h3>
                   <div className="h-[280px]">
@@ -323,7 +332,7 @@ const Admin = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.5 }}
-                  className="bg-card rounded-2xl p-6 shadow-sm"
+                  className="dash-card-interactive p-6"
                 >
                   <h3 className="text-lg font-bold text-foreground mb-4">توزيع الطلبيات</h3>
                   <div className="h-[200px]">
@@ -362,7 +371,7 @@ const Admin = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.6 }}
-                className="bg-card rounded-2xl shadow-sm"
+                className="dash-card overflow-hidden"
               >
                 <div className="p-6 border-b border-border flex items-center justify-between">
                   <h2 className="text-lg font-bold text-foreground">آخر الطلبيات</h2>
@@ -400,7 +409,7 @@ const Admin = () => {
           {activeTab === "affiliates" && (
             <div className="space-y-6">
               {/* Filters */}
-              <div className="bg-card rounded-2xl p-4 shadow-sm flex flex-wrap gap-3">
+              <div className="dash-card p-4 flex flex-wrap gap-3">
                 <div className="relative flex-1 min-w-[200px]">
                   <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
@@ -425,10 +434,10 @@ const Admin = () => {
               </div>
 
               {/* Affiliates Table */}
-              <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
+              <div className="dash-card overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="w-full">
-                    <thead className="bg-muted">
+                    <thead className="bg-slate-100/95 dark:bg-slate-800/60 border-b border-border/50">
                       <tr>
                         <th className="text-right p-4 font-semibold text-foreground">المسوّق</th>
                         <th className="text-right p-4 font-semibold text-foreground">المستوى</th>
@@ -506,7 +515,7 @@ const Admin = () => {
           {activeTab === "orders" && (
             <div className="space-y-6">
               {/* Filters */}
-              <div className="bg-card rounded-2xl p-4 shadow-sm flex flex-wrap gap-3">
+              <div className="dash-card p-4 flex flex-wrap gap-3">
                 <div className="relative flex-1 min-w-[200px]">
                   <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
@@ -533,10 +542,10 @@ const Admin = () => {
               </div>
 
               {/* Orders Table */}
-              <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
+              <div className="dash-card overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="w-full">
-                    <thead className="bg-muted">
+                    <thead className="bg-slate-100/95 dark:bg-slate-800/60 border-b border-border/50">
                       <tr>
                         <th className="text-right p-4 font-semibold text-foreground">المنتج</th>
                         <th className="text-right p-4 font-semibold text-foreground">الزبون</th>
@@ -624,7 +633,7 @@ const Admin = () => {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.05 }}
-                    className="bg-card rounded-2xl overflow-hidden shadow-sm"
+                    className="dash-card overflow-hidden"
                   >
                     <div className="aspect-video relative">
                       <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
@@ -660,7 +669,7 @@ const Admin = () => {
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-card rounded-2xl p-6 shadow-sm"
+                className="dash-card-interactive p-6"
               >
                 <h3 className="text-lg font-bold text-foreground mb-6">تحليل المبيعات الشهرية</h3>
                 <div className="h-[400px]">
@@ -689,7 +698,7 @@ const Admin = () => {
           {/* Settings Tab */}
           {activeTab === "settings" && (
             <div className="max-w-2xl space-y-6">
-              <div className="bg-card rounded-2xl p-6 shadow-sm">
+              <div className="dash-card-interactive p-6">
                 <h3 className="text-lg font-bold text-foreground mb-4">إعدادات المنصة</h3>
                 <div className="space-y-4">
                   <div className="flex items-center justify-between p-4 bg-muted rounded-xl">
@@ -709,7 +718,7 @@ const Admin = () => {
                 </div>
               </div>
 
-              <div className="bg-card rounded-2xl p-6 shadow-sm">
+              <div className="dash-card-interactive p-6">
                 <div className="flex items-start gap-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-xl">
                   <AlertTriangle className="w-6 h-6 text-yellow-600 shrink-0 mt-0.5" />
                   <div>
