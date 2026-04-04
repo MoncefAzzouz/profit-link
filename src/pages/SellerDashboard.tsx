@@ -1,20 +1,31 @@
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, Package, ShoppingCart, Wallet, Users,
   Settings, LogOut, Menu, Plus, TrendingUp, Clock,
   CheckCircle, XCircle, Truck, ChevronLeft, Eye,
-  BarChart3, AlertCircle, Pause, Play
+  BarChart3, AlertCircle, Pause, Play, Edit3, Trash2,
+  Image, DollarSign, Layers, Tag, Save, X, Search,
+  MoreVertical, ArrowUpRight, Sparkles
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell,
 } from "recharts";
 import {
-  mockSellerProducts, mockSellerOrders, mockSellerStats,
+  mockSellerProducts as initialProducts, mockSellerOrders, mockSellerStats,
   sellerEarningsData, SellerProduct
 } from "@/data/mockSellerData";
 
@@ -29,9 +40,9 @@ const statusConfig = {
 };
 
 const productStatusConfig = {
-  active: { label: "نشط", color: "text-emerald-700 bg-emerald-50 border-emerald-200" },
-  paused: { label: "متوقف", color: "text-yellow-700 bg-yellow-50 border-yellow-200" },
-  out_of_stock: { label: "نفذ المخزون", color: "text-red-700 bg-red-50 border-red-200" },
+  active: { label: "نشط", color: "text-emerald-700 bg-emerald-50 border-emerald-200", dot: "bg-emerald-500" },
+  paused: { label: "متوقف", color: "text-yellow-700 bg-yellow-50 border-yellow-200", dot: "bg-yellow-500" },
+  out_of_stock: { label: "نفذ المخزون", color: "text-red-700 bg-red-50 border-red-200", dot: "bg-red-500" },
 };
 
 const orderStatusPieData = [
@@ -40,6 +51,13 @@ const orderStatusPieData = [
   { name: "معلّقة", value: 23, color: "hsl(45, 93%, 47%)" },
   { name: "ملغاة", value: 45, color: "hsl(0, 84%, 60%)" },
 ];
+
+const categories = ["إلكترونيات", "أزياء", "جمال", "رياضة", "منزل", "أطفال", "صحة", "أخرى"];
+
+const emptyProduct: Omit<SellerProduct, "id"> = {
+  name: "", price: 0, commission: 0, image: "", category: "إلكترونيات",
+  stock: 0, totalSales: 0, status: "active",
+};
 
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
@@ -65,6 +83,16 @@ const SellerDashboard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
 
+  // Product CRUD state
+  const [products, setProducts] = useState<SellerProduct[]>(initialProducts);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<SellerProduct | null>(null);
+  const [productToDelete, setProductToDelete] = useState<SellerProduct | null>(null);
+  const [formData, setFormData] = useState<Omit<SellerProduct, "id">>(emptyProduct);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterStatus, setFilterStatus] = useState<string>("all");
+
   useEffect(() => {
     const storedUser = localStorage.getItem("seller_user");
     if (!storedUser) {
@@ -79,6 +107,69 @@ const SellerDashboard = () => {
     toast({ title: "تم تسجيل الخروج" });
     navigate("/");
   };
+
+  // Product CRUD handlers
+  const openAddDialog = () => {
+    setEditingProduct(null);
+    setFormData(emptyProduct);
+    setDialogOpen(true);
+  };
+
+  const openEditDialog = (product: SellerProduct) => {
+    setEditingProduct(product);
+    setFormData({
+      name: product.name, price: product.price, commission: product.commission,
+      image: product.image, category: product.category, stock: product.stock,
+      totalSales: product.totalSales, status: product.status,
+    });
+    setDialogOpen(true);
+  };
+
+  const openDeleteDialog = (product: SellerProduct) => {
+    setProductToDelete(product);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleSaveProduct = () => {
+    if (!formData.name || !formData.price) {
+      toast({ title: "خطأ", description: "يرجى ملء جميع الحقول المطلوبة", variant: "destructive" });
+      return;
+    }
+
+    if (editingProduct) {
+      setProducts(prev => prev.map(p => p.id === editingProduct.id ? { ...p, ...formData } : p));
+      toast({ title: "✅ تم التحديث", description: `تم تحديث "${formData.name}" بنجاح` });
+    } else {
+      const newProduct: SellerProduct = {
+        id: `sp-${Date.now()}`,
+        ...formData,
+      };
+      setProducts(prev => [newProduct, ...prev]);
+      toast({ title: "🎉 تمت الإضافة", description: `تم إضافة "${formData.name}" بنجاح` });
+    }
+    setDialogOpen(false);
+  };
+
+  const handleDeleteProduct = () => {
+    if (productToDelete) {
+      setProducts(prev => prev.filter(p => p.id !== productToDelete.id));
+      toast({ title: "🗑️ تم الحذف", description: `تم حذف "${productToDelete.name}"` });
+      setDeleteDialogOpen(false);
+      setProductToDelete(null);
+    }
+  };
+
+  const toggleProductStatus = (product: SellerProduct) => {
+    const newStatus = product.status === "active" ? "paused" : "active";
+    setProducts(prev => prev.map(p => p.id === product.id ? { ...p, status: newStatus } : p));
+    toast({ title: newStatus === "active" ? "▶️ تم التفعيل" : "⏸️ تم الإيقاف" });
+  };
+
+  const filteredProducts = products.filter(p => {
+    const matchesSearch = p.name.includes(searchQuery) || p.category.includes(searchQuery);
+    const matchesStatus = filterStatus === "all" || p.status === filterStatus;
+    return matchesSearch && matchesStatus;
+  });
 
   const sidebarItems = [
     { id: "overview" as Tab, label: "نظرة عامة", icon: LayoutDashboard },
@@ -201,7 +292,6 @@ const SellerDashboard = () => {
                 ))}
               </div>
 
-              {/* Revenue Chart */}
               <motion.div {...cardAnim(0.3)} className="bg-card rounded-2xl p-6 shadow-sm border border-border/50">
                 <h3 className="text-lg font-bold text-foreground mb-6">تطور الإيرادات</h3>
                 <div className="h-[300px]">
@@ -223,7 +313,6 @@ const SellerDashboard = () => {
                 </div>
               </motion.div>
 
-              {/* Recent Orders */}
               <motion.div {...cardAnim(0.4)} className="bg-card rounded-2xl shadow-sm border border-border/50">
                 <div className="p-6 border-b border-border flex items-center justify-between">
                   <h2 className="text-lg font-bold text-foreground">آخر الطلبيات</h2>
@@ -257,54 +346,137 @@ const SellerDashboard = () => {
             </div>
           )}
 
-          {/* ===== PRODUCTS ===== */}
+          {/* ===== PRODUCTS (with CRUD) ===== */}
           {activeTab === "products" && (
             <div className="space-y-6">
-              <div className="flex items-center justify-between">
-                <p className="text-muted-foreground">{mockSellerProducts.length} منتجات</p>
-                <Button className="gap-2">
-                  <Plus className="w-4 h-4" />
-                  إضافة منتج جديد
-                </Button>
+              {/* Header with stats */}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                {[
+                  { label: "إجمالي المنتجات", value: products.length, icon: Package, gradient: "from-primary/10 to-primary/5" },
+                  { label: "منتجات نشطة", value: products.filter(p => p.status === "active").length, icon: CheckCircle, gradient: "from-emerald-500/10 to-emerald-500/5" },
+                  { label: "متوقفة", value: products.filter(p => p.status === "paused").length, icon: Pause, gradient: "from-yellow-500/10 to-yellow-500/5" },
+                  { label: "نفذ المخزون", value: products.filter(p => p.status === "out_of_stock").length, icon: AlertCircle, gradient: "from-red-500/10 to-red-500/5" },
+                ].map((stat, i) => (
+                  <motion.div key={i} {...cardAnim(i * 0.06)} className={`bg-gradient-to-br ${stat.gradient} rounded-2xl p-4 border border-border/30`}>
+                    <stat.icon className="w-5 h-5 text-muted-foreground mb-2" />
+                    <p className="text-2xl font-bold text-foreground">{stat.value}</p>
+                    <p className="text-xs text-muted-foreground">{stat.label}</p>
+                  </motion.div>
+                ))}
               </div>
+
+              {/* Toolbar */}
+              <motion.div {...cardAnim(0.2)} className="bg-card rounded-2xl p-4 shadow-sm border border-border/50">
+                <div className="flex flex-col sm:flex-row gap-3 items-center justify-between">
+                  <div className="flex flex-1 gap-3 w-full sm:w-auto">
+                    <div className="relative flex-1">
+                      <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        placeholder="ابحث عن منتج..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="pr-10 rounded-xl border-border/50 bg-muted/30 focus:bg-background"
+                      />
+                    </div>
+                    <Select value={filterStatus} onValueChange={setFilterStatus}>
+                      <SelectTrigger className="w-[140px] rounded-xl border-border/50">
+                        <SelectValue placeholder="الحالة" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">الكل</SelectItem>
+                        <SelectItem value="active">نشط</SelectItem>
+                        <SelectItem value="paused">متوقف</SelectItem>
+                        <SelectItem value="out_of_stock">نفذ المخزون</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <Button onClick={openAddDialog} className="gap-2 rounded-xl bg-gradient-to-l from-primary to-primary/90 shadow-md hover:shadow-lg transition-all w-full sm:w-auto">
+                    <Sparkles className="w-4 h-4" />
+                    إضافة منتج جديد
+                  </Button>
+                </div>
+              </motion.div>
+
+              {/* Product Grid */}
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {mockSellerProducts.map((product, i) => {
-                  const pStatus = productStatusConfig[product.status];
-                  return (
-                    <motion.div key={product.id} {...cardAnim(i * 0.08)} className="bg-card rounded-2xl overflow-hidden shadow-sm border border-border/50 hover:shadow-md transition-all">
-                      <div className="aspect-video relative">
-                        <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
-                        <div className={`absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-bold border ${pStatus.color}`}>
-                          {pStatus.label}
-                        </div>
-                      </div>
-                      <div className="p-5">
-                        <h3 className="font-bold text-foreground">{product.name}</h3>
-                        <div className="flex items-center justify-between mt-3">
-                          <span className="text-xl font-bold text-foreground">{product.price.toLocaleString()} دج</span>
-                          <span className="text-sm text-secondary font-medium">عمولة: {product.commission.toLocaleString()} دج</span>
-                        </div>
-                        <div className="flex items-center justify-between mt-3 pt-3 border-t border-border">
-                          <div className="text-sm text-muted-foreground">
-                            <span className="font-semibold text-foreground">{product.totalSales}</span> مبيعة
+                <AnimatePresence mode="popLayout">
+                  {filteredProducts.map((product, i) => {
+                    const pStatus = productStatusConfig[product.status];
+                    return (
+                      <motion.div
+                        key={product.id}
+                        layout
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.9 }}
+                        transition={{ delay: i * 0.05, duration: 0.4 }}
+                        className="bg-card rounded-2xl overflow-hidden shadow-sm border border-border/50 hover:shadow-lg hover:border-primary/20 transition-all duration-300 group"
+                      >
+                        <div className="aspect-video relative overflow-hidden">
+                          <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                          <div className={`absolute top-3 right-3 px-3 py-1.5 rounded-full text-xs font-bold border backdrop-blur-sm ${pStatus.color}`}>
+                            <span className={`inline-block w-1.5 h-1.5 rounded-full ${pStatus.dot} mr-1.5`} />
+                            {pStatus.label}
                           </div>
-                          <div className="text-sm text-muted-foreground">
-                            مخزون: <span className={`font-semibold ${product.stock === 0 ? "text-destructive" : "text-foreground"}`}>{product.stock}</span>
+                          {/* Quick actions overlay */}
+                          <div className="absolute bottom-3 left-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-all translate-y-2 group-hover:translate-y-0">
+                            <Button size="sm" variant="secondary" onClick={() => openEditDialog(product)} className="flex-1 rounded-lg backdrop-blur-sm bg-background/80 hover:bg-background gap-1.5 text-xs shadow-lg">
+                              <Edit3 className="w-3.5 h-3.5" /> تعديل
+                            </Button>
+                            <Button size="sm" variant="destructive" onClick={() => openDeleteDialog(product)} className="rounded-lg backdrop-blur-sm bg-destructive/80 hover:bg-destructive gap-1.5 text-xs shadow-lg">
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </Button>
                           </div>
                         </div>
-                        <div className="flex gap-2 mt-4">
-                          <Button variant="outline" size="sm" className="flex-1 gap-1">
-                            <Eye className="w-4 h-4" /> عرض
-                          </Button>
-                          <Button variant="outline" size="sm" className="gap-1">
-                            {product.status === "active" ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-                          </Button>
+                        <div className="p-5">
+                          <div className="flex items-start justify-between gap-2">
+                            <h3 className="font-bold text-foreground text-sm leading-tight">{product.name}</h3>
+                            <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full whitespace-nowrap">{product.category}</span>
+                          </div>
+                          <div className="flex items-center justify-between mt-3">
+                            <span className="text-xl font-bold text-foreground">{product.price.toLocaleString()} دج</span>
+                            <div className="flex items-center gap-1 text-sm text-secondary font-medium bg-secondary/10 px-2 py-0.5 rounded-full">
+                              <ArrowUpRight className="w-3.5 h-3.5" />
+                              {product.commission.toLocaleString()} دج
+                            </div>
+                          </div>
+                          <div className="flex items-center justify-between mt-3 pt-3 border-t border-border">
+                            <div className="text-sm text-muted-foreground">
+                              <span className="font-semibold text-foreground">{product.totalSales}</span> مبيعة
+                            </div>
+                            <div className="text-sm text-muted-foreground">
+                              مخزون: <span className={`font-semibold ${product.stock === 0 ? "text-destructive" : "text-foreground"}`}>{product.stock}</span>
+                            </div>
+                          </div>
+                          <div className="flex gap-2 mt-4">
+                            <Button variant="outline" size="sm" onClick={() => openEditDialog(product)} className="flex-1 gap-1.5 rounded-xl hover:bg-primary/5 hover:border-primary/30 hover:text-primary transition-all">
+                              <Edit3 className="w-3.5 h-3.5" /> تعديل
+                            </Button>
+                            <Button variant="outline" size="sm" onClick={() => toggleProductStatus(product)} className="gap-1 rounded-xl">
+                              {product.status === "active" ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
+                            </Button>
+                            <Button variant="outline" size="sm" onClick={() => openDeleteDialog(product)} className="gap-1 rounded-xl text-destructive hover:bg-destructive/10 hover:border-destructive/30">
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </Button>
+                          </div>
                         </div>
-                      </div>
-                    </motion.div>
-                  );
-                })}
+                      </motion.div>
+                    );
+                  })}
+                </AnimatePresence>
               </div>
+
+              {filteredProducts.length === 0 && (
+                <motion.div {...cardAnim()} className="text-center py-16">
+                  <Package className="w-16 h-16 text-muted-foreground/30 mx-auto mb-4" />
+                  <p className="text-lg font-semibold text-muted-foreground">لا توجد منتجات</p>
+                  <p className="text-sm text-muted-foreground/70 mt-1">أضف منتجك الأول لبدء البيع</p>
+                  <Button onClick={openAddDialog} className="mt-4 gap-2 rounded-xl">
+                    <Plus className="w-4 h-4" /> إضافة منتج
+                  </Button>
+                </motion.div>
+              )}
             </div>
           )}
 
@@ -508,6 +680,145 @@ const SellerDashboard = () => {
           )}
         </div>
       </main>
+
+      {/* ===== ADD/EDIT PRODUCT DIALOG ===== */}
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl" dir="rtl">
+          <DialogHeader>
+            <DialogTitle className="text-xl flex items-center gap-2">
+              {editingProduct ? (
+                <><Edit3 className="w-5 h-5 text-primary" /> تعديل المنتج</>
+              ) : (
+                <><Sparkles className="w-5 h-5 text-primary" /> إضافة منتج جديد</>
+              )}
+            </DialogTitle>
+            <DialogDescription>
+              {editingProduct ? "قم بتحديث بيانات المنتج" : "أدخل بيانات المنتج الجديد"}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold">اسم المنتج *</Label>
+              <Input
+                placeholder="مثال: ساعة ذكية متعددة الوظائف"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                className="rounded-xl"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label className="text-sm font-semibold">السعر (دج) *</Label>
+                <Input
+                  type="number"
+                  placeholder="0"
+                  value={formData.price || ""}
+                  onChange={(e) => setFormData({ ...formData, price: Number(e.target.value) })}
+                  className="rounded-xl"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-sm font-semibold">عمولة المسوّق (دج)</Label>
+                <Input
+                  type="number"
+                  placeholder="0"
+                  value={formData.commission || ""}
+                  onChange={(e) => setFormData({ ...formData, commission: Number(e.target.value) })}
+                  className="rounded-xl"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label className="text-sm font-semibold">التصنيف</Label>
+                <Select value={formData.category} onValueChange={(v) => setFormData({ ...formData, category: v })}>
+                  <SelectTrigger className="rounded-xl">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-sm font-semibold">المخزون</Label>
+                <Input
+                  type="number"
+                  placeholder="0"
+                  value={formData.stock || ""}
+                  onChange={(e) => setFormData({ ...formData, stock: Number(e.target.value) })}
+                  className="rounded-xl"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold">رابط الصورة</Label>
+              <Input
+                placeholder="https://example.com/image.jpg"
+                value={formData.image}
+                onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+                className="rounded-xl"
+                dir="ltr"
+              />
+              {formData.image && (
+                <div className="mt-2 rounded-xl overflow-hidden border border-border h-32">
+                  <img src={formData.image} alt="معاينة" className="w-full h-full object-cover" onError={(e) => (e.currentTarget.style.display = "none")} />
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold">الحالة</Label>
+              <Select value={formData.status} onValueChange={(v: any) => setFormData({ ...formData, status: v })}>
+                <SelectTrigger className="rounded-xl">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="active">نشط</SelectItem>
+                  <SelectItem value="paused">متوقف</SelectItem>
+                  <SelectItem value="out_of_stock">نفذ المخزون</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setDialogOpen(false)} className="rounded-xl">
+              إلغاء
+            </Button>
+            <Button onClick={handleSaveProduct} className="rounded-xl gap-2 bg-gradient-to-l from-primary to-primary/90">
+              <Save className="w-4 h-4" />
+              {editingProduct ? "حفظ التغييرات" : "إضافة المنتج"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ===== DELETE CONFIRMATION DIALOG ===== */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent className="max-w-sm rounded-2xl" dir="rtl">
+          <DialogHeader>
+            <DialogTitle className="text-xl flex items-center gap-2 text-destructive">
+              <Trash2 className="w-5 h-5" /> حذف المنتج
+            </DialogTitle>
+            <DialogDescription>
+              هل أنت متأكد من حذف "{productToDelete?.name}"؟ لا يمكن التراجع عن هذا الإجراء.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)} className="rounded-xl">
+              إلغاء
+            </Button>
+            <Button variant="destructive" onClick={handleDeleteProduct} className="rounded-xl gap-2">
+              <Trash2 className="w-4 h-4" /> نعم، احذف
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
