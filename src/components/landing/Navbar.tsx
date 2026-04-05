@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Menu, X, Home, Workflow, Sparkles, Layers, MessageCircle, LogIn, UserPlus } from "lucide-react";
+import { Menu, X, Home, Workflow, Sparkles, Layers, MessageCircle, LogIn, UserPlus, Store } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navLinks = [
@@ -75,6 +75,12 @@ const Navbar = () => {
                 </Button>
               </Link>
               <Link to="/auth">
+                <Button variant={isScrolled ? "outline" : "glass"} size="sm" className="gap-1.5 shadow-sm">
+                  <Store className="h-4 w-4" />
+                  سجّل كبائع
+                </Button>
+              </Link>
+              <Link to="/auth">
                 <Button variant={isScrolled ? "default" : "hero"} size="sm" className="gap-1.5 shadow-md">
                   <UserPlus className="h-4 w-4" />
                   سجّل كمسوّق
@@ -126,6 +132,12 @@ const Navbar = () => {
                   <Button variant="outline" className="w-full gap-2 h-12">
                     <LogIn className="h-4 w-4" />
                     تسجيل الدخول
+                  </Button>
+                </Link>
+                <Link to="/auth" onClick={() => setIsMobileMenuOpen(false)}>
+                  <Button variant="outline" className="w-full gap-2 h-12">
+                    <Store className="h-4 w-4" />
+                    سجّل كبائع
                   </Button>
                 </Link>
                 <Link to="/auth" onClick={() => setIsMobileMenuOpen(false)}>

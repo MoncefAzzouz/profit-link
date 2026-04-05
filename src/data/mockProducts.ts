@@ -20,10 +20,10 @@ export const mockProducts: Product[] = [
     price: 4500,
     originalPrice: 9000,
     commission: 2250,
-    image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500",
+    image: "https://images.unsplash.com/photo-1546868871-7041f2a55e12?w=500&q=80",
     images: [
-      "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500",
-      "https://images.unsplash.com/photo-1546868871-7041f2a55e12?w=500"
+      "https://images.unsplash.com/photo-1546868871-7041f2a55e12?w=500&q=80",
+      "https://images.unsplash.com/photo-1579586337278-3befd40fd17a?w=500&q=80"
     ],
     category: "إلكترونيات",
     stock: 150,
@@ -36,10 +36,10 @@ export const mockProducts: Product[] = [
     price: 3200,
     originalPrice: 6500,
     commission: 1600,
-    image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500",
+    image: "https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?w=500&q=80",
     images: [
-      "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500",
-      "https://images.unsplash.com/photo-1484704849700-f032a568e944?w=500"
+      "https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?w=500&q=80",
+      "https://images.unsplash.com/photo-1583394838336-acd977736f90?w=500&q=80"
     ],
     category: "إلكترونيات",
     stock: 200,
@@ -52,10 +52,10 @@ export const mockProducts: Product[] = [
     price: 2800,
     originalPrice: 5600,
     commission: 1400,
-    image: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=500",
+    image: "https://images.unsplash.com/photo-1491553895911-0055eca6402d?w=500&q=80",
     images: [
-      "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=500",
-      "https://images.unsplash.com/photo-1622560480605-d83c853bc5c3?w=500"
+      "https://images.unsplash.com/photo-1491553895911-0055eca6402d?w=500&q=80",
+      "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=500&q=80"
     ],
     category: "أزياء",
     stock: 80,
@@ -68,10 +68,10 @@ export const mockProducts: Product[] = [
     price: 1500,
     originalPrice: 3000,
     commission: 750,
-    image: "https://images.unsplash.com/photo-1556228720-195a672e8a03?w=500",
+    image: "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=500&q=80",
     images: [
-      "https://images.unsplash.com/photo-1556228720-195a672e8a03?w=500",
-      "https://images.unsplash.com/photo-1570194065650-d99fb4ee4907?w=500"
+      "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=500&q=80",
+      "https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?w=500&q=80"
     ],
     category: "جمال",
     stock: 300,
@@ -84,9 +84,9 @@ export const mockProducts: Product[] = [
     price: 8500,
     originalPrice: 17000,
     commission: 4250,
-    image: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=500",
+    image: "https://images.unsplash.com/photo-1518331647614-7a1f04cd34cf?w=500&q=80",
     images: [
-      "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=500"
+      "https://images.unsplash.com/photo-1518331647614-7a1f04cd34cf?w=500&q=80"
     ],
     category: "أجهزة منزلية",
     stock: 50,
@@ -99,10 +99,10 @@ export const mockProducts: Product[] = [
     price: 3500,
     originalPrice: 7000,
     commission: 1750,
-    image: "https://images.unsplash.com/photo-1541643600914-78b084683601?w=500",
+    image: "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=500&q=80",
     images: [
-      "https://images.unsplash.com/photo-1541643600914-78b084683601?w=500",
-      "https://images.unsplash.com/photo-1594035910387-fea47794261f?w=500"
+      "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=500&q=80",
+      "https://images.unsplash.com/photo-1594035910387-fea47794261f?w=500&q=80"
     ],
     category: "جمال",
     stock: 120,
