@@ -410,6 +410,15 @@ const SellerDashboard = () => {
                         <SelectItem value="out_of_stock">نفذ المخزون</SelectItem>
                       </SelectContent>
                     </Select>
+                    <Select value={filterCategory} onValueChange={setFilterCategory}>
+                      <SelectTrigger className="w-[140px] rounded-xl border-border/50">
+                        <SelectValue placeholder="التصنيف" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">كل التصنيفات</SelectItem>
+                        {categories.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <Button onClick={openAddDialog} className="gap-2 rounded-xl bg-gradient-to-l from-primary to-primary/90 shadow-md hover:shadow-lg transition-all w-full sm:w-auto">
                     <Sparkles className="w-4 h-4" />
