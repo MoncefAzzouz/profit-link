@@ -93,6 +93,7 @@ const SellerDashboard = () => {
   const [formData, setFormData] = useState<Omit<SellerProduct, "id">>(emptyProduct);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [filterCategory, setFilterCategory] = useState<string>("all");
 
   useEffect(() => {
     const storedUser = localStorage.getItem("seller_user");
