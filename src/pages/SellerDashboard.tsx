@@ -177,6 +177,7 @@ const SellerDashboard = () => {
   const sidebarItems = [
     { id: "overview" as Tab, label: "نظرة عامة", icon: LayoutDashboard },
     { id: "products" as Tab, label: "المنتجات", icon: Package },
+    { id: "landing-pages" as Tab, label: "صفحات الهبوط", icon: LayoutTemplate },
     { id: "orders" as Tab, label: "الطلبيات", icon: ShoppingCart },
     { id: "earnings" as Tab, label: "الإيرادات", icon: Wallet },
     { id: "affiliates" as Tab, label: "المسوّقون", icon: Users },
