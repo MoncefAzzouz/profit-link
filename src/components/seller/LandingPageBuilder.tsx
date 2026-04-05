@@ -5,7 +5,7 @@ import {
   ChevronDown, ChevronUp, Sparkles, Monitor, Smartphone,
   Copy, Check, ExternalLink, Layers, Paintbrush, Star,
   ShoppingCart, Shield, Truck, Clock, MessageSquare, Zap,
-  GripVertical, Settings2, LayoutTemplate
+  GripVertical, Settings2, LayoutTemplate, ArrowRight, Phone, X
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -41,6 +41,10 @@ interface LandingPageConfig {
   status: "draft" | "published";
   views: number;
   conversions: number;
+  price: number;
+  originalPrice: number;
+  category: string;
+  features: string[];
 }
 
 const templates = [
@@ -93,6 +97,8 @@ const mockLandingPages: LandingPageConfig[] = [
     showFreeShipping: true, sections: ["hero", "features", "gallery", "reviews", "countdown", "guarantee", "cta"],
     customCss: "", fontFamily: "cairo", backgroundColor: "#ffffff",
     status: "published", views: 1240, conversions: 89,
+    price: 4500, originalPrice: 9000, category: "إلكترونيات",
+    features: ["شاشة AMOLED", "مقاومة للماء IP68", "بطارية 7 أيام", "تتبع اللياقة"],
   },
   {
     id: "lp-2", productName: "سماعات بلوتوث لاسلكية", template: "bold",
@@ -103,6 +109,8 @@ const mockLandingPages: LandingPageConfig[] = [
     showFreeShipping: true, sections: ["hero", "features", "reviews", "shipping", "cta"],
     customCss: "", fontFamily: "tajawal", backgroundColor: "#0f172a",
     status: "draft", views: 0, conversions: 0,
+    price: 3200, originalPrice: 6500, category: "إلكترونيات",
+    features: ["إلغاء الضوضاء", "بطارية 24 ساعة", "بلوتوث 5.0", "ميكروفون مدمج"],
   },
 ];
 
@@ -138,6 +146,10 @@ const LandingPageBuilder = () => {
       status: "draft",
       views: 0,
       conversions: 0,
+      price: 1500,
+      originalPrice: 3000,
+      category: "منتجات",
+      features: ["ميزة 1", "ميزة 2", "ميزة 3"],
     };
     setPages(prev => [newPage, ...prev]);
     setEditingPage(newPage);
@@ -189,364 +201,450 @@ const LandingPageBuilder = () => {
 
   // Editor view
   if (editingPage) {
+    const totalPrice = editingPage.price;
+    const savings = editingPage.originalPrice - editingPage.price;
+
     return (
-      <div className="space-y-6">
+      <div className="flex flex-col h-[calc(100vh-140px)] -m-4 sm:-m-6">
         {/* Editor header */}
-        <motion.div {...cardAnim()} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="bg-card border-b border-border p-4 flex items-center justify-between gap-4 shrink-0">
           <div className="flex items-center gap-3">
             <Button variant="outline" size="sm" onClick={() => setEditingPage(null)} className="rounded-xl gap-1.5">
               <ChevronDown className="w-4 h-4 rotate-90" /> رجوع
             </Button>
             <div>
-              <h2 className="text-lg font-bold text-foreground">{editingPage.productName}</h2>
-              <p className="text-sm text-muted-foreground">تخصيص صفحة الهبوط</p>
+              <h2 className="text-base font-bold text-foreground leading-tight">{editingPage.productName}</h2>
+              <p className="text-xs text-muted-foreground">تعديل صفحة الهبوط</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={() => setPreviewOpen(true)} className="rounded-xl gap-1.5">
-              <Eye className="w-4 h-4" /> معاينة
-            </Button>
+            <div className="hidden sm:flex items-center bg-muted rounded-lg p-1 mr-2">
+              <button 
+                onClick={() => setPreviewDevice("desktop")}
+                className={`p-1.5 rounded-md transition-all ${previewDevice === "desktop" ? "bg-card shadow-sm text-primary" : "text-muted-foreground hover:text-foreground"}`}
+              >
+                <Monitor className="w-4 h-4" />
+              </button>
+              <button 
+                onClick={() => setPreviewDevice("mobile")}
+                className={`p-1.5 rounded-md transition-all ${previewDevice === "mobile" ? "bg-card shadow-sm text-primary" : "text-muted-foreground hover:text-foreground"}`}
+              >
+                <Smartphone className="w-4 h-4" />
+              </button>
+            </div>
             <Button size="sm" onClick={() => publishPage(editingPage)} className="rounded-xl gap-1.5 bg-gradient-to-l from-primary to-primary/90 shadow-md">
               {editingPage.status === "published" ? <><Zap className="w-4 h-4" /> منشورة</> : <><Sparkles className="w-4 h-4" /> نشر</>}
             </Button>
           </div>
-        </motion.div>
+        </div>
 
-        {/* Design tabs */}
-        <motion.div {...cardAnim(0.1)} className="dash-card p-1.5">
-          <div className="flex gap-1">
-            {([
-              { id: "template" as const, label: "القالب", icon: LayoutTemplate },
-              { id: "colors" as const, label: "الألوان", icon: Palette },
-              { id: "sections" as const, label: "الأقسام", icon: Layers },
-              { id: "content" as const, label: "المحتوى", icon: Type },
-            ]).map(tab => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveDesignTab(tab.id)}
-                className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-sm font-medium transition-all ${
-                  activeDesignTab === tab.id
-                    ? "bg-primary text-primary-foreground shadow-md"
-                    : "text-muted-foreground hover:bg-muted/50"
-                }`}
-              >
-                <tab.icon className="w-4 h-4" />
-                <span className="hidden sm:inline">{tab.label}</span>
-              </button>
-            ))}
-          </div>
-        </motion.div>
-
-        {/* Template selection */}
-        {activeDesignTab === "template" && (
-          <motion.div {...cardAnim(0.15)} className="space-y-4">
-            <h3 className="text-base font-bold text-foreground">اختر قالب التصميم</h3>
-            <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-              {templates.map((tmpl) => (
-                <button
-                  key={tmpl.id}
-                  onClick={() => updatePage("template", tmpl.id)}
-                  className={`relative rounded-2xl overflow-hidden border-2 transition-all duration-300 hover:shadow-lg group ${
-                    editingPage.template === tmpl.id
-                      ? "border-primary shadow-lg ring-2 ring-primary/20"
-                      : "border-border/50 hover:border-border"
-                  }`}
-                >
-                  <div className={`h-28 bg-gradient-to-br ${tmpl.preview} flex items-center justify-center`}>
-                    <span className="text-4xl">{tmpl.icon}</span>
-                  </div>
-                  <div className="p-3 bg-card">
-                    <p className="font-bold text-foreground text-sm">{tmpl.name}</p>
-                    <p className="text-xs text-muted-foreground">{tmpl.desc}</p>
-                  </div>
-                  {editingPage.template === tmpl.id && (
-                    <div className="absolute top-2 right-2 w-6 h-6 bg-primary rounded-full flex items-center justify-center">
-                      <Check className="w-4 h-4 text-primary-foreground" />
+        <div className="flex flex-1 overflow-hidden">
+          {/* Left Side: Live Preview */}
+          <div className="hidden lg:flex flex-1 bg-muted/30 items-center justify-center p-8 overflow-y-auto">
+            <div 
+              className={`bg-background shadow-2xl rounded-2xl overflow-hidden transition-all duration-500 origin-center ${
+                previewDevice === "mobile" ? "w-[375px] h-[667px]" : "w-full max-w-4xl h-full"
+              }`}
+              style={{ fontFamily: editingPage.fontFamily }}
+            >
+              <div className="h-full overflow-y-auto scrollbar-hide" style={{ backgroundColor: editingPage.backgroundColor }}>
+                {/* Simulated ProductPage structure */}
+                <div className="p-4 sm:p-8 space-y-8">
+                  <div className={`grid ${previewDevice === "mobile" ? "grid-cols-1" : "grid-cols-2"} gap-8`}>
+                    {/* Images Column */}
+                    <div className="space-y-4">
+                      <div className="relative aspect-square rounded-2xl overflow-hidden bg-muted group">
+                        {editingPage.heroImage ? (
+                          <img src={editingPage.heroImage} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground gap-2">
+                            <Image className="w-12 h-12 opacity-20" />
+                            <span className="text-xs">بانتظار الصورة...</span>
+                          </div>
+                        )}
+                        <div className="absolute top-4 left-4 bg-destructive text-destructive-foreground px-3 py-1 rounded-full text-xs font-bold">
+                          خصم {Math.round((1 - editingPage.price / editingPage.originalPrice) * 100)}%
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-2">
+                        {editingPage.features.slice(0, 4).map((f, i) => (
+                          <div key={i} className="flex items-center gap-2 bg-muted/50 rounded-lg p-2 text-[10px] sm:text-xs">
+                            <Check className="w-3 h-3 text-emerald-500 shrink-0" />
+                            <span className="font-medium truncate">{f}</span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  )}
-                </button>
-              ))}
-            </div>
 
-            <div className="dash-card-interactive p-5 space-y-4">
-              <h4 className="font-bold text-foreground text-sm">الخط</h4>
-              <Select value={editingPage.fontFamily} onValueChange={(v) => updatePage("fontFamily", v)}>
-                <SelectTrigger className="rounded-xl">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {fontOptions.map(f => <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>)}
-                </SelectContent>
-              </Select>
+                    {/* Info Column */}
+                    <div className="space-y-4 text-right" dir="rtl">
+                      <div>
+                        <span className="text-xs font-bold uppercase tracking-wider" style={{ color: editingPage.primaryColor }}>{editingPage.category}</span>
+                        <h1 className="text-xl sm:text-2xl font-black mt-1 leading-tight" style={{ color: editingPage.backgroundColor === "#ffffff" ? "#0f172a" : (editingPage.backgroundColor.startsWith("#0") || editingPage.backgroundColor.startsWith("#1") ? "#ffffff" : "#0f172a") }}>
+                          {editingPage.heroTitle}
+                        </h1>
+                        <p className="text-xs sm:text-sm mt-2 leading-relaxed opacity-70" style={{ color: editingPage.backgroundColor.startsWith("#0") || editingPage.backgroundColor.startsWith("#1") ? "#cbd5e1" : "#475569" }}>
+                          {editingPage.heroSubtitle}
+                        </p>
+                      </div>
 
-              <h4 className="font-bold text-foreground text-sm">شكل زر الشراء</h4>
-              <div className="flex gap-3">
-                {(["pill", "rounded", "square"] as const).map(style => (
-                  <button
-                    key={style}
-                    onClick={() => updatePage("ctaStyle", style)}
-                    className={`flex-1 py-3 text-sm font-medium border-2 transition-all ${
-                      editingPage.ctaStyle === style
-                        ? "border-primary bg-primary/5 text-primary"
-                        : "border-border text-muted-foreground hover:border-border/80"
-                    } ${style === "pill" ? "rounded-full" : style === "rounded" ? "rounded-xl" : "rounded-none"}`}
-                  >
-                    {style === "pill" ? "دائري" : style === "rounded" ? "مستدير" : "مربع"}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </motion.div>
-        )}
+                      <div className="p-4 rounded-xl" style={{ backgroundColor: `${editingPage.primaryColor}10` }}>
+                        <div className="flex items-center gap-3">
+                          <span className="text-2xl font-black" style={{ color: editingPage.primaryColor }}>
+                            {editingPage.price.toLocaleString()} دج
+                          </span>
+                          <span className="text-sm opacity-50 line-through">
+                            {editingPage.originalPrice.toLocaleString()} دج
+                          </span>
+                        </div>
+                        <p className="text-[10px] font-bold mt-1" style={{ color: editingPage.accentColor }}>
+                          وفّر {savings.toLocaleString()} دج اليوم!
+                        </p>
+                      </div>
 
-        {/* Colors */}
-        {activeDesignTab === "colors" && (
-          <motion.div {...cardAnim(0.15)} className="space-y-5">
-            <div className="dash-card-interactive p-5 space-y-4">
-              <h4 className="font-bold text-foreground">اللون الأساسي</h4>
-              <div className="flex flex-wrap gap-3">
-                {colorPresets.map(color => (
-                  <button
-                    key={color.value}
-                    onClick={() => updatePage("primaryColor", color.value)}
-                    className={`w-12 h-12 rounded-xl transition-all hover:scale-110 ${
-                      editingPage.primaryColor === color.value ? "ring-4 ring-primary/30 scale-110" : ""
-                    }`}
-                    style={{ backgroundColor: color.value }}
-                    title={color.name}
-                  />
-                ))}
-                <div className="relative">
-                  <input
-                    type="color"
-                    value={editingPage.primaryColor}
-                    onChange={(e) => updatePage("primaryColor", e.target.value)}
-                    className="absolute inset-0 w-12 h-12 opacity-0 cursor-pointer"
-                  />
-                  <div className="w-12 h-12 rounded-xl border-2 border-dashed border-border flex items-center justify-center">
-                    <Paintbrush className="w-5 h-5 text-muted-foreground" />
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="flex items-center gap-2 p-2 bg-card border border-border rounded-lg shadow-sm">
+                          <Truck className="w-4 h-4 text-emerald-500 shrink-0" />
+                          <span className="text-[10px] font-bold">توصيل مجاني</span>
+                        </div>
+                        <div className="flex items-center gap-2 p-2 bg-card border border-border rounded-lg shadow-sm">
+                          <Shield className="w-4 h-4 text-blue-500 shrink-0" />
+                          <span className="text-[10px] font-bold">ضمان الجودة</span>
+                        </div>
+                      </div>
+
+                      <div className="bg-card border border-border rounded-xl p-4 shadow-sm space-y-4">
+                        <h3 className="text-xs font-bold flex items-center gap-2">
+                          <ShoppingCart className="w-3.5 h-3.5 text-primary" />
+                          معلومات الطلب
+                        </h3>
+                        <div className="space-y-2">
+                          <div className="h-8 bg-muted/50 rounded-lg" />
+                          <div className="h-8 bg-muted/50 rounded-lg" />
+                        </div>
+                        <button
+                          className={`w-full py-3 text-sm font-black text-white shadow-lg transition-transform hover:scale-[1.02] active:scale-[0.98] ${
+                            editingPage.ctaStyle === "pill" ? "rounded-full" : editingPage.ctaStyle === "rounded" ? "rounded-xl" : "rounded-none"
+                          }`}
+                          style={{ backgroundColor: editingPage.primaryColor }}
+                        >
+                          {editingPage.ctaText} — {editingPage.price.toLocaleString()} دج
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
+          </div>
 
-            <div className="dash-card-interactive p-5 space-y-4">
-              <h4 className="font-bold text-foreground">اللون الثانوي</h4>
-              <div className="flex flex-wrap gap-3">
-                {colorPresets.map(color => (
+          {/* Right Side: Configuration Panels */}
+          <div className="w-full lg:w-[400px] border-r border-border bg-card flex flex-col shrink-0">
+            {/* Tabs content */}
+            <div className="p-4 border-b border-border">
+              <div className="flex bg-muted rounded-xl p-1">
+                {([
+                  { id: "content" as const, label: "المحتوى", icon: Type },
+                  { id: "design" as const, label: "التصميم", icon: Paintbrush },
+                  { id: "sections" as const, label: "الأقسام", icon: Layers },
+                ]).map(tab => (
                   <button
-                    key={color.value}
-                    onClick={() => updatePage("accentColor", color.value)}
-                    className={`w-12 h-12 rounded-xl transition-all hover:scale-110 ${
-                      editingPage.accentColor === color.value ? "ring-4 ring-primary/30 scale-110" : ""
+                    key={tab.id}
+                    onClick={() => setActiveDesignTab(tab.id === "design" ? "template" : tab.id)}
+                    className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-medium transition-all ${
+                      (activeDesignTab === tab.id || (tab.id === "design" && ["template", "colors"].includes(activeDesignTab)))
+                        ? "bg-card shadow-sm text-primary"
+                        : "text-muted-foreground hover:text-foreground"
                     }`}
-                    style={{ backgroundColor: color.value }}
-                    title={color.name}
-                  />
-                ))}
-              </div>
-            </div>
-
-            <div className="dash-card-interactive p-5 space-y-4">
-              <h4 className="font-bold text-foreground">لون الخلفية</h4>
-              <div className="flex gap-3">
-                {["#ffffff", "#f8fafc", "#0f172a", "#1e1b4b", "#fef3c7"].map(bg => (
-                  <button
-                    key={bg}
-                    onClick={() => updatePage("backgroundColor", bg)}
-                    className={`w-12 h-12 rounded-xl border-2 transition-all hover:scale-110 ${
-                      editingPage.backgroundColor === bg ? "ring-4 ring-primary/30 scale-110" : "border-border"
-                    }`}
-                    style={{ backgroundColor: bg }}
-                  />
-                ))}
-              </div>
-            </div>
-
-            {/* Live color preview */}
-            <div className="dash-card-interactive overflow-hidden">
-              <div className="p-6 text-center space-y-3" style={{ backgroundColor: editingPage.backgroundColor }}>
-                <h3 className="text-xl font-bold" style={{ color: editingPage.primaryColor }}>معاينة الألوان</h3>
-                <p className="text-sm" style={{ color: editingPage.backgroundColor === "#ffffff" || editingPage.backgroundColor === "#f8fafc" || editingPage.backgroundColor === "#fef3c7" ? "#64748b" : "#94a3b8" }}>
-                  هكذا ستبدو صفحة المنتج
-                </p>
-                <button
-                  className={`px-8 py-3 text-white font-bold ${editingPage.ctaStyle === "pill" ? "rounded-full" : editingPage.ctaStyle === "rounded" ? "rounded-xl" : ""}`}
-                  style={{ backgroundColor: editingPage.primaryColor }}
-                >
-                  {editingPage.ctaText}
-                </button>
-              </div>
-            </div>
-          </motion.div>
-        )}
-
-        {/* Sections */}
-        {activeDesignTab === "sections" && (
-          <motion.div {...cardAnim(0.15)} className="space-y-4">
-            <p className="text-sm text-muted-foreground">اختر الأقسام التي تريد إظهارها في صفحة الهبوط</p>
-            <div className="grid gap-3">
-              {availableSections.map((section) => {
-                const isActive = editingPage.sections.includes(section.id);
-                return (
-                  <button
-                    key={section.id}
-                    onClick={() => toggleSection(section.id)}
-                    disabled={section.required}
-                    className={`flex items-center gap-4 p-4 rounded-2xl border-2 transition-all text-right ${
-                      isActive
-                        ? "border-primary bg-primary/5"
-                        : "border-border/50 hover:border-border"
-                    } ${section.required ? "opacity-70 cursor-not-allowed" : ""}`}
                   >
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                      isActive ? "bg-primary/15 text-primary" : "bg-muted text-muted-foreground"
-                    }`}>
-                      <section.icon className="w-5 h-5" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-semibold text-foreground text-sm">{section.name}</p>
-                      {section.required && <p className="text-xs text-muted-foreground">مطلوب</p>}
-                    </div>
-                    <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
-                      isActive ? "bg-primary border-primary" : "border-border"
-                    }`}>
-                      {isActive && <Check className="w-4 h-4 text-primary-foreground" />}
-                    </div>
+                    <tab.icon className="w-3.5 h-3.5" />
+                    <span>{tab.label}</span>
                   </button>
-                );
-              })}
+                ))}
+              </div>
             </div>
-          </motion.div>
-        )}
 
-        {/* Content */}
-        {activeDesignTab === "content" && (
-          <motion.div {...cardAnim(0.15)} className="space-y-5">
-            <div className="dash-card-interactive p-5 space-y-4">
-              <Label className="font-bold">اسم المنتج</Label>
-              <Input value={editingPage.productName} onChange={(e) => updatePage("productName", e.target.value)} className="rounded-xl" />
-            </div>
-            <div className="dash-card-interactive p-5 space-y-4">
-              <Label className="font-bold">العنوان الرئيسي</Label>
-              <Input value={editingPage.heroTitle} onChange={(e) => updatePage("heroTitle", e.target.value)} className="rounded-xl" />
-            </div>
-            <div className="dash-card-interactive p-5 space-y-4">
-              <Label className="font-bold">العنوان الفرعي</Label>
-              <Textarea value={editingPage.heroSubtitle} onChange={(e) => updatePage("heroSubtitle", e.target.value)} className="rounded-xl" rows={2} />
-            </div>
-            <div className="dash-card-interactive p-5 space-y-4">
-              <Label className="font-bold">رابط صورة البطل</Label>
-              <Input value={editingPage.heroImage} onChange={(e) => updatePage("heroImage", e.target.value)} className="rounded-xl" dir="ltr" />
-              {editingPage.heroImage && (
-                <div className="mt-2 rounded-xl overflow-hidden border border-border h-40">
-                  <img src={editingPage.heroImage} alt="معاينة" className="w-full h-full object-cover" />
+            <div className="flex-1 overflow-y-auto p-4 space-y-6">
+              {/* Content Panel */}
+              {activeDesignTab === "content" && (
+                <div className="space-y-5">
+                  <div className="space-y-2">
+                    <Label className="text-xs font-bold opacity-70">اسم المنتج</Label>
+                    <Input value={editingPage.productName} onChange={(e) => updatePage("productName", e.target.value)} className="rounded-xl h-9 text-sm" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-xs font-bold opacity-70">السعر الحالي (دج)</Label>
+                      <Input type="number" value={editingPage.price} onChange={(e) => updatePage("price", parseInt(e.target.value) || 0)} className="rounded-xl h-9 text-sm" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-xs font-bold opacity-70">السعر الأصلي (دج)</Label>
+                      <Input type="number" value={editingPage.originalPrice} onChange={(e) => updatePage("originalPrice", parseInt(e.target.value) || 0)} className="rounded-xl h-9 text-sm" />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs font-bold opacity-70">التصنيف</Label>
+                    <Input value={editingPage.category} onChange={(e) => updatePage("category", e.target.value)} className="rounded-xl h-9 text-sm" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs font-bold opacity-70">العنوان الرئيسي</Label>
+                    <Input value={editingPage.heroTitle} onChange={(e) => updatePage("heroTitle", e.target.value)} className="rounded-xl h-9 text-sm" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs font-bold opacity-70">العنوان الفرعي</Label>
+                    <Textarea value={editingPage.heroSubtitle} onChange={(e) => updatePage("heroSubtitle", e.target.value)} className="rounded-xl text-sm" rows={2} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs font-bold opacity-70">رابط الصورة</Label>
+                    <Input value={editingPage.heroImage} onChange={(e) => updatePage("heroImage", e.target.value)} className="rounded-xl h-9 text-sm" dir="ltr" />
+                  </div>
+                  <div className="space-y-3">
+                    <Label className="text-xs font-bold opacity-70">مميزات المنتج</Label>
+                    <div className="space-y-2">
+                      {editingPage.features.map((feature, idx) => (
+                        <div key={idx} className="flex gap-2">
+                          <Input 
+                            value={feature} 
+                            onChange={(e) => {
+                              const newFeatures = [...editingPage.features];
+                              newFeatures[idx] = e.target.value;
+                              updatePage("features", newFeatures);
+                            }}
+                            className="rounded-xl h-8 text-xs flex-1"
+                          />
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-8 w-8 text-destructive hover:bg-destructive/10"
+                            onClick={() => {
+                              const newFeatures = editingPage.features.filter((_, i) => i !== idx);
+                              updatePage("features", newFeatures);
+                            }}
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </Button>
+                        </div>
+                      ))}
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="w-full rounded-xl border-dashed h-8 text-xs gap-1.5"
+                        onClick={() => updatePage("features", [...editingPage.features, "ميزة جديدة"])}
+                      >
+                        <Plus className="w-3.5 h-3.5" /> إضافة ميزة
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs font-bold opacity-70">نص زر الشراء</Label>
+                    <Input value={editingPage.ctaText} onChange={(e) => updatePage("ctaText", e.target.value)} className="rounded-xl h-9 text-sm" />
+                  </div>
+                </div>
+              )}
+
+              {/* Design Panel */}
+              {(activeDesignTab === "template" || activeDesignTab === "colors") && (
+                <div className="space-y-6">
+                  <div className="bg-muted rounded-xl p-1 flex">
+                    <button 
+                      onClick={() => setActiveDesignTab("template")}
+                      className={`flex-1 py-1.5 text-[10px] font-bold rounded-lg transition-all ${activeDesignTab === "template" ? "bg-card shadow-sm text-primary" : "text-muted-foreground"}`}
+                    >
+                      القوالب والخطوط
+                    </button>
+                    <button 
+                      onClick={() => setActiveDesignTab("colors")}
+                      className={`flex-1 py-1.5 text-[10px] font-bold rounded-lg transition-all ${activeDesignTab === "colors" ? "bg-card shadow-sm text-primary" : "text-muted-foreground"}`}
+                    >
+                      الألوان والأشكال
+                    </button>
+                  </div>
+
+                  {activeDesignTab === "template" && (
+                    <div className="space-y-5">
+                       <div className="space-y-3">
+                        <Label className="text-xs font-bold opacity-70">نوع التصميم</Label>
+                        <div className="grid grid-cols-2 gap-2">
+                          {templates.map((tmpl) => (
+                            <button
+                              key={tmpl.id}
+                              onClick={() => updatePage("template", tmpl.id)}
+                              className={`p-2 rounded-xl border-2 transition-all flex flex-col items-center gap-1 ${
+                                editingPage.template === tmpl.id ? "border-primary bg-primary/5" : "border-border/50 hover:border-border"
+                              }`}
+                            >
+                              <span className="text-xl">{tmpl.icon}</span>
+                              <span className="text-[10px] font-bold">{tmpl.name}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-xs font-bold opacity-70">نوع الخط</Label>
+                        <Select value={editingPage.fontFamily} onValueChange={(v) => updatePage("fontFamily", v)}>
+                          <SelectTrigger className="rounded-xl h-9 text-sm">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {fontOptions.map(f => <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  )}
+
+                  {activeDesignTab === "colors" && (
+                    <div className="space-y-5">
+                      <div className="space-y-3">
+                        <Label className="text-xs font-bold opacity-70">اللون الأساسي</Label>
+                        <div className="flex flex-wrap gap-2">
+                          {colorPresets.map(color => (
+                            <button
+                              key={color.value}
+                              onClick={() => updatePage("primaryColor", color.value)}
+                              className={`w-8 h-8 rounded-lg transition-all ${editingPage.primaryColor === color.value ? "ring-2 ring-primary ring-offset-2 scale-110" : ""}`}
+                              style={{ backgroundColor: color.value }}
+                            />
+                          ))}
+                          <div className="relative">
+                            <input type="color" value={editingPage.primaryColor} onChange={(e) => updatePage("primaryColor", e.target.value)} className="absolute inset-0 w-8 h-8 opacity-0 cursor-pointer" />
+                            <div className="w-8 h-8 rounded-lg border-2 border-dashed border-border flex items-center justify-center text-muted-foreground"><Paintbrush className="w-3 h-3" /></div>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="space-y-3">
+                        <Label className="text-xs font-bold opacity-70">شكل زر الشراء</Label>
+                        <div className="flex gap-2">
+                          {(["pill", "rounded", "square"] as const).map(style => (
+                            <button
+                              key={style}
+                              onClick={() => updatePage("ctaStyle", style)}
+                              className={`flex-1 py-2 text-[10px] font-bold border-2 transition-all ${
+                                editingPage.ctaStyle === style ? "border-primary bg-primary/5 text-primary" : "border-border text-muted-foreground"
+                              } ${style === "pill" ? "rounded-full" : style === "rounded" ? "rounded-lg" : "rounded-none"}`}
+                            >
+                              {style === "pill" ? "دائري" : style === "rounded" ? "مستدير" : "مربع"}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="space-y-3">
+                        <Label className="text-xs font-bold opacity-70">لون الخلفية</Label>
+                        <div className="flex gap-2">
+                          {["#ffffff", "#f8fafc", "#0f172a", "#1e1b4b", "#fef3c7"].map(bg => (
+                            <button
+                              key={bg}
+                              onClick={() => updatePage("backgroundColor", bg)}
+                              className={`w-8 h-8 rounded-lg border transition-all ${editingPage.backgroundColor === bg ? "ring-2 ring-primary ring-offset-2 scale-110" : "border-border"}`}
+                              style={{ backgroundColor: bg }}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Sections Panel */}
+              {activeDesignTab === "sections" && (
+                <div className="space-y-3">
+                  {availableSections.map((section) => {
+                    const isActive = editingPage.sections.includes(section.id);
+                    return (
+                      <button
+                        key={section.id}
+                        onClick={() => toggleSection(section.id)}
+                        disabled={section.required}
+                        className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-all text-right ${
+                          isActive ? "border-primary bg-primary/5" : "border-border/50 hover:border-border"
+                        } ${section.required ? "opacity-50 cursor-not-allowed" : ""}`}
+                      >
+                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isActive ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}>
+                          <section.icon className="w-4 h-4" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-xs font-bold">{section.name}</p>
+                          {section.required && <p className="text-[10px] opacity-50">أساسي</p>}
+                        </div>
+                        <div className={`w-5 h-5 rounded-full border flex items-center justify-center ${isActive ? "bg-primary border-primary text-white" : "border-border text-transparent"}`}>
+                          <Check className="w-3 h-3" />
+                        </div>
+                      </button>
+                    );
+                  })}
                 </div>
               )}
             </div>
-            <div className="dash-card-interactive p-5 space-y-4">
-              <Label className="font-bold">نص زر الشراء</Label>
-              <Input value={editingPage.ctaText} onChange={(e) => updatePage("ctaText", e.target.value)} className="rounded-xl" />
-            </div>
-            <div className="dash-card-interactive p-5 space-y-4">
-              <Label className="font-bold">خيارات إضافية</Label>
-              <div className="grid grid-cols-2 gap-3">
-                {[
-                  { key: "showReviews" as const, label: "آراء العملاء", icon: "⭐" },
-                  { key: "showCountdown" as const, label: "عداد تنازلي", icon: "⏰" },
-                  { key: "showGuarantee" as const, label: "ضمان الاسترجاع", icon: "🛡️" },
-                  { key: "showFreeShipping" as const, label: "توصيل مجاني", icon: "🚚" },
-                ].map(opt => (
-                  <button
-                    key={opt.key}
-                    onClick={() => updatePage(opt.key, !editingPage[opt.key])}
-                    className={`flex items-center gap-2 p-3 rounded-xl border-2 text-sm transition-all ${
-                      editingPage[opt.key]
-                        ? "border-primary bg-primary/5 text-primary font-medium"
-                        : "border-border text-muted-foreground hover:border-border/80"
-                    }`}
-                  >
-                    <span>{opt.icon}</span>
-                    {opt.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </motion.div>
-        )}
 
-        {/* Preview Dialog */}
+            <div className="p-4 border-t border-border bg-muted/20 shrink-0">
+               <div className="flex items-center justify-between text-xs mb-3">
+                 <span className="font-bold opacity-60">حالة الصفحة</span>
+                 <span className={`px-2 py-0.5 rounded-full font-bold ${editingPage.status === "published" ? "bg-emerald-500/10 text-emerald-600" : "bg-amber-500/10 text-amber-600"}`}>
+                   {editingPage.status === "published" ? "منشورة" : "مسودة"}
+                 </span>
+               </div>
+               <div className="grid grid-cols-2 gap-2">
+                 <Button variant="outline" size="sm" onClick={() => setPreviewOpen(true)} className="rounded-xl h-9 text-xs gap-1.5 lg:hidden">
+                   <Eye className="w-3.5 h-3.5" /> معاينة
+                 </Button>
+                 <Button variant="default" size="sm" className="rounded-xl h-9 text-xs gap-1.5 w-full col-span-2 lg:col-span-1 shadow-sm" onClick={() => {
+                    toast({ title: "💾 تم الحفظ", description: "تم حفظ التغييرات بنجاح" });
+                 }}>
+                   <Save className="w-3.5 h-3.5" /> حفظ التغييرات
+                 </Button>
+               </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Keeping existing Preview Dialog for mobile users editing on mobile or as a full-screen view */}
         <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto rounded-2xl" dir="rtl">
-            <DialogHeader>
-              <DialogTitle className="flex items-center justify-between">
-                <span>معاينة صفحة الهبوط</span>
-                <div className="flex gap-2">
-                  <Button variant={previewDevice === "desktop" ? "default" : "outline"} size="sm" onClick={() => setPreviewDevice("desktop")} className="rounded-lg">
-                    <Monitor className="w-4 h-4" />
-                  </Button>
-                  <Button variant={previewDevice === "mobile" ? "default" : "outline"} size="sm" onClick={() => setPreviewDevice("mobile")} className="rounded-lg">
-                    <Smartphone className="w-4 h-4" />
-                  </Button>
-                </div>
-              </DialogTitle>
-            </DialogHeader>
-            <div className={`mx-auto border border-border rounded-2xl overflow-hidden transition-all ${
-              previewDevice === "mobile" ? "max-w-[375px]" : "w-full"
-            }`}>
-              <div className="p-8 space-y-6" style={{ backgroundColor: editingPage.backgroundColor }}>
-                {/* Hero preview */}
-                <div className="text-center space-y-4">
-                  {editingPage.heroImage && (
-                    <img src={editingPage.heroImage} alt="" className="w-full h-48 object-cover rounded-2xl" />
-                  )}
-                  <h1 className="text-2xl font-bold" style={{ color: editingPage.primaryColor }}>
-                    {editingPage.heroTitle}
-                  </h1>
-                  <p className="text-sm" style={{ color: editingPage.backgroundColor === "#ffffff" || editingPage.backgroundColor === "#f8fafc" || editingPage.backgroundColor === "#fef3c7" ? "#475569" : "#94a3b8" }}>
-                    {editingPage.heroSubtitle}
-                  </p>
+          <DialogContent className="max-w-[450px] p-0 overflow-hidden border-none rounded-3xl" dir="rtl">
+            <div className="h-[80vh] w-full overflow-y-auto scrollbar-hide" style={{ backgroundColor: editingPage.backgroundColor, fontFamily: editingPage.fontFamily }}>
+               {/* Full mobile preview - essentially same content as split-view preview but standalone */}
+               <div className="p-6 space-y-6">
+                  {/* Hero Image */}
+                  <div className="relative aspect-square rounded-2xl overflow-hidden bg-muted">
+                    {editingPage.heroImage && <img src={editingPage.heroImage} alt="" className="w-full h-full object-cover" />}
+                    <div className="absolute top-4 left-4 bg-destructive text-white px-3 py-1 rounded-full text-xs font-bold">
+                       خصم {Math.round((1 - editingPage.price / editingPage.originalPrice) * 100)}%
+                    </div>
+                  </div>
+
+                  {/* Info */}
+                  <div className="space-y-1 text-center">
+                    <span className="text-[10px] font-bold uppercase" style={{ color: editingPage.primaryColor }}>{editingPage.category}</span>
+                    <h1 className="text-xl font-black leading-tight">{editingPage.heroTitle}</h1>
+                    <p className="text-xs opacity-70 leading-relaxed">{editingPage.heroSubtitle}</p>
+                  </div>
+
+                  {/* Price */}
+                  <div className="p-4 rounded-xl text-center" style={{ backgroundColor: `${editingPage.primaryColor}10` }}>
+                    <div className="flex justify-center items-center gap-3">
+                      <span className="text-2xl font-black" style={{ color: editingPage.primaryColor }}>{editingPage.price.toLocaleString()} دج</span>
+                      <span className="text-sm opacity-50 line-through">{editingPage.originalPrice.toLocaleString()} دج</span>
+                    </div>
+                  </div>
+
+                  {/* CTA */}
                   <button
-                    className={`px-8 py-3 text-white font-bold text-sm ${editingPage.ctaStyle === "pill" ? "rounded-full" : editingPage.ctaStyle === "rounded" ? "rounded-xl" : ""}`}
+                    className={`w-full py-4 text-sm font-black text-white shadow-xl ${
+                      editingPage.ctaStyle === "pill" ? "rounded-full" : editingPage.ctaStyle === "rounded" ? "rounded-2xl" : "rounded-none"
+                    }`}
                     style={{ backgroundColor: editingPage.primaryColor }}
                   >
                     {editingPage.ctaText}
                   </button>
-                </div>
-                {/* Section previews */}
-                {editingPage.sections.includes("features") && (
-                  <div className="grid grid-cols-2 gap-3">
-                    {["✅ جودة عالية", "⚡ شحن سريع", "🛡️ ضمان سنة", "💰 سعر مناسب"].map((f, i) => (
-                      <div key={i} className="p-3 rounded-xl text-center text-xs font-medium" style={{
-                        backgroundColor: `${editingPage.primaryColor}15`,
-                        color: editingPage.primaryColor
-                      }}>
-                        {f}
-                      </div>
-                    ))}
-                  </div>
-                )}
-                {editingPage.sections.includes("reviews") && (
-                  <div className="space-y-2">
-                    {[{ name: "أحمد", text: "منتج ممتاز جدا 👍" }, { name: "سارة", text: "وصلني بسرعة والجودة رائعة" }].map((r, i) => (
-                      <div key={i} className="p-3 rounded-xl border" style={{ borderColor: `${editingPage.primaryColor}30` }}>
-                        <div className="flex items-center gap-1 mb-1">
-                          {[1,2,3,4,5].map(s => <Star key={s} className="w-3 h-3 fill-yellow-400 text-yellow-400" />)}
-                        </div>
-                        <p className="text-xs" style={{ color: editingPage.backgroundColor.startsWith("#0") || editingPage.backgroundColor.startsWith("#1") ? "#cbd5e1" : "#475569" }}>
-                          "{r.text}" — {r.name}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+               </div>
             </div>
           </DialogContent>
         </Dialog>
       </div>
     );
   }
+
 
   // List view
   return (
