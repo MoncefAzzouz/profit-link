@@ -30,7 +30,7 @@ import {
   sellerEarningsData, SellerProduct
 } from "@/data/mockSellerData";
 
-type Tab = "overview" | "products" | "orders" | "earnings" | "affiliates" | "settings";
+type Tab = "overview" | "products" | "orders" | "earnings" | "affiliates" | "landing-pages" | "settings";
 
 const statusConfig = {
   pending: { label: "قيد الانتظار", icon: Clock, color: "text-yellow-600 bg-yellow-50 border-yellow-200" },
