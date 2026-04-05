@@ -1,26 +1,57 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { Copy, Check, Search, Filter, Eye, TrendingUp } from "lucide-react";
+import { Copy, Check, Search, Filter, Eye, TrendingUp, SlidersHorizontal, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { mockProducts, categories } from "@/data/mockProducts";
 import { useToast } from "@/hooks/use-toast";
+
+const priceRanges = [
+  { label: "الكل", min: 0, max: Infinity },
+  { label: "أقل من 2,000 دج", min: 0, max: 2000 },
+  { label: "2,000 - 5,000 دج", min: 2000, max: 5000 },
+  { label: "5,000 - 10,000 دج", min: 5000, max: 10000 },
+  { label: "أكثر من 10,000 دج", min: 10000, max: Infinity },
+];
+
+const sortOptions = [
+  { value: "default", label: "الافتراضي" },
+  { value: "price-asc", label: "السعر: من الأقل" },
+  { value: "price-desc", label: "السعر: من الأعلى" },
+  { value: "commission-desc", label: "العمولة: من الأعلى" },
+  { value: "stock-desc", label: "المخزون: الأكثر" },
+];
 
 const Products = () => {
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("الكل");
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [selectedPriceRange, setSelectedPriceRange] = useState(0);
+  const [sortBy, setSortBy] = useState("default");
+  const [showFilters, setShowFilters] = useState(false);
+  const [stockFilter, setStockFilter] = useState("all");
 
-  // Simulated affiliate ID (in real app, this would come from auth)
   const affiliateId = "aff-demo-123";
 
-  const filteredProducts = mockProducts.filter(product => {
-    const matchesSearch = product.name.includes(searchQuery) || product.description.includes(searchQuery);
-    const matchesCategory = selectedCategory === "الكل" || product.category === selectedCategory;
-    return matchesSearch && matchesCategory;
-  });
+  const filteredProducts = mockProducts
+    .filter(product => {
+      const matchesSearch = product.name.includes(searchQuery) || product.description.includes(searchQuery);
+      const matchesCategory = selectedCategory === "الكل" || product.category === selectedCategory;
+      const range = priceRanges[selectedPriceRange];
+      const matchesPrice = product.price >= range.min && product.price <= range.max;
+      const matchesStock = stockFilter === "all" || (stockFilter === "in-stock" && product.stock > 0) || (stockFilter === "low" && product.stock <= 50 && product.stock > 0);
+      return matchesSearch && matchesCategory && matchesPrice && matchesStock;
+    })
+    .sort((a, b) => {
+      if (sortBy === "price-asc") return a.price - b.price;
+      if (sortBy === "price-desc") return b.price - a.price;
+      if (sortBy === "commission-desc") return b.commission - a.commission;
+      if (sortBy === "stock-desc") return b.stock - a.stock;
+      return 0;
+    });
 
   const copyAffiliateLink = (productId: string, productName: string) => {
     const link = `${window.location.origin}/product/${productId}/${affiliateId}`;
@@ -59,8 +90,9 @@ const Products = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="bg-card rounded-2xl p-6 shadow-lg mb-8"
+          className="bg-card rounded-2xl p-6 shadow-lg mb-8 space-y-4"
         >
+          {/* Search + Sort row */}
           <div className="flex flex-col lg:flex-row gap-4">
             <div className="flex-1 relative">
               <Search className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground w-5 h-5" />
@@ -71,19 +103,96 @@ const Products = () => {
                 className="pr-12 h-12"
               />
             </div>
-            <div className="flex gap-2 flex-wrap">
-              {categories.map((category) => (
-                <Button
-                  key={category}
-                  variant={selectedCategory === category ? "default" : "outline"}
-                  onClick={() => setSelectedCategory(category)}
-                  className="rounded-full"
-                >
-                  {category}
-                </Button>
-              ))}
+            <div className="flex gap-2">
+              <Select value={sortBy} onValueChange={setSortBy}>
+                <SelectTrigger className="w-[180px] h-12 rounded-xl">
+                  <SelectValue placeholder="ترتيب حسب" />
+                </SelectTrigger>
+                <SelectContent>
+                  {sortOptions.map(opt => (
+                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button
+                variant={showFilters ? "default" : "outline"}
+                onClick={() => setShowFilters(!showFilters)}
+                className="h-12 gap-2 rounded-xl"
+              >
+                <SlidersHorizontal className="w-4 h-4" />
+                فلاتر
+              </Button>
             </div>
           </div>
+
+          {/* Categories */}
+          <div className="flex gap-2 flex-wrap">
+            {categories.map((category) => (
+              <Button
+                key={category}
+                variant={selectedCategory === category ? "default" : "outline"}
+                onClick={() => setSelectedCategory(category)}
+                className="rounded-full"
+              >
+                {category}
+              </Button>
+            ))}
+          </div>
+
+          {/* Advanced filters */}
+          {showFilters && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="flex flex-col sm:flex-row gap-4 pt-4 border-t border-border"
+            >
+              <div className="flex-1 space-y-2">
+                <label className="text-sm font-medium text-muted-foreground">نطاق السعر</label>
+                <Select value={String(selectedPriceRange)} onValueChange={(v) => setSelectedPriceRange(Number(v))}>
+                  <SelectTrigger className="rounded-xl">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {priceRanges.map((range, i) => (
+                      <SelectItem key={i} value={String(i)}>{range.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex-1 space-y-2">
+                <label className="text-sm font-medium text-muted-foreground">المخزون</label>
+                <Select value={stockFilter} onValueChange={setStockFilter}>
+                  <SelectTrigger className="rounded-xl">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">الكل</SelectItem>
+                    <SelectItem value="in-stock">متوفر</SelectItem>
+                    <SelectItem value="low">مخزون منخفض</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex items-end">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => { setSelectedPriceRange(0); setStockFilter("all"); setSortBy("default"); setSelectedCategory("الكل"); setSearchQuery(""); }}
+                  className="gap-1.5 text-destructive"
+                >
+                  <X className="w-4 h-4" /> مسح الفلاتر
+                </Button>
+              </div>
+            </motion.div>
+          )}
+
+          {/* Active filter count */}
+          {(selectedCategory !== "الكل" || selectedPriceRange !== 0 || stockFilter !== "all") && (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Filter className="w-4 h-4" />
+              <span>{filteredProducts.length} منتج من أصل {mockProducts.length}</span>
+            </div>
+          )}
         </motion.div>
 
         {/* Products Grid */}

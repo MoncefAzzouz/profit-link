@@ -7,8 +7,9 @@ import {
   CheckCircle, XCircle, Truck, ChevronLeft, Eye,
   BarChart3, AlertCircle, Pause, Play, Edit3, Trash2,
   Image, DollarSign, Layers, Tag, Save, X, Search,
-  MoreVertical, ArrowUpRight, Sparkles, Store
+  MoreVertical, ArrowUpRight, Sparkles, Store, LayoutTemplate
 } from "lucide-react";
+import LandingPageBuilder from "@/components/seller/LandingPageBuilder";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -29,7 +30,7 @@ import {
   sellerEarningsData, SellerProduct
 } from "@/data/mockSellerData";
 
-type Tab = "overview" | "products" | "orders" | "earnings" | "affiliates" | "settings";
+type Tab = "overview" | "products" | "orders" | "earnings" | "affiliates" | "landing-pages" | "settings";
 
 const statusConfig = {
   pending: { label: "قيد الانتظار", icon: Clock, color: "text-yellow-600 bg-yellow-50 border-yellow-200" },
@@ -92,6 +93,7 @@ const SellerDashboard = () => {
   const [formData, setFormData] = useState<Omit<SellerProduct, "id">>(emptyProduct);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [filterCategory, setFilterCategory] = useState<string>("all");
 
   useEffect(() => {
     const storedUser = localStorage.getItem("seller_user");
@@ -168,12 +170,14 @@ const SellerDashboard = () => {
   const filteredProducts = products.filter(p => {
     const matchesSearch = p.name.includes(searchQuery) || p.category.includes(searchQuery);
     const matchesStatus = filterStatus === "all" || p.status === filterStatus;
-    return matchesSearch && matchesStatus;
+    const matchesCategory = filterCategory === "all" || p.category === filterCategory;
+    return matchesSearch && matchesStatus && matchesCategory;
   });
 
   const sidebarItems = [
     { id: "overview" as Tab, label: "نظرة عامة", icon: LayoutDashboard },
     { id: "products" as Tab, label: "المنتجات", icon: Package },
+    { id: "landing-pages" as Tab, label: "صفحات الهبوط", icon: LayoutTemplate },
     { id: "orders" as Tab, label: "الطلبيات", icon: ShoppingCart },
     { id: "earnings" as Tab, label: "الإيرادات", icon: Wallet },
     { id: "affiliates" as Tab, label: "المسوّقون", icon: Users },
@@ -406,6 +410,15 @@ const SellerDashboard = () => {
                         <SelectItem value="out_of_stock">نفذ المخزون</SelectItem>
                       </SelectContent>
                     </Select>
+                    <Select value={filterCategory} onValueChange={setFilterCategory}>
+                      <SelectTrigger className="w-[140px] rounded-xl border-border/50">
+                        <SelectValue placeholder="التصنيف" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">كل التصنيفات</SelectItem>
+                        {categories.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <Button onClick={openAddDialog} className="gap-2 rounded-xl bg-gradient-to-l from-primary to-primary/90 shadow-md hover:shadow-lg transition-all w-full sm:w-auto">
                     <Sparkles className="w-4 h-4" />
@@ -496,6 +509,9 @@ const SellerDashboard = () => {
               )}
             </div>
           )}
+
+          {/* ===== LANDING PAGES ===== */}
+          {activeTab === "landing-pages" && <LandingPageBuilder />}
 
           {/* ===== ORDERS ===== */}
           {activeTab === "orders" && (
