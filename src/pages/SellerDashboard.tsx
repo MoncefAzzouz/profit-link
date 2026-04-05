@@ -170,7 +170,8 @@ const SellerDashboard = () => {
   const filteredProducts = products.filter(p => {
     const matchesSearch = p.name.includes(searchQuery) || p.category.includes(searchQuery);
     const matchesStatus = filterStatus === "all" || p.status === filterStatus;
-    return matchesSearch && matchesStatus;
+    const matchesCategory = filterCategory === "all" || p.category === filterCategory;
+    return matchesSearch && matchesStatus && matchesCategory;
   });
 
   const sidebarItems = [
