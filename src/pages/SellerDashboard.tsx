@@ -510,6 +510,9 @@ const SellerDashboard = () => {
             </div>
           )}
 
+          {/* ===== LANDING PAGES ===== */}
+          {activeTab === "landing-pages" && <LandingPageBuilder />}
+
           {/* ===== ORDERS ===== */}
           {activeTab === "orders" && (
             <div className="space-y-6">
