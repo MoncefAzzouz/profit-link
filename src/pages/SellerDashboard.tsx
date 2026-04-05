@@ -7,8 +7,9 @@ import {
   CheckCircle, XCircle, Truck, ChevronLeft, Eye,
   BarChart3, AlertCircle, Pause, Play, Edit3, Trash2,
   Image, DollarSign, Layers, Tag, Save, X, Search,
-  MoreVertical, ArrowUpRight, Sparkles, Store
+  MoreVertical, ArrowUpRight, Sparkles, Store, LayoutTemplate
 } from "lucide-react";
+import LandingPageBuilder from "@/components/seller/LandingPageBuilder";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
