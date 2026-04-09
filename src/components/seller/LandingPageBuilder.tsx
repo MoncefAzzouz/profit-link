@@ -1159,6 +1159,9 @@ const LandingPageBuilder = () => {
                     <Button variant="outline" size="sm" onClick={() => setEditingPage(page)} className="flex-1 rounded-xl gap-1.5">
                       <Paintbrush className="w-3.5 h-3.5" /> تخصيص
                     </Button>
+                    <Button variant="outline" size="sm" onClick={() => viewPage(page)} className="rounded-xl gap-1.5">
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </Button>
                     <Button variant="outline" size="sm" onClick={() => copyLink(page)} className="rounded-xl gap-1.5">
                       {copiedId === page.id ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                     </Button>
