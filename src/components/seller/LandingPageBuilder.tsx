@@ -231,16 +231,25 @@ const mockLandingPages: LandingPageConfig[] = [
 
 const LandingPageBuilder = () => {
   const { toast } = useToast();
-  const [pages, setPages] = useState<LandingPageConfig[]>(mockLandingPages);
+  const [pages, setPages] = useState<LandingPageConfig[]>(() => {
+    const stored = localStorage.getItem("landing_pages");
+    return stored ? JSON.parse(stored) : mockLandingPages;
+  });
   const [editingPage, setEditingPage] = useState<LandingPageConfig | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewDevice, setPreviewDevice] = useState<"desktop" | "mobile">("desktop");
   const [activeDesignTab, setActiveDesignTab] = useState<"content" | "template" | "colors" | "sections" | "advanced">("content");
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
+  // Persist pages to localStorage
+  const savePages = (newPages: LandingPageConfig[]) => {
+    setPages(newPages);
+    localStorage.setItem("landing_pages", JSON.stringify(newPages));
+  };
+
   const createNewPage = () => {
     const newPage = defaultNewPage();
-    setPages(prev => [newPage, ...prev]);
+    savePages([newPage, ...pages]);
     setEditingPage(newPage);
     toast({ title: "🎨 تم الإنشاء", description: "صفحة هبوط جديدة جاهزة للتخصيص" });
   };
@@ -249,7 +258,8 @@ const LandingPageBuilder = () => {
     if (!editingPage) return;
     const updated = { ...editingPage, [field]: value };
     setEditingPage(updated);
-    setPages(prev => prev.map(p => p.id === updated.id ? updated : p));
+    const newPages = pages.map(p => p.id === updated.id ? updated : p);
+    savePages(newPages);
   };
 
   const toggleSection = (sectionId: string) => {
@@ -263,7 +273,7 @@ const LandingPageBuilder = () => {
   };
 
   const deletePage = (id: string) => {
-    setPages(prev => prev.filter(p => p.id !== id));
+    savePages(pages.filter(p => p.id !== id));
     if (editingPage?.id === id) setEditingPage(null);
     toast({ title: "🗑️ تم الحذف" });
   };
@@ -275,11 +285,19 @@ const LandingPageBuilder = () => {
     setTimeout(() => setCopiedId(null), 2000);
   };
 
+  const viewPage = (page: LandingPageConfig) => {
+    window.open(`/lp/${page.id}`, "_blank");
+  };
+
   const publishPage = (page: LandingPageConfig) => {
     const newStatus = page.status === "published" ? "draft" : "published";
-    setPages(prev => prev.map(p => p.id === page.id ? { ...p, status: newStatus } : p));
+    const newPages = pages.map(p => p.id === page.id ? { ...p, status: newStatus } : p);
+    savePages(newPages);
     if (editingPage?.id === page.id) setEditingPage({ ...editingPage, status: newStatus });
     toast({ title: newStatus === "published" ? "🚀 تم النشر" : "📝 تحويل إلى مسودة" });
+    if (newStatus === "published") {
+      window.open(`/lp/${page.id}`, "_blank");
+    }
   };
 
   const cardAnim = (delay = 0) => ({
