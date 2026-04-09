@@ -72,10 +72,20 @@ const LandingPageView = () => {
     if (stored) {
       const pages: LandingPageConfig[] = JSON.parse(stored);
       const found = pages.find(p => p.id === pageId);
+      console.log("LandingPageView -> Found page:", found);
       if (found) {
-        setPage(found);
+        // Ensure arrays and nested objects exist to prevent crashes from old mock data
+        const safeFound = {
+          ...found,
+          features: found.features || [],
+          socialProof: found.socialProof || [],
+          faqItems: found.faqItems || [],
+          trustBadges: found.trustBadges || [],
+          beforeAfterImages: found.beforeAfterImages || { before: "", after: "" }
+        };
+        setPage(safeFound);
         // Increment views
-        const updated = pages.map(p => p.id === pageId ? { ...p, views: p.views + 1 } : p);
+        const updated = pages.map(p => p.id === pageId ? { ...safeFound, views: (safeFound.views || 0) + 1 } : p);
         localStorage.setItem("landing_pages", JSON.stringify(updated));
       }
     }
@@ -141,7 +151,7 @@ const LandingPageView = () => {
             <AlertTriangle className="w-10 h-10 text-muted-foreground" />
           </div>
           <h1 className="text-2xl font-black text-foreground">الصفحة غير موجودة</h1>
-          <p className="text-muted-foreground">هذه الصفحة غير متاحة أو تم حذفها</p>
+          <p className="text-muted-foreground">هذه الصفحة غير متاحة أو تم حذفها (رقم الصفحة: {pageId})</p>
         </motion.div>
       </div>
     );

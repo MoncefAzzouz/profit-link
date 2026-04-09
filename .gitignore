@@ -31,3 +31,4 @@ dist-ssr
 # Bun
 bun.lockb
 bun.lock
+.vercel
