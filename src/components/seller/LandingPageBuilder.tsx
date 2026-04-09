@@ -649,6 +649,9 @@ const LandingPageBuilder = () => {
                 <Smartphone className="w-4 h-4" />
               </button>
             </div>
+            <Button variant="outline" size="sm" onClick={() => viewPage(editingPage)} className="rounded-xl gap-1.5">
+              <ExternalLink className="w-4 h-4" /> معاينة
+            </Button>
             <Button size="sm" onClick={() => publishPage(editingPage)} className="rounded-xl gap-1.5 bg-gradient-to-l from-primary to-primary/90 shadow-md">
               {editingPage.status === "published" ? <><Zap className="w-4 h-4" /> منشورة</> : <><Sparkles className="w-4 h-4" /> نشر</>}
             </Button>
