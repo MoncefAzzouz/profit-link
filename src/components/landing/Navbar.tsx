@@ -74,7 +74,7 @@ const Navbar = () => {
                   تسجيل الدخول
                 </Button>
               </Link>
-              <Link to="/auth">
+              <Link to="/seller-register">
                 <Button variant={isScrolled ? "outline" : "glass"} size="sm" className="gap-1.5 shadow-sm">
                   <Store className="h-4 w-4" />
                   سجّل كبائع
@@ -134,7 +134,7 @@ const Navbar = () => {
                     تسجيل الدخول
                   </Button>
                 </Link>
-                <Link to="/auth" onClick={() => setIsMobileMenuOpen(false)}>
+                <Link to="/seller-register" onClick={() => setIsMobileMenuOpen(false)}>
                   <Button variant="outline" className="w-full gap-2 h-12">
                     <Store className="h-4 w-4" />
                     سجّل كبائع
