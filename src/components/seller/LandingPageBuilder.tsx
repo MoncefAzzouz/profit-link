@@ -233,7 +233,10 @@ const LandingPageBuilder = () => {
   const { toast } = useToast();
   const [pages, setPages] = useState<LandingPageConfig[]>(() => {
     const stored = localStorage.getItem("landing_pages");
-    return stored ? JSON.parse(stored) : mockLandingPages;
+    if (stored) return JSON.parse(stored);
+    // Save mock data to localStorage on first load
+    localStorage.setItem("landing_pages", JSON.stringify(mockLandingPages));
+    return mockLandingPages;
   });
   const [editingPage, setEditingPage] = useState<LandingPageConfig | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
