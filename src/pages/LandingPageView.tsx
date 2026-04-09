@@ -1,0 +1,641 @@
+import { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  ShoppingCart, Star, Users, ThumbsUp, Shield, Truck, Clock,
+  Award, Check, Play, Image, Gift, MessageSquare, Timer, Package,
+  ChevronDown, Phone, MapPin, User, AlertTriangle, Heart, Flame,
+  ArrowRight, Sparkles, X
+} from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { useToast } from "@/hooks/use-toast";
+
+interface LandingPageConfig {
+  id: string;
+  productName: string;
+  template: string;
+  heroTitle: string;
+  heroSubtitle: string;
+  heroImage: string;
+  primaryColor: string;
+  accentColor: string;
+  ctaText: string;
+  ctaStyle: "rounded" | "square" | "pill";
+  showReviews: boolean;
+  showCountdown: boolean;
+  showGuarantee: boolean;
+  showFreeShipping: boolean;
+  sections: string[];
+  customCss: string;
+  fontFamily: string;
+  backgroundColor: string;
+  status: "draft" | "published";
+  views: number;
+  conversions: number;
+  price: number;
+  originalPrice: number;
+  category: string;
+  features: string[];
+  heroLayout: "centered" | "split" | "fullscreen" | "video-bg";
+  animationStyle: "none" | "fade" | "slide" | "bounce" | "zoom";
+  headerStyle: "transparent" | "solid" | "gradient" | "floating";
+  socialProof: { name: string; text: string; rating: number }[];
+  faqItems: { q: string; a: string }[];
+  urgencyText: string;
+  videoUrl: string;
+  beforeAfterImages: { before: string; after: string };
+  trustBadges: string[];
+  countdownDate: string;
+  showStickyBar: boolean;
+  showFloatingCta: boolean;
+  showSocialProofPopup: boolean;
+  borderRadius: number;
+  shadowIntensity: "none" | "sm" | "md" | "lg" | "xl";
+  gradientDirection: "to-r" | "to-l" | "to-b" | "to-t" | "to-br" | "to-bl";
+  ctaAnimation: "none" | "pulse" | "bounce" | "shake" | "glow";
+  imageStyle: "rounded" | "sharp" | "blob" | "circle";
+}
+
+const LandingPageView = () => {
+  const { pageId } = useParams();
+  const { toast } = useToast();
+  const [page, setPage] = useState<LandingPageConfig | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [showNotification, setShowNotification] = useState(false);
+  const [orderForm, setOrderForm] = useState({ name: "", phone: "", wilaya: "" });
+  const [orderSubmitted, setOrderSubmitted] = useState(false);
+  const [countdown, setCountdown] = useState({ hours: 2, minutes: 14, seconds: 35 });
+  const [faqOpen, setFaqOpen] = useState<number | null>(null);
+
+  useEffect(() => {
+    const stored = localStorage.getItem("landing_pages");
+    if (stored) {
+      const pages: LandingPageConfig[] = JSON.parse(stored);
+      const found = pages.find(p => p.id === pageId);
+      if (found) {
+        setPage(found);
+        // Increment views
+        const updated = pages.map(p => p.id === pageId ? { ...p, views: p.views + 1 } : p);
+        localStorage.setItem("landing_pages", JSON.stringify(updated));
+      }
+    }
+    setLoading(false);
+  }, [pageId]);
+
+  // Countdown timer
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCountdown(prev => {
+        if (prev.seconds > 0) return { ...prev, seconds: prev.seconds - 1 };
+        if (prev.minutes > 0) return { ...prev, minutes: prev.minutes - 1, seconds: 59 };
+        if (prev.hours > 0) return { hours: prev.hours - 1, minutes: 59, seconds: 59 };
+        return prev;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Social proof notifications
+  useEffect(() => {
+    if (!page?.sections.includes("notification-popup")) return;
+    const names = ["محمد من وهران", "سارة من الجزائر", "أحمد من قسنطينة", "فاطمة من باتنة", "يوسف من سطيف"];
+    let i = 0;
+    const interval = setInterval(() => {
+      setShowNotification(true);
+      i = (i + 1) % names.length;
+      setTimeout(() => setShowNotification(false), 4000);
+    }, 8000);
+    setTimeout(() => {
+      setShowNotification(true);
+      setTimeout(() => setShowNotification(false), 4000);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [page]);
+
+  const handleOrder = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!orderForm.name || !orderForm.phone || !orderForm.wilaya) {
+      toast({ title: "⚠️ يرجى ملء جميع الحقول", variant: "destructive" });
+      return;
+    }
+    setOrderSubmitted(true);
+    toast({ title: "✅ تم تسجيل طلبك بنجاح!", description: "سنتواصل معك قريباً لتأكيد الطلب" });
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} className="text-center space-y-4">
+          <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
+          <p className="text-muted-foreground text-sm">جاري التحميل...</p>
+        </motion.div>
+      </div>
+    );
+  }
+
+  if (!page) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center space-y-4 p-8">
+          <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center mx-auto">
+            <AlertTriangle className="w-10 h-10 text-muted-foreground" />
+          </div>
+          <h1 className="text-2xl font-black text-foreground">الصفحة غير موجودة</h1>
+          <p className="text-muted-foreground">هذه الصفحة غير متاحة أو تم حذفها</p>
+        </motion.div>
+      </div>
+    );
+  }
+
+  const p = page;
+  const isDark = (bg: string) => bg.startsWith("#0") || bg.startsWith("#1") || bg.startsWith("#2") || bg === "#020617";
+  const tc = isDark(p.backgroundColor) ? "#f1f5f9" : "#0f172a";
+  const stc = isDark(p.backgroundColor) ? "#94a3b8" : "#64748b";
+  const br = `${p.borderRadius}px`;
+  const discountPercent = Math.round((1 - p.price / p.originalPrice) * 100);
+  const shadowMap = { none: "", sm: "shadow-sm", md: "shadow-md", lg: "shadow-lg", xl: "shadow-xl" };
+
+  const notificationNames = ["محمد من وهران", "سارة من الجزائر", "أحمد من قسنطينة", "فاطمة من باتنة"];
+
+  const wilayas = [
+    "01 أدرار", "02 الشلف", "03 الأغواط", "04 أم البواقي", "05 باتنة", "06 بجاية", "07 بسكرة",
+    "08 بشار", "09 البليدة", "10 البويرة", "11 تمنراست", "12 تبسة", "13 تلمسان", "14 تيارت",
+    "15 تيزي وزو", "16 الجزائر", "17 الجلفة", "18 جيجل", "19 سطيف", "20 سعيدة",
+    "21 سكيكدة", "22 سيدي بلعباس", "23 عنابة", "24 قالمة", "25 قسنطينة", "26 المدية",
+    "27 مستغانم", "28 المسيلة", "29 معسكر", "30 ورقلة", "31 وهران", "32 البيض",
+    "33 إليزي", "34 برج بوعريريج", "35 بومرداس", "36 الطارف", "37 تندوف", "38 تيسمسيلت",
+    "39 الوادي", "40 خنشلة", "41 سوق أهراس", "42 تيبازة", "43 ميلة", "44 عين الدفلى",
+    "45 النعامة", "46 عين تموشنت", "47 غرداية", "48 غليزان", "49 تيميمون",
+    "50 برج باجي مختار", "51 أولاد جلال", "52 بني عباس", "53 عين صالح",
+    "54 عين قزام", "55 تقرت", "56 جانت", "57 المغير", "58 المنيعة"
+  ];
+
+  return (
+    <div className="min-h-screen" style={{ backgroundColor: p.backgroundColor, fontFamily: p.fontFamily, color: tc }} dir="rtl">
+      {/* Google Fonts */}
+      <link href={`https://fonts.googleapis.com/css2?family=${p.fontFamily === "cairo" ? "Cairo" : p.fontFamily === "tajawal" ? "Tajawal" : p.fontFamily === "almarai" ? "Almarai" : p.fontFamily === "changa" ? "Changa" : p.fontFamily === "ibm-plex" ? "IBM+Plex+Sans+Arabic" : p.fontFamily === "noto-kufi" ? "Noto+Kufi+Arabic" : "Readex+Pro"}:wght@400;600;700;800;900&display=swap`} rel="stylesheet" />
+
+      {/* Urgency Bar */}
+      {p.sections.includes("urgency-bar") && (
+        <motion.div initial={{ y: -40 }} animate={{ y: 0 }} className="py-3 px-4 text-center text-sm font-bold text-white" style={{ backgroundColor: p.primaryColor }}>
+          <span className="animate-pulse">🔥</span> {p.urgencyText} <span className="animate-pulse">🔥</span>
+        </motion.div>
+      )}
+
+      {/* Sticky Header */}
+      <div className="sticky top-0 z-50 backdrop-blur-xl border-b" style={{ backgroundColor: isDark(p.backgroundColor) ? "rgba(15,23,42,0.9)" : "rgba(255,255,255,0.9)", borderColor: isDark(p.backgroundColor) ? "#334155" : "#e2e8f0" }}>
+        <div className="max-w-5xl mx-auto flex items-center justify-between px-4 sm:px-6 py-3">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg" style={{ backgroundColor: p.primaryColor }}>
+              <ShoppingCart className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <span className="text-sm font-bold block">{p.productName}</span>
+              <span className="text-xs" style={{ color: stc }}>شحن مجاني لكل الولايات 🚚</span>
+            </div>
+          </div>
+          <a href="#order-form" className="text-xs font-bold px-5 py-2.5 rounded-full text-white shadow-lg transition-transform hover:scale-105" style={{ backgroundColor: p.primaryColor }}>
+            {p.ctaText}
+          </a>
+        </div>
+      </div>
+
+      <div className="max-w-5xl mx-auto">
+        {/* Hero Section */}
+        {p.sections.includes("hero") && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.6 }} className="px-4 sm:px-6 py-8 sm:py-12">
+            <div className={`${p.heroLayout === "split" ? "grid md:grid-cols-2 gap-8 items-center" : "space-y-6 text-center"}`}>
+              {/* Image */}
+              <div className={`relative overflow-hidden ${shadowMap[p.shadowIntensity]} ${p.imageStyle === "circle" ? "rounded-full aspect-square max-w-[400px] mx-auto" : p.imageStyle === "blob" ? "rounded-[30%_70%_70%_30%/30%_30%_70%_70%]" : ""}`}
+                style={{ borderRadius: p.imageStyle === "rounded" ? br : p.imageStyle === "sharp" ? "0" : undefined }}>
+                {p.heroImage ? (
+                  <img src={p.heroImage} alt={p.productName} className="w-full h-full object-cover" style={{ aspectRatio: p.imageStyle === "circle" ? "1" : "4/3" }} />
+                ) : (
+                  <div className="w-full flex flex-col items-center justify-center gap-3 py-24 bg-muted" style={{ color: stc }}>
+                    <Image className="w-16 h-16 opacity-20" />
+                    <span className="text-sm">صورة المنتج</span>
+                  </div>
+                )}
+                {discountPercent > 0 && (
+                  <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.3, type: "spring" }}
+                    className="absolute top-4 left-4 bg-red-500 text-white px-4 py-2 rounded-full text-sm font-black shadow-xl">
+                    خصم {discountPercent}% 🔥
+                  </motion.div>
+                )}
+              </div>
+
+              {/* Text */}
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
+                className={`space-y-4 ${p.heroLayout !== "split" ? "max-w-2xl mx-auto" : ""}`}>
+                <span className="text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full inline-block" style={{ color: p.primaryColor, backgroundColor: `${p.primaryColor}15` }}>
+                  {p.category}
+                </span>
+                <h1 className="text-3xl sm:text-4xl md:text-5xl font-black leading-tight">{p.heroTitle}</h1>
+                <p className="text-base sm:text-lg leading-relaxed" style={{ color: stc }}>{p.heroSubtitle}</p>
+
+                <div className="flex items-center gap-4 flex-wrap justify-center md:justify-start">
+                  <div className="px-5 py-3 rounded-2xl inline-flex items-center gap-3" style={{ backgroundColor: `${p.primaryColor}15`, borderRadius: br }}>
+                    <span className="text-3xl font-black" style={{ color: p.primaryColor }}>{p.price.toLocaleString()} دج</span>
+                    {p.originalPrice > p.price && (
+                      <span className="text-lg line-through" style={{ color: stc }}>{p.originalPrice.toLocaleString()} دج</span>
+                    )}
+                  </div>
+                </div>
+
+                <a href="#order-form"
+                  className={`inline-block text-center text-lg font-black text-white px-10 py-4 shadow-2xl transition-all hover:scale-105 ${
+                    p.ctaAnimation === "pulse" ? "animate-pulse" : p.ctaAnimation === "bounce" ? "animate-bounce" : ""
+                  } ${p.ctaStyle === "pill" ? "rounded-full" : p.ctaStyle === "rounded" ? "rounded-xl" : "rounded-none"}`}
+                  style={{ backgroundColor: p.primaryColor }}>
+                  {p.ctaText} <ArrowRight className="w-5 h-5 inline-block mr-2 rotate-180" />
+                </a>
+              </motion.div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Social Proof Numbers */}
+        {p.sections.includes("social-proof") && (
+          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+            className="px-4 sm:px-6 pb-8">
+            <div className="grid grid-cols-3 gap-4 max-w-xl mx-auto">
+              {[
+                { icon: Users, val: "2,340+", label: "عميل سعيد" },
+                { icon: Star, val: "4.9/5", label: "تقييم عام" },
+                { icon: ThumbsUp, val: "98%", label: "معدل الرضا" },
+              ].map((s, i) => (
+                <motion.div key={i} initial={{ opacity: 0, scale: 0.8 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
+                  className={`p-4 rounded-2xl border text-center ${shadowMap[p.shadowIntensity]}`}
+                  style={{ borderColor: isDark(p.backgroundColor) ? "#334155" : "#e2e8f0", borderRadius: br }}>
+                  <s.icon className="w-6 h-6 mx-auto mb-2" style={{ color: p.primaryColor }} />
+                  <p className="text-xl font-black">{s.val}</p>
+                  <p className="text-xs mt-1" style={{ color: stc }}>{s.label}</p>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+
+        {/* Features */}
+        {p.sections.includes("features") && (
+          <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}
+            className="px-4 sm:px-6 pb-8">
+            <h2 className="text-2xl font-black text-center mb-6 flex items-center justify-center gap-2">
+              <Star className="w-6 h-6" style={{ color: p.primaryColor }} /> لماذا تختار هذا المنتج؟
+            </h2>
+            <div className="grid sm:grid-cols-2 gap-3 max-w-2xl mx-auto">
+              {p.features.map((f, i) => (
+                <motion.div key={i} initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
+                  className={`flex items-center gap-3 p-4 border rounded-2xl ${shadowMap[p.shadowIntensity]}`}
+                  style={{ borderColor: isDark(p.backgroundColor) ? "#334155" : "#e2e8f0", borderRadius: br }}>
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ backgroundColor: `${p.primaryColor}15` }}>
+                    <Check className="w-5 h-5" style={{ color: p.primaryColor }} />
+                  </div>
+                  <span className="text-sm font-bold">{f}</span>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+
+        {/* Video */}
+        {p.sections.includes("video") && (
+          <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}
+            className="px-4 sm:px-6 pb-8">
+            <div className={`relative aspect-video rounded-2xl overflow-hidden bg-muted flex items-center justify-center max-w-3xl mx-auto ${shadowMap[p.shadowIntensity]}`}
+              style={{ borderRadius: br }}>
+              {p.videoUrl ? (
+                <iframe src={p.videoUrl} className="w-full h-full" allowFullScreen />
+              ) : (
+                <>
+                  <div className="w-20 h-20 rounded-full flex items-center justify-center shadow-2xl cursor-pointer transition-transform hover:scale-110" style={{ backgroundColor: p.primaryColor }}>
+                    <Play className="w-8 h-8 text-white fill-white ml-1" />
+                  </div>
+                  <p className="absolute bottom-4 text-sm font-bold" style={{ color: stc }}>شاهد الفيديو التوضيحي</p>
+                </>
+              )}
+            </div>
+          </motion.div>
+        )}
+
+        {/* Before/After */}
+        {p.sections.includes("before-after") && (
+          <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}
+            className="px-4 sm:px-6 pb-8">
+            <h2 className="text-2xl font-black text-center mb-6">قبل وبعد الاستخدام</h2>
+            <div className="grid grid-cols-2 gap-4 max-w-xl mx-auto">
+              <div className={`rounded-2xl overflow-hidden border-2 border-red-300 ${shadowMap[p.shadowIntensity]}`} style={{ borderRadius: br }}>
+                <div className="bg-red-500 text-center py-2 text-sm font-bold text-white">قبل ❌</div>
+                <div className="aspect-square bg-muted flex items-center justify-center">
+                  {p.beforeAfterImages.before ? <img src={p.beforeAfterImages.before} className="w-full h-full object-cover" /> : <Image className="w-12 h-12 opacity-20" />}
+                </div>
+              </div>
+              <div className={`rounded-2xl overflow-hidden border-2 ${shadowMap[p.shadowIntensity]}`} style={{ borderColor: p.primaryColor, borderRadius: br }}>
+                <div className="text-center py-2 text-sm font-bold text-white" style={{ backgroundColor: p.primaryColor }}>بعد ✅</div>
+                <div className="aspect-square bg-muted flex items-center justify-center">
+                  {p.beforeAfterImages.after ? <img src={p.beforeAfterImages.after} className="w-full h-full object-cover" /> : <Image className="w-12 h-12 opacity-20" />}
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Trust Badges */}
+        {p.sections.includes("trust-badges") && (
+          <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}
+            className="px-4 sm:px-6 pb-8">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-2xl mx-auto">
+              {p.trustBadges.map((badge, i) => {
+                const icons = [Shield, Truck, Award, Check];
+                const Icon = icons[i % icons.length];
+                return (
+                  <motion.div key={i} initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
+                    className={`flex flex-col items-center gap-2 p-4 border rounded-2xl text-center ${shadowMap[p.shadowIntensity]}`}
+                    style={{ borderColor: isDark(p.backgroundColor) ? "#334155" : "#e2e8f0", borderRadius: br }}>
+                    <Icon className="w-6 h-6" style={{ color: p.primaryColor }} />
+                    <span className="text-xs font-bold">{badge}</span>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </motion.div>
+        )}
+
+        {/* Reviews */}
+        {p.sections.includes("reviews") && (
+          <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}
+            className="px-4 sm:px-6 pb-8">
+            <h2 className="text-2xl font-black text-center mb-6 flex items-center justify-center gap-2">
+              <MessageSquare className="w-6 h-6" style={{ color: p.primaryColor }} /> آراء العملاء
+            </h2>
+            <div className="space-y-4 max-w-xl mx-auto">
+              {p.socialProof.map((review, i) => (
+                <motion.div key={i} initial={{ opacity: 0, y: 15 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.15 }}
+                  className={`p-5 border rounded-2xl space-y-3 ${shadowMap[p.shadowIntensity]}`}
+                  style={{ borderColor: isDark(p.backgroundColor) ? "#334155" : "#e2e8f0", borderRadius: br }}>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold" style={{ backgroundColor: p.primaryColor }}>
+                        {review.name[0]}
+                      </div>
+                      <div>
+                        <span className="text-sm font-bold block">{review.name}</span>
+                        <span className="text-xs" style={{ color: stc }}>مشتري مؤكد ✅</span>
+                      </div>
+                    </div>
+                    <div className="flex gap-0.5">
+                      {Array.from({ length: review.rating }).map((_, j) => (
+                        <Star key={j} className="w-4 h-4 fill-amber-400 text-amber-400" />
+                      ))}
+                    </div>
+                  </div>
+                  <p className="text-sm leading-relaxed" style={{ color: stc }}>{review.text}</p>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+
+        {/* Countdown */}
+        {p.sections.includes("countdown") && (
+          <motion.div initial={{ opacity: 0, scale: 0.95 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }}
+            className="px-4 sm:px-6 pb-8">
+            <div className={`p-6 rounded-2xl text-center space-y-4 max-w-xl mx-auto ${shadowMap[p.shadowIntensity]}`}
+              style={{ backgroundColor: `${p.primaryColor}10`, borderRadius: br }}>
+              <p className="text-lg font-bold" style={{ color: p.primaryColor }}>⏰ العرض ينتهي خلال</p>
+              <div className="flex justify-center gap-4" dir="ltr">
+                {[
+                  { v: String(countdown.hours).padStart(2, "0"), l: "ساعة" },
+                  { v: String(countdown.minutes).padStart(2, "0"), l: "دقيقة" },
+                  { v: String(countdown.seconds).padStart(2, "0"), l: "ثانية" },
+                ].map((t, i) => (
+                  <div key={i} className="text-center">
+                    <div className="w-16 h-16 rounded-xl flex items-center justify-center text-2xl font-black text-white shadow-lg"
+                      style={{ backgroundColor: p.primaryColor }}>
+                      {t.v}
+                    </div>
+                    <p className="text-xs mt-2 font-medium" style={{ color: stc }}>{t.l}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Bundle Offers */}
+        {p.sections.includes("bundle") && (
+          <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}
+            className="px-4 sm:px-6 pb-8">
+            <h2 className="text-2xl font-black text-center mb-6 flex items-center justify-center gap-2">
+              <Gift className="w-6 h-6" style={{ color: p.primaryColor }} /> عروض خاصة
+            </h2>
+            <div className="space-y-3 max-w-xl mx-auto">
+              {[
+                { qty: "1x", price: p.price, label: "قطعة واحدة", save: 0, popular: false },
+                { qty: "2x", price: Math.round(p.price * 1.7), label: "قطعتين", save: 15, popular: true },
+                { qty: "3x", price: Math.round(p.price * 2.3), label: "ثلاث قطع", save: 25, popular: false },
+              ].map((b, i) => (
+                <motion.div key={i} initial={{ opacity: 0, x: -10 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
+                  className={`flex items-center justify-between p-5 border-2 rounded-2xl relative cursor-pointer transition-all hover:shadow-lg ${b.popular ? "shadow-md" : ""}`}
+                  style={{ borderColor: b.popular ? p.primaryColor : (isDark(p.backgroundColor) ? "#334155" : "#e2e8f0"), borderRadius: br }}>
+                  {b.popular && (
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 text-white text-xs font-bold px-4 py-1 rounded-full shadow-lg" style={{ backgroundColor: p.primaryColor }}>
+                      ⭐ الأكثر طلباً
+                    </div>
+                  )}
+                  <div className="flex items-center gap-3">
+                    <span className="text-lg font-black" style={{ color: p.primaryColor }}>{b.qty}</span>
+                    <span className="text-sm font-bold">{b.label}</span>
+                  </div>
+                  <div className="text-left">
+                    <span className="text-lg font-black">{b.price.toLocaleString()} دج</span>
+                    {b.save > 0 && <span className="text-xs font-bold text-red-500 mr-2">وفّر {b.save}%</span>}
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+
+        {/* FAQ */}
+        {p.sections.includes("faq") && (
+          <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}
+            className="px-4 sm:px-6 pb-8">
+            <h2 className="text-2xl font-black text-center mb-6 flex items-center justify-center gap-2">
+              <MessageSquare className="w-6 h-6" style={{ color: p.primaryColor }} /> أسئلة شائعة
+            </h2>
+            <div className="space-y-3 max-w-xl mx-auto">
+              {p.faqItems.map((faq, i) => (
+                <motion.div key={i} initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}
+                  className={`border rounded-2xl overflow-hidden ${shadowMap[p.shadowIntensity]}`}
+                  style={{ borderColor: isDark(p.backgroundColor) ? "#334155" : "#e2e8f0", borderRadius: br }}>
+                  <button onClick={() => setFaqOpen(faqOpen === i ? null : i)}
+                    className="w-full flex items-center justify-between p-4 text-sm font-bold text-right">
+                    <span>{faq.q}</span>
+                    <ChevronDown className={`w-4 h-4 transition-transform shrink-0 ${faqOpen === i ? "rotate-180" : ""}`} style={{ color: p.primaryColor }} />
+                  </button>
+                  <AnimatePresence>
+                    {faqOpen === i && (
+                      <motion.div initial={{ height: 0 }} animate={{ height: "auto" }} exit={{ height: 0 }} className="overflow-hidden">
+                        <p className="px-4 pb-4 text-sm" style={{ color: stc }}>{faq.a}</p>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+
+        {/* Guarantee */}
+        {p.sections.includes("guarantee") && (
+          <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}
+            className="px-4 sm:px-6 pb-8">
+            <div className={`p-6 rounded-2xl border-2 border-dashed text-center space-y-3 max-w-xl mx-auto ${shadowMap[p.shadowIntensity]}`}
+              style={{ borderColor: p.primaryColor, borderRadius: br }}>
+              <Shield className="w-12 h-12 mx-auto" style={{ color: p.primaryColor }} />
+              <p className="text-xl font-black">ضمان 30 يوم</p>
+              <p className="text-sm" style={{ color: stc }}>إذا لم يعجبك المنتج، يمكنك إرجاعه واسترداد أموالك بالكامل</p>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Shipping */}
+        {p.sections.includes("shipping") && (
+          <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}
+            className="px-4 sm:px-6 pb-8">
+            <div className={`p-6 rounded-2xl border space-y-4 max-w-xl mx-auto ${shadowMap[p.shadowIntensity]}`}
+              style={{ borderColor: isDark(p.backgroundColor) ? "#334155" : "#e2e8f0", borderRadius: br }}>
+              <h3 className="text-lg font-bold flex items-center gap-2">
+                <Truck className="w-5 h-5" style={{ color: p.primaryColor }} /> معلومات التوصيل
+              </h3>
+              {[
+                { icon: Truck, text: "توصيل مجاني لجميع الولايات 58" },
+                { icon: Clock, text: "التوصيل خلال 2-5 أيام عمل" },
+                { icon: ShoppingCart, text: "الدفع عند الاستلام COD 💵" },
+              ].map((item, i) => (
+                <div key={i} className="flex items-center gap-3">
+                  <item.icon className="w-5 h-5" style={{ color: p.primaryColor }} />
+                  <span className="text-sm font-medium">{item.text}</span>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+
+        {/* ORDER FORM */}
+        {p.sections.includes("cta") && (
+          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+            id="order-form" className="px-4 sm:px-6 pb-12">
+            <div className={`p-6 sm:p-8 border-2 rounded-2xl space-y-5 max-w-xl mx-auto ${shadowMap[p.shadowIntensity]}`}
+              style={{ borderColor: p.primaryColor, borderRadius: br }}>
+              {orderSubmitted ? (
+                <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} className="text-center space-y-4 py-8">
+                  <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto shadow-lg" style={{ backgroundColor: `${p.primaryColor}15` }}>
+                    <Check className="w-10 h-10" style={{ color: p.primaryColor }} />
+                  </div>
+                  <h3 className="text-2xl font-black">تم تسجيل طلبك بنجاح! 🎉</h3>
+                  <p className="text-sm" style={{ color: stc }}>سنتواصل معك عبر الهاتف لتأكيد الطلب</p>
+                </motion.div>
+              ) : (
+                <form onSubmit={handleOrder} className="space-y-4">
+                  <div className="text-center space-y-2 mb-6">
+                    <h3 className="text-xl font-black flex items-center justify-center gap-2">
+                      <ShoppingCart className="w-5 h-5" style={{ color: p.primaryColor }} /> اطلب الآن
+                    </h3>
+                    <p className="text-sm" style={{ color: stc }}>املأ النموذج التالي وسنتواصل معك</p>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div className="relative">
+                      <User className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: stc }} />
+                      <Input
+                        placeholder="الاسم الكامل"
+                        value={orderForm.name}
+                        onChange={(e) => setOrderForm(f => ({ ...f, name: e.target.value }))}
+                        className="pr-10 h-12 rounded-xl text-sm"
+                        style={{ borderRadius: `${Math.min(p.borderRadius, 16)}px`, borderColor: isDark(p.backgroundColor) ? "#334155" : "#d1d5db", backgroundColor: isDark(p.backgroundColor) ? "#1e293b" : "#fff", color: tc }}
+                      />
+                    </div>
+                    <div className="relative">
+                      <Phone className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: stc }} />
+                      <Input
+                        placeholder="رقم الهاتف (مثال: 0555123456)"
+                        value={orderForm.phone}
+                        onChange={(e) => setOrderForm(f => ({ ...f, phone: e.target.value }))}
+                        className="pr-10 h-12 rounded-xl text-sm"
+                        style={{ borderRadius: `${Math.min(p.borderRadius, 16)}px`, borderColor: isDark(p.backgroundColor) ? "#334155" : "#d1d5db", backgroundColor: isDark(p.backgroundColor) ? "#1e293b" : "#fff", color: tc }}
+                      />
+                    </div>
+                    <div className="relative">
+                      <MapPin className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: stc }} />
+                      <select
+                        value={orderForm.wilaya}
+                        onChange={(e) => setOrderForm(f => ({ ...f, wilaya: e.target.value }))}
+                        className="w-full pr-10 h-12 text-sm border bg-transparent appearance-none cursor-pointer"
+                        style={{ borderRadius: `${Math.min(p.borderRadius, 16)}px`, borderColor: isDark(p.backgroundColor) ? "#334155" : "#d1d5db", backgroundColor: isDark(p.backgroundColor) ? "#1e293b" : "#fff", color: tc, paddingLeft: "12px" }}
+                      >
+                        <option value="">اختر الولاية</option>
+                        {wilayas.map(w => <option key={w} value={w}>{w}</option>)}
+                      </select>
+                    </div>
+                  </div>
+
+                  <button type="submit"
+                    className={`w-full py-4 text-lg font-black text-white shadow-2xl transition-all hover:scale-[1.02] ${
+                      p.ctaAnimation === "pulse" ? "animate-pulse" : p.ctaAnimation === "bounce" ? "animate-bounce" : ""
+                    } ${p.ctaStyle === "pill" ? "rounded-full" : p.ctaStyle === "rounded" ? "rounded-xl" : "rounded-none"}`}
+                    style={{ backgroundColor: p.primaryColor }}>
+                    {p.ctaText} — {p.price.toLocaleString()} دج
+                  </button>
+
+                  <div className="flex items-center justify-center gap-4 text-xs" style={{ color: stc }}>
+                    <span className="flex items-center gap-1"><Shield className="w-4 h-4" /> آمن</span>
+                    <span className="flex items-center gap-1"><Truck className="w-4 h-4" /> شحن مجاني</span>
+                    <span className="flex items-center gap-1"><Award className="w-4 h-4" /> ضمان</span>
+                  </div>
+                </form>
+              )}
+            </div>
+          </motion.div>
+        )}
+
+        {/* Footer */}
+        <div className="border-t py-6 text-center" style={{ borderColor: isDark(p.backgroundColor) ? "#334155" : "#e2e8f0" }}>
+          <p className="text-xs" style={{ color: stc }}>© 2024 {p.productName} — جميع الحقوق محفوظة</p>
+        </div>
+      </div>
+
+      {/* Floating CTA */}
+      {p.showFloatingCta && (
+        <motion.a href="#order-form" initial={{ y: 100 }} animate={{ y: 0 }} transition={{ delay: 2 }}
+          className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 text-white font-bold px-8 py-4 rounded-full shadow-2xl text-sm transition-transform hover:scale-105"
+          style={{ backgroundColor: p.primaryColor }}>
+          {p.ctaText} 🛒
+        </motion.a>
+      )}
+
+      {/* Social Proof Notification Popup */}
+      <AnimatePresence>
+        {showNotification && p.sections.includes("notification-popup") && (
+          <motion.div initial={{ x: -300, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -300, opacity: 0 }}
+            className="fixed bottom-6 left-6 z-50 p-4 border rounded-2xl flex items-center gap-3 shadow-2xl max-w-xs"
+            style={{ borderColor: isDark(p.backgroundColor) ? "#334155" : "#e2e8f0", borderRadius: br, backgroundColor: isDark(p.backgroundColor) ? "#1e293b" : "#ffffff" }}>
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: `${p.primaryColor}15` }}>
+              <ShoppingCart className="w-5 h-5" style={{ color: p.primaryColor }} />
+            </div>
+            <div>
+              <p className="text-sm font-bold" style={{ color: tc }}>{notificationNames[Math.floor(Math.random() * notificationNames.length)]}</p>
+              <p className="text-xs" style={{ color: stc }}>اشترى هذا المنتج منذ {Math.floor(Math.random() * 10) + 1} دقائق</p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Custom CSS */}
+      {p.customCss && <style>{p.customCss}</style>}
+    </div>
+  );
+};
+
+export default LandingPageView;
