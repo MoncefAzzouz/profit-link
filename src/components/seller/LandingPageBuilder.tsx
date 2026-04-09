@@ -291,7 +291,7 @@ const LandingPageBuilder = () => {
 
   const publishPage = (page: LandingPageConfig) => {
     const newStatus = page.status === "published" ? "draft" : "published";
-    const newPages = pages.map(p => p.id === page.id ? { ...p, status: newStatus } : p);
+    const newPages = pages.map(p => p.id === page.id ? { ...p, status: newStatus as "draft" | "published" } : p);
     savePages(newPages);
     if (editingPage?.id === page.id) setEditingPage({ ...editingPage, status: newStatus });
     toast({ title: newStatus === "published" ? "🚀 تم النشر" : "📝 تحويل إلى مسودة" });
