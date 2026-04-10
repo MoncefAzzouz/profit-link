@@ -114,7 +114,41 @@ const Dashboard = () => {
     });
   }, [orderSearch, orderStatus, dateFrom, dateTo]);
 
-  const sidebarItems = [
+  const productPriceRanges = [
+    { label: "الكل", min: 0, max: Infinity },
+    { label: "أقل من 2,000 دج", min: 0, max: 2000 },
+    { label: "2,000 - 5,000 دج", min: 2000, max: 5000 },
+    { label: "5,000 - 10,000 دج", min: 5000, max: 10000 },
+    { label: "أكثر من 10,000 دج", min: 10000, max: Infinity },
+  ];
+
+  const productSortOptions = [
+    { value: "default", label: "الافتراضي" },
+    { value: "price-asc", label: "السعر: من الأقل" },
+    { value: "price-desc", label: "السعر: من الأعلى" },
+    { value: "commission-desc", label: "العمولة: من الأعلى" },
+    { value: "stock-desc", label: "المخزون: الأكثر" },
+  ];
+
+  const filteredProducts = useMemo(() => {
+    const range = productPriceRanges[productPriceRange];
+    return mockProducts
+      .filter((product) => {
+        const matchesSearch = product.name.includes(productSearch) || product.description.includes(productSearch);
+        const matchesCategory = productCategory === "الكل" || product.category === productCategory;
+        const matchesPrice = product.price >= range.min && product.price <= range.max;
+        const matchesStock = productStockFilter === "all" || (productStockFilter === "in-stock" && product.stock > 0) || (productStockFilter === "low" && product.stock <= 50 && product.stock > 0);
+        return matchesSearch && matchesCategory && matchesPrice && matchesStock;
+      })
+      .sort((a, b) => {
+        if (productSort === "price-asc") return a.price - b.price;
+        if (productSort === "price-desc") return b.price - a.price;
+        if (productSort === "commission-desc") return b.commission - a.commission;
+        if (productSort === "stock-desc") return b.stock - a.stock;
+        return 0;
+      });
+  }, [productSearch, productCategory, productPriceRange, productSort, productStockFilter]);
+
     { id: "overview" as Tab, label: "نظرة عامة", icon: LayoutDashboard },
     { id: "products" as Tab, label: "المنتجات", icon: Package },
     { id: "orders" as Tab, label: "طلبياتي", icon: ShoppingCart },
