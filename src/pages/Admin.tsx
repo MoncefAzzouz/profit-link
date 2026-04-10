@@ -5,7 +5,7 @@ import {
   LayoutDashboard, Users, Package, ShoppingCart, Wallet,
   Settings, Menu, X, TrendingUp, CheckCircle, XCircle,
   Truck, Clock, Eye, Edit, Ban, Search, Filter, Plus,
-  BarChart3, ChevronLeft, AlertTriangle
+  BarChart3, ChevronLeft, AlertTriangle, SlidersHorizontal
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,7 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { mockProducts } from "@/data/mockProducts";
+import { mockProducts, categories } from "@/data/mockProducts";
 import { mockAffiliates, mockAdminStats, mockAllOrders } from "@/data/mockAdminData";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -65,6 +65,11 @@ const Admin = () => {
   const [orderSearch, setOrderSearch] = useState("");
   const [orderStatus, setOrderStatus] = useState("all");
   const [productSearch, setProductSearch] = useState("");
+  const [productCategory, setProductCategory] = useState("الكل");
+  const [productPriceRange, setProductPriceRange] = useState(0);
+  const [productSort, setProductSort] = useState("default");
+  const [productStockFilter, setProductStockFilter] = useState("all");
+  const [showProductFilters, setShowProductFilters] = useState(false);
 
   const sidebarItems = [
     { id: "overview" as Tab, label: "نظرة عامة", icon: LayoutDashboard },
@@ -95,11 +100,40 @@ const Admin = () => {
     });
   }, [orderSearch, orderStatus]);
 
+  const productPriceRanges = [
+    { label: "الكل", min: 0, max: Infinity },
+    { label: "أقل من 2,000 دج", min: 0, max: 2000 },
+    { label: "2,000 - 5,000 دج", min: 2000, max: 5000 },
+    { label: "5,000 - 10,000 دج", min: 5000, max: 10000 },
+    { label: "أكثر من 10,000 دج", min: 10000, max: Infinity },
+  ];
+
+  const productSortOptions = [
+    { value: "default", label: "الافتراضي" },
+    { value: "price-asc", label: "السعر: من الأقل" },
+    { value: "price-desc", label: "السعر: من الأعلى" },
+    { value: "commission-desc", label: "العمولة: من الأعلى" },
+    { value: "stock-desc", label: "المخزون: الأكثر" },
+  ];
+
   const filteredProducts = useMemo(() => {
-    return mockProducts.filter((product) => {
-      return product.name.includes(productSearch);
-    });
-  }, [productSearch]);
+    const range = productPriceRanges[productPriceRange];
+    return mockProducts
+      .filter((product) => {
+        const matchesSearch = product.name.includes(productSearch) || product.description.includes(productSearch);
+        const matchesCategory = productCategory === "الكل" || product.category === productCategory;
+        const matchesPrice = product.price >= range.min && product.price <= range.max;
+        const matchesStock = productStockFilter === "all" || (productStockFilter === "in-stock" && product.stock > 0) || (productStockFilter === "low" && product.stock <= 50 && product.stock > 0);
+        return matchesSearch && matchesCategory && matchesPrice && matchesStock;
+      })
+      .sort((a, b) => {
+        if (productSort === "price-asc") return a.price - b.price;
+        if (productSort === "price-desc") return b.price - a.price;
+        if (productSort === "commission-desc") return b.commission - a.commission;
+        if (productSort === "stock-desc") return b.stock - a.stock;
+        return 0;
+      });
+  }, [productSearch, productCategory, productPriceRange, productSort, productStockFilter]);
 
   const handleSuspendAffiliate = (id: string) => {
     toast({ title: "تم إيقاف المسوّق" });
@@ -608,21 +642,111 @@ const Admin = () => {
           {/* Products Tab */}
           {activeTab === "products" && (
             <div className="space-y-6">
-              {/* Header */}
-              <div className="flex justify-between items-center">
-                <div className="relative min-w-[300px]">
-                  <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    placeholder="ابحث عن منتج..."
-                    value={productSearch}
-                    onChange={(e) => setProductSearch(e.target.value)}
-                    className="pr-10"
-                  />
+              {/* Filters */}
+              <div className="bg-card rounded-2xl p-6 shadow-sm space-y-4">
+                <div className="flex flex-col lg:flex-row gap-4">
+                  <div className="flex-1 relative">
+                    <Search className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground w-5 h-5" />
+                    <Input
+                      value={productSearch}
+                      onChange={(e) => setProductSearch(e.target.value)}
+                      placeholder="ابحث عن منتج..."
+                      className="pr-12 h-12"
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <Select value={productSort} onValueChange={setProductSort}>
+                      <SelectTrigger className="w-[180px] h-12 rounded-xl">
+                        <SelectValue placeholder="ترتيب حسب" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {productSortOptions.map(opt => (
+                          <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      variant={showProductFilters ? "default" : "outline"}
+                      onClick={() => setShowProductFilters(!showProductFilters)}
+                      className="h-12 gap-2 rounded-xl"
+                    >
+                      <SlidersHorizontal className="w-4 h-4" />
+                      فلاتر
+                    </Button>
+                    <Button className="h-12 gap-2 rounded-xl">
+                      <Plus className="w-4 h-4" />
+                      إضافة منتج
+                    </Button>
+                  </div>
                 </div>
-                <Button className="gap-2">
-                  <Plus className="w-4 h-4" />
-                  إضافة منتج
-                </Button>
+
+                {/* Categories */}
+                <div className="flex gap-2 flex-wrap">
+                  {categories.map((category) => (
+                    <Button
+                      key={category}
+                      variant={productCategory === category ? "default" : "outline"}
+                      onClick={() => setProductCategory(category)}
+                      className="rounded-full"
+                    >
+                      {category}
+                    </Button>
+                  ))}
+                </div>
+
+                {/* Advanced filters */}
+                {showProductFilters && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    className="flex flex-col sm:flex-row gap-4 pt-4 border-t border-border"
+                  >
+                    <div className="flex-1 space-y-2">
+                      <label className="text-sm font-medium text-muted-foreground">نطاق السعر</label>
+                      <Select value={String(productPriceRange)} onValueChange={(v) => setProductPriceRange(Number(v))}>
+                        <SelectTrigger className="rounded-xl">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {productPriceRanges.map((range, i) => (
+                            <SelectItem key={i} value={String(i)}>{range.label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="flex-1 space-y-2">
+                      <label className="text-sm font-medium text-muted-foreground">المخزون</label>
+                      <Select value={productStockFilter} onValueChange={setProductStockFilter}>
+                        <SelectTrigger className="rounded-xl">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">الكل</SelectItem>
+                          <SelectItem value="in-stock">متوفر</SelectItem>
+                          <SelectItem value="low">مخزون منخفض</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="flex items-end">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => { setProductPriceRange(0); setProductStockFilter("all"); setProductSort("default"); setProductCategory("الكل"); setProductSearch(""); }}
+                        className="gap-1.5 text-destructive"
+                      >
+                        <X className="w-4 h-4" /> مسح الفلاتر
+                      </Button>
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* Active filter count */}
+                {(productCategory !== "الكل" || productPriceRange !== 0 || productStockFilter !== "all") && (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Filter className="w-4 h-4" />
+                    <span>{filteredProducts.length} منتج من أصل {mockProducts.length}</span>
+                  </div>
+                )}
               </div>
 
               {/* Products Grid */}
