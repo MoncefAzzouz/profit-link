@@ -39,8 +39,9 @@ import { mockOrders, mockAffiliateStats, Order } from "@/data/mockAffiliateData"
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import EarningsChart from "@/components/dashboard/EarningsChart";
+import { shippingRates, shippingRegions } from "@/data/mockShippingData";
 
-type Tab = "overview" | "products" | "my_store" | "favorites" | "orders" | "earnings" | "withdrawals" | "levels" | "support";
+type Tab = "overview" | "products" | "my_store" | "favorites" | "orders" | "earnings" | "withdrawals" | "levels" | "shipping" | "support";
 
 const statusConfig = {
   pending: { label: "قيد الانتظار", icon: Clock, color: "text-yellow-600 bg-yellow-100" },
@@ -226,6 +227,7 @@ const Dashboard = () => {
     { id: "orders" as Tab, label: "طلبياتي", icon: ShoppingCart },
     { id: "earnings" as Tab, label: "الأرباح", icon: Wallet },
     { id: "withdrawals" as Tab, label: "طلبات السحب", icon: CheckCircle },
+    { id: "shipping" as Tab, label: "التوصيل", icon: Truck },
     { id: "levels" as Tab, label: "المستويات", icon: Trophy },
     { id: "support" as Tab, label: "الدعم", icon: HelpCircle },
   ];
@@ -1123,6 +1125,163 @@ const Dashboard = () => {
                   )}
                 </motion.div>
               ))}
+            </div>
+          )}
+
+          {/* Shipping Tab */}
+          {activeTab === "shipping" && (
+            <div className="space-y-8">
+              <div className="flex flex-col lg:flex-row gap-8">
+                {/* Algeria Map Illustration */}
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="lg:w-1/3 bg-card rounded-[2.5rem] p-8 shadow-sm border border-border/50 flex flex-col items-center justify-center relative overflow-hidden"
+                >
+                  <div className="relative z-10 w-full h-full flex flex-col items-center">
+                    <h3 className="text-xl font-bold text-foreground mb-6 self-start">تغطية التوصيل عبر الوطن</h3>
+                    <div className="w-full aspect-[4/5] relative">
+                      {/* Stylized SVG Map of Algeria */}
+                      <svg viewBox="0 0 400 500" className="w-full h-full drop-shadow-2xl">
+                        <path
+                          d="M150,50 L250,50 L300,100 L350,150 L350,250 L300,350 L250,450 L100,450 L50,350 L50,150 L100,100 Z"
+                          className="fill-primary/10 stroke-primary/30 stroke-2"
+                        />
+                        {/* Highlights (North) */}
+                        <path d="M150,50 L250,50 L300,100 L350,150 L250,150 L150,150 Z" className="fill-secondary/20 hover:fill-secondary/40 transition-colors cursor-pointer" />
+                        {/* Cities dots */}
+                        <circle cx="200" cy="80" r="5" className="fill-secondary animate-pulse" /> {/* Algiers */}
+                        <circle cx="120" cy="120" r="4" className="fill-primary" /> {/* Oran */}
+                        <circle cx="280" cy="110" r="4" className="fill-primary" /> {/* Constantine */}
+                      </svg>
+                      
+                      <div className="absolute bottom-4 right-4 bg-background/80 backdrop-blur-sm p-4 rounded-2xl border border-border/50 shadow-lg">
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="w-3 h-3 rounded-full bg-secondary" />
+                          <span className="text-xs font-bold">توصيل سريع (24-48 ساعة)</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 rounded-full bg-primary/40" />
+                          <span className="text-xs font-bold">توصيل عادي (3-7 أيام)</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  {/* Decorative backgrounds */}
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl" />
+                  <div className="absolute bottom-0 left-0 w-32 h-32 bg-secondary/5 rounded-full blur-3xl" />
+                </motion.div>
+
+                {/* Pricing Summary */}
+                <div className="lg:w-2/3 space-y-6">
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    <div className="bg-gradient-to-br from-primary to-navy-900 text-white rounded-3xl p-6 shadow-xl">
+                      <div className="flex items-center gap-4 mb-4">
+                        <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center">
+                          <MapPin className="w-6 h-6" />
+                        </div>
+                        <h4 className="text-lg font-bold">التوصيل للمنزل</h4>
+                      </div>
+                      <p className="text-white/80 text-sm mb-4">يستلم الزبون المنتج في مقر سكنه في كافة الولايات.</p>
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-xs">يبدأ من</span>
+                        <span className="text-3xl font-black">300 دج</span>
+                      </div>
+                    </div>
+
+                    <div className="bg-gradient-to-br from-secondary to-orange-700 text-white rounded-3xl p-6 shadow-xl">
+                      <div className="flex items-center gap-4 mb-4">
+                        <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center">
+                          <User className="w-6 h-6" />
+                        </div>
+                        <h4 className="text-lg font-bold">التوصيل للمكتب</h4>
+                      </div>
+                      <p className="text-white/80 text-sm mb-4">سعر مخفض عند استلام الزبون للطلب من مكتب الشركة.</p>
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-xs">يبدأ من</span>
+                        <span className="text-3xl font-black">200 دج</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-card rounded-3xl p-8 border border-border/50 shadow-sm relative overflow-hidden">
+                    <div className="relative z-10">
+                      <h4 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
+                        <Clock className="w-5 h-5 text-primary" />
+                        مواعيد التسليم المتوقعة
+                      </h4>
+                      <div className="grid grid-cols-3 gap-6">
+                        <div>
+                          <p className="text-xs text-muted-foreground mb-1">الشمال</p>
+                          <p className="font-bold text-lg">24 - 48 ساعة</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground mb-1">الهضاب</p>
+                          <p className="font-bold text-lg">2 - 4 أيام</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground mb-1">الجنوب</p>
+                          <p className="font-bold text-lg">5 - 10 أيام</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-[80px] -mr-32 -mt-32" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Wilaya Pricing Table */}
+              <div className="bg-card rounded-[2.5rem] shadow-sm border border-border/50 overflow-hidden">
+                <div className="p-8 border-b border-border flex items-center justify-between">
+                  <div>
+                    <h3 className="text-2xl font-black text-foreground">قائمة الأسعار حسب الولايات</h3>
+                    <p className="text-muted-foreground mt-1 text-sm">تفاصيل تكاليف الشحن ومدة التوصيل لكل ولاية.</p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="relative">
+                      <Search className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                      <Input placeholder="ابحث عن ولاية..." className="pr-10 rounded-xl h-10 w-64 border-border/60" />
+                    </div>
+                  </div>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="bg-muted/50 border-b border-border">
+                        <th className="text-right p-6 font-bold text-foreground">الولاية</th>
+                        <th className="text-right p-6 font-bold text-foreground">التوصيل للمنزل</th>
+                        <th className="text-right p-6 font-bold text-foreground">التوصيل للمكتب</th>
+                        <th className="text-right p-6 font-bold text-foreground">وقت التوصيل</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border">
+                      {shippingRates.map((rate, idx) => (
+                        <tr key={idx} className="hover:bg-muted/30 transition-colors group">
+                          <td className="p-6">
+                            <span className="font-bold text-foreground text-lg">{rate.wilaya}</span>
+                          </td>
+                          <td className="p-6">
+                            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 text-primary font-black rounded-lg text-sm">
+                              {rate.homePrice} دج
+                            </span>
+                          </td>
+                          <td className="p-6">
+                            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-secondary/10 text-secondary font-black rounded-lg text-sm">
+                              {rate.officePrice} دج
+                            </span>
+                          </td>
+                          <td className="p-6">
+                            <span className="flex items-center gap-2 text-muted-foreground font-medium">
+                              <Clock className="w-4 h-4" />
+                              {rate.deliveryTime}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </div>
           )}
 
