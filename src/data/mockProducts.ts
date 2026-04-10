@@ -2,6 +2,7 @@ export interface Product {
   id: string;
   name: string;
   description: string;
+  adText: string;
   price: number;
   originalPrice: number;
   commission: number;
@@ -17,6 +18,7 @@ export const mockProducts: Product[] = [
     id: "prod-1",
     name: "ساعة ذكية متعددة الوظائف",
     description: "ساعة ذكية أنيقة مع شاشة AMOLED ومقاومة للماء، تتبع اللياقة البدنية ومراقبة النوم والقلب",
+    adText: "🔥 العرض المحدود! ساعة ذكية تجمع بين الأناقة والقوة. تتبع صحتك بجهاز واحد. اطلبها الآن واستفد من الخصم!",
     price: 4500,
     originalPrice: 9000,
     commission: 2250,
@@ -33,6 +35,7 @@ export const mockProducts: Product[] = [
     id: "prod-2",
     name: "سماعات بلوتوث لاسلكية",
     description: "سماعات لاسلكية بجودة صوت عالية مع إلغاء الضوضاء وبطارية تدوم 24 ساعة",
+    adText: "🎧 عيش تجربة الصوت الحقيقي! سماعات لاسلكية مع ميزة إلغاء الضوضاء. مثالية للرياضة والعمل. توصيل سريع لجميع الولايات.",
     price: 3200,
     originalPrice: 6500,
     commission: 1600,
@@ -49,6 +52,7 @@ export const mockProducts: Product[] = [
     id: "prod-3",
     name: "حقيبة ظهر عصرية",
     description: "حقيبة ظهر أنيقة ومتينة مع جيب للحاسوب المحمول ومنفذ USB للشحن",
+    adText: "🎒 سافر واعمل بكل راحة! حقيبة ظهر مضادة للسرقة مع منفذ شحن USB. تصميم عصري يناسب الجميع. الكمية محدودة!",
     price: 2800,
     originalPrice: 5600,
     commission: 1400,
@@ -65,6 +69,7 @@ export const mockProducts: Product[] = [
     id: "prod-4",
     name: "كريم العناية بالبشرة",
     description: "كريم طبيعي 100% للترطيب العميق ومكافحة التجاعيد مع فيتامين E",
+    adText: "✨ بشرة نضرة وشابة دائماً! كريم العناية الطبيعي بمكونات سرية. احصلي على إشراقتك اليوم. اطلبي العرض الخاص الآن.",
     price: 1500,
     originalPrice: 3000,
     commission: 750,
@@ -81,6 +86,7 @@ export const mockProducts: Product[] = [
     id: "prod-5",
     name: "مكنسة كهربائية ذكية",
     description: "روبوت تنظيف ذكي مع خرائط ذكية وتحكم عن بعد عبر التطبيق",
+    adText: "🤖 خلي البيت ينظف حاله! المكنسة الذكية الأقوى في السوق. توفر عليك الوقت والجهد. تحكم كامل عبر موبايلك.",
     price: 8500,
     originalPrice: 17000,
     commission: 4250,
@@ -96,6 +102,7 @@ export const mockProducts: Product[] = [
     id: "prod-6",
     name: "عطر فاخر للرجال",
     description: "عطر فرنسي فاخر بنفحات خشبية وعنبرية تدوم طويلاً",
+    adText: "💎 الأناقة في زجاجة! عطر رجالي بتركيبة فريدة وجذابة. يدوم طويلاً ويترك انطباعاً لا ينسى. هدية مثالية لنفسك أو لمن تحب.",
     price: 3500,
     originalPrice: 7000,
     commission: 1750,

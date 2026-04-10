@@ -5,7 +5,8 @@ import {
   LayoutDashboard, Package, ShoppingCart, Wallet, Trophy, 
   HelpCircle, LogOut, Menu, X, Copy, Check, TrendingUp,
   Clock, CheckCircle, XCircle, Truck, Eye, ChevronLeft,
-  Calendar, Filter, Search, SlidersHorizontal, Store, Sparkles
+  Calendar, Filter, Search, SlidersHorizontal, Store, Sparkles,
+  Heart, Download, PlusCircle, User, Phone, MapPin, PackagePlus, MessageSquare, Plus, Trash2, Maximize2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,11 +36,11 @@ import { format, parseISO, isAfter, isBefore, isEqual } from "date-fns";
 import { ar } from "date-fns/locale";
 import { mockProducts, categories } from "@/data/mockProducts";
 import { mockOrders, mockAffiliateStats, Order } from "@/data/mockAffiliateData";
-import { mockWithdrawalRequests } from "@/data/mockAdminData";
 import { useToast } from "@/hooks/use-toast";
+import { Badge } from "@/components/ui/badge";
 import EarningsChart from "@/components/dashboard/EarningsChart";
 
-type Tab = "overview" | "products" | "my_store" | "orders" | "earnings" | "withdrawals" | "levels" | "support";
+type Tab = "overview" | "products" | "my_store" | "favorites" | "orders" | "earnings" | "withdrawals" | "levels" | "support";
 
 const statusConfig = {
   pending: { label: "قيد الانتظار", icon: Clock, color: "text-yellow-600 bg-yellow-100" },
@@ -79,6 +80,20 @@ const Dashboard = () => {
   const [withdrawMethod, setWithdrawMethod] = useState("CCP");
   const [withdrawAccount, setWithdrawAccount] = useState("");
 
+  // Product Redesign States
+  const [favorites, setFavorites] = useState<Set<string>>(new Set());
+  const [storeProducts, setStoreProducts] = useState<Set<string>>(new Set());
+  const [selectedProduct, setSelectedProduct] = useState<any>(null);
+  const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
+  const [isOrderDialogOpen, setIsOrderDialogOpen] = useState(false);
+  const [orderFormData, setOrderFormData] = useState({
+    firstName: "",
+    lastName: "",
+    phone: "",
+    address: "",
+    deliveryFee: 500
+  });
+
   useEffect(() => {
     const storedUser = localStorage.getItem("affiliate_user");
     if (!storedUser) {
@@ -100,6 +115,44 @@ const Dashboard = () => {
     setCopiedId(productId);
     toast({ title: "تم نسخ الرابط! 🔗" });
     setTimeout(() => setCopiedId(null), 2000);
+  };
+
+  const toggleFavorite = (productId: string) => {
+    setFavorites(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(productId)) {
+        newSet.delete(productId);
+        toast({ title: "تمت الإزالة من المفضلة" });
+      } else {
+        newSet.add(productId);
+        toast({ title: "تمت الإضافة للمفضلة ❤️" });
+      }
+      return newSet;
+    });
+  };
+
+  const toggleStoreProduct = (productId: string) => {
+    setStoreProducts(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(productId)) {
+        newSet.delete(productId);
+        toast({ title: "تمت الإزالة من متجرك" });
+      } else {
+        newSet.add(productId);
+        toast({ title: "تمت الإضافة لمتجرك ➕" });
+      }
+      return newSet;
+    });
+  };
+
+  const openProductDetail = (product: any) => {
+    setSelectedProduct(product);
+    setIsDetailDialogOpen(true);
+  };
+
+  const openOrderForm = (product: any) => {
+    setSelectedProduct(product);
+    setIsOrderDialogOpen(true);
   };
 
   const clearFilters = () => {
@@ -169,6 +222,7 @@ const Dashboard = () => {
     { id: "overview" as Tab, label: "نظرة عامة", icon: LayoutDashboard },
     { id: "products" as Tab, label: "المنتجات", icon: Package },
     { id: "my_store" as Tab, label: "متجري", icon: Store },
+    { id: "favorites" as Tab, label: "المنتجات المفضلة", icon: Heart },
     { id: "orders" as Tab, label: "طلبياتي", icon: ShoppingCart },
     { id: "earnings" as Tab, label: "الأرباح", icon: Wallet },
     { id: "withdrawals" as Tab, label: "طلبات السحب", icon: CheckCircle },
@@ -537,41 +591,76 @@ const Dashboard = () => {
 
               {/* Products Grid */}
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredProducts.map((product, index) => (
-                  <motion.div
-                    key={product.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                    className="bg-card rounded-2xl overflow-hidden shadow-sm hover-lift"
-                  >
-                    <div className="aspect-video relative">
-                      <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
-                      <div className="absolute top-3 left-3 bg-accent text-accent-foreground px-3 py-1 rounded-full text-sm font-bold">
-                        {product.commission.toLocaleString()} دج عمولة
-                      </div>
-                    </div>
-                    <div className="p-5">
-                      <h3 className="font-bold text-foreground">{product.name}</h3>
-                      <p className="text-xl font-bold text-secondary mt-2">{product.price.toLocaleString()} دج</p>
-                      <div className="flex gap-2 mt-4">
-                        <Button
-                          onClick={() => copyAffiliateLink(product.id, product.name)}
-                          className="flex-1 gap-2"
-                          variant={copiedId === product.id ? "secondary" : "default"}
-                        >
-                          {copiedId === product.id ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                          {copiedId === product.id ? "تم النسخ" : "نسخ الرابط"}
-                        </Button>
-                        <Link to={`/product/${product.id}/${user.id}`}>
-                          <Button variant="outline" size="icon">
-                            <Eye className="w-4 h-4" />
+                {filteredProducts.map((product, index) => {
+                  const isFavorite = favorites.has(product.id);
+                  const isInStore = storeProducts.has(product.id);
+                  const profit = product.price - (product.originalPrice / 2); // Assuming 50% commission is calculated this way or use product.commission
+                  
+                  return (
+                    <motion.div
+                      key={product.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.05 }}
+                      className="bg-card rounded-2xl overflow-hidden shadow-sm border border-border/50 hover:shadow-md transition-all group"
+                    >
+                      <div className="aspect-[4/3] relative overflow-hidden">
+                        <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                          <Button size="icon" variant="secondary" className="rounded-full shadow-lg" onClick={() => openProductDetail(product)}>
+                            <Maximize2 className="w-4 h-4" />
                           </Button>
-                        </Link>
+                        </div>
+                        <button 
+                          onClick={() => toggleFavorite(product.id)}
+                          className={`absolute top-3 right-3 p-2 rounded-full backdrop-blur-md transition-all ${
+                            isFavorite ? "bg-red-500 text-white" : "bg-white/80 text-muted-foreground hover:bg-white"
+                          }`}
+                        >
+                          <Heart className={`w-4 h-4 ${isFavorite ? "fill-current" : ""}`} />
+                        </button>
+                        <div className="absolute bottom-3 left-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-lg text-[10px] font-bold text-primary border border-primary/20">
+                          {product.category}
+                        </div>
                       </div>
-                    </div>
-                  </motion.div>
-                ))}
+                      
+                      <div className="p-4 space-y-3">
+                        <h3 className="font-bold text-foreground line-clamp-1">{product.name}</h3>
+                        
+                        <div className="flex items-center justify-between">
+                          <div className="space-y-0.5">
+                            <p className="text-[10px] text-muted-foreground line-through">{product.originalPrice.toLocaleString()} دج</p>
+                            <p className="text-lg font-bold text-primary">{product.price.toLocaleString()} دج</p>
+                          </div>
+                          <div className="text-left">
+                            <p className="text-[10px] text-muted-foreground">ربحك الصافي</p>
+                            <p className="text-lg font-bold text-secondary">{product.commission.toLocaleString()} دج</p>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2 pt-1">
+                          <Button 
+                            onClick={() => openOrderForm(product)}
+                            className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2 rounded-xl h-10 text-xs font-bold"
+                          >
+                            <ShoppingCart className="w-4 h-4" />
+                            طلب المنتج
+                          </Button>
+                          <Button 
+                            variant="outline"
+                            onClick={() => toggleStoreProduct(product.id)}
+                            className={`gap-2 rounded-xl h-10 text-xs font-bold ${
+                              isInStore ? "border-secondary text-secondary bg-secondary/5" : "border-border hover:bg-muted"
+                            }`}
+                          >
+                            {isInStore ? <Check className="w-4 h-4" /> : <PlusCircle className="w-4 h-4" />}
+                            {isInStore ? "في المتجر" : "إضافة للمتجر"}
+                          </Button>
+                        </div>
+                      </div>
+                    </motion.div>
+                  );
+                })}
               </div>
 
               {filteredProducts.length === 0 && (
@@ -584,19 +673,19 @@ const Dashboard = () => {
 
           {/* My Store Tab */}
           {activeTab === "my_store" && (
-            <div className="space-y-6">
+            <div className="space-y-8">
               {/* Store Link Card */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-gradient-to-r from-primary via-primary to-navy-800 rounded-2xl p-8 text-white shadow-xl relative overflow-hidden"
+                className="bg-gradient-to-r from-primary via-primary to-navy-800 rounded-3xl p-8 lg:p-12 text-white shadow-2xl relative overflow-hidden"
               >
-                <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
+                <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-10">
                   <div className="text-center md:text-right flex-1">
-                    <h2 className="text-3xl font-bold mb-3">متجرك الخاص جاهز! 🚀</h2>
-                    <p className="text-primary-foreground/80 mb-8 max-w-2xl text-lg">شارك رابط متجرك واكسب عمولة على كل منتج يشتريه الزبائن من خلالك.</p>
-                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
-                      <div className="bg-white/10 backdrop-blur-md px-6 py-4 rounded-2xl border border-white/20 font-mono text-sm break-all flex-1 flex items-center justify-center sm:justify-start text-left" dir="ltr">
+                    <h2 className="text-4xl font-black mb-4">متجرك الخاص جاهز! 🚀</h2>
+                    <p className="text-primary-foreground/80 mb-10 max-w-2xl text-xl leading-relaxed">شارك رابط متجرك واكسب عمولة على كل منتج يشتريه الزبائن من خلالك. متجرك يحتوي حالياً على <b>{storeProducts.size}</b> منتجات.</p>
+                    <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-4">
+                      <div className="bg-white/10 backdrop-blur-md px-6 py-5 rounded-2xl border border-white/20 font-mono text-sm break-all flex-1 flex items-center justify-center lg:justify-start text-left" dir="ltr">
                         {window.location.origin}/store/{user?.id || "aff-demo"}
                       </div>
                       <div className="flex gap-3">
@@ -606,114 +695,160 @@ const Dashboard = () => {
                             navigator.clipboard.writeText(link);
                             toast({ title: "تم نسخ رابط المتجر! 🔗" });
                           }}
-                          className="bg-secondary text-secondary-foreground hover:bg-secondary/90 h-14 px-8 rounded-2xl gap-2 shadow-xl shadow-secondary/20 font-bold transition-all hover:scale-105 active:scale-95"
+                          className="bg-secondary text-secondary-foreground hover:bg-secondary/90 h-16 px-10 rounded-2xl gap-3 shadow-xl shadow-secondary/20 font-black text-lg transition-all hover:scale-105 active:scale-95"
                         >
-                          <Copy className="w-5 h-5" />
+                          <Copy className="w-6 h-6" />
                           نسخ الرابط
                         </Button>
                         <Button 
                           variant="outline"
-                          className="bg-white/10 border-white/20 hover:bg-white/20 text-white h-14 px-6 rounded-2xl gap-2 backdrop-blur-sm"
+                          className="bg-white/10 border-white/20 hover:bg-white/20 text-white h-16 px-8 rounded-2xl gap-3 backdrop-blur-sm font-bold"
                         >
-                          <Eye className="w-5 h-5" />
+                          <Eye className="w-6 h-6" />
                           معاينة
                         </Button>
                       </div>
                     </div>
                   </div>
-                  <div className="hidden lg:flex w-48 h-48 bg-white/10 rounded-[2.5rem] items-center justify-center backdrop-blur-md border border-white/20 rotate-6 shadow-2xl relative group transition-transform hover:rotate-0 duration-500">
-                    <Store className="w-24 h-24 text-white opacity-80 group-hover:scale-110 transition-transform duration-500" />
-                    <div className="absolute -top-2 -right-2 w-12 h-12 bg-secondary rounded-2xl flex items-center justify-center -rotate-12 group-hover:rotate-0 transition-transform duration-500">
-                      <Sparkles className="w-6 h-6 text-white" />
+                  <div className="hidden xl:flex w-64 h-64 bg-white/10 rounded-[3rem] items-center justify-center backdrop-blur-md border border-white/20 rotate-6 shadow-2xl relative group transition-transform hover:rotate-0 duration-500">
+                    <Store className="w-32 h-32 text-white opacity-80 group-hover:scale-110 transition-transform duration-500" />
+                    <div className="absolute -top-4 -right-4 w-16 h-16 bg-secondary rounded-2xl flex items-center justify-center -rotate-12 group-hover:rotate-0 transition-transform duration-500 shadow-xl">
+                      <Sparkles className="w-8 h-8 text-white" />
                     </div>
                   </div>
                 </div>
                 {/* Decorative background elements */}
-                <div className="absolute -right-20 -top-20 w-80 h-80 bg-secondary/30 rounded-full blur-[100px] opacity-50" />
-                <div className="absolute -left-20 -bottom-20 w-80 h-80 bg-primary/30 rounded-full blur-[100px] opacity-50" />
+                <div className="absolute -right-20 -top-20 w-[400px] h-[400px] bg-secondary/30 rounded-full blur-[120px] opacity-50" />
+                <div className="absolute -left-20 -bottom-20 w-[400px] h-[400px] bg-primary/30 rounded-full blur-[120px] opacity-50" />
               </motion.div>
 
-              {/* Store Stats */}
-              <div className="grid md:grid-cols-3 gap-6">
-                {[
-                  { label: "زيارات المتجر", value: "1,245", sub: "+12% هذا الأسبوع", icon: Eye, color: "text-blue-600 bg-blue-100" },
-                  { label: "المنتجات المروجة", value: mockProducts.length, sub: "كل المنتجات", icon: Package, color: "text-emerald-600 bg-emerald-100" },
-                  { label: "إجمالي المبيعات", value: "48", sub: "مبيعات مباشرة", icon: TrendingUp, color: "text-secondary bg-secondary/10" },
-                ].map((stat, i) => (
-                  <motion.div
-                    key={i}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 * (i + 1) }}
-                    className="bg-card rounded-2xl p-6 shadow-sm border border-border/50 hover:border-primary/20 transition-all hover:shadow-md group"
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${stat.color} group-hover:scale-110 transition-transform duration-300`}>
-                        <stat.icon className="w-7 h-7" />
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground font-medium">{stat.label}</p>
-                        <p className="text-3xl font-bold text-foreground mt-0.5">{stat.value}</p>
-                        <p className="text-xs text-secondary mt-1 flex items-center gap-1">
-                          <TrendingUp className="w-3 h-3" />
-                          {stat.sub}
-                        </p>
-                      </div>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-
-              {/* Store Customization */}
-              <div className="grid lg:grid-cols-2 gap-6 pb-8">
-                <motion.div
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.4 }}
-                  className="bg-card rounded-3xl p-8 shadow-sm border border-border/50"
-                >
-                  <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
-                    <SlidersHorizontal className="w-5 h-5 text-primary" />
-                    تخصيص المتجر
+              {/* Store Products Section */}
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-2xl font-black text-foreground flex items-center gap-3">
+                    <Package className="w-6 h-6 text-primary" />
+                    المنتجات المضافة لمتجرك
                   </h3>
-                  <div className="space-y-6">
-                    <div className="space-y-2.5">
-                      <Label className="text-sm font-semibold text-muted-foreground mr-1">اسم المتجر</Label>
-                      <Input placeholder="أدخل اسم لمتجرك..." defaultValue={`${user?.name} Store`} className="rounded-2xl h-14 text-lg border-border/60 focus:ring-primary/20" />
-                    </div>
-                    <div className="space-y-2.5">
-                      <Label className="text-sm font-semibold text-muted-foreground mr-1">وصف المتجر (Bio)</Label>
-                      <Input placeholder="مثال: أفضل المنتجات بأفضل الأسعار..." className="rounded-2xl h-14 text-lg border-border/60 focus:ring-primary/20" />
-                    </div>
-                    <Button className="w-full h-14 rounded-2xl bg-primary text-primary-foreground font-bold text-lg shadow-xl shadow-primary/20 transition-all hover:scale-[1.02] active:scale-95 mt-2">
-                      حفظ التغييرات
-                    </Button>
-                  </div>
-                </motion.div>
+                  <Badge variant="outline" className="px-4 py-1.5 rounded-full font-bold">
+                    {storeProducts.size} منتج
+                  </Badge>
+                </div>
 
-                <motion.div
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.5 }}
-                  className="bg-card rounded-3xl p-8 shadow-sm border border-border/50 flex flex-col items-center justify-center text-center space-y-5 relative overflow-hidden group"
-                >
-                  <div className="relative z-10 flex flex-col items-center">
-                    <div className="w-24 h-24 bg-muted/50 rounded-full flex items-center justify-center mb-4 ring-8 ring-muted/20">
-                      <Sparkles className="w-12 h-12 text-primary/30" />
+                {storeProducts.size > 0 ? (
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    {mockProducts.filter(p => storeProducts.has(p.id)).map((product) => (
+                      <motion.div
+                        key={product.id}
+                        layout
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="bg-card rounded-2xl overflow-hidden shadow-sm border border-border/50 group"
+                      >
+                        <div className="aspect-square relative">
+                          <img src={product.image} className="w-full h-full object-cover" />
+                          <button 
+                            onClick={() => toggleStoreProduct(product.id)}
+                            className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full shadow-lg hover:bg-red-600 transition-colors"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                        <div className="p-4">
+                          <h4 className="font-bold text-foreground line-clamp-1 mb-2">{product.name}</h4>
+                          <div className="flex justify-between items-center">
+                            <span className="text-primary font-bold">{product.price.toLocaleString()} دج</span>
+                            <span className="text-xs text-secondary font-bold">ربحك: {product.commission.toLocaleString()} دج</span>
+                          </div>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="bg-card rounded-[2.5rem] p-20 text-center border-2 border-dashed border-border/60">
+                    <div className="w-24 h-24 bg-muted rounded-full flex items-center justify-center mx-auto mb-6">
+                      <PlusCircle className="w-12 h-12 text-muted-foreground/40" />
                     </div>
-                    <h3 className="text-xl font-bold text-foreground">ميزة قادمة قريباً ✨</h3>
-                    <p className="text-muted-foreground max-w-[280px] mt-2 mb-6 text-lg leading-relaxed">
-                      قريباً ستتمكن من اختيار الثيم الخاص بمتجرك وترتيب المنتجات حسب رغبتك لزيادة مبيعاتك واحترافية ظهورك.
+                    <h4 className="text-xl font-bold text-foreground mb-2">متجرك فارغ حالياً</h4>
+                    <p className="text-muted-foreground max-w-md mx-auto mb-8">
+                      ابدأ بتصفح المنتجات وأضف ما تراه مناسباً لجمهورك لتبدأ في جني الأرباح.
                     </p>
-                    <Button variant="outline" disabled className="rounded-2xl h-12 px-8 font-semibold border-border/60 opacity-60">
-                      فتح المحرر المتقدم
+                    <Button onClick={() => setActiveTab("products")} className="rounded-2xl h-12 px-8 font-bold">
+                      تصفح المنتجات الآن
                     </Button>
                   </div>
-                  {/* Background decoration for upcoming feature */}
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-10 -mt-10 blur-2xl group-hover:bg-primary/10 transition-colors" />
-                  <div className="absolute bottom-0 left-0 w-32 h-32 bg-secondary/5 rounded-full -ml-10 -mb-10 blur-2xl group-hover:bg-secondary/10 transition-colors" />
-                </motion.div>
+                )}
               </div>
+            </div>
+          )}
+
+          {/* Favorites Tab */}
+          {activeTab === "favorites" && (
+            <div className="space-y-8">
+              <div className="flex items-center justify-between border-b border-border/60 pb-6">
+                <div>
+                  <h2 className="text-3xl font-black text-foreground">المنتجات المفضلة ❤️</h2>
+                  <p className="text-muted-foreground mt-1">المنتجات التي قمت بحفظها للوصول إليها لاحقاً.</p>
+                </div>
+                <Badge className="bg-red-500 hover:bg-red-600 px-6 py-2 rounded-full text-lg font-bold">
+                  {favorites.size} منتج
+                </Badge>
+              </div>
+
+              {favorites.size > 0 ? (
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                  {mockProducts.filter(p => favorites.has(p.id)).map((product) => (
+                    <motion.div
+                      key={product.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="bg-card rounded-2xl overflow-hidden shadow-sm border border-border/50 hover:shadow-md transition-all group"
+                    >
+                      <div className="aspect-[4/3] relative overflow-hidden">
+                        <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                          <Button size="icon" variant="secondary" className="rounded-full shadow-lg" onClick={() => openProductDetail(product)}>
+                            <Maximize2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                        <button 
+                          onClick={() => toggleFavorite(product.id)}
+                          className="absolute top-3 right-3 p-2 rounded-full bg-red-500 text-white shadow-lg"
+                        >
+                          <Heart className="w-4 h-4 fill-current" />
+                        </button>
+                      </div>
+                      
+                      <div className="p-4 space-y-3">
+                        <h3 className="font-bold text-foreground line-clamp-1">{product.name}</h3>
+                        <div className="flex items-center justify-between">
+                          <p className="text-xl font-bold text-primary">{product.price.toLocaleString()} دج</p>
+                          <p className="text-xs font-bold text-secondary">الربح: {product.commission.toLocaleString()} دج</p>
+                        </div>
+                        <Button 
+                          onClick={() => openOrderForm(product)}
+                          className="w-full bg-primary hover:bg-primary/90 text-primary-foreground gap-2 rounded-xl h-10 text-xs font-bold"
+                        >
+                          <ShoppingCart className="w-4 h-4" />
+                          طلب المنتج
+                        </Button>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              ) : (
+                <div className="bg-card rounded-[2.5rem] p-20 text-center border-2 border-dashed border-border/60">
+                  <div className="w-24 h-24 bg-muted rounded-full flex items-center justify-center mx-auto mb-6">
+                    <Heart className="w-12 h-12 text-muted-foreground/40" />
+                  </div>
+                  <h4 className="text-xl font-bold text-foreground mb-2">قائمة المفضلة فارغة</h4>
+                  <p className="text-muted-foreground max-w-md mx-auto mb-8">
+                    لم تقم بإضافة أي منتجات للمفضلة بعد. ابحث عن المنتجات التي تعجبك واضغط على أيقونة القلب.
+                  </p>
+                  <Button onClick={() => setActiveTab("products")} variant="outline" className="rounded-2xl h-12 px-8 font-bold">
+                    الذهاب للمتجر
+                  </Button>
+                </div>
+              )}
             </div>
           )}
 
@@ -1082,29 +1217,271 @@ const Dashboard = () => {
             </div>
 
             <div className="space-y-2">
-              <Label className="text-sm font-semibold">تفاصيل الحساب ({withdrawMethod})</Label>
+              <Label className="text-sm font-semibold">رقم الحساب / RIP</Label>
               <Input
-                placeholder={withdrawMethod === "CCP" ? "رقم الحساب / المفتاح" : "رقم الـ RIP"}
+                placeholder="أدخل رقم الحساب..."
                 value={withdrawAccount}
                 onChange={(e) => setWithdrawAccount(e.target.value)}
-                className="rounded-xl font-mono"
+                className="rounded-xl h-11"
               />
             </div>
           </div>
 
-          <DialogFooter className="pt-2">
-            <Button 
-              className="w-full h-12 rounded-xl bg-secondary text-secondary-foreground hover:bg-secondary/90 text-lg font-bold"
+          <DialogFooter className="sm:justify-start gap-2">
+            <Button
+              className="w-full h-12 rounded-xl bg-secondary text-secondary-foreground font-bold"
               onClick={() => {
-                toast({ title: "✅ تم إرسال الطلب", description: "سيتم مراجعة طلبك وتحويل المبلغ خلال 24-48 ساعة" });
+                toast({ title: "تم إرسال طلب السحب بنجاح! ✅" });
                 setWithdrawalDialogOpen(false);
-                setWithdrawAmount("");
-                setWithdrawAccount("");
               }}
             >
               تأكيد الطلب
             </Button>
+            <Button variant="outline" className="w-full h-12 rounded-xl" onClick={() => setWithdrawalDialogOpen(false)}>
+              إلغاء
+            </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ===== PRODUCT DETAIL DIALOG ===== */}
+      <Dialog open={isDetailDialogOpen} onOpenChange={setIsDetailDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto rounded-[2rem] p-0 border-none bg-background shadow-2xl" dir="rtl">
+          {selectedProduct && (
+            <div className="flex flex-col lg:flex-row h-full">
+              {/* Image Gallery Side */}
+              <div className="lg:w-1/2 p-6 lg:p-10 bg-muted/30 relative">
+                <div className="aspect-square rounded-3xl overflow-hidden bg-white shadow-inner mb-6 space-y-4">
+                  <motion.img 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    key={selectedProduct.image}
+                    src={selectedProduct.image} 
+                    alt={selectedProduct.name} 
+                    className="w-full h-full object-cover" 
+                  />
+                </div>
+                <div className="grid grid-cols-4 gap-3">
+                  {selectedProduct.images.map((img: string, i: number) => (
+                    <button 
+                      key={i} 
+                      onClick={() => setSelectedProduct({...selectedProduct, image: img})}
+                      className={`aspect-square rounded-xl overflow-hidden border-2 transition-all ${selectedProduct.image === img ? "border-primary shadow-md" : "border-transparent opacity-60 hover:opacity-100"}`}
+                    >
+                      <img src={img} className="w-full h-full object-cover" />
+                    </button>
+                  ))}
+                </div>
+                <Button 
+                  variant="secondary" 
+                  size="sm" 
+                  className="absolute top-10 left-10 rounded-full gap-2 backdrop-blur-md"
+                  onClick={() => {
+                    // Logic to download image would go here
+                    toast({ title: "بدأ تحميل الصور... 📥" });
+                  }}
+                >
+                  <Download className="w-4 h-4" />
+                  تحميل الصور
+                </Button>
+              </div>
+
+              {/* Content Side */}
+              <div className="lg:w-1/2 p-8 lg:p-12 space-y-8 flex flex-col">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="px-3 py-1 bg-primary/10 text-primary text-xs font-bold rounded-full uppercase tracking-wider">
+                      {selectedProduct.category}
+                    </span>
+                    <button 
+                      onClick={() => toggleFavorite(selectedProduct.id)}
+                      className={`p-2.5 rounded-full transition-all ${favorites.has(selectedProduct.id) ? "bg-red-500 text-white" : "bg-muted text-muted-foreground hover:bg-muted/80"}`}
+                    >
+                      <Heart className={`w-5 h-5 ${favorites.has(selectedProduct.id) ? "fill-current" : ""}`} />
+                    </button>
+                  </div>
+                  <div className="flex items-start justify-between gap-4">
+                    <h2 className="text-3xl font-black text-foreground">{selectedProduct.name}</h2>
+                    <Button variant="ghost" size="icon" onClick={() => {
+                      navigator.clipboard.writeText(selectedProduct.name);
+                      toast({ title: "تم نسخ الاسم" });
+                    }}>
+                      <Copy className="w-5 h-5 text-muted-foreground" />
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="bg-muted/50 p-4 rounded-2xl">
+                    <p className="text-xs text-muted-foreground mb-1">سعر البيع النهائي</p>
+                    <p className="text-2xl font-black text-primary">{selectedProduct.price.toLocaleString()} دج</p>
+                  </div>
+                  <div className="bg-secondary/10 p-4 rounded-2xl border border-secondary/20">
+                    <p className="text-xs text-muted-foreground mb-1">عمولتك الصافية</p>
+                    <p className="text-2xl font-black text-secondary">{selectedProduct.commission.toLocaleString()} دج</p>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-bold flex items-center gap-2">
+                      <MessageSquare className="w-4 h-4 text-primary" />
+                      النص الإعلاني الجاهز
+                    </h4>
+                    <Button variant="outline" size="sm" className="h-8 gap-1.5 rounded-lg text-xs" onClick={() => {
+                      navigator.clipboard.writeText(selectedProduct.adText);
+                      toast({ title: "تم نسخ النص الإعلاني ✨" });
+                    }}>
+                      <Copy className="w-3.5 h-3.5" />
+                      نسخ النص
+                    </Button>
+                  </div>
+                  <div className="bg-muted/50 p-5 rounded-2xl border border-border/50 text-sm leading-relaxed text-muted-foreground italic">
+                    {selectedProduct.adText || "لا يوجد نص إعلاني متوفر حالياً لهذا المنتج."}
+                  </div>
+                </div>
+
+                <div className="mt-auto pt-6 flex gap-4">
+                  <Button 
+                    className="flex-1 h-14 rounded-2xl bg-primary text-primary-foreground font-black text-lg gap-3 shadow-xl shadow-primary/20"
+                    onClick={() => {
+                      setIsDetailDialogOpen(false);
+                      openOrderForm(selectedProduct);
+                    }}
+                  >
+                    <ShoppingCart className="w-6 h-6" />
+                    اطلب المنتج الآن
+                  </Button>
+                  <Button 
+                    variant="outline"
+                    className={`h-14 w-14 rounded-2xl border-2 flex items-center justify-center ${storeProducts.has(selectedProduct.id) ? "border-secondary text-secondary bg-secondary/5" : "border-border"}`}
+                    onClick={() => toggleStoreProduct(selectedProduct.id)}
+                  >
+                    <PackagePlus className="w-7 h-7" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* ===== MANUAL ORDER DIALOG ===== */}
+      <Dialog open={isOrderDialogOpen} onOpenChange={setIsOrderDialogOpen}>
+        <DialogContent className="max-w-2xl rounded-[2.5rem] p-0 border-none overflow-hidden" dir="rtl">
+          {selectedProduct && (
+            <div className="flex flex-col">
+              <div className="bg-primary p-8 text-primary-foreground flex flex-col md:flex-row items-center gap-6">
+                <div className="w-24 h-24 bg-white rounded-2xl overflow-hidden shadow-lg flex-shrink-0">
+                  <img src={selectedProduct.image} className="w-full h-full object-cover" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-black mb-1">تسجيل طلب يدوي</h2>
+                  <p className="opacity-80">سيتم تسجيل هذا الطلب باسمك وستحصل على العمولة بعد التسليم.</p>
+                </div>
+              </div>
+
+              <div className="p-8 space-y-8">
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-2 text-sm font-bold ml-1">
+                      <User className="w-4 h-4 text-primary" /> الاسم الأول
+                    </Label>
+                    <Input 
+                      placeholder="أدخل الاسم..." 
+                      className="h-12 rounded-2xl border-border/60"
+                      value={orderFormData.firstName}
+                      onChange={(e) => setOrderFormData({...orderFormData, firstName: e.target.value})}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-2 text-sm font-bold ml-1">
+                      <User className="w-4 h-4 text-primary" /> اللقب (العائلة)
+                    </Label>
+                    <Input 
+                      placeholder="أدخل اللقب..." 
+                      className="h-12 rounded-2xl border-border/60"
+                      value={orderFormData.lastName}
+                      onChange={(e) => setOrderFormData({...orderFormData, lastName: e.target.value})}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2 text-sm font-bold ml-1">
+                    <Phone className="w-4 h-4 text-primary" /> رقم الهاتف
+                  </Label>
+                  <Input 
+                    placeholder="0xxx xx xx xx" 
+                    className="h-12 rounded-2xl border-border/60 font-mono"
+                    value={orderFormData.phone}
+                    onChange={(e) => setOrderFormData({...orderFormData, phone: e.target.value})}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2 text-sm font-bold ml-1">
+                    <MapPin className="w-4 h-4 text-primary" /> العنوان الكامل (الولاية + المدينة)
+                  </Label>
+                  <Input 
+                    placeholder="مثال: الجزائر، براقي، الشارع الرئيسي..." 
+                    className="h-12 rounded-2xl border-border/60"
+                    value={orderFormData.address}
+                    onChange={(e) => setOrderFormData({...orderFormData, address: e.target.value})}
+                  />
+                </div>
+
+                <div className="bg-muted/40 p-6 rounded-[2rem] border border-border/40 space-y-4">
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-muted-foreground">سعر المنتج:</span>
+                    <span className="font-bold">{selectedProduct.price.toLocaleString()} دج</span>
+                  </div>
+                  <div className="flex justify-between items-center gap-4">
+                    <span className="text-muted-foreground text-sm">سعر التوصيل:</span>
+                    <div className="w-32">
+                      <Input 
+                        type="number" 
+                        value={orderFormData.deliveryFee}
+                        onChange={(e) => setOrderFormData({...orderFormData, deliveryFee: Number(e.target.value)})}
+                        className="h-10 rounded-xl font-bold text-center"
+                      />
+                    </div>
+                  </div>
+                  <div className="h-px bg-border/60 my-2" />
+                  <div className="flex justify-between items-center">
+                    <span className="text-lg font-bold">السعر الكلي:</span>
+                    <span className="text-3xl font-black text-secondary">
+                      {(selectedProduct.price + orderFormData.deliveryFee).toLocaleString()} دج
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex gap-4">
+                  <Button 
+                    className="flex-1 h-16 rounded-[1.5rem] bg-secondary text-secondary-foreground font-black text-xl shadow-xl shadow-secondary/20 hover:scale-[1.02] active:scale-95 transition-all"
+                    onClick={() => {
+                      if (!orderFormData.firstName || !orderFormData.phone || !orderFormData.address) {
+                        toast({ title: "يرجى ملء كافة البيانات الأساسية", variant: "destructive" });
+                        return;
+                      }
+                      toast({ title: "تم تسجيل الطلب بنجاح! 🚀", description: "سيتم تتبع الطلب من قسم طلبياتي." });
+                      setIsOrderDialogOpen(false);
+                      setOrderFormData({ firstName: "", lastName: "", phone: "", address: "", deliveryFee: 500 });
+                    }}
+                  >
+                    تأكيد الطلب نهائياً
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    className="h-16 px-8 rounded-[1.5rem] border-2"
+                    onClick={() => setIsOrderDialogOpen(false)}
+                  >
+                    إلغاء
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>
