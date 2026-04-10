@@ -6,7 +6,6 @@ import Stats from "@/components/landing/Stats";
 import TopAffiliates from "@/components/landing/TopAffiliates";
 import LevelSystem from "@/components/landing/LevelSystem";
 import CTA from "@/components/landing/CTA";
-import JoinAsSeller from "@/components/landing/JoinAsSeller";
 import Contact from "@/components/landing/Contact";
 import Footer from "@/components/landing/Footer";
 
@@ -26,9 +25,6 @@ const Index = () => {
         <TopAffiliates />
         <section id="levels">
           <LevelSystem />
-        </section>
-        <section id="sellers">
-          <JoinAsSeller />
         </section>
         <CTA />
         <section id="contact">

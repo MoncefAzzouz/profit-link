@@ -6,7 +6,7 @@ import {
   HelpCircle, LogOut, Menu, X, Copy, Check, TrendingUp,
   Clock, CheckCircle, XCircle, Truck, Eye, ChevronLeft,
   Calendar, Filter, Search, SlidersHorizontal, Store, Sparkles,
-  Heart, Download, PlusCircle, User, Phone, MapPin, PackagePlus, MessageSquare, Plus, Trash2, Maximize2
+  Heart, Download, PlusCircle, User, Phone, MapPin, PackagePlus, MessageSquare, Plus, Trash2, Maximize2, LayoutTemplate
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -42,13 +42,14 @@ import EarningsChart from "@/components/dashboard/EarningsChart";
 import { shippingRates, shippingRegions } from "@/data/mockShippingData";
 import { mockWithdrawalRequests } from "@/data/mockAdminData";
 import { mockSellerStats, sellerEarningsData } from "@/data/mockSellerData";
+import LandingPageBuilder from "@/components/seller/LandingPageBuilder";
 import {
   BarChart, Bar, PieChart, Pie, Cell, ResponsiveContainer,
   XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip,
   AreaChart, Area
 } from "recharts";
 
-type Tab = "overview" | "products" | "my_store" | "favorites" | "orders" | "earnings" | "withdrawals" | "levels" | "shipping" | "support";
+type Tab = "overview" | "products" | "my_store" | "favorites" | "landing_pages" | "orders" | "earnings" | "withdrawals" | "levels" | "shipping" | "support";
 
 const orderStatusPieData = [
   { name: "مسلّمة", value: 812, color: "hsl(160, 84%, 39%)" },
@@ -268,6 +269,7 @@ const Dashboard = () => {
     { id: "products" as Tab, label: "المنتجات", icon: Package },
     { id: "my_store" as Tab, label: "متجري", icon: Store },
     { id: "favorites" as Tab, label: "المنتجات المفضلة", icon: Heart },
+    { id: "landing_pages" as Tab, label: "صفحات الهبوط", icon: LayoutTemplate },
     { id: "orders" as Tab, label: "طلبياتي", icon: ShoppingCart },
     { id: "earnings" as Tab, label: "الأرباح", icon: Wallet },
     { id: "withdrawals" as Tab, label: "طلبات السحب", icon: CheckCircle },
@@ -951,6 +953,13 @@ const Dashboard = () => {
                   </Button>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Landing Pages Tab */}
+          {activeTab === "landing_pages" && (
+            <div className="space-y-6">
+              <LandingPageBuilder />
             </div>
           )}
 

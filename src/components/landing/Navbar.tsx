@@ -74,12 +74,6 @@ const Navbar = () => {
                   تسجيل الدخول
                 </Button>
               </Link>
-              <Link to="/seller-register">
-                <Button variant={isScrolled ? "outline" : "glass"} size="sm" className="gap-1.5 shadow-sm">
-                  <Store className="h-4 w-4" />
-                  سجّل كبائع
-                </Button>
-              </Link>
               <Link to="/auth">
                 <Button variant={isScrolled ? "default" : "hero"} size="sm" className="gap-1.5 shadow-md">
                   <UserPlus className="h-4 w-4" />
@@ -134,15 +128,9 @@ const Navbar = () => {
                     تسجيل الدخول
                   </Button>
                 </Link>
-                <Link to="/seller-register" onClick={() => setIsMobileMenuOpen(false)}>
-                  <Button variant="outline" className="w-full gap-2 h-12">
-                    <Store className="h-4 w-4" />
-                    سجّل كبائع
-                  </Button>
-                </Link>
                 <Link to="/auth" onClick={() => setIsMobileMenuOpen(false)}>
-                  <Button variant="default" className="w-full gap-2 h-12">
-                    <UserPlus className="h-4 w-4" />
+                  <Button variant="default" className="w-full gap-2 h-12 text-lg">
+                    <UserPlus className="h-5 w-5" />
                     سجّل كمسوّق
                   </Button>
                 </Link>
