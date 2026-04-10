@@ -35,7 +35,7 @@ import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { format, parseISO, isAfter, isBefore, isEqual } from "date-fns";
 import { ar } from "date-fns/locale";
 import { mockProducts, categories } from "@/data/mockProducts";
-import { mockOrders, mockAffiliateStats, Order } from "@/data/mockAffiliateData";
+import { mockOrders, mockAffiliateStats, Order, wilayas } from "@/data/mockAffiliateData";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import EarningsChart from "@/components/dashboard/EarningsChart";
@@ -122,9 +122,22 @@ const Dashboard = () => {
     firstName: "",
     lastName: "",
     phone: "",
+    wilaya: "",
     address: "",
+    deliveryType: "home" as "home" | "office",
     deliveryFee: 500
   });
+
+  // Calculate delivery fee automatically
+  useEffect(() => {
+    if (orderFormData.wilaya) {
+      const rate = shippingRates.find(r => r.wilaya === orderFormData.wilaya);
+      if (rate) {
+        const fee = orderFormData.deliveryType === "home" ? rate.homePrice : rate.officePrice;
+        setOrderFormData(prev => ({ ...prev, deliveryFee: fee }));
+      }
+    }
+  }, [orderFormData.wilaya, orderFormData.deliveryType]);
 
   useEffect(() => {
     const storedUser = localStorage.getItem("affiliate_user");
@@ -1746,12 +1759,54 @@ const Dashboard = () => {
                   />
                 </div>
 
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-2 text-sm font-bold ml-1">
+                      <MapPin className="w-4 h-4 text-primary" /> الولاية
+                    </Label>
+                    <Select 
+                      value={orderFormData.wilaya} 
+                      onValueChange={(val) => setOrderFormData({ ...orderFormData, wilaya: val })}
+                    >
+                      <SelectTrigger className="h-12 rounded-2xl border-border/60">
+                        <SelectValue placeholder="اختر الولاية" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {wilayas.map((w) => (
+                          <SelectItem key={w} value={w}>{w}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-2 text-sm font-bold ml-1">
+                      <Truck className="w-4 h-4 text-primary" /> نوع التوصيل
+                    </Label>
+                    <div className="flex bg-muted p-1 rounded-xl h-12">
+                      <button 
+                        type="button"
+                        onClick={() => setOrderFormData({ ...orderFormData, deliveryType: "home" })}
+                        className={`flex-1 flex items-center justify-center rounded-lg text-xs font-bold transition-all ${orderFormData.deliveryType === "home" ? "bg-background text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                      >
+                        للمنزل
+                      </button>
+                      <button 
+                        type="button"
+                        onClick={() => setOrderFormData({ ...orderFormData, deliveryType: "office" })}
+                        className={`flex-1 flex items-center justify-center rounded-lg text-xs font-bold transition-all ${orderFormData.deliveryType === "office" ? "bg-background text-secondary shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                      >
+                        للمكتب
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
                 <div className="space-y-2">
                   <Label className="flex items-center gap-2 text-sm font-bold ml-1">
-                    <MapPin className="w-4 h-4 text-primary" /> العنوان الكامل (الولاية + المدينة)
+                    <MapPin className="w-4 h-4 text-primary" /> العنوان بالتفصيل
                   </Label>
                   <Input 
-                    placeholder="مثال: الجزائر، براقي، الشارع الرئيسي..." 
+                    placeholder="رقم المنزل، الشارع، البلدية..." 
                     className="h-12 rounded-2xl border-border/60"
                     value={orderFormData.address}
                     onChange={(e) => setOrderFormData({...orderFormData, address: e.target.value})}
@@ -1770,7 +1825,7 @@ const Dashboard = () => {
                         type="number" 
                         value={orderFormData.deliveryFee}
                         onChange={(e) => setOrderFormData({...orderFormData, deliveryFee: Number(e.target.value)})}
-                        className="h-10 rounded-xl font-bold text-center"
+                        className="h-10 rounded-xl font-bold text-center bg-background border-none shadow-inner"
                       />
                     </div>
                   </div>
@@ -1787,13 +1842,13 @@ const Dashboard = () => {
                   <Button 
                     className="flex-1 h-16 rounded-[1.5rem] bg-secondary text-secondary-foreground font-black text-xl shadow-xl shadow-secondary/20 hover:scale-[1.02] active:scale-95 transition-all"
                     onClick={() => {
-                      if (!orderFormData.firstName || !orderFormData.phone || !orderFormData.address) {
+                      if (!orderFormData.firstName || !orderFormData.phone || !orderFormData.address || !orderFormData.wilaya) {
                         toast({ title: "يرجى ملء كافة البيانات الأساسية", variant: "destructive" });
                         return;
                       }
                       toast({ title: "تم تسجيل الطلب بنجاح! 🚀", description: "سيتم تتبع الطلب من قسم طلبياتي." });
                       setIsOrderDialogOpen(false);
-                      setOrderFormData({ firstName: "", lastName: "", phone: "", address: "", deliveryFee: 500 });
+                      setOrderFormData({ firstName: "", lastName: "", phone: "", wilaya: "", address: "", deliveryType: "home", deliveryFee: 500 });
                     }}
                   >
                     تأكيد الطلب نهائياً
