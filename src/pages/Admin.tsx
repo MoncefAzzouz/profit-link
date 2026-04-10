@@ -5,7 +5,7 @@ import {
   LayoutDashboard, Users, Package, ShoppingCart, Wallet,
   Settings, Menu, X, TrendingUp, CheckCircle, XCircle,
   Truck, Clock, Eye, Edit, Ban, Search, Filter, Plus,
-  BarChart3, ChevronLeft, AlertTriangle, SlidersHorizontal, X
+  BarChart3, ChevronLeft, AlertTriangle, SlidersHorizontal
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
