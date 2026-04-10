@@ -5,7 +5,7 @@ import {
   LayoutDashboard, Users, Package, ShoppingCart, Wallet,
   Settings, Menu, X, TrendingUp, CheckCircle, XCircle,
   Truck, Clock, Eye, Edit, Ban, Search, Filter, Plus,
-  BarChart3, ChevronLeft, AlertTriangle, SlidersHorizontal
+  BarChart3, ChevronLeft, AlertTriangle, SlidersHorizontal, Store
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,14 +17,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { mockProducts, categories } from "@/data/mockProducts";
-import { mockAffiliates, mockAdminStats, mockAllOrders } from "@/data/mockAdminData";
+import { mockAffiliates, mockAdminStats, mockAllOrders, mockSellers } from "@/data/mockAdminData";
 import { useToast } from "@/hooks/use-toast";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell
 } from "recharts";
 
-type Tab = "overview" | "affiliates" | "orders" | "products" | "analytics" | "settings";
+type Tab = "overview" | "affiliates" | "sellers" | "orders" | "products" | "analytics" | "settings";
 
 const statusConfig = {
   pending: { label: "قيد الانتظار", icon: Clock, color: "text-yellow-600 bg-yellow-100" },
