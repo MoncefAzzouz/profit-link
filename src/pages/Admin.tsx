@@ -70,10 +70,13 @@ const Admin = () => {
   const [productSort, setProductSort] = useState("default");
   const [productStockFilter, setProductStockFilter] = useState("all");
   const [showProductFilters, setShowProductFilters] = useState(false);
+  const [sellerSearch, setSellerSearch] = useState("");
+  const [sellerStatus, setSellerStatus] = useState("all");
 
   const sidebarItems = [
     { id: "overview" as Tab, label: "نظرة عامة", icon: LayoutDashboard },
     { id: "affiliates" as Tab, label: "المسوّقين", icon: Users },
+    { id: "sellers" as Tab, label: "البائعين", icon: Store },
     { id: "orders" as Tab, label: "الطلبيات", icon: ShoppingCart },
     { id: "products" as Tab, label: "المنتجات", icon: Package },
     { id: "analytics" as Tab, label: "الإحصائيات", icon: BarChart3 },
