@@ -40,6 +40,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import EarningsChart from "@/components/dashboard/EarningsChart";
 import { shippingRates, shippingRegions } from "@/data/mockShippingData";
+import { mockWithdrawalRequests } from "@/data/mockAdminData";
 
 type Tab = "overview" | "products" | "my_store" | "favorites" | "orders" | "earnings" | "withdrawals" | "levels" | "shipping" | "support";
 
