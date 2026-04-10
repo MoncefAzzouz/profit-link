@@ -337,3 +337,55 @@ export const mockWithdrawalRequests: WithdrawalRequest[] = [
     date: "2024-01-15",
   },
 ];
+
+export interface JoinRequest {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  role: "affiliate" | "seller";
+  wilaya: string;
+  storeName?: string;
+  ccp?: string;
+  category?: string;
+  status: "pending" | "approved" | "rejected";
+  date: string;
+}
+
+export const mockJoinRequests: JoinRequest[] = [
+  {
+    id: "jr-001",
+    name: "بلال قدور",
+    email: "bilal@email.com",
+    phone: "0555998877",
+    role: "affiliate",
+    wilaya: "16 Alger - الجزائر",
+    ccp: "0012341234 / 44",
+    status: "pending",
+    date: "2024-01-25",
+  },
+  {
+    id: "jr-002",
+    name: "سامية تواتي",
+    email: "samia@store.com",
+    phone: "0666112233",
+    role: "seller",
+    wilaya: "31 Oran - وهران",
+    storeName: "سامية فاشن",
+    category: "أزياء",
+    status: "pending",
+    date: "2024-01-24",
+  },
+  {
+    id: "jr-003",
+    name: "عمر خالد",
+    email: "omar@marketing.dz",
+    phone: "0777445566",
+    role: "affiliate",
+    wilaya: "06 Béjaïa - بجاية",
+    ccp: "0098765432 / 11",
+    status: "pending",
+    date: "2024-01-23",
+  },
+];
+

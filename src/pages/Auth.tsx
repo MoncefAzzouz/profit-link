@@ -76,6 +76,24 @@ const Auth = () => {
     setIsLoading(true);
     await new Promise(resolve => setTimeout(resolve, 1500));
 
+    if (!isLogin) {
+      // Save join request for admin review
+      const newRequest = {
+        id: "jr-" + Date.now(),
+        name: `${formData.firstName} ${formData.lastName}`,
+        email: formData.email,
+        phone: formData.phone,
+        role: "affiliate", // Registration page is specifically for affiliates
+        wilaya: formData.wilaya,
+        ccp: formData.ccp,
+        status: "pending",
+        date: new Date().toISOString().split('T')[0]
+      };
+      
+      const existingRequests = JSON.parse(localStorage.getItem("admin_join_requests") || "[]");
+      localStorage.setItem("admin_join_requests", JSON.stringify([newRequest, ...existingRequests]));
+    }
+
     localStorage.setItem("affiliate_user", JSON.stringify({
       id: "aff-" + Date.now(),
       name: `${formData.firstName} ${formData.lastName}` || "مسوّق جديد",

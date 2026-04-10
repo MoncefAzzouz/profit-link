@@ -1,14 +1,22 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import {
   LayoutDashboard, Users, Package, ShoppingCart, Wallet,
   Settings, Menu, X, TrendingUp, CheckCircle, XCircle,
   Truck, Clock, Eye, Edit, Ban, Search, Filter, Plus,
-  BarChart3, ChevronLeft, AlertTriangle, SlidersHorizontal, Store
+  BarChart3, ChevronLeft, AlertTriangle, SlidersHorizontal, Store, UserPlus, Check, MapPin, CreditCard,
+  Video, Star, EyeOff, Trash2, Upload, FileText, Film, Image as ImageIcon
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { 
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription, DialogTrigger
+} from "@/components/ui/dialog";
+import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
@@ -16,15 +24,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { mockProducts, categories } from "@/data/mockProducts";
-import { mockAffiliates, mockAdminStats, mockAllOrders, mockSellers, mockWithdrawalRequests, WithdrawalRequest } from "@/data/mockAdminData";
+import { mockProducts, categories, Product } from "@/data/mockProducts";
+import { mockAffiliates, mockAdminStats, mockAllOrders, mockSellers, mockWithdrawalRequests, WithdrawalRequest, mockJoinRequests, JoinRequest } from "@/data/mockAdminData";
 import { useToast } from "@/hooks/use-toast";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell
 } from "recharts";
 
-type Tab = "overview" | "affiliates" | "sellers" | "orders" | "products" | "analytics" | "withdrawals" | "settings";
+type Tab = "overview" | "affiliates" | "sellers" | "join_requests" | "orders" | "products" | "analytics" | "withdrawals" | "settings";
 
 const statusConfig = {
   pending: { label: "قيد الانتظار", icon: Clock, color: "text-yellow-600 bg-yellow-100" },
@@ -74,23 +82,66 @@ const Admin = () => {
   const [sellerStatus, setSellerStatus] = useState("all");
   const [withdrawalSearch, setWithdrawalSearch] = useState("");
   const [withdrawalStatus, setWithdrawalStatus] = useState("all");
+  const [joinRequests, setJoinRequests] = useState<JoinRequest[]>(mockJoinRequests);
+  const [joinSearch, setJoinSearch] = useState("");
+  const [joinRole, setJoinRole] = useState("all");
+  
+  // Product Management States
+  const [products, setProducts] = useState(mockProducts);
+  const [isProductDialogOpen, setIsProductDialogOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [productFormData, setProductFormData] = useState<Partial<Product>>({
+    name: "",
+    description: "",
+    adText: "",
+    price: 0,
+    originalPrice: 0,
+    commission: 0,
+    category: "إلكترونيات",
+    stock: 0,
+    image: "",
+    videoUrl: "",
+    isVisible: true,
+    isTrend: false,
+    isFeatured: false,
+    adMaterials: []
+  });
+
+  useEffect(() => {
+    // Load persisted requests
+    const persistedReqs = JSON.parse(localStorage.getItem("admin_join_requests") || "[]");
+    const uniqueReqs = [...persistedReqs, ...mockJoinRequests].filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
+    setJoinRequests(uniqueReqs);
+
+    // Load persisted products
+    const persistedProds = JSON.parse(localStorage.getItem("admin_products") || "[]");
+    // Merge with mock products but ensure persistence overrides/complements
+    const uniqueProds = [...persistedProds, ...mockProducts].filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
+    setProducts(uniqueProds);
+  }, []);
+
+  const saveProductsToStorage = (updatedProducts: Product[]) => {
+    // Only save the ones that were potentially modified or added (for simulation simplicity we save all current state)
+    localStorage.setItem("admin_products", JSON.stringify(updatedProducts));
+  };
 
   const sidebarItems = [
     { id: "overview" as Tab, label: "نظرة عامة", icon: LayoutDashboard },
+    { id: "products" as Tab, label: "المنتجات", icon: Package },
     { id: "affiliates" as Tab, label: "المسوّقين", icon: Users },
     { id: "sellers" as Tab, label: "البائعين", icon: Store },
+    { id: "join_requests" as Tab, label: "طلبات الانضمام", icon: UserPlus },
     { id: "orders" as Tab, label: "الطلبيات", icon: ShoppingCart },
     { id: "withdrawals" as Tab, label: "طلبات السحب", icon: Wallet },
-    { id: "products" as Tab, label: "المنتجات", icon: Package },
     { id: "analytics" as Tab, label: "الإحصائيات", icon: BarChart3 },
     { id: "settings" as Tab, label: "الإعدادات", icon: Settings },
   ];
 
   const filteredAffiliates = useMemo(() => {
     return mockAffiliates.filter((affiliate) => {
-      const matchesSearch = affiliate.name.includes(affiliateSearch) || 
-                           affiliate.email.includes(affiliateSearch) ||
-                           affiliate.phone.includes(affiliateSearch);
+      const matchesSearch = affiliate.name.includes(affiliateSearch) ||
+        affiliate.email.includes(affiliateSearch) ||
+        affiliate.phone.includes(affiliateSearch);
       const matchesStatus = affiliateStatus === "all" || affiliate.status === affiliateStatus;
       return matchesSearch && matchesStatus;
     });
@@ -98,10 +149,10 @@ const Admin = () => {
 
   const filteredSellers = useMemo(() => {
     return mockSellers.filter((seller) => {
-      const matchesSearch = seller.name.includes(sellerSearch) || 
-                           seller.email.includes(sellerSearch) ||
-                           seller.storeName.includes(sellerSearch) ||
-                           seller.phone.includes(sellerSearch);
+      const matchesSearch = seller.name.includes(sellerSearch) ||
+        seller.email.includes(sellerSearch) ||
+        seller.storeName.includes(sellerSearch) ||
+        seller.phone.includes(sellerSearch);
       const matchesStatus = sellerStatus === "all" || seller.status === sellerStatus;
       return matchesSearch && matchesStatus;
     });
@@ -109,9 +160,9 @@ const Admin = () => {
 
   const filteredOrders = useMemo(() => {
     return mockAllOrders.filter((order) => {
-      const matchesSearch = order.productName.includes(orderSearch) || 
-                           order.customerName.includes(orderSearch) ||
-                           order.affiliateName.includes(orderSearch);
+      const matchesSearch = order.productName.includes(orderSearch) ||
+        order.customerName.includes(orderSearch) ||
+        order.affiliateName.includes(orderSearch);
       const matchesStatus = orderStatus === "all" || order.status === orderStatus;
       return matchesSearch && matchesStatus;
     });
@@ -119,8 +170,8 @@ const Admin = () => {
 
   const filteredWithdrawals = useMemo(() => {
     return mockWithdrawalRequests.filter((req) => {
-      const matchesSearch = req.requesterName.includes(withdrawalSearch) || 
-                           req.accountDetails.includes(withdrawalSearch);
+      const matchesSearch = req.requesterName.includes(withdrawalSearch) ||
+        req.accountDetails.includes(withdrawalSearch);
       const matchesStatus = withdrawalStatus === "all" || req.status === withdrawalStatus;
       return matchesSearch && matchesStatus;
     });
@@ -144,7 +195,7 @@ const Admin = () => {
 
   const filteredProducts = useMemo(() => {
     const range = productPriceRanges[productPriceRange];
-    return mockProducts
+    return products
       .filter((product) => {
         const matchesSearch = product.name.includes(productSearch) || product.description.includes(productSearch);
         const matchesCategory = productCategory === "الكل" || product.category === productCategory;
@@ -161,6 +212,104 @@ const Admin = () => {
       });
   }, [productSearch, productCategory, productPriceRange, productSort, productStockFilter]);
 
+  const filteredJoinRequests = useMemo(() => {
+    return joinRequests.filter((req) => {
+      const matchesSearch = req.name.includes(joinSearch) || req.email.includes(joinSearch) || req.phone.includes(joinSearch);
+      const matchesRole = joinRole === "all" || req.role === joinRole;
+      return matchesSearch && matchesRole;
+    });
+  }, [joinRequests, joinSearch, joinRole]);
+
+  const handleApproveJoin = (id: string) => {
+    setJoinRequests(prev => {
+      const updated = prev.filter(r => r.id !== id);
+      // Persist to localStorage (only the ones not in mock data ideally, but for simulation let's just save the current ones minus mocks if we want, or just filter localStorage)
+      const persisted = JSON.parse(localStorage.getItem("admin_join_requests") || "[]");
+      localStorage.setItem("admin_join_requests", JSON.stringify(persisted.filter((r: any) => r.id !== id)));
+      return updated;
+    });
+    toast({ title: "تم قبول الطلب بنجاح ✅", description: "تم تفعيل حساب المستخدم وإرسال بريد إلكتروني له." });
+  };
+
+  const handleRejectJoin = (id: string) => {
+    setJoinRequests(prev => {
+      const updated = prev.filter(r => r.id !== id);
+      const persisted = JSON.parse(localStorage.getItem("admin_join_requests") || "[]");
+      localStorage.setItem("admin_join_requests", JSON.stringify(persisted.filter((r: any) => r.id !== id)));
+      return updated;
+    });
+    toast({ title: "تم رفض الطلب", variant: "destructive" });
+  };
+
+  // Product CRUD Handlers
+  const handleOpenAddProduct = () => {
+    setEditingProduct(null);
+    setProductFormData({
+      name: "",
+      description: "",
+      adText: "",
+      price: 0,
+      originalPrice: 0,
+      commission: 0,
+      category: "إلكترونيات",
+      stock: 0,
+      image: "",
+      videoUrl: "",
+      isVisible: true,
+      isTrend: false,
+      isFeatured: false,
+      adMaterials: []
+    });
+    setIsProductDialogOpen(true);
+  };
+
+  const handleOpenEditProduct = (product: Product) => {
+    setEditingProduct(product);
+    setProductFormData({ ...product });
+    setIsProductDialogOpen(true);
+  };
+
+  const handleSaveProduct = (e: React.FormEvent) => {
+    e.preventDefault();
+    const productToSave = {
+      ...productFormData,
+      id: editingProduct?.id || `prod-${Date.now()}`,
+      images: productFormData.image ? [productFormData.image] : [],
+      features: productFormData.features || []
+    } as Product;
+
+    const updatedProducts = editingProduct 
+      ? products.map(p => p.id === editingProduct.id ? productToSave : p)
+      : [productToSave, ...products];
+
+    setProducts(updatedProducts);
+    saveProductsToStorage(updatedProducts);
+    setIsProductDialogOpen(false);
+    toast({
+      title: editingProduct ? "تم تحديث المنتج بنجاح" : "تم إضافة المنتج بنجاح",
+      description: `المنتج "${productToSave.name}" جاهز الآن.`,
+    });
+  };
+
+  const handleDeleteProduct = (id: string) => {
+    const updatedProducts = products.filter(p => p.id !== id);
+    setProducts(updatedProducts);
+    saveProductsToStorage(updatedProducts);
+    toast({ title: "تم حذف المنتج", variant: "destructive" });
+  };
+
+  const handleToggleProductStatus = (id: string, field: keyof Product) => {
+    const updatedProducts = products.map(p => {
+      if (p.id === id) {
+        return { ...p, [field]: !p[field] };
+      }
+      return p;
+    });
+    setProducts(updatedProducts);
+    saveProductsToStorage(updatedProducts);
+    toast({ title: "تم تحديث حالة المنتج" });
+  };
+
   const handleSuspendAffiliate = (id: string) => {
     toast({ title: "تم إيقاف المسوّق" });
   };
@@ -172,9 +321,8 @@ const Admin = () => {
   return (
     <div className="dashboard-page-admin">
       {/* Sidebar */}
-      <aside className={`fixed lg:static inset-y-0 right-0 z-50 w-72 shrink-0 bg-gradient-to-b from-slate-900 via-[hsl(222,47%,12%)] to-[hsl(222,47%,7%)] text-white border-l border-white/[0.07] shadow-[4px_0_40px_-12px_rgba(0,0,0,0.45)] transform transition-transform duration-300 ease-out ${
-        sidebarOpen ? "translate-x-0" : "translate-x-full lg:translate-x-0"
-      }`}>
+      <aside className={`fixed lg:static inset-y-0 right-0 z-50 w-72 shrink-0 bg-gradient-to-b from-slate-900 via-[hsl(222,47%,12%)] to-[hsl(222,47%,7%)] text-white border-l border-white/[0.07] shadow-[4px_0_40px_-12px_rgba(0,0,0,0.45)] transform transition-transform duration-300 ease-out ${sidebarOpen ? "translate-x-0" : "translate-x-full lg:translate-x-0"
+        }`}>
         <div className="flex flex-col h-full">
           {/* Logo */}
           <div className="p-4 pt-5">
@@ -200,11 +348,10 @@ const Admin = () => {
                   setActiveTab(item.id);
                   setSidebarOpen(false);
                 }}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm transition-all duration-200 ${
-                  activeTab === item.id
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm transition-all duration-200 ${activeTab === item.id
                     ? "bg-white/[0.12] text-white shadow-lg shadow-black/25 ring-1 ring-emerald-400/35"
                     : "text-white/65 hover:bg-white/[0.08] hover:text-white"
-                }`}
+                  }`}
               >
                 <item.icon className="w-5 h-5 shrink-0 opacity-90" />
                 <span className="font-medium">{item.label}</span>
@@ -372,7 +519,7 @@ const Admin = () => {
                         </defs>
                         <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                         <XAxis dataKey="month" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }} />
-                        <YAxis tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }} tickFormatter={(v) => `${(v/1000000).toFixed(1)}M`} />
+                        <YAxis tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }} tickFormatter={(v) => `${(v / 1000000).toFixed(1)}M`} />
                         <Tooltip
                           contentStyle={{
                             backgroundColor: "hsl(var(--card))",
@@ -675,6 +822,120 @@ const Admin = () => {
             </div>
           )}
 
+          {/* Join Requests Tab */}
+          {activeTab === "join_requests" && (
+            <div className="space-y-6">
+              {/* Filters */}
+              <div className="dash-card p-4 flex flex-wrap gap-3">
+                <div className="relative flex-1 min-w-[200px]">
+                  <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    placeholder="ابحث في طلبات الانضمام..."
+                    value={joinSearch}
+                    onChange={(e) => setJoinSearch(e.target.value)}
+                    className="pr-10"
+                  />
+                </div>
+                <Select value={joinRole} onValueChange={setJoinRole}>
+                  <SelectTrigger className="w-[160px]">
+                    <Filter className="w-4 h-4 ml-2" />
+                    <SelectValue placeholder="النوع" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">الكل</SelectItem>
+                    <SelectItem value="affiliate">مسوّق</SelectItem>
+                    <SelectItem value="seller">بائع</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Join Requests Table */}
+              <div className="dash-card overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-slate-100/95 dark:bg-slate-800/60 border-b border-border/50">
+                      <tr>
+                        <th className="text-right p-4 font-semibold text-foreground">الاسم</th>
+                        <th className="text-right p-4 font-semibold text-foreground">النوع</th>
+                        <th className="text-right p-4 font-semibold text-foreground">الموقع / النشاط</th>
+                        <th className="text-right p-4 font-semibold text-foreground">التاريخ</th>
+                        <th className="text-right p-4 font-semibold text-foreground">إجراءات</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border">
+                      {filteredJoinRequests.map((req) => (
+                        <tr key={req.id} className="hover:bg-muted/50 transition-colors">
+                          <td className="p-4">
+                            <div>
+                              <p className="font-bold text-foreground">{req.name}</p>
+                              <p className="text-xs text-muted-foreground font-mono">{req.email}</p>
+                              <p className="text-[10px] text-muted-foreground">{req.phone}</p>
+                            </div>
+                          </td>
+                          <td className="p-4">
+                            <span className={`inline-flex px-3 py-1 rounded-full text-xs font-bold ${req.role === "affiliate" ? "bg-blue-100 text-blue-700" : "bg-purple-100 text-purple-700"
+                              }`}>
+                              {req.role === "affiliate" ? "مسوّق" : "بائع"}
+                            </span>
+                          </td>
+                          <td className="p-4">
+                            <div className="space-y-0.5">
+                              <p className="text-sm font-medium text-foreground flex items-center gap-1.5">
+                                <MapPin className="w-3.5 h-3.5 text-muted-foreground" /> {req.wilaya}
+                              </p>
+                              {req.role === "seller" && (
+                                <p className="text-xs text-secondary font-bold flex items-center gap-1.5">
+                                  <Store className="w-3.5 h-3.5" /> {req.storeName}
+                                </p>
+                              )}
+                              {req.role === "affiliate" && (
+                                <p className="text-[10px] text-muted-foreground font-mono flex items-center gap-1.5">
+                                  <CreditCard className="w-3.5 h-3.5" /> {req.ccp}
+                                </p>
+                              )}
+                            </div>
+                          </td>
+                          <td className="p-4 text-sm text-muted-foreground font-medium">{req.date}</td>
+                          <td className="p-4 text-left">
+                            <div className="flex gap-2 justify-end">
+                              <Button
+                                size="sm"
+                                variant="hero"
+                                className="bg-secondary hover:bg-secondary/90 h-9 px-4 rounded-xl gap-2 shadow-lg shadow-secondary/20"
+                                onClick={() => handleApproveJoin(req.id)}
+                              >
+                                <Check className="w-4 h-4" /> قبول
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-9 px-4 rounded-xl gap-2 border-destructive/20 text-destructive hover:bg-destructive/5 hover:text-destructive hover:border-destructive/30"
+                                onClick={() => handleRejectJoin(req.id)}
+                              >
+                                <X className="w-4 h-4" /> رفض
+                              </Button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {filteredJoinRequests.length === 0 && (
+                  <div className="text-center py-20 bg-muted/20">
+                    <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4 border border-border/50 shadow-inner">
+                      <UserPlus className="w-8 h-8 text-muted-foreground/30" />
+                    </div>
+                    <p className="text-muted-foreground font-bold">لا توجد طلبات انضمام حالياً</p>
+                    <p className="text-[10px] text-muted-foreground/60 mt-1">سيظهر الطلبات الجديدة هنا للمراجعة والقبول.</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+
           {activeTab === "orders" && (
             <div className="space-y-6">
               {/* Filters */}
@@ -802,7 +1063,7 @@ const Admin = () => {
                       <SlidersHorizontal className="w-4 h-4" />
                       فلاتر
                     </Button>
-                    <Button className="h-12 gap-2 rounded-xl">
+                    <Button className="h-12 gap-2 rounded-xl" onClick={handleOpenAddProduct}>
                       <Plus className="w-4 h-4" />
                       إضافة منتج
                     </Button>
@@ -873,7 +1134,7 @@ const Admin = () => {
                 {(productCategory !== "الكل" || productPriceRange !== 0 || productStockFilter !== "all") && (
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Filter className="w-4 h-4" />
-                    <span>{filteredProducts.length} منتج من أصل {mockProducts.length}</span>
+                    <span>{filteredProducts.length} منتج من أصل {products.length}</span>
                   </div>
                 )}
               </div>
@@ -888,25 +1149,51 @@ const Admin = () => {
                     transition={{ delay: index * 0.05 }}
                     className="dash-card overflow-hidden"
                   >
-                    <div className="aspect-video relative">
-                      <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
-                      <div className="absolute top-3 left-3 bg-secondary text-secondary-foreground px-3 py-1 rounded-full text-sm font-bold">
-                        {product.stock} في المخزون
+                    <div className="aspect-video relative group">
+                      <img src={product.image} alt={product.name} className="w-full h-full object-cover transition-transform group-hover:scale-105" />
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
+                         <Button size="sm" variant="secondary" className="rounded-full h-9 w-9 p-0" onClick={() => handleToggleProductStatus(product.id, 'isVisible')}>
+                            {product.isVisible ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                         </Button>
+                         <Button size="sm" variant="secondary" className="rounded-full h-9 w-9 p-0" onClick={() => handleToggleProductStatus(product.id, 'isTrend')}>
+                            <TrendingUp className={`w-4 h-4 ${product.isTrend ? "text-orange-500" : ""}`} />
+                         </Button>
+                         <Button size="sm" variant="secondary" className="rounded-full h-9 w-9 p-0" onClick={() => handleToggleProductStatus(product.id, 'isFeatured')}>
+                            <Star className={`w-4 h-4 ${product.isFeatured ? "text-yellow-500 fill-yellow-500" : ""}`} />
+                         </Button>
+                      </div>
+                      <div className="absolute top-3 right-3 flex flex-col gap-2">
+                        {!product.isVisible && <Badge variant="destructive" className="font-bold">مخفي</Badge>}
+                        {product.isTrend && <Badge className="bg-orange-500 hover:bg-orange-600 font-bold border-none shadow-lg">ترند 🔥</Badge>}
+                        {product.isFeatured && <Badge className="bg-yellow-500 hover:bg-yellow-600 font-bold border-none shadow-lg text-black">مميز ⭐</Badge>}
+                      </div>
+                      <div className="absolute bottom-3 left-3 bg-white/90 backdrop-blur-sm text-slate-900 px-3 py-1 rounded-full text-[10px] font-bold shadow-lg">
+                        {product.stock} قـطـعـة
                       </div>
                     </div>
                     <div className="p-5">
-                      <h3 className="font-bold text-foreground">{product.name}</h3>
-                      <div className="flex justify-between items-center mt-2">
-                        <p className="text-xl font-bold text-primary">{product.price.toLocaleString()} دج</p>
-                        <p className="text-sm text-muted-foreground">عمولة: {product.commission.toLocaleString()} دج</p>
+                      <div className="flex justify-between items-start mb-2">
+                        <Badge variant="outline" className="text-[10px] py-0">{product.category}</Badge>
+                        {product.videoUrl && <Video className="w-4 h-4 text-primary animate-pulse" />}
                       </div>
-                      <div className="flex gap-2 mt-4">
-                        <Button variant="outline" className="flex-1 gap-2">
-                          <Edit className="w-4 h-4" />
+                      <h3 className="font-bold text-foreground line-clamp-1">{product.name}</h3>
+                      <div className="flex justify-between items-end mt-4">
+                        <div className="space-y-0.5">
+                          <p className="text-xs text-muted-foreground line-through opacity-50">{product.originalPrice.toLocaleString()} دج</p>
+                          <p className="text-xl font-black text-secondary">{product.price.toLocaleString()} دج</p>
+                        </div>
+                        <div className="text-left">
+                          <p className="text-[10px] text-muted-foreground font-bold">العمولة</p>
+                          <p className="font-bold text-primary">{product.commission.toLocaleString()} دج</p>
+                        </div>
+                      </div>
+                      <div className="flex gap-2 mt-6">
+                        <Button variant="outline" className="flex-1 gap-2 rounded-xl h-10 font-bold text-xs" onClick={() => handleOpenEditProduct(product)}>
+                          <Edit className="w-3.5 h-3.5" />
                           تعديل
                         </Button>
-                        <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
-                          <X className="w-4 h-4" />
+                        <Button variant="ghost" size="icon" className="h-10 w-10 text-destructive hover:bg-destructive/10 rounded-xl" onClick={() => handleDeleteProduct(product.id)}>
+                          <Trash2 className="w-4 h-4" />
                         </Button>
                       </div>
                     </div>
@@ -988,11 +1275,10 @@ const Admin = () => {
                             <p className="text-[10px] text-muted-foreground font-mono">{req.accountDetails}</p>
                           </td>
                           <td className="p-4">
-                            <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                              req.status === "pending" ? "bg-amber-100 text-amber-700" :
-                              req.status === "completed" ? "bg-emerald-100 text-emerald-700" :
-                              "bg-red-100 text-red-700"
-                            }`}>
+                            <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold ${req.status === "pending" ? "bg-amber-100 text-amber-700" :
+                                req.status === "completed" ? "bg-emerald-100 text-emerald-700" :
+                                  "bg-red-100 text-red-700"
+                              }`}>
                               {req.status === "pending" ? "قيد الانتظار" : req.status === "completed" ? "تم الدفع" : "مرفوض"}
                             </span>
                           </td>
@@ -1036,7 +1322,7 @@ const Admin = () => {
                     <BarChart data={revenueData}>
                       <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                       <XAxis dataKey="month" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }} />
-                      <YAxis tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }} tickFormatter={(v) => `${(v/1000000).toFixed(1)}M`} />
+                      <YAxis tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }} tickFormatter={(v) => `${(v / 1000000).toFixed(1)}M`} />
                       <Tooltip
                         contentStyle={{
                           backgroundColor: "hsl(var(--card))",
@@ -1082,6 +1368,252 @@ const Admin = () => {
           )}
         </div>
       </main>
+      {/* Product Management Dialog */}
+      <Dialog open={isProductDialogOpen} onOpenChange={setIsProductDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-0 rounded-3xl border-none font-cairo" dir="rtl">
+          <DialogHeader className="p-8 pb-0 text-right">
+            <DialogTitle className="text-2xl font-black flex items-center gap-3">
+              <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
+                {editingProduct ? <Edit className="w-6 h-6" /> : <Plus className="w-6 h-6" />}
+              </div>
+              <div>
+                <p>{editingProduct ? "تعديل منتج" : "إضافة منتج جديد"}</p>
+                <p className="text-xs text-muted-foreground font-bold mt-1">أدخل معلومات المنتج بعناية لجذب المسوّقين</p>
+              </div>
+            </DialogTitle>
+          </DialogHeader>
+
+          <form onSubmit={handleSaveProduct} className="p-8 pt-6 space-y-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {/* Left Column: Basic Info */}
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <Label className="font-bold text-sm">اسم المنتج</Label>
+                  <Input 
+                    value={productFormData.name} 
+                    onChange={e => setProductFormData({...productFormData, name: e.target.value})} 
+                    placeholder="مثال: ساعة ذكية الترا" 
+                    className="h-12 rounded-xl bg-muted/30 border-none px-4"
+                    required
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="font-bold text-sm">الفئة (Niche)</Label>
+                    <Select 
+                      value={productFormData.category} 
+                      onValueChange={v => setProductFormData({...productFormData, category: v})}
+                    >
+                      <SelectTrigger className="h-12 rounded-xl bg-muted/30 border-none px-4 text-right">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent dir="rtl">
+                        {categories.filter(c => c !== "الكل").map(c => (
+                          <SelectItem key={c} value={c}>{c}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="font-bold text-sm">المخزون المتوفر</Label>
+                    <Input 
+                      type="number"
+                      value={productFormData.stock} 
+                      onChange={e => setProductFormData({...productFormData, stock: Number(e.target.value)})} 
+                      className="h-12 rounded-xl bg-muted/30 border-none px-4"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="font-bold text-sm">وصف المنتج (مميزات)</Label>
+                  <Textarea 
+                    value={productFormData.description} 
+                    onChange={e => setProductFormData({...productFormData, description: e.target.value})} 
+                    placeholder="اشرح مميزات المنتج التقنية..." 
+                    className="min-h-[100px] rounded-xl bg-muted/30 border-none p-4"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="font-bold text-sm text-secondary">النص الإعلاني الجاهز</Label>
+                  <Textarea 
+                    value={productFormData.adText} 
+                    onChange={e => setProductFormData({...productFormData, adText: e.target.value})} 
+                    placeholder="اكتب نصاً جذاباً للمسوّقين لنسخه مباشرة..." 
+                    className="min-h-[120px] rounded-xl bg-secondary/5 border-secondary/20 p-4 font-medium"
+                  />
+                </div>
+              </div>
+
+              {/* Right Column: Pricing & Media */}
+              <div className="space-y-6">
+                 <div className="p-6 rounded-3xl bg-secondary/5 border border-secondary/10 space-y-4">
+                    <h4 className="font-black text-sm text-secondary flex items-center gap-2">
+                      <Wallet className="w-4 h-4" /> إدارة الأسعار والعمولة
+                    </h4>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label className="text-xs font-bold opacity-70">السعر الأصلي</Label>
+                        <Input 
+                          type="number"
+                          value={productFormData.originalPrice} 
+                          onChange={e => setProductFormData({...productFormData, originalPrice: Number(e.target.value)})} 
+                          placeholder="المشطوب"
+                          className="h-11 rounded-xl bg-white border-none px-3 font-mono"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-xs font-bold">سعر البيع النهائي</Label>
+                        <Input 
+                          type="number"
+                          value={productFormData.price} 
+                          onChange={e => setProductFormData({...productFormData, price: Number(e.target.value)})} 
+                          placeholder="السعر الفعلي"
+                          className="h-11 rounded-xl bg-white border-none px-3 font-mono font-bold text-secondary"
+                          required
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-xs font-bold text-primary">العمولة (دج)</Label>
+                      <div className="relative">
+                        <Input 
+                          type="number"
+                          value={productFormData.commission} 
+                          onChange={e => setProductFormData({...productFormData, commission: Number(e.target.value)})} 
+                          placeholder="50% من سعر البيع؟"
+                          className="h-12 rounded-xl bg-primary/5 border-primary/20 px-4 font-black text-primary text-xl"
+                        />
+                        <Button 
+                          type="button"
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={() => setProductFormData({...productFormData, commission: (productFormData.price || 0) * 0.5})}
+                          className="absolute left-2 top-1/2 -translate-y-1/2 h-8 text-[10px] font-black hover:bg-primary/10"
+                        >
+                          حساب 50%
+                        </Button>
+                      </div>
+                    </div>
+                 </div>
+
+                 <div className="space-y-2">
+                    <Label className="font-bold text-sm">رابط الصورة الرئيسية</Label>
+                    <div className="relative">
+                      <ImageIcon className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input 
+                        value={productFormData.image} 
+                        onChange={e => setProductFormData({...productFormData, image: e.target.value})} 
+                        placeholder="https://images..." 
+                        className="h-12 pr-12 rounded-xl bg-muted/30 border-none px-4"
+                      />
+                    </div>
+                 </div>
+
+                 <div className="space-y-2">
+                    <Label className="font-bold text-sm">رابط فيديو المراجعة</Label>
+                    <div className="relative">
+                      <Video className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input 
+                        value={productFormData.videoUrl} 
+                        onChange={e => setProductFormData({...productFormData, videoUrl: e.target.value})} 
+                        placeholder="Youtube / Instagram link..." 
+                        className="h-12 pr-12 rounded-xl bg-muted/30 border-none px-4"
+                      />
+                    </div>
+                 </div>
+
+                 <div className="flex gap-4 pt-4 border-t border-border">
+                    <div className="flex items-center gap-2">
+                       <Switch 
+                        checked={productFormData.isTrend} 
+                        onCheckedChange={v => setProductFormData({...productFormData, isTrend: v})} 
+                       />
+                       <span className="text-sm font-bold flex items-center gap-1.5"><TrendingUp className="w-4 h-4 text-orange-500" /> ترند</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                       <Switch 
+                        checked={productFormData.isFeatured} 
+                        onCheckedChange={v => setProductFormData({...productFormData, isFeatured: v})} 
+                       />
+                       <span className="text-sm font-bold flex items-center gap-1.5"><Star className="w-4 h-4 text-yellow-500 fill-yellow-500" /> مميز</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                       <Switch 
+                        checked={productFormData.isVisible} 
+                        onCheckedChange={v => setProductFormData({...productFormData, isVisible: v})} 
+                       />
+                       <span className="text-sm font-bold flex items-center gap-1.5"><Eye className="w-4 h-4" /> مرئي</span>
+                    </div>
+                 </div>
+              </div>
+            </div>
+
+            {/* Ad Materials Section */}
+            <div className="p-6 rounded-3xl bg-slate-50 border-2 border-dashed border-slate-200 space-y-4">
+               <h4 className="font-black text-sm flex items-center gap-2">
+                 <Upload className="w-4 h-4 text-primary" /> رفع محتوى إعلاني جاهز (صور + نصوص)
+               </h4>
+               <p className="text-[10px] text-muted-foreground font-bold">يمكنك إضافة روابط لصور إضافية أو نصوص إعلانية بديلة ليستخدمها المسوّقون</p>
+               
+               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <Button type="button" variant="outline" className="h-11 rounded-xl border-dashed gap-2" onClick={() => setProductFormData({
+                    ...productFormData, 
+                    adMaterials: [...(productFormData.adMaterials || []), { type: 'image', content: '' }]
+                  })}>
+                    <ImageIcon className="w-4 h-4" /> إضافة رابط صورة
+                  </Button>
+                  <Button type="button" variant="outline" className="h-11 rounded-xl border-dashed gap-2" onClick={() => setProductFormData({
+                    ...productFormData, 
+                    adMaterials: [...(productFormData.adMaterials || []), { type: 'text', content: '' }]
+                  })}>
+                    <FileText className="w-4 h-4" /> إضافة مسودة نص
+                  </Button>
+               </div>
+
+               {productFormData.adMaterials && productFormData.adMaterials.length > 0 && (
+                 <div className="space-y-3 mt-4">
+                   {productFormData.adMaterials.map((mat, i) => (
+                      <div key={i} className="flex gap-2 items-center">
+                         <div className="flex-1 bg-white rounded-xl border border-slate-200 p-1 pr-3 flex items-center gap-3">
+                            {mat.type === 'image' ? <ImageIcon className="w-4 h-4 text-muted-foreground" /> : <FileText className="w-4 h-4 text-muted-foreground" />}
+                            <Input 
+                              value={mat.content} 
+                              onChange={e => {
+                                const newMats = [...productFormData.adMaterials!];
+                                newMats[i].content = e.target.value;
+                                setProductFormData({...productFormData, adMaterials: newMats});
+                              }}
+                              placeholder={mat.type === 'image' ? "رابط الصورة..." : "النص الإعلاني..."}
+                              className="border-none shadow-none h-9 text-xs"
+                            />
+                         </div>
+                         <Button type="button" variant="ghost" size="icon" className="text-destructive h-9 w-9" onClick={() => {
+                            const newMats = productFormData.adMaterials!.filter((_, index) => index !== i);
+                            setProductFormData({...productFormData, adMaterials: newMats});
+                         }}>
+                            <Trash2 className="w-4 h-4" />
+                         </Button>
+                      </div>
+                   ))}
+                 </div>
+               )}
+            </div>
+
+            <DialogFooter className="pt-6 sm:justify-start gap-3">
+              <Button type="submit" variant="hero" className="w-full sm:w-auto h-14 px-12 rounded-2xl shadow-xl shadow-primary/20 font-black">
+                {editingProduct ? "تحديث المنتج" : "حفظ المنتج ونشره"}
+              </Button>
+              <Button type="button" variant="ghost" onClick={() => setIsProductDialogOpen(false)} className="w-full sm:w-auto h-14 px-8 rounded-2xl font-bold">
+                إلغاء
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

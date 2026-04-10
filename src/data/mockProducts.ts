@@ -8,9 +8,17 @@ export interface Product {
   commission: number;
   image: string;
   images: string[];
+  videoUrl?: string; // New field for video review
   category: string;
   stock: number;
   features: string[];
+  isTrend?: boolean; // New: Highlight trending products
+  isFeatured?: boolean; // New: Identify special products
+  isVisible?: boolean; // New: Toggle display status
+  adMaterials?: {
+    type: 'image' | 'video' | 'text';
+    content: string;
+  }[]; // New: Ready-made advertising content
 }
 
 export const mockProducts: Product[] = [
@@ -29,7 +37,14 @@ export const mockProducts: Product[] = [
     ],
     category: "إلكترونيات",
     stock: 150,
-    features: ["شاشة AMOLED", "مقاومة للماء IP68", "بطارية 7 أيام", "تتبع اللياقة"]
+    features: ["شاشة AMOLED", "مقاومة للماء IP68", "بطارية 7 أيام", "تتبع اللياقة"],
+    isVisible: true,
+    isTrend: true,
+    isFeatured: false,
+    adMaterials: [
+      { type: "image", content: "https://images.unsplash.com/photo-1546868871-7041f2a55e12?w=500&q=80" },
+      { type: "text", content: "أفضل ساعة ذكية في الجزائر لعام 2024! متوفرة الآن بخصم 50%." }
+    ]
   },
   {
     id: "prod-2",
@@ -46,7 +61,10 @@ export const mockProducts: Product[] = [
     ],
     category: "إلكترونيات",
     stock: 200,
-    features: ["إلغاء الضوضاء", "بطارية 24 ساعة", "بلوتوث 5.0", "ميكروفون مدمج"]
+    features: ["إلغاء الضوضاء", "بطارية 24 ساعة", "بلوتوث 5.0", "ميكروفون مدمج"],
+    isVisible: true,
+    isTrend: false,
+    isFeatured: true
   },
   {
     id: "prod-3",
@@ -63,7 +81,10 @@ export const mockProducts: Product[] = [
     ],
     category: "أزياء",
     stock: 80,
-    features: ["جيب للحاسوب 15.6\"", "منفذ USB", "مقاومة للماء", "مريحة للظهر"]
+    features: ["جيب للحاسوب 15.6\"", "منفذ USB", "مقاومة للماء", "مريحة للظهر"],
+    isVisible: true,
+    isTrend: false,
+    isFeatured: false
   },
   {
     id: "prod-4",
@@ -80,7 +101,10 @@ export const mockProducts: Product[] = [
     ],
     category: "جمال",
     stock: 300,
-    features: ["طبيعي 100%", "فيتامين E", "ترطيب 24 ساعة", "مضاد للتجاعيد"]
+    features: ["طبيعي 100%", "فيتامين E", "ترطيب 24 ساعة", "مضاد للتجاعيد"],
+    isVisible: true,
+    isTrend: true,
+    isFeatured: true
   },
   {
     id: "prod-5",
@@ -96,7 +120,10 @@ export const mockProducts: Product[] = [
     ],
     category: "أجهزة منزلية",
     stock: 50,
-    features: ["تحكم بالتطبيق", "خرائط ذكية", "شفط قوي", "بطارية 3 ساعات"]
+    features: ["تحكم بالتطبيق", "خرائط ذكية", "شفط قوي", "بطارية 3 ساعات"],
+    isVisible: true,
+    isTrend: false,
+    isFeatured: false
   },
   {
     id: "prod-6",
@@ -113,7 +140,10 @@ export const mockProducts: Product[] = [
     ],
     category: "جمال",
     stock: 120,
-    features: ["فرنسي أصلي", "100ml", "يدوم 12 ساعة", "تغليف فاخر"]
+    features: ["فرنسي أصلي", "100ml", "يدوم 12 ساعة", "تغليف فاخر"],
+    isVisible: true,
+    isTrend: false,
+    isFeatured: true
   }
 ];
 
