@@ -413,42 +413,154 @@ const Dashboard = () => {
 
           {/* Products Tab */}
           {activeTab === "products" && (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {mockProducts.map((product, index) => (
-                <motion.div
-                  key={product.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                  className="bg-card rounded-2xl overflow-hidden shadow-sm hover-lift"
-                >
-                  <div className="aspect-video relative">
-                    <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
-                    <div className="absolute top-3 left-3 bg-accent text-accent-foreground px-3 py-1 rounded-full text-sm font-bold">
-                      {product.commission.toLocaleString()} دج عمولة
-                    </div>
+            <div className="space-y-6">
+              {/* Filters */}
+              <div className="bg-card rounded-2xl p-6 shadow-sm space-y-4">
+                <div className="flex flex-col lg:flex-row gap-4">
+                  <div className="flex-1 relative">
+                    <Search className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground w-5 h-5" />
+                    <Input
+                      value={productSearch}
+                      onChange={(e) => setProductSearch(e.target.value)}
+                      placeholder="ابحث عن منتج..."
+                      className="pr-12 h-12"
+                    />
                   </div>
-                  <div className="p-5">
-                    <h3 className="font-bold text-foreground">{product.name}</h3>
-                    <p className="text-xl font-bold text-secondary mt-2">{product.price.toLocaleString()} دج</p>
-                    <div className="flex gap-2 mt-4">
+                  <div className="flex gap-2">
+                    <Select value={productSort} onValueChange={setProductSort}>
+                      <SelectTrigger className="w-[180px] h-12 rounded-xl">
+                        <SelectValue placeholder="ترتيب حسب" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {productSortOptions.map(opt => (
+                          <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      variant={showProductFilters ? "default" : "outline"}
+                      onClick={() => setShowProductFilters(!showProductFilters)}
+                      className="h-12 gap-2 rounded-xl"
+                    >
+                      <SlidersHorizontal className="w-4 h-4" />
+                      فلاتر
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Categories */}
+                <div className="flex gap-2 flex-wrap">
+                  {categories.map((category) => (
+                    <Button
+                      key={category}
+                      variant={productCategory === category ? "default" : "outline"}
+                      onClick={() => setProductCategory(category)}
+                      className="rounded-full"
+                    >
+                      {category}
+                    </Button>
+                  ))}
+                </div>
+
+                {/* Advanced filters */}
+                {showProductFilters && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    className="flex flex-col sm:flex-row gap-4 pt-4 border-t border-border"
+                  >
+                    <div className="flex-1 space-y-2">
+                      <label className="text-sm font-medium text-muted-foreground">نطاق السعر</label>
+                      <Select value={String(productPriceRange)} onValueChange={(v) => setProductPriceRange(Number(v))}>
+                        <SelectTrigger className="rounded-xl">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {productPriceRanges.map((range, i) => (
+                            <SelectItem key={i} value={String(i)}>{range.label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="flex-1 space-y-2">
+                      <label className="text-sm font-medium text-muted-foreground">المخزون</label>
+                      <Select value={productStockFilter} onValueChange={setProductStockFilter}>
+                        <SelectTrigger className="rounded-xl">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">الكل</SelectItem>
+                          <SelectItem value="in-stock">متوفر</SelectItem>
+                          <SelectItem value="low">مخزون منخفض</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="flex items-end">
                       <Button
-                        onClick={() => copyAffiliateLink(product.id, product.name)}
-                        className="flex-1 gap-2"
-                        variant={copiedId === product.id ? "secondary" : "default"}
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => { setProductPriceRange(0); setProductStockFilter("all"); setProductSort("default"); setProductCategory("الكل"); setProductSearch(""); }}
+                        className="gap-1.5 text-destructive"
                       >
-                        {copiedId === product.id ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                        {copiedId === product.id ? "تم النسخ" : "نسخ الرابط"}
+                        <X className="w-4 h-4" /> مسح الفلاتر
                       </Button>
-                      <Link to={`/product/${product.id}/${user.id}`}>
-                        <Button variant="outline" size="icon">
-                          <Eye className="w-4 h-4" />
-                        </Button>
-                      </Link>
                     </div>
+                  </motion.div>
+                )}
+
+                {/* Active filter count */}
+                {(productCategory !== "الكل" || productPriceRange !== 0 || productStockFilter !== "all") && (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Filter className="w-4 h-4" />
+                    <span>{filteredProducts.length} منتج من أصل {mockProducts.length}</span>
                   </div>
-                </motion.div>
-              ))}
+                )}
+              </div>
+
+              {/* Products Grid */}
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredProducts.map((product, index) => (
+                  <motion.div
+                    key={product.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                    className="bg-card rounded-2xl overflow-hidden shadow-sm hover-lift"
+                  >
+                    <div className="aspect-video relative">
+                      <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
+                      <div className="absolute top-3 left-3 bg-accent text-accent-foreground px-3 py-1 rounded-full text-sm font-bold">
+                        {product.commission.toLocaleString()} دج عمولة
+                      </div>
+                    </div>
+                    <div className="p-5">
+                      <h3 className="font-bold text-foreground">{product.name}</h3>
+                      <p className="text-xl font-bold text-secondary mt-2">{product.price.toLocaleString()} دج</p>
+                      <div className="flex gap-2 mt-4">
+                        <Button
+                          onClick={() => copyAffiliateLink(product.id, product.name)}
+                          className="flex-1 gap-2"
+                          variant={copiedId === product.id ? "secondary" : "default"}
+                        >
+                          {copiedId === product.id ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                          {copiedId === product.id ? "تم النسخ" : "نسخ الرابط"}
+                        </Button>
+                        <Link to={`/product/${product.id}/${user.id}`}>
+                          <Button variant="outline" size="icon">
+                            <Eye className="w-4 h-4" />
+                          </Button>
+                        </Link>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+
+              {filteredProducts.length === 0 && (
+                <div className="text-center py-16">
+                  <p className="text-xl text-muted-foreground">لا توجد منتجات مطابقة للبحث</p>
+                </div>
+              )}
             </div>
           )}
 
