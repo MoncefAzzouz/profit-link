@@ -5,7 +5,7 @@ import {
   LayoutDashboard, Package, ShoppingCart, Wallet, Trophy, 
   HelpCircle, LogOut, Menu, X, Copy, Check, TrendingUp,
   Clock, CheckCircle, XCircle, Truck, Eye, ChevronLeft,
-  Calendar, Filter, Search
+  Calendar, Filter, Search, SlidersHorizontal
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
