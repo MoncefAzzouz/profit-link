@@ -5,7 +5,7 @@ import {
   LayoutDashboard, Package, ShoppingCart, Wallet, Trophy, 
   HelpCircle, LogOut, Menu, X, Copy, Check, TrendingUp,
   Clock, CheckCircle, XCircle, Truck, Eye, ChevronLeft,
-  Calendar, Filter, Search, SlidersHorizontal
+  Calendar, Filter, Search, SlidersHorizontal, Store, Sparkles
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -39,7 +39,7 @@ import { mockWithdrawalRequests } from "@/data/mockAdminData";
 import { useToast } from "@/hooks/use-toast";
 import EarningsChart from "@/components/dashboard/EarningsChart";
 
-type Tab = "overview" | "products" | "orders" | "earnings" | "withdrawals" | "levels" | "support";
+type Tab = "overview" | "products" | "my_store" | "orders" | "earnings" | "withdrawals" | "levels" | "support";
 
 const statusConfig = {
   pending: { label: "قيد الانتظار", icon: Clock, color: "text-yellow-600 bg-yellow-100" },
@@ -168,6 +168,7 @@ const Dashboard = () => {
   const sidebarItems = [
     { id: "overview" as Tab, label: "نظرة عامة", icon: LayoutDashboard },
     { id: "products" as Tab, label: "المنتجات", icon: Package },
+    { id: "my_store" as Tab, label: "متجري", icon: Store },
     { id: "orders" as Tab, label: "طلبياتي", icon: ShoppingCart },
     { id: "earnings" as Tab, label: "الأرباح", icon: Wallet },
     { id: "withdrawals" as Tab, label: "طلبات السحب", icon: CheckCircle },
@@ -578,6 +579,141 @@ const Dashboard = () => {
                   <p className="text-xl text-muted-foreground">لا توجد منتجات مطابقة للبحث</p>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* My Store Tab */}
+          {activeTab === "my_store" && (
+            <div className="space-y-6">
+              {/* Store Link Card */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-gradient-to-r from-primary via-primary to-navy-800 rounded-2xl p-8 text-white shadow-xl relative overflow-hidden"
+              >
+                <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
+                  <div className="text-center md:text-right flex-1">
+                    <h2 className="text-3xl font-bold mb-3">متجرك الخاص جاهز! 🚀</h2>
+                    <p className="text-primary-foreground/80 mb-8 max-w-2xl text-lg">شارك رابط متجرك واكسب عمولة على كل منتج يشتريه الزبائن من خلالك.</p>
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
+                      <div className="bg-white/10 backdrop-blur-md px-6 py-4 rounded-2xl border border-white/20 font-mono text-sm break-all flex-1 flex items-center justify-center sm:justify-start text-left" dir="ltr">
+                        {window.location.origin}/store/{user?.id || "aff-demo"}
+                      </div>
+                      <div className="flex gap-3">
+                        <Button 
+                          onClick={() => {
+                            const link = `${window.location.origin}/store/${user?.id || "aff-demo"}`;
+                            navigator.clipboard.writeText(link);
+                            toast({ title: "تم نسخ رابط المتجر! 🔗" });
+                          }}
+                          className="bg-secondary text-secondary-foreground hover:bg-secondary/90 h-14 px-8 rounded-2xl gap-2 shadow-xl shadow-secondary/20 font-bold transition-all hover:scale-105 active:scale-95"
+                        >
+                          <Copy className="w-5 h-5" />
+                          نسخ الرابط
+                        </Button>
+                        <Button 
+                          variant="outline"
+                          className="bg-white/10 border-white/20 hover:bg-white/20 text-white h-14 px-6 rounded-2xl gap-2 backdrop-blur-sm"
+                        >
+                          <Eye className="w-5 h-5" />
+                          معاينة
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="hidden lg:flex w-48 h-48 bg-white/10 rounded-[2.5rem] items-center justify-center backdrop-blur-md border border-white/20 rotate-6 shadow-2xl relative group transition-transform hover:rotate-0 duration-500">
+                    <Store className="w-24 h-24 text-white opacity-80 group-hover:scale-110 transition-transform duration-500" />
+                    <div className="absolute -top-2 -right-2 w-12 h-12 bg-secondary rounded-2xl flex items-center justify-center -rotate-12 group-hover:rotate-0 transition-transform duration-500">
+                      <Sparkles className="w-6 h-6 text-white" />
+                    </div>
+                  </div>
+                </div>
+                {/* Decorative background elements */}
+                <div className="absolute -right-20 -top-20 w-80 h-80 bg-secondary/30 rounded-full blur-[100px] opacity-50" />
+                <div className="absolute -left-20 -bottom-20 w-80 h-80 bg-primary/30 rounded-full blur-[100px] opacity-50" />
+              </motion.div>
+
+              {/* Store Stats */}
+              <div className="grid md:grid-cols-3 gap-6">
+                {[
+                  { label: "زيارات المتجر", value: "1,245", sub: "+12% هذا الأسبوع", icon: Eye, color: "text-blue-600 bg-blue-100" },
+                  { label: "المنتجات المروجة", value: mockProducts.length, sub: "كل المنتجات", icon: Package, color: "text-emerald-600 bg-emerald-100" },
+                  { label: "إجمالي المبيعات", value: "48", sub: "مبيعات مباشرة", icon: TrendingUp, color: "text-secondary bg-secondary/10" },
+                ].map((stat, i) => (
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 * (i + 1) }}
+                    className="bg-card rounded-2xl p-6 shadow-sm border border-border/50 hover:border-primary/20 transition-all hover:shadow-md group"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${stat.color} group-hover:scale-110 transition-transform duration-300`}>
+                        <stat.icon className="w-7 h-7" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground font-medium">{stat.label}</p>
+                        <p className="text-3xl font-bold text-foreground mt-0.5">{stat.value}</p>
+                        <p className="text-xs text-secondary mt-1 flex items-center gap-1">
+                          <TrendingUp className="w-3 h-3" />
+                          {stat.sub}
+                        </p>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+
+              {/* Store Customization */}
+              <div className="grid lg:grid-cols-2 gap-6 pb-8">
+                <motion.div
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.4 }}
+                  className="bg-card rounded-3xl p-8 shadow-sm border border-border/50"
+                >
+                  <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
+                    <SlidersHorizontal className="w-5 h-5 text-primary" />
+                    تخصيص المتجر
+                  </h3>
+                  <div className="space-y-6">
+                    <div className="space-y-2.5">
+                      <Label className="text-sm font-semibold text-muted-foreground mr-1">اسم المتجر</Label>
+                      <Input placeholder="أدخل اسم لمتجرك..." defaultValue={`${user?.name} Store`} className="rounded-2xl h-14 text-lg border-border/60 focus:ring-primary/20" />
+                    </div>
+                    <div className="space-y-2.5">
+                      <Label className="text-sm font-semibold text-muted-foreground mr-1">وصف المتجر (Bio)</Label>
+                      <Input placeholder="مثال: أفضل المنتجات بأفضل الأسعار..." className="rounded-2xl h-14 text-lg border-border/60 focus:ring-primary/20" />
+                    </div>
+                    <Button className="w-full h-14 rounded-2xl bg-primary text-primary-foreground font-bold text-lg shadow-xl shadow-primary/20 transition-all hover:scale-[1.02] active:scale-95 mt-2">
+                      حفظ التغييرات
+                    </Button>
+                  </div>
+                </motion.div>
+
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.5 }}
+                  className="bg-card rounded-3xl p-8 shadow-sm border border-border/50 flex flex-col items-center justify-center text-center space-y-5 relative overflow-hidden group"
+                >
+                  <div className="relative z-10 flex flex-col items-center">
+                    <div className="w-24 h-24 bg-muted/50 rounded-full flex items-center justify-center mb-4 ring-8 ring-muted/20">
+                      <Sparkles className="w-12 h-12 text-primary/30" />
+                    </div>
+                    <h3 className="text-xl font-bold text-foreground">ميزة قادمة قريباً ✨</h3>
+                    <p className="text-muted-foreground max-w-[280px] mt-2 mb-6 text-lg leading-relaxed">
+                      قريباً ستتمكن من اختيار الثيم الخاص بمتجرك وترتيب المنتجات حسب رغبتك لزيادة مبيعاتك واحترافية ظهورك.
+                    </p>
+                    <Button variant="outline" disabled className="rounded-2xl h-12 px-8 font-semibold border-border/60 opacity-60">
+                      فتح المحرر المتقدم
+                    </Button>
+                  </div>
+                  {/* Background decoration for upcoming feature */}
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-10 -mt-10 blur-2xl group-hover:bg-primary/10 transition-colors" />
+                  <div className="absolute bottom-0 left-0 w-32 h-32 bg-secondary/5 rounded-full -ml-10 -mb-10 blur-2xl group-hover:bg-secondary/10 transition-colors" />
+                </motion.div>
+              </div>
             </div>
           )}
 
