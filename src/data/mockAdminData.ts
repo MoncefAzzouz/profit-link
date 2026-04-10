@@ -97,6 +97,94 @@ export const mockAffiliates: Affiliate[] = [
   },
 ];
 
+export interface Seller {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  storeName: string;
+  wilaya: string;
+  category: string;
+  totalProducts: number;
+  totalRevenue: number;
+  totalOrders: number;
+  status: "active" | "suspended" | "pending";
+  joinDate: string;
+}
+
+export const mockSellers: Seller[] = [
+  {
+    id: "seller-001",
+    name: "عبد الرحمن بلقاسم",
+    email: "abdelrahman@store.com",
+    phone: "0550123456",
+    storeName: "متجر التقنية",
+    wilaya: "الجزائر",
+    category: "إلكترونيات",
+    totalProducts: 12,
+    totalRevenue: 4500000,
+    totalOrders: 890,
+    status: "active",
+    joinDate: "2023-06-10",
+  },
+  {
+    id: "seller-002",
+    name: "نادية مرابط",
+    email: "nadia@beauty.com",
+    phone: "0661234567",
+    storeName: "بيوتي شوب",
+    wilaya: "وهران",
+    category: "جمال",
+    totalProducts: 8,
+    totalRevenue: 2100000,
+    totalOrders: 567,
+    status: "active",
+    joinDate: "2023-09-22",
+  },
+  {
+    id: "seller-003",
+    name: "محمد أمين حداد",
+    email: "amine@fashion.com",
+    phone: "0772345678",
+    storeName: "فاشن ستور",
+    wilaya: "قسنطينة",
+    category: "أزياء",
+    totalProducts: 15,
+    totalRevenue: 3200000,
+    totalOrders: 723,
+    status: "active",
+    joinDate: "2023-07-15",
+  },
+  {
+    id: "seller-004",
+    name: "سمية بوخالفة",
+    email: "soumia@home.com",
+    phone: "0553456789",
+    storeName: "بيت الراحة",
+    wilaya: "سطيف",
+    category: "أجهزة منزلية",
+    totalProducts: 6,
+    totalRevenue: 890000,
+    totalOrders: 198,
+    status: "suspended",
+    joinDate: "2023-11-05",
+  },
+  {
+    id: "seller-005",
+    name: "رياض بن عمر",
+    email: "riad@tech.com",
+    phone: "0694567890",
+    storeName: "ريادة تك",
+    wilaya: "عنابة",
+    category: "إلكترونيات",
+    totalProducts: 3,
+    totalRevenue: 0,
+    totalOrders: 0,
+    status: "pending",
+    joinDate: "2024-01-20",
+  },
+];
+
 export const mockAdminStats: AdminStats = {
   totalAffiliates: 156,
   activeAffiliates: 142,
