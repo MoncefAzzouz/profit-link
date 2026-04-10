@@ -149,6 +149,7 @@ const Dashboard = () => {
       });
   }, [productSearch, productCategory, productPriceRange, productSort, productStockFilter]);
 
+  const sidebarItems = [
     { id: "overview" as Tab, label: "نظرة عامة", icon: LayoutDashboard },
     { id: "products" as Tab, label: "المنتجات", icon: Package },
     { id: "orders" as Tab, label: "طلبياتي", icon: ShoppingCart },
