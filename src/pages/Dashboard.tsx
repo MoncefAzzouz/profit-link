@@ -485,7 +485,63 @@ const Dashboard = () => {
                   باقي {mockAffiliateStats.ordersToNextLevel} طلبيات للترقية للمستوى التالي
                 </p>
               </motion.div>
-
+              {/* Revenue Evolution Chart from Seller Dashboard */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.45 }}
+                className="dash-card-interactive p-6"
+              >
+                <div className="flex items-center justify-between mb-8">
+                  <div>
+                    <h3 className="text-lg font-bold text-foreground">تطور الإيرادات</h3>
+                    <p className="text-sm text-muted-foreground mt-1">نظرة سريعة على مبيعاتك المحققة</p>
+                  </div>
+                  <Select defaultValue="6months">
+                    <SelectTrigger className="w-32 h-9 rounded-xl text-xs">
+                      <SelectValue placeholder="الفترة" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="3months">آخر 3 أشهر</SelectItem>
+                      <SelectItem value="6months">آخر 6 أشهر</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="h-[300px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={sellerEarningsData}>
+                      <defs>
+                        <linearGradient id="sellerRevenueGradient" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="hsl(160, 84%, 39%)" stopOpacity={0.3} />
+                          <stop offset="95%" stopColor="hsl(160, 84%, 39%)" stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border)/0.5)" />
+                      <XAxis 
+                        dataKey="month" 
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }} 
+                      />
+                      <YAxis 
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }} 
+                        tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} 
+                      />
+                      <RechartsTooltip content={<CustomTooltip />} />
+                      <Area 
+                        type="monotone" 
+                        dataKey="revenue" 
+                        stroke="hsl(160, 84%, 39%)" 
+                        strokeWidth={3} 
+                        fill="url(#sellerRevenueGradient)" 
+                        name="revenue" 
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+              </motion.div>
               {/* Recent Orders */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -1708,9 +1764,9 @@ const Dashboard = () => {
 
       {/* ===== MANUAL ORDER DIALOG ===== */}
       <Dialog open={isOrderDialogOpen} onOpenChange={setIsOrderDialogOpen}>
-        <DialogContent className="max-w-2xl rounded-[2.5rem] p-0 border-none overflow-hidden" dir="rtl">
+        <DialogContent className="max-w-2xl rounded-[2.5rem] p-0 border-none overflow-hidden max-h-[95vh] flex flex-col" dir="rtl">
           {selectedProduct && (
-            <div className="flex flex-col">
+            <div className="flex flex-col flex-1 min-h-0">
               <div className="bg-primary p-8 text-primary-foreground flex flex-col md:flex-row items-center gap-6">
                 <div className="w-24 h-24 bg-white rounded-2xl overflow-hidden shadow-lg flex-shrink-0">
                   <img src={selectedProduct.image} className="w-full h-full object-cover" />
@@ -1721,7 +1777,7 @@ const Dashboard = () => {
                 </div>
               </div>
 
-              <div className="p-8 space-y-8">
+              <div className="p-8 space-y-8 overflow-y-auto flex-1 custom-scrollbar">
                 <div className="grid md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <Label className="flex items-center gap-2 text-sm font-bold ml-1">
