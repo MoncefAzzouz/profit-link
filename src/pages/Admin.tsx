@@ -5,7 +5,7 @@ import {
   LayoutDashboard, Users, Package, ShoppingCart, Wallet,
   Settings, Menu, X, TrendingUp, CheckCircle, XCircle,
   Truck, Clock, Eye, Edit, Ban, Search, Filter, Plus,
-  BarChart3, ChevronLeft, AlertTriangle, SlidersHorizontal
+  BarChart3, ChevronLeft, AlertTriangle, SlidersHorizontal, Store
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,14 +17,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { mockProducts, categories } from "@/data/mockProducts";
-import { mockAffiliates, mockAdminStats, mockAllOrders } from "@/data/mockAdminData";
+import { mockAffiliates, mockAdminStats, mockAllOrders, mockSellers } from "@/data/mockAdminData";
 import { useToast } from "@/hooks/use-toast";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell
 } from "recharts";
 
-type Tab = "overview" | "affiliates" | "orders" | "products" | "analytics" | "settings";
+type Tab = "overview" | "affiliates" | "sellers" | "orders" | "products" | "analytics" | "settings";
 
 const statusConfig = {
   pending: { label: "قيد الانتظار", icon: Clock, color: "text-yellow-600 bg-yellow-100" },
@@ -70,10 +70,13 @@ const Admin = () => {
   const [productSort, setProductSort] = useState("default");
   const [productStockFilter, setProductStockFilter] = useState("all");
   const [showProductFilters, setShowProductFilters] = useState(false);
+  const [sellerSearch, setSellerSearch] = useState("");
+  const [sellerStatus, setSellerStatus] = useState("all");
 
   const sidebarItems = [
     { id: "overview" as Tab, label: "نظرة عامة", icon: LayoutDashboard },
     { id: "affiliates" as Tab, label: "المسوّقين", icon: Users },
+    { id: "sellers" as Tab, label: "البائعين", icon: Store },
     { id: "orders" as Tab, label: "الطلبيات", icon: ShoppingCart },
     { id: "products" as Tab, label: "المنتجات", icon: Package },
     { id: "analytics" as Tab, label: "الإحصائيات", icon: BarChart3 },
@@ -89,6 +92,17 @@ const Admin = () => {
       return matchesSearch && matchesStatus;
     });
   }, [affiliateSearch, affiliateStatus]);
+
+  const filteredSellers = useMemo(() => {
+    return mockSellers.filter((seller) => {
+      const matchesSearch = seller.name.includes(sellerSearch) || 
+                           seller.email.includes(sellerSearch) ||
+                           seller.storeName.includes(sellerSearch) ||
+                           seller.phone.includes(sellerSearch);
+      const matchesStatus = sellerStatus === "all" || seller.status === sellerStatus;
+      return matchesSearch && matchesStatus;
+    });
+  }, [sellerSearch, sellerStatus]);
 
   const filteredOrders = useMemo(() => {
     return mockAllOrders.filter((order) => {
@@ -545,7 +559,110 @@ const Admin = () => {
             </div>
           )}
 
-          {/* Orders Tab */}
+          {/* Sellers Tab */}
+          {activeTab === "sellers" && (
+            <div className="space-y-6">
+              {/* Filters */}
+              <div className="dash-card p-4 flex flex-wrap gap-3">
+                <div className="relative flex-1 min-w-[200px]">
+                  <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    placeholder="ابحث عن بائع..."
+                    value={sellerSearch}
+                    onChange={(e) => setSellerSearch(e.target.value)}
+                    className="pr-10"
+                  />
+                </div>
+                <Select value={sellerStatus} onValueChange={setSellerStatus}>
+                  <SelectTrigger className="w-[160px]">
+                    <Filter className="w-4 h-4 ml-2" />
+                    <SelectValue placeholder="الحالة" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">جميع الحالات</SelectItem>
+                    <SelectItem value="active">نشط</SelectItem>
+                    <SelectItem value="suspended">موقوف</SelectItem>
+                    <SelectItem value="pending">قيد المراجعة</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Sellers Table */}
+              <div className="dash-card overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-slate-100/95 dark:bg-slate-800/60 border-b border-border/50">
+                      <tr>
+                        <th className="text-right p-4 font-semibold text-foreground">البائع</th>
+                        <th className="text-right p-4 font-semibold text-foreground">المتجر</th>
+                        <th className="text-right p-4 font-semibold text-foreground">الولاية</th>
+                        <th className="text-right p-4 font-semibold text-foreground">المنتجات</th>
+                        <th className="text-right p-4 font-semibold text-foreground">الإيرادات</th>
+                        <th className="text-right p-4 font-semibold text-foreground">الطلبيات</th>
+                        <th className="text-right p-4 font-semibold text-foreground">الحالة</th>
+                        <th className="text-right p-4 font-semibold text-foreground">إجراءات</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border">
+                      {filteredSellers.map((seller) => {
+                        const status = affiliateStatusConfig[seller.status];
+                        return (
+                          <tr key={seller.id} className="hover:bg-muted/50 transition-colors">
+                            <td className="p-4">
+                              <div>
+                                <p className="font-medium text-foreground">{seller.name}</p>
+                                <p className="text-sm text-muted-foreground">{seller.email}</p>
+                              </div>
+                            </td>
+                            <td className="p-4">
+                              <div className="flex items-center gap-2">
+                                <Store className="w-4 h-4 text-muted-foreground" />
+                                <span className="text-foreground font-medium">{seller.storeName}</span>
+                              </div>
+                              <p className="text-xs text-muted-foreground mt-0.5">{seller.category}</p>
+                            </td>
+                            <td className="p-4 text-muted-foreground">{seller.wilaya}</td>
+                            <td className="p-4 text-foreground font-medium">{seller.totalProducts}</td>
+                            <td className="p-4 font-bold text-secondary">
+                              {seller.totalRevenue.toLocaleString()} دج
+                            </td>
+                            <td className="p-4 text-foreground">{seller.totalOrders}</td>
+                            <td className="p-4">
+                              <span className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${status.color}`}>
+                                {status.label}
+                              </span>
+                            </td>
+                            <td className="p-4">
+                              <div className="flex gap-2">
+                                <Button variant="ghost" size="icon" className="h-8 w-8">
+                                  <Eye className="w-4 h-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 text-destructive hover:text-destructive"
+                                  onClick={() => toast({ title: "تم إيقاف البائع" })}
+                                >
+                                  <Ban className="w-4 h-4" />
+                                </Button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {filteredSellers.length === 0 && (
+                <div className="text-center py-12">
+                  <p className="text-muted-foreground">لا يوجد بائعين مطابقين للبحث</p>
+                </div>
+              )}
+            </div>
+          )}
+
           {activeTab === "orders" && (
             <div className="space-y-6">
               {/* Filters */}
