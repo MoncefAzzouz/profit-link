@@ -93,7 +93,17 @@ const Admin = () => {
     });
   }, [affiliateSearch, affiliateStatus]);
 
-  const filteredOrders = useMemo(() => {
+  const filteredSellers = useMemo(() => {
+    return mockSellers.filter((seller) => {
+      const matchesSearch = seller.name.includes(sellerSearch) || 
+                           seller.email.includes(sellerSearch) ||
+                           seller.storeName.includes(sellerSearch) ||
+                           seller.phone.includes(sellerSearch);
+      const matchesStatus = sellerStatus === "all" || seller.status === sellerStatus;
+      return matchesSearch && matchesStatus;
+    });
+  }, [sellerSearch, sellerStatus]);
+
     return mockAllOrders.filter((order) => {
       const matchesSearch = order.productName.includes(orderSearch) || 
                            order.customerName.includes(orderSearch) ||
