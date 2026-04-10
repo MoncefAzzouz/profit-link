@@ -5,7 +5,7 @@ import {
   LayoutDashboard, Users, Package, ShoppingCart, Wallet,
   Settings, Menu, X, TrendingUp, CheckCircle, XCircle,
   Truck, Clock, Eye, Edit, Ban, Search, Filter, Plus,
-  BarChart3, ChevronLeft, AlertTriangle
+  BarChart3, ChevronLeft, AlertTriangle, SlidersHorizontal, X
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,7 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { mockProducts } from "@/data/mockProducts";
+import { mockProducts, categories } from "@/data/mockProducts";
 import { mockAffiliates, mockAdminStats, mockAllOrders } from "@/data/mockAdminData";
 import { useToast } from "@/hooks/use-toast";
 import {
