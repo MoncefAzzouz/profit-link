@@ -24,6 +24,18 @@ export interface AdminStats {
   ordersThisMonth: number;
 }
 
+export interface WithdrawalRequest {
+  id: string;
+  requesterId: string;
+  requesterName: string;
+  requesterType: "affiliate" | "seller";
+  amount: number;
+  method: "CCP" | "Baridimob";
+  accountDetails: string;
+  status: "pending" | "completed" | "rejected";
+  date: string;
+}
+
 export const mockAffiliates: Affiliate[] = [
   {
     id: "aff-001",
@@ -276,5 +288,52 @@ export const mockAllOrders = [
     commission: 0,
     date: "2024-01-14",
     quantity: 1,
+  },
+];
+
+export const mockWithdrawalRequests: WithdrawalRequest[] = [
+  {
+    id: "wdr-001",
+    requesterId: "aff-001",
+    requesterName: "أحمد بن سالم",
+    requesterType: "affiliate",
+    amount: 15000,
+    method: "CCP",
+    accountDetails: "0012345678 / 22",
+    status: "pending",
+    date: "2024-01-20",
+  },
+  {
+    id: "wdr-002",
+    requesterId: "seller-001",
+    requesterName: "عبد الرحمن بلقاسم",
+    requesterType: "seller",
+    amount: 85000,
+    method: "Baridimob",
+    accountDetails: "00799999000123456789",
+    status: "completed",
+    date: "2024-01-18",
+  },
+  {
+    id: "wdr-003",
+    requesterId: "aff-002",
+    requesterName: "فاطمة الزهراء",
+    requesterType: "affiliate",
+    amount: 5000,
+    method: "Baridimob",
+    accountDetails: "00799999000987654321",
+    status: "pending",
+    date: "2024-01-21",
+  },
+  {
+    id: "wdr-004",
+    requesterId: "seller-002",
+    requesterName: "نادية مرابط",
+    requesterType: "seller",
+    amount: 120000,
+    method: "CCP",
+    accountDetails: "0087654321 / 11",
+    status: "rejected",
+    date: "2024-01-15",
   },
 ];

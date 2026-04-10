@@ -17,14 +17,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { mockProducts, categories } from "@/data/mockProducts";
-import { mockAffiliates, mockAdminStats, mockAllOrders, mockSellers } from "@/data/mockAdminData";
+import { mockAffiliates, mockAdminStats, mockAllOrders, mockSellers, mockWithdrawalRequests, WithdrawalRequest } from "@/data/mockAdminData";
 import { useToast } from "@/hooks/use-toast";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell
 } from "recharts";
 
-type Tab = "overview" | "affiliates" | "sellers" | "orders" | "products" | "analytics" | "settings";
+type Tab = "overview" | "affiliates" | "sellers" | "orders" | "products" | "analytics" | "withdrawals" | "settings";
 
 const statusConfig = {
   pending: { label: "قيد الانتظار", icon: Clock, color: "text-yellow-600 bg-yellow-100" },
@@ -72,12 +72,15 @@ const Admin = () => {
   const [showProductFilters, setShowProductFilters] = useState(false);
   const [sellerSearch, setSellerSearch] = useState("");
   const [sellerStatus, setSellerStatus] = useState("all");
+  const [withdrawalSearch, setWithdrawalSearch] = useState("");
+  const [withdrawalStatus, setWithdrawalStatus] = useState("all");
 
   const sidebarItems = [
     { id: "overview" as Tab, label: "نظرة عامة", icon: LayoutDashboard },
     { id: "affiliates" as Tab, label: "المسوّقين", icon: Users },
     { id: "sellers" as Tab, label: "البائعين", icon: Store },
     { id: "orders" as Tab, label: "الطلبيات", icon: ShoppingCart },
+    { id: "withdrawals" as Tab, label: "طلبات السحب", icon: Wallet },
     { id: "products" as Tab, label: "المنتجات", icon: Package },
     { id: "analytics" as Tab, label: "الإحصائيات", icon: BarChart3 },
     { id: "settings" as Tab, label: "الإعدادات", icon: Settings },
@@ -113,6 +116,15 @@ const Admin = () => {
       return matchesSearch && matchesStatus;
     });
   }, [orderSearch, orderStatus]);
+
+  const filteredWithdrawals = useMemo(() => {
+    return mockWithdrawalRequests.filter((req) => {
+      const matchesSearch = req.requesterName.includes(withdrawalSearch) || 
+                           req.accountDetails.includes(withdrawalSearch);
+      const matchesStatus = withdrawalStatus === "all" || req.status === withdrawalStatus;
+      return matchesSearch && matchesStatus;
+    });
+  }, [withdrawalSearch, withdrawalStatus]);
 
   const productPriceRanges = [
     { label: "الكل", min: 0, max: Infinity },
@@ -900,6 +912,112 @@ const Admin = () => {
                     </div>
                   </motion.div>
                 ))}
+              </div>
+            </div>
+          )}
+
+          {/* Withdrawals Tab */}
+          {activeTab === "withdrawals" && (
+            <div className="space-y-6">
+              {/* Stats for Withdrawals */}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                {[
+                  { label: "طلبات معلقة", value: mockWithdrawalRequests.filter(r => r.status === "pending").length, color: "text-amber-600 bg-amber-50" },
+                  { label: "إجمالي السحوبات", value: `${mockWithdrawalRequests.filter(r => r.status === "completed").reduce((sum, r) => sum + r.amount, 0).toLocaleString()} دج`, color: "text-emerald-600 bg-emerald-50 col-span-2" },
+                ].map((stat, i) => (
+                  <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className={`dash-card p-4 flex flex-col items-center justify-center text-center ${stat.color}`}>
+                    <p className="text-2xl font-black">{stat.value}</p>
+                    <p className="text-xs font-bold opacity-80">{stat.label}</p>
+                  </motion.div>
+                ))}
+              </div>
+
+              {/* Filters */}
+              <div className="dash-card p-4 flex flex-wrap gap-3">
+                <div className="relative flex-1 min-w-[200px]">
+                  <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    placeholder="ابحث عن اسم أو حساب..."
+                    value={withdrawalSearch}
+                    onChange={(e) => setWithdrawalSearch(e.target.value)}
+                    className="pr-10"
+                  />
+                </div>
+                <Select value={withdrawalStatus} onValueChange={setWithdrawalStatus}>
+                  <SelectTrigger className="w-[160px]">
+                    <Filter className="w-4 h-4 ml-2" />
+                    <SelectValue placeholder="الحالة" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">جميع الحالات</SelectItem>
+                    <SelectItem value="pending">قيد الانتظار</SelectItem>
+                    <SelectItem value="completed">تم الدفع</SelectItem>
+                    <SelectItem value="rejected">مرفوض</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Table */}
+              <div className="dash-card overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-slate-100/95 dark:bg-slate-800/60 border-b border-border/50">
+                      <tr>
+                        <th className="text-right p-4 font-semibold text-foreground text-sm">المستفيد</th>
+                        <th className="text-right p-4 font-semibold text-foreground text-sm">المبلغ</th>
+                        <th className="text-right p-4 font-semibold text-foreground text-sm">طريقة الدفع</th>
+                        <th className="text-right p-4 font-semibold text-foreground text-sm">الحالة</th>
+                        <th className="text-right p-4 font-semibold text-foreground text-sm">التاريخ</th>
+                        <th className="text-right p-4 font-semibold text-foreground text-sm">إجراءات</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border">
+                      {filteredWithdrawals.length > 0 ? filteredWithdrawals.map((req) => (
+                        <tr key={req.id} className="hover:bg-muted/50 transition-colors">
+                          <td className="p-4">
+                            <p className="font-bold text-foreground text-sm">{req.requesterName}</p>
+                            <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${req.requesterType === "seller" ? "bg-emerald-100 text-emerald-700" : "bg-blue-100 text-blue-700"}`}>
+                              {req.requesterType === "seller" ? "بائع" : "مسوّق"}
+                            </span>
+                          </td>
+                          <td className="p-4 font-black text-foreground text-sm">
+                            {req.amount.toLocaleString()} دج
+                          </td>
+                          <td className="p-4">
+                            <p className="text-xs font-bold text-foreground">{req.method}</p>
+                            <p className="text-[10px] text-muted-foreground font-mono">{req.accountDetails}</p>
+                          </td>
+                          <td className="p-4">
+                            <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                              req.status === "pending" ? "bg-amber-100 text-amber-700" :
+                              req.status === "completed" ? "bg-emerald-100 text-emerald-700" :
+                              "bg-red-100 text-red-700"
+                            }`}>
+                              {req.status === "pending" ? "قيد الانتظار" : req.status === "completed" ? "تم الدفع" : "مرفوض"}
+                            </span>
+                          </td>
+                          <td className="p-4 text-xs text-muted-foreground">{req.date}</td>
+                          <td className="p-4">
+                            {req.status === "pending" && (
+                              <div className="flex gap-2">
+                                <Button size="sm" className="h-8 text-[10px] bg-emerald-600 hover:bg-emerald-700" onClick={() => toast({ title: "تم قبول الطلب", description: "سيتم تحويل المبلغ قريباً" })}>
+                                  قبول
+                                </Button>
+                                <Button size="sm" variant="destructive" className="h-8 text-[10px]" onClick={() => toast({ title: "تم رفض الطلب", variant: "destructive" })}>
+                                  رفض
+                                </Button>
+                              </div>
+                            )}
+                          </td>
+                        </tr>
+                      )) : (
+                        <tr>
+                          <td colSpan={6} className="p-8 text-center text-muted-foreground text-sm">لا توجد طلبات سحب حالياً</td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           )}

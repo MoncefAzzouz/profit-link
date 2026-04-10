@@ -30,7 +30,7 @@ import {
   sellerEarningsData, SellerProduct
 } from "@/data/mockSellerData";
 
-type Tab = "overview" | "products" | "orders" | "earnings" | "affiliates" | "landing-pages" | "settings";
+type Tab = "overview" | "products" | "orders" | "earnings" | "withdrawals" | "affiliates" | "landing-pages" | "settings";
 
 const statusConfig = {
   pending: { label: "قيد الانتظار", icon: Clock, color: "text-yellow-600 bg-yellow-50 border-yellow-200" },
@@ -94,6 +94,12 @@ const SellerDashboard = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [filterCategory, setFilterCategory] = useState<string>("all");
+
+  // Withdrawal state
+  const [withdrawalDialogOpen, setWithdrawalDialogOpen] = useState(false);
+  const [withdrawAmount, setWithdrawAmount] = useState("");
+  const [withdrawMethod, setWithdrawMethod] = useState("CCP");
+  const [withdrawAccount, setWithdrawAccount] = useState("");
 
   useEffect(() => {
     const storedUser = localStorage.getItem("seller_user");
@@ -180,6 +186,7 @@ const SellerDashboard = () => {
     { id: "landing-pages" as Tab, label: "صفحات الهبوط", icon: LayoutTemplate },
     { id: "orders" as Tab, label: "الطلبيات", icon: ShoppingCart },
     { id: "earnings" as Tab, label: "الإيرادات", icon: Wallet },
+    { id: "withdrawals" as Tab, label: "طلبات السحب", icon: CheckCircle },
     { id: "affiliates" as Tab, label: "المسوّقون", icon: Users },
     { id: "settings" as Tab, label: "الإعدادات", icon: Settings },
   ];
@@ -619,6 +626,61 @@ const SellerDashboard = () => {
             </div>
           )}
 
+          {/* Withdrawals Tab */}
+          {activeTab === "withdrawals" && (
+            <div className="space-y-6">
+              {/* Withdrawal History */}
+              <motion.div {...cardAnim(0.1)} className="dash-card">
+                <div className="p-6 border-b border-border flex items-center justify-between">
+                  <div>
+                    <h2 className="text-xl font-bold text-foreground">طلبات السحب</h2>
+                    <p className="text-sm text-muted-foreground mt-1">سجل عمليات سحب الأرباح الخاصة بك</p>
+                  </div>
+                  <Button onClick={() => setWithdrawalDialogOpen(true)} className="gap-2 rounded-xl bg-secondary text-secondary-foreground hover:bg-secondary/90 shadow-lg shadow-secondary/20">
+                    <Wallet className="w-4 h-4" />
+                    طلب سحب جديد
+                  </Button>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-muted/50 border-b border-border/50">
+                      <tr>
+                        <th className="text-right p-4 font-semibold text-foreground text-sm">المبلغ</th>
+                        <th className="text-right p-4 font-semibold text-foreground text-sm">طريقة الدفع</th>
+                        <th className="text-right p-4 font-semibold text-foreground text-sm">الحالة</th>
+                        <th className="text-right p-4 font-semibold text-foreground text-sm">التاريخ</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border">
+                      <tr className="hover:bg-muted/30 transition-colors">
+                        <td className="p-4 font-bold text-foreground text-sm">85,000 دج</td>
+                        <td className="p-4">
+                          <p className="text-xs font-bold text-foreground">Baridimob</p>
+                          <p className="text-[10px] text-muted-foreground font-mono">00799999000123456789</p>
+                        </td>
+                        <td className="p-4">
+                          <span className="inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700">تم الدفع</span>
+                        </td>
+                        <td className="p-4 text-xs text-muted-foreground">2024-01-18</td>
+                      </tr>
+                      <tr className="hover:bg-muted/30 transition-colors">
+                        <td className="p-4 font-bold text-foreground text-sm">120,000 دج</td>
+                        <td className="p-4">
+                          <p className="text-xs font-bold text-foreground">CCP</p>
+                          <p className="text-[10px] text-muted-foreground font-mono">0087654321 / 11</p>
+                        </td>
+                        <td className="p-4">
+                          <span className="inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-100 text-red-700">مرفوض</span>
+                        </td>
+                        <td className="p-4 text-xs text-muted-foreground">2024-01-15</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </motion.div>
+            </div>
+          )}
+
           {/* ===== AFFILIATES ===== */}
           {activeTab === "affiliates" && (
             <div className="space-y-6">
@@ -852,6 +914,71 @@ const SellerDashboard = () => {
             </Button>
             <Button variant="destructive" onClick={handleDeleteProduct} className="rounded-xl gap-2">
               <Trash2 className="w-4 h-4" /> نعم، احذف
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ===== WITHDRAWAL REQUEST DIALOG ===== */}
+      <Dialog open={withdrawalDialogOpen} onOpenChange={setWithdrawalDialogOpen}>
+        <DialogContent className="max-w-md rounded-2xl" dir="rtl">
+          <DialogHeader>
+            <DialogTitle className="text-xl flex items-center gap-2">
+              <Wallet className="w-5 h-5 text-secondary" /> طلب سحب الأرباح
+            </DialogTitle>
+            <DialogDescription>
+              أدخل المبلغ وبيانات التحويل لسحب أرباحك.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold">المبلغ المطلوب (دج)</Label>
+              <Input
+                type="number"
+                placeholder="أدخل المبلغ..."
+                value={withdrawAmount}
+                onChange={(e) => setWithdrawAmount(e.target.value)}
+                className="rounded-xl h-12 text-lg font-bold"
+              />
+              <p className="text-[11px] text-muted-foreground">الرصيد القابل للسحب: {(mockSellerStats.totalRevenue * 0.55).toLocaleString()} دج</p>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold">طريقة السحب</Label>
+              <Select value={withdrawMethod} onValueChange={setWithdrawMethod}>
+                <SelectTrigger className="rounded-xl h-11">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="CCP">CCP (البريد الجزائري)</SelectItem>
+                  <SelectItem value="Baridimob">Baridimob</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold">تفاصيل الحساب ({withdrawMethod})</Label>
+              <Input
+                placeholder={withdrawMethod === "CCP" ? "رقم الحساب / المفتاح" : "رقم الـ RIP"}
+                value={withdrawAccount}
+                onChange={(e) => setWithdrawAccount(e.target.value)}
+                className="rounded-xl font-mono"
+              />
+            </div>
+          </div>
+
+          <DialogFooter className="pt-2">
+            <Button 
+              className="w-full h-12 rounded-xl bg-secondary text-secondary-foreground hover:bg-secondary/90 text-lg font-bold"
+              onClick={() => {
+                toast({ title: "✅ تم إرسال الطلب", description: "سيتم مراجعة طلبك وتحويل المبلغ خلال 24-48 ساعة" });
+                setWithdrawalDialogOpen(false);
+                setWithdrawAmount("");
+                setWithdrawAccount("");
+              }}
+            >
+              تأكيد الطلب
             </Button>
           </DialogFooter>
         </DialogContent>
