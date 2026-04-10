@@ -24,7 +24,7 @@ import {
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { format, parseISO, isAfter, isBefore, isEqual } from "date-fns";
 import { ar } from "date-fns/locale";
-import { mockProducts } from "@/data/mockProducts";
+import { mockProducts, categories } from "@/data/mockProducts";
 import { mockOrders, mockAffiliateStats, Order } from "@/data/mockAffiliateData";
 import { useToast } from "@/hooks/use-toast";
 import EarningsChart from "@/components/dashboard/EarningsChart";
@@ -46,6 +46,14 @@ const Dashboard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [user, setUser] = useState<any>(null);
+
+  // Product filter states
+  const [productSearch, setProductSearch] = useState("");
+  const [productCategory, setProductCategory] = useState("الكل");
+  const [productPriceRange, setProductPriceRange] = useState(0);
+  const [productSort, setProductSort] = useState("default");
+  const [productStockFilter, setProductStockFilter] = useState("all");
+  const [showProductFilters, setShowProductFilters] = useState(false);
 
   // Filter states
   const [orderSearch, setOrderSearch] = useState("");
