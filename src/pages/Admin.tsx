@@ -104,6 +104,7 @@ const Admin = () => {
     });
   }, [sellerSearch, sellerStatus]);
 
+  const filteredOrders = useMemo(() => {
     return mockAllOrders.filter((order) => {
       const matchesSearch = order.productName.includes(orderSearch) || 
                            order.customerName.includes(orderSearch) ||
