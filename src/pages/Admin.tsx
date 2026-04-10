@@ -959,17 +959,7 @@ const Admin = () => {
                 </div>
               </div>
 
-              <div className="dash-card-interactive p-6">
-                <div className="flex items-start gap-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-xl">
-                  <AlertTriangle className="w-6 h-6 text-yellow-600 shrink-0 mt-0.5" />
-                  <div>
-                    <p className="font-semibold text-foreground">ملاحظة مهمة</p>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      هذه نسخة تجريبية. لربط قاعدة بيانات حقيقية ونظام مصادقة، قم بتفعيل Lovable Cloud.
-                    </p>
-                  </div>
-                </div>
-              </div>
+
             </div>
           )}
         </div>
