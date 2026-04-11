@@ -6,10 +6,12 @@ import {
   HelpCircle, LogOut, Menu, X, Copy, Check, TrendingUp,
   Clock, CheckCircle, XCircle, Truck, Eye, ChevronLeft,
   Calendar, Filter, Search, SlidersHorizontal, Store, Sparkles,
-  Heart, Download, PlusCircle, User, Phone, MapPin, PackagePlus, MessageSquare, Plus, Trash2, Maximize2, LayoutTemplate
+  Heart, Download, PlusCircle, User, Phone, MapPin, PackagePlus, MessageSquare, Plus, Trash2, Maximize2, LayoutTemplate,
+  Save, Globe, Facebook, Instagram
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -42,6 +44,7 @@ import EarningsChart from "@/components/dashboard/EarningsChart";
 import { shippingRates, shippingRegions } from "@/data/mockShippingData";
 import { mockWithdrawalRequests } from "@/data/mockAdminData";
 import { mockSellerStats, sellerEarningsData } from "@/data/mockSellerData";
+import { StoreSettings, defaultStoreSettings } from "@/data/storeSettings";
 import LandingPageBuilder from "@/components/seller/LandingPageBuilder";
 import {
   BarChart, Bar, PieChart, Pie, Cell, ResponsiveContainer,
@@ -49,7 +52,7 @@ import {
   AreaChart, Area
 } from "recharts";
 
-type Tab = "overview" | "products" | "my_store" | "favorites" | "landing_pages" | "orders" | "earnings" | "withdrawals" | "levels" | "shipping" | "support";
+type Tab = "overview" | "products" | "my_store" | "my_store_edit" | "favorites" | "landing_pages" | "orders" | "earnings" | "withdrawals" | "levels" | "shipping" | "support";
 
 const orderStatusPieData = [
   { name: "مسلّمة", value: 812, color: "hsl(160, 84%, 39%)" },
@@ -128,6 +131,20 @@ const Dashboard = () => {
     deliveryType: "home" as "home" | "office",
     deliveryFee: 500
   });
+
+  // Store Editor State
+  const [storeSettings, setStoreSettings] = useState<StoreSettings>(() => {
+    const saved = localStorage.getItem("affiliate_store_settings");
+    return saved ? JSON.parse(saved) : defaultStoreSettings;
+  });
+
+  const saveStoreSettings = () => {
+    localStorage.setItem("affiliate_store_settings", JSON.stringify(storeSettings));
+    toast({
+      title: "تم حفظ إعدادات المتجر! ✅",
+      description: "تم تحديث مظهر متجرك العام بنجاح.",
+    });
+  };
 
   // Calculate delivery fee automatically
   useEffect(() => {
@@ -268,6 +285,7 @@ const Dashboard = () => {
     { id: "overview" as Tab, label: "نظرة عامة", icon: LayoutDashboard },
     { id: "products" as Tab, label: "المنتجات", icon: Package },
     { id: "my_store" as Tab, label: "متجري", icon: Store },
+    { id: "my_store_edit" as Tab, label: "تعديل متجري", icon: LayoutTemplate },
     { id: "favorites" as Tab, label: "المنتجات المفضلة", icon: Heart },
     { id: "landing_pages" as Tab, label: "صفحات الهبوط", icon: LayoutTemplate },
     { id: "orders" as Tab, label: "طلبياتي", icon: ShoppingCart },
@@ -1575,6 +1593,216 @@ const Dashboard = () => {
                   <div className="p-4 bg-muted rounded-xl">
                     <p className="font-semibold text-foreground">كيف يتم الدفع؟</p>
                     <p className="text-sm text-muted-foreground mt-1">يتم التحويل تلقائياً كل نهاية أسبوع عبر CCP أو Baridimob.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* My Store Edit Tab */}
+          {activeTab === "my_store_edit" && (
+            <div className="space-y-8 max-w-5xl" dir="rtl">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div>
+                  <h2 className="text-3xl font-black text-foreground flex items-center gap-3">
+                    <LayoutTemplate className="w-8 h-8 text-primary" />
+                    تخصيص مظهر المتجر
+                  </h2>
+                  <p className="text-muted-foreground mt-1">اجعل متجرك فريداً وجذاباً لزيادة المبيعات</p>
+                </div>
+                <div className="flex gap-3 w-full sm:w-auto">
+                   <Button 
+                    variant="outline"
+                    className="flex-1 sm:flex-none h-12 px-6 rounded-2xl gap-2 font-bold"
+                    onClick={() => window.open('/products', '_blank')}
+                  >
+                    <Eye className="w-5 h-5" />
+                    معاينة
+                  </Button>
+                  <Button 
+                    onClick={saveStoreSettings}
+                    className="flex-1 sm:flex-none bg-primary text-primary-foreground h-12 px-8 rounded-2xl gap-2 font-bold shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all"
+                  >
+                    <Save className="w-5 h-5" />
+                    حفظ التغييرات
+                  </Button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {/* Visual Identity Section */}
+                <div className="space-y-6">
+                  <div className="bg-card rounded-[2.5rem] p-8 border border-border/50 shadow-sm space-y-6">
+                    <div className="flex items-center gap-3 border-b border-border pb-4">
+                      <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                        <Store className="w-5 h-5" />
+                      </div>
+                      <h3 className="text-xl font-bold">الهوية البصرية</h3>
+                    </div>
+
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label className="text-sm font-bold pr-1">شريط الترحيب (Top Bar)</Label>
+                        <Input 
+                          value={storeSettings.welcomeBarText}
+                          onChange={(e) => setStoreSettings({...storeSettings, welcomeBarText: e.target.value})}
+                          placeholder="مثال: أهلاً بكم في متجرنا الرسمي..."
+                          className="h-12 rounded-xl bg-muted/30 border-none px-4"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label className="text-sm font-bold pr-1">رابط الشعار (Logo URL)</Label>
+                        <div className="flex gap-4">
+                          <Input 
+                            value={storeSettings.storeLogo}
+                            onChange={(e) => setStoreSettings({...storeSettings, storeLogo: e.target.value})}
+                            placeholder="ضع رابط صورة الشعار هنا"
+                            className="h-12 rounded-xl bg-muted/30 border-none px-4 flex-1"
+                          />
+                          {storeSettings.storeLogo && (
+                            <div className="w-12 h-12 rounded-xl overflow-hidden border border-border shrink-0">
+                              <img src={storeSettings.storeLogo} alt="Logo Preview" className="w-full h-full object-cover" />
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label className="text-sm font-bold pr-1">اسم المتجر</Label>
+                        <Input 
+                          value={storeSettings.storeName}
+                          onChange={(e) => setStoreSettings({...storeSettings, storeName: e.target.value})}
+                          placeholder="مثال: متجر النخبة"
+                          className="h-12 rounded-xl bg-muted/30 border-none px-4"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label className="text-sm font-bold pr-1">نبذة عن المتجر</Label>
+                        <Textarea 
+                          value={storeSettings.storeIntro}
+                          onChange={(e) => setStoreSettings({...storeSettings, storeIntro: e.target.value})}
+                          placeholder="اكتب وصفاً قصيراً يظهر تحت اسم المتجر..."
+                          className="min-h-[100px] rounded-xl bg-muted/30 border-none p-4"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-card rounded-[2.5rem] p-8 border border-border/50 shadow-sm space-y-6">
+                    <div className="flex items-center gap-3 border-b border-border pb-4">
+                      <div className="w-10 h-10 rounded-xl bg-secondary/10 flex items-center justify-center text-secondary">
+                        <LayoutDashboard className="w-5 h-5" />
+                      </div>
+                      <h3 className="text-xl font-bold">تنسيق العرض</h3>
+                    </div>
+
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between p-4 bg-muted/30 rounded-2xl">
+                        <div className="space-y-0.5">
+                          <Label className="font-bold">عدد المنتجات في السطر</Label>
+                          <p className="text-xs text-muted-foreground">ينطبق على شاشات الحاسوب فقط</p>
+                        </div>
+                        <Select 
+                          value={String(storeSettings.gridColumns)} 
+                          onValueChange={(v) => setStoreSettings({...storeSettings, gridColumns: Number(v)})}
+                        >
+                          <SelectTrigger className="w-24 border-none bg-background rounded-xl h-10">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="2">منشورين (2)</SelectItem>
+                            <SelectItem value="3">3 منشورات</SelectItem>
+                            <SelectItem value="4">4 منشورات</SelectItem>
+                            <SelectItem value="5">5 منشورات</SelectItem>
+                            <SelectItem value="6">6 منشورات</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Social & Contact Section */}
+                <div className="space-y-6">
+                  <div className="bg-card rounded-[2.5rem] p-8 border border-border/50 shadow-sm space-y-6">
+                    <div className="flex items-center gap-3 border-b border-border pb-4">
+                      <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-600">
+                        <Globe className="w-5 h-5" />
+                      </div>
+                      <h3 className="text-xl font-bold">التواصل والروابط</h3>
+                    </div>
+
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label className="text-sm font-bold pr-1 flex items-center gap-2">
+                          <Facebook className="w-4 h-4 text-[#1877F2]" /> فيسبوك
+                        </Label>
+                        <Input 
+                          value={storeSettings.socialLinks.facebook}
+                          onChange={(e) => setStoreSettings({...storeSettings, socialLinks: {...storeSettings.socialLinks, facebook: e.target.value}})}
+                          placeholder="https://facebook.com/your-page"
+                          className="h-11 rounded-xl bg-muted/30 border-none px-4"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label className="text-sm font-bold pr-1 flex items-center gap-2">
+                          <Instagram className="w-4 h-4 text-[#E4405F]" /> انستغرام
+                        </Label>
+                        <Input 
+                          value={storeSettings.socialLinks.instagram}
+                          onChange={(e) => setStoreSettings({...storeSettings, socialLinks: {...storeSettings.socialLinks, instagram: e.target.value}})}
+                          placeholder="https://instagram.com/your-profile"
+                          className="h-11 rounded-xl bg-muted/30 border-none px-4"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label className="text-sm font-bold pr-1 flex items-center gap-2">
+                          <Phone className="w-4 h-4 text-secondary" /> رقم الهاتف
+                        </Label>
+                        <Input 
+                          value={storeSettings.socialLinks.phone}
+                          onChange={(e) => setStoreSettings({...storeSettings, socialLinks: {...storeSettings.socialLinks, phone: e.target.value}})}
+                          placeholder="05xx xx xx xx"
+                          className="h-11 rounded-xl bg-muted/30 border-none px-4"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label className="text-sm font-bold pr-1 flex items-center gap-2">
+                          <MessageSquare className="w-4 h-4 text-emerald-500" /> واتساب
+                        </Label>
+                        <Input 
+                          value={storeSettings.socialLinks.whatsapp}
+                          onChange={(e) => setStoreSettings({...storeSettings, socialLinks: {...storeSettings.socialLinks, whatsapp: e.target.value}})}
+                          placeholder="رقم الواتساب..."
+                          className="h-11 rounded-xl bg-muted/30 border-none px-4"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-primary/5 rounded-[2.5rem] p-8 border border-primary/10 space-y-4">
+                    <div className="flex items-center gap-4 text-primary">
+                      <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center">
+                        <Sparkles className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <h4 className="font-bold">معاينة مباشرة للمتجر</h4>
+                        <p className="text-xs opacity-70">شاهد كيف يظهر متجرك للعملاء</p>
+                      </div>
+                    </div>
+                    <Button 
+                      variant="outline" 
+                      className="w-full h-12 rounded-2xl border-primary/20 text-primary bg-background hover:bg-primary hover:text-white transition-all gap-2"
+                      onClick={() => window.open('/products', '_blank')}
+                    >
+                      <Eye className="w-5 h-5" />
+                      فتح رابط المتجر
+                    </Button>
                   </div>
                 </div>
               </div>

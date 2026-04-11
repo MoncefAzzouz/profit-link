@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
@@ -13,6 +14,7 @@ import {
   ChevronDown,
   MousePointerClick,
 } from "lucide-react";
+import { LandingSettings, defaultLandingSettings } from "@/data/landingSettings";
 
 const container = {
   hidden: { opacity: 0 },
@@ -29,6 +31,14 @@ const item = {
 
 const Hero = () => {
   const reduceMotion = useReducedMotion();
+  const [settings, setSettings] = useState<LandingSettings>(defaultLandingSettings);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("landing_page_settings");
+    if (saved) {
+      setSettings(JSON.parse(saved));
+    }
+  }, []);
 
   return (
     <section className="relative min-h-screen overflow-hidden bg-gradient-to-br from-navy-900 via-primary to-navy-800 hero-mesh">
@@ -62,24 +72,24 @@ const Hero = () => {
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-secondary" />
               </span>
               <Sparkles className="w-4 h-4 text-amber-300 shrink-0" aria-hidden />
-              منصة التسويق بالعمولة الأولى في الجزائر
+              {settings.hero.badge}
             </motion.div>
 
             <motion.h1
               {...(reduceMotion ? {} : { variants: item })}
               className="text-4xl md:text-5xl lg:text-6xl xl:text-[3.5rem] font-extrabold text-white mb-5 leading-[1.15] tracking-tight"
             >
-              ابدأ رحلتك في{" "}
-              <span className="text-gradient-hero">التجارة الإلكترونية</span>
+              {settings.hero.titlePart1}{" "}
+              <span className="text-gradient-hero">{settings.hero.titleGradient}</span>
               <br />
-              <span className="text-white/95">بدون رأس مال</span>
+              <span className="text-white/95">{settings.hero.titlePart2}</span>
             </motion.h1>
 
             <motion.p
               {...(reduceMotion ? {} : { variants: item })}
               className="text-lg md:text-xl text-white/75 mb-9 max-w-xl mx-auto lg:mx-0 lg:mr-0 leading-relaxed"
             >
-              سجّل مجانًا، اختر المنتجات، شارك رابط الإحالة، وتابع أرباحك — كل ذلك من هاتفك فقط.
+              {settings.hero.description}
             </motion.p>
 
             <motion.div
@@ -88,22 +98,22 @@ const Hero = () => {
             >
               <Link to="/auth">
                 <Button variant="hero" size="xl" className="group w-full sm:w-auto min-w-[200px] shadow-glow">
-                  ابدأ الربح الآن
+                  {settings.hero.primaryBtn}
                   <ArrowLeft className="w-5 h-5 transition-transform group-hover:-translate-x-1" />
                 </Button>
               </Link>
               <Button variant="heroOutline" size="xl" className="w-full sm:w-auto min-w-[200px]" asChild>
                 <a href="#how-it-works">
                   <MousePointerClick className="w-5 h-5 opacity-90" />
-                  كيف يعمل؟
+                  {settings.hero.secondaryBtn}
                 </a>
               </Button>
             </motion.div>
 
             <motion.p {...(reduceMotion ? {} : { variants: item })} className="text-white/55 text-sm mb-10">
-              لديك حساب بالفعل؟{" "}
+              {settings.hero.loginAlt.split("؟ ")[0]}؟{" "}
               <Link to="/auth" className="text-secondary font-semibold hover:text-emerald-300 underline-offset-4 hover:underline transition-colors">
-                تسجيل الدخول
+                {settings.hero.loginAlt.split("؟ ")[1]}
               </Link>
             </motion.p>
 
@@ -112,9 +122,9 @@ const Hero = () => {
               className="flex flex-wrap justify-center lg:justify-start gap-3"
             >
               {[
-                { icon: Smartphone, text: "واجهة بسيطة من الجوال" },
-                { icon: Package, text: "منتجات جاهزة للترويج" },
-                { icon: TrendingUp, text: "عمولة تصل إلى 50%" },
+                { icon: Smartphone, text: settings.features.item1 },
+                { icon: Package, text: settings.features.item2 },
+                { icon: TrendingUp, text: settings.features.item3 },
               ].map((entry, index) => (
                 <div
                   key={index}

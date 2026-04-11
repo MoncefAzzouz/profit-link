@@ -1,12 +1,14 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { Copy, Check, Search, Filter, Eye, TrendingUp, SlidersHorizontal, X } from "lucide-react";
+import { Copy, Check, Search, Filter, Eye, TrendingUp, SlidersHorizontal, X, Facebook, Instagram, Phone, MessageSquare, Globe, Shield, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { mockProducts, categories } from "@/data/mockProducts";
+import { StoreSettings, defaultStoreSettings } from "@/data/storeSettings";
 import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 
 const priceRanges = [
   { label: "الكل", min: 0, max: Infinity },
@@ -33,6 +35,15 @@ const Products = () => {
   const [sortBy, setSortBy] = useState("default");
   const [showFilters, setShowFilters] = useState(false);
   const [stockFilter, setStockFilter] = useState("all");
+
+  const [storeSettings, setStoreSettings] = useState<StoreSettings>(defaultStoreSettings);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("affiliate_store_settings");
+    if (saved) {
+      setStoreSettings(JSON.parse(saved));
+    }
+  }, []);
 
   const affiliateId = "aff-demo-123";
 
@@ -65,23 +76,51 @@ const Products = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="bg-gradient-to-br from-primary via-primary to-navy-800 text-primary-foreground py-16">
-        <div className="container mx-auto px-4">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-center"
-          >
-            <h1 className="text-4xl lg:text-5xl font-bold mb-4">
-              منتجاتنا المميزة
-            </h1>
-            <p className="text-xl text-primary-foreground/80 max-w-2xl mx-auto">
-              اختر المنتج وانسخ رابط الإحالة الخاص بك وابدأ بالربح
-            </p>
-          </motion.div>
+    <div className="min-h-screen bg-background" dir="rtl">
+      {/* Top Welcome Bar */}
+      {storeSettings.welcomeBarText && (
+        <div className="bg-primary text-primary-foreground py-2 text-center text-xs font-bold tracking-wide">
+          {storeSettings.welcomeBarText}
         </div>
+      )}
+
+      {/* Branded Header */}
+      <div className="bg-card border-b border-border py-12 relative overflow-hidden">
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-8">
+            {/* Store Info (Left on Desktop) */}
+            <motion.div 
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="text-right md:flex-1"
+            >
+              <h1 className="text-4xl lg:text-5xl font-black text-foreground mb-4">
+                {storeSettings.storeName}
+              </h1>
+              <p className="text-xl text-muted-foreground max-w-2xl leading-relaxed">
+                {storeSettings.storeIntro}
+              </p>
+            </motion.div>
+
+            {/* Store Logo (Right on Desktop) */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="shrink-0"
+            >
+              <div className="w-32 h-32 md:w-40 md:h-40 rounded-[2.5rem] overflow-hidden shadow-2xl border-4 border-background ring-1 ring-border">
+                <img 
+                  src={storeSettings.storeLogo} 
+                  alt={storeSettings.storeName} 
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            </motion.div>
+          </div>
+        </div>
+        {/* Subtle decorative elements */}
+        <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -mr-32 -mt-32" />
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-secondary/5 rounded-full blur-3xl -ml-32 -mb-32" />
       </div>
 
       <div className="container mx-auto px-4 py-8">
@@ -196,7 +235,14 @@ const Products = () => {
         </motion.div>
 
         {/* Products Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className={cn(
+          "grid gap-6",
+          storeSettings.gridColumns === 2 && "md:grid-cols-2",
+          storeSettings.gridColumns === 3 && "md:grid-cols-2 lg:grid-cols-3",
+          storeSettings.gridColumns === 4 && "md:grid-cols-2 lg:grid-cols-4",
+          storeSettings.gridColumns === 5 && "md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5",
+          storeSettings.gridColumns === 6 && "md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6"
+        )}>
           {filteredProducts.map((product, index) => (
             <motion.div
               key={product.id}
@@ -297,6 +343,69 @@ const Products = () => {
           </div>
         )}
       </div>
+
+      {/* Branded Footer */}
+      <footer className="bg-card border-t border-border mt-20 pt-16 pb-8">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
+            <div className="md:col-span-2 space-y-6">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-2xl overflow-hidden shadow-md">
+                  <img src={storeSettings.storeLogo} alt={storeSettings.storeName} className="w-full h-full object-cover" />
+                </div>
+                <h3 className="text-2xl font-black text-foreground">{storeSettings.storeName}</h3>
+              </div>
+              <p className="text-muted-foreground max-w-md leading-relaxed">
+                {storeSettings.storeIntro}
+              </p>
+              <div className="flex gap-4">
+                {storeSettings.socialLinks.facebook && (
+                  <a href={storeSettings.socialLinks.facebook} target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center hover:bg-primary hover:text-white transition-colors">
+                    <Facebook className="w-5 h-5" />
+                  </a>
+                )}
+                {storeSettings.socialLinks.instagram && (
+                  <a href={storeSettings.socialLinks.instagram} target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center hover:bg-primary hover:text-white transition-colors">
+                    <Instagram className="w-5 h-5" />
+                  </a>
+                )}
+                {storeSettings.socialLinks.phone && (
+                  <a href={`tel:${storeSettings.socialLinks.phone}`} className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center hover:bg-secondary hover:text-white transition-colors">
+                    <Phone className="w-5 h-5" />
+                  </a>
+                )}
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <h4 className="font-bold text-foreground">روابط قانونية</h4>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li><a href={storeSettings.footerInfo.privacyPolicyLink} className="hover:text-primary transition-colors">سياسة الخصوصية</a></li>
+                <li><a href={storeSettings.footerInfo.termsLink} className="hover:text-primary transition-colors">الشروط والأحكام</a></li>
+              </ul>
+            </div>
+
+            <div className="space-y-4">
+              <h4 className="font-bold text-foreground">اتصل بنا</h4>
+              <div className="space-y-3 text-sm text-muted-foreground">
+                <div className="flex items-center gap-2">
+                  <Phone className="w-4 h-4 text-secondary" />
+                  <span>{storeSettings.socialLinks.phone}</span>
+                </div>
+                {storeSettings.socialLinks.whatsapp && (
+                  <div className="flex items-center gap-2">
+                    <MessageSquare className="w-4 h-4 text-emerald-500" />
+                    <span>واتساب</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+          <div className="border-t border-border pt-8 text-center text-sm text-muted-foreground font-medium">
+            &copy; {new Date().getFullYear()} {storeSettings.storeName}. جميع الحقوق محفوظة.
+          </div>
+        </div>
+      </footer>
     </div>
   );
 };

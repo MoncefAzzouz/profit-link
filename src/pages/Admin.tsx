@@ -6,7 +6,7 @@ import {
   Settings, Menu, X, TrendingUp, CheckCircle, XCircle,
   Truck, Clock, Eye, Edit, Ban, Search, Filter, Plus,
   BarChart3, ChevronLeft, AlertTriangle, SlidersHorizontal, Store, UserPlus, Check, MapPin, CreditCard,
-  Video, Star, EyeOff, Trash2, Upload, FileText, Film, Image as ImageIcon, User
+  Video, Star, EyeOff, Trash2, Upload, FileText, Film, Image as ImageIcon, User, LayoutTemplate
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,13 +27,14 @@ import {
 import { mockProducts, categories, Product } from "@/data/mockProducts";
 import { mockAffiliates, mockAdminStats, mockAllOrders, mockSellers, mockWithdrawalRequests, WithdrawalRequest, mockJoinRequests, JoinRequest } from "@/data/mockAdminData";
 import { shippingRates, shippingRegions } from "@/data/mockShippingData";
+import { LandingSettings, defaultLandingSettings } from "@/data/landingSettings";
 import { useToast } from "@/hooks/use-toast";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell
 } from "recharts";
 
-type Tab = "overview" | "affiliates" | "sellers" | "join_requests" | "orders" | "products" | "analytics" | "withdrawals" | "settings" | "shipping";
+type Tab = "overview" | "affiliates" | "sellers" | "join_requests" | "orders" | "products" | "analytics" | "withdrawals" | "settings" | "shipping" | "landing_editor";
 
 const statusConfig = {
   pending: { label: "قيد الانتظار", icon: Clock, color: "text-yellow-600 bg-yellow-100" },
@@ -88,6 +89,20 @@ const Admin = () => {
   const [joinRole, setJoinRole] = useState("all");
   const [shippingSearch, setShippingSearch] = useState("");
   
+  // Landing Page Editor State
+  const [landingSettings, setLandingSettings] = useState<LandingSettings>(() => {
+    const saved = localStorage.getItem("landing_page_settings");
+    return saved ? JSON.parse(saved) : defaultLandingSettings;
+  });
+
+  const saveLandingSettings = () => {
+    localStorage.setItem("landing_page_settings", JSON.stringify(landingSettings));
+    toast({
+      title: "تم حفظ الإعدادات بنجاح ✅",
+      description: "سيتم تطبيق التغييرات على الصفحة الرئيسية فوراً.",
+    });
+  };
+  
   // Product Management States
   const [products, setProducts] = useState(mockProducts);
   const [isProductDialogOpen, setIsProductDialogOpen] = useState(false);
@@ -136,6 +151,7 @@ const Admin = () => {
     { id: "orders" as Tab, label: "الطلبيات", icon: ShoppingCart },
     { id: "withdrawals" as Tab, label: "طلبات السحب", icon: Wallet },
     { id: "shipping" as Tab, label: "التوصيل", icon: Truck },
+    { id: "landing_editor" as Tab, label: "تعديل الواجهة", icon: LayoutTemplate },
     { id: "analytics" as Tab, label: "الإحصائيات", icon: BarChart3 },
     { id: "settings" as Tab, label: "الإعدادات", icon: Settings },
   ];
@@ -1539,6 +1555,193 @@ const Admin = () => {
                       )}
                     </tbody>
                   </table>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Landing page Editor Tab */}
+          {activeTab === "landing_editor" && (
+            <div className="space-y-8 max-w-5xl" dir="rtl">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-2">
+                <div>
+                  <h3 className="text-2xl font-black text-foreground">تعديل الصفحة الرئيسية</h3>
+                  <p className="text-muted-foreground mt-1 text-sm">قم بتخصيص النصوص والروابط في الواجهة الأمامية للمنصة.</p>
+                </div>
+                <Button onClick={saveLandingSettings} variant="hero" className="shadow-lg px-8 w-full sm:w-auto h-12 rounded-2xl">
+                  حفظ التغييرات
+                </Button>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {/* Hero section */}
+                <div className="dash-card-interactive p-8 space-y-6">
+                  <div className="flex items-center gap-3 border-b border-border pb-4 mb-6">
+                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                      <LayoutDashboard className="w-5 h-5" />
+                    </div>
+                    <h4 className="text-lg font-bold">قسم الهيرو (الرئيسي)</h4>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label className="font-bold text-sm">البادج (النص الصغير في الأعلى)</Label>
+                      <Input 
+                        value={landingSettings.hero.badge}
+                        onChange={(e) => setLandingSettings({...landingSettings, hero: {...landingSettings.hero, badge: e.target.value}})}
+                        className="bg-muted/30 border-none rounded-xl h-11"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label className="font-bold text-sm">العنوان (الجزء الأول)</Label>
+                        <Input 
+                          value={landingSettings.hero.titlePart1}
+                          onChange={(e) => setLandingSettings({...landingSettings, hero: {...landingSettings.hero, titlePart1: e.target.value}})}
+                          className="bg-muted/30 border-none rounded-xl h-11"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="font-bold text-sm">النص الملون (Gradient)</Label>
+                        <Input 
+                          value={landingSettings.hero.titleGradient}
+                          onChange={(e) => setLandingSettings({...landingSettings, hero: {...landingSettings.hero, titleGradient: e.target.value}})}
+                          className="bg-muted/30 border-none rounded-xl h-11 font-bold text-primary"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="font-bold text-sm">العنوان (الجزء الثاني)</Label>
+                      <Input 
+                        value={landingSettings.hero.titlePart2}
+                        onChange={(e) => setLandingSettings({...landingSettings, hero: {...landingSettings.hero, titlePart2: e.target.value}})}
+                        className="bg-muted/30 border-none rounded-xl h-11"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="font-bold text-sm">الوصف التفصيلي</Label>
+                      <Textarea 
+                        value={landingSettings.hero.description}
+                        onChange={(e) => setLandingSettings({...landingSettings, hero: {...landingSettings.hero, description: e.target.value}})}
+                        className="bg-muted/30 border-none rounded-xl min-h-[100px] leading-relaxed"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label className="font-bold text-sm">نص الزر الأساسي</Label>
+                        <Input 
+                          value={landingSettings.hero.primaryBtn}
+                          onChange={(e) => setLandingSettings({...landingSettings, hero: {...landingSettings.hero, primaryBtn: e.target.value}})}
+                          className="bg-muted/30 border-none rounded-xl h-11"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="font-bold text-sm">نص الزر الثانوي</Label>
+                        <Input 
+                          value={landingSettings.hero.secondaryBtn}
+                          onChange={(e) => setLandingSettings({...landingSettings, hero: {...landingSettings.hero, secondaryBtn: e.target.value}})}
+                          className="bg-muted/30 border-none rounded-xl h-11"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Features & Navbar */}
+                <div className="space-y-8">
+                  <div className="dash-card-interactive p-8 space-y-6">
+                    <div className="flex items-center gap-3 border-b border-border pb-4 mb-6">
+                      <div className="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-600">
+                        <TrendingUp className="w-5 h-5" />
+                      </div>
+                      <h4 className="text-lg font-bold">المميزات الرئيسية</h4>
+                    </div>
+                    
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label className="font-bold text-sm text-muted-foreground flex items-center gap-2">
+                          <span className="w-6 h-6 rounded-full bg-orange-500/20 text-orange-600 flex items-center justify-center text-xs">1</span>
+                          الميزة الأولى
+                        </Label>
+                        <Input 
+                          value={landingSettings.features.item1}
+                          onChange={(e) => setLandingSettings({...landingSettings, features: {...landingSettings.features, item1: e.target.value}})}
+                          className="bg-muted/30 border-none rounded-xl h-11"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="font-bold text-sm text-muted-foreground flex items-center gap-2">
+                          <span className="w-6 h-6 rounded-full bg-blue-500/20 text-blue-600 flex items-center justify-center text-xs">2</span>
+                          الميزة الثانية
+                        </Label>
+                        <Input 
+                          value={landingSettings.features.item2}
+                          onChange={(e) => setLandingSettings({...landingSettings, features: {...landingSettings.features, item2: e.target.value}})}
+                          className="bg-muted/30 border-none rounded-xl h-11"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="font-bold text-sm text-muted-foreground flex items-center gap-2">
+                          <span className="w-6 h-6 rounded-full bg-green-500/20 text-green-600 flex items-center justify-center text-xs">3</span>
+                          الميزة الثالثة
+                        </Label>
+                        <Input 
+                          value={landingSettings.features.item3}
+                          onChange={(e) => setLandingSettings({...landingSettings, features: {...landingSettings.features, item3: e.target.value}})}
+                          className="bg-muted/30 border-none rounded-xl h-11"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="dash-card-interactive p-8 space-y-6">
+                    <div className="flex items-center gap-3 border-b border-border pb-4 mb-6">
+                      <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-600">
+                        <Menu className="w-5 h-5" />
+                      </div>
+                      <h4 className="text-lg font-bold">روابط القائمة العلوية</h4>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      {landingSettings.navbar.links.map((link, idx) => (
+                        <div key={idx} className="space-y-1.5">
+                          <Label className="text-xs font-bold text-muted-foreground pr-1">رابط {idx + 1}</Label>
+                          <Input 
+                            value={link.name}
+                            onChange={(e) => {
+                              const newLinks = [...landingSettings.navbar.links];
+                              newLinks[idx].name = e.target.value;
+                              setLandingSettings({...landingSettings, navbar: {...landingSettings.navbar, links: newLinks}});
+                            }}
+                            className="bg-muted/30 border-none rounded-xl h-10 text-sm"
+                          />
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4 pt-2">
+                      <div className="space-y-2">
+                        <Label className="font-bold text-xs pr-1">زر الدخول</Label>
+                        <Input 
+                          value={landingSettings.navbar.loginBtn}
+                          onChange={(e) => setLandingSettings({...landingSettings, navbar: {...landingSettings.navbar, loginBtn: e.target.value}})}
+                          className="bg-muted/30 border-none rounded-xl h-10 text-sm"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="font-bold text-xs pr-1">زر التسجيل</Label>
+                        <Input 
+                          value={landingSettings.navbar.registerBtn}
+                          onChange={(e) => setLandingSettings({...landingSettings, navbar: {...landingSettings.navbar, registerBtn: e.target.value}})}
+                          className="bg-muted/30 border-none rounded-xl h-10 text-sm"
+                        />
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
