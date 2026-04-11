@@ -4,6 +4,8 @@ export interface StoreSettings {
   storeLogo: string;
   storeIntro: string;
   gridColumns: number;
+  templateId: "modern" | "minimal" | "bold" | "dark";
+  primaryColor: string;
   socialLinks: {
     facebook: string;
     instagram: string;
@@ -22,6 +24,8 @@ export const defaultStoreSettings: StoreSettings = {
   storeLogo: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&q=80&w=200",
   storeIntro: "نحن نقدم مجموعة مختارة من المنتجات عالية الجودة مع ضمان التوصيل السريع لجميع الولايات.",
   gridColumns: 6,
+  templateId: "modern",
+  primaryColor: "#10b981",
   socialLinks: {
     facebook: "https://facebook.com",
     instagram: "https://instagram.com",

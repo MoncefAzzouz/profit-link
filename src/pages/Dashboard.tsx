@@ -7,7 +7,7 @@ import {
   Clock, CheckCircle, XCircle, Truck, Eye, ChevronLeft,
   Calendar, Filter, Search, SlidersHorizontal, Store, Sparkles,
   Heart, Download, PlusCircle, User, Phone, MapPin, PackagePlus, MessageSquare, Plus, Trash2, Maximize2, LayoutTemplate,
-  Save, Globe, Facebook, Instagram
+  Save, Globe, Facebook, Instagram, Palette, Layers
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -1690,6 +1690,44 @@ const Dashboard = () => {
                     </div>
                   </div>
 
+                  {/* Template Selection Section */}
+                  <div className="bg-card rounded-[2.5rem] p-8 border border-border/50 shadow-sm space-y-6">
+                    <div className="flex items-center gap-3 border-b border-border pb-4">
+                      <div className="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-600">
+                        <Layers className="w-5 h-5" />
+                      </div>
+                      <h3 className="text-xl font-bold">قالب المتجر</h3>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      {[
+                        { id: "modern", label: "مودرن جلاس", desc: "شفافية وعصرية", color: "from-blue-500/20 to-purple-500/20" },
+                        { id: "minimal", label: "مينيمال", desc: "بسيط وأنيق", color: "from-gray-100 to-gray-200" },
+                        { id: "bold", label: "جريء وحيوي", desc: "ألوان قوية", color: "from-primary/20 to-primary/40" },
+                        { id: "dark", label: "كلاسيك داكن", desc: "فخامة وأناقة", color: "from-slate-800 to-slate-900" }
+                      ].map((tpl) => (
+                        <div 
+                          key={tpl.id}
+                          onClick={() => setStoreSettings({...storeSettings, templateId: tpl.id as any})}
+                          className={`
+                            relative cursor-pointer p-4 rounded-2xl border-2 transition-all group
+                            ${storeSettings.templateId === tpl.id ? "border-primary bg-primary/5" : "border-border hover:border-primary/50 bg-muted/30"}
+                          `}
+                        >
+                          <div className={`aspect-video rounded-xl mb-3 bg-gradient-to-br ${tpl.color} flex items-center justify-center`}>
+                            {storeSettings.templateId === tpl.id && (
+                              <div className="bg-primary text-white p-1 rounded-full shadow-lg">
+                                <Check className="w-4 h-4" />
+                              </div>
+                            )}
+                          </div>
+                          <p className={`font-bold text-sm ${storeSettings.templateId === tpl.id ? "text-primary" : "text-foreground"}`}>{tpl.label}</p>
+                          <p className="text-[10px] text-muted-foreground">{tpl.desc}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
                   <div className="bg-card rounded-[2.5rem] p-8 border border-border/50 shadow-sm space-y-6">
                     <div className="flex items-center gap-3 border-b border-border pb-4">
                       <div className="w-10 h-10 rounded-xl bg-secondary/10 flex items-center justify-center text-secondary">
@@ -1719,6 +1757,43 @@ const Dashboard = () => {
                             <SelectItem value="6">6 منشورات</SelectItem>
                           </SelectContent>
                         </Select>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Color Customization Section */}
+                  <div className="bg-card rounded-[2.5rem] p-8 border border-border/50 shadow-sm space-y-6">
+                    <div className="flex items-center gap-3 border-b border-border pb-4">
+                      <div className="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-600">
+                        <Palette className="w-5 h-5" />
+                      </div>
+                      <h3 className="text-xl font-bold">ألوان العلامة التجارية</h3>
+                    </div>
+
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between p-4 bg-muted/30 rounded-2xl">
+                        <div className="space-y-0.5">
+                          <Label className="font-bold">اللون الأساسي</Label>
+                          <p className="text-xs text-muted-foreground">سيطبق على الأزرار والأيقونات واللمسات الجمالية</p>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <div 
+                            className="w-10 h-10 rounded-full border border-border flex items-center justify-center overflow-hidden" 
+                            style={{ backgroundColor: storeSettings.primaryColor }}
+                          >
+                            <Input 
+                              type="color" 
+                              value={storeSettings.primaryColor}
+                              onChange={(e) => setStoreSettings({...storeSettings, primaryColor: e.target.value})}
+                              className="w-16 h-16 cursor-pointer opacity-0"
+                            />
+                          </div>
+                          <Input 
+                            value={storeSettings.primaryColor}
+                            onChange={(e) => setStoreSettings({...storeSettings, primaryColor: e.target.value})}
+                            className="w-24 h-10 rounded-lg text-xs font-mono text-center"
+                          />
+                        </div>
                       </div>
                     </div>
                   </div>

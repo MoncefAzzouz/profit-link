@@ -76,16 +76,35 @@ const Products = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background" dir="rtl">
+    <div 
+      className={cn(
+        "min-h-screen transition-colors duration-500",
+        storeSettings.templateId === "dark" ? "bg-slate-950 text-slate-100 dark" : "bg-background text-foreground"
+      )} 
+      dir="rtl"
+      style={{ "--store-primary": storeSettings.primaryColor } as React.CSSProperties}
+    >
       {/* Top Welcome Bar */}
       {storeSettings.welcomeBarText && (
-        <div className="bg-primary text-primary-foreground py-2 text-center text-xs font-bold tracking-wide">
+        <div 
+          className="text-primary-foreground py-2 text-center text-xs font-bold tracking-wide"
+          style={{ backgroundColor: "var(--store-primary)" }}
+        >
           {storeSettings.welcomeBarText}
         </div>
       )}
 
       {/* Branded Header */}
-      <div className="bg-card border-b border-border py-12 relative overflow-hidden">
+      <div className={cn(
+        "py-12 relative overflow-hidden transition-all duration-500",
+        storeSettings.templateId === "modern" && "bg-card/40 backdrop-blur-xl border-b border-border/50",
+        storeSettings.templateId === "minimal" && "bg-background border-b border-border",
+        storeSettings.templateId === "bold" && "border-b-4 border-foreground shadow-[8px_8px_0px_0px_rgba(0,0,0,0.1)]",
+        storeSettings.templateId === "dark" && "bg-slate-900 border-b border-slate-800",
+        storeSettings.templateId === "bold" ? "" : "bg-card border-b border-border"
+      )}
+      style={storeSettings.templateId === "bold" ? { backgroundColor: "var(--store-primary)", color: "white" } : {}}
+      >
         <div className="container mx-auto px-4 relative z-10">
           <div className="flex flex-col md:flex-row items-center justify-between gap-8">
             {/* Store Info (Left on Desktop) */}
@@ -94,10 +113,22 @@ const Products = () => {
               animate={{ opacity: 1, x: 0 }}
               className="text-right md:flex-1"
             >
-              <h1 className="text-4xl lg:text-5xl font-black text-foreground mb-4">
+              <h1 className={cn(
+                "text-4xl lg:text-6xl font-black mb-4 tracking-tight",
+                storeSettings.templateId === "minimal" && "font-light",
+                storeSettings.templateId === "bold" && "uppercase italic",
+                storeSettings.templateId === "dark" ? "text-slate-50" : "text-foreground"
+              )}
+              style={storeSettings.templateId === "bold" ? { color: "white" } : {}}
+              >
                 {storeSettings.storeName}
               </h1>
-              <p className="text-xl text-muted-foreground max-w-2xl leading-relaxed">
+              <p className={cn(
+                "text-xl max-w-2xl leading-relaxed",
+                storeSettings.templateId === "dark" ? "text-slate-400" : "text-muted-foreground"
+              )}
+              style={storeSettings.templateId === "bold" ? { color: "rgba(255,255,255,0.8)" } : {}}
+              >
                 {storeSettings.storeIntro}
               </p>
             </motion.div>
@@ -108,7 +139,13 @@ const Products = () => {
               animate={{ opacity: 1, scale: 1 }}
               className="shrink-0"
             >
-              <div className="w-32 h-32 md:w-40 md:h-40 rounded-[2.5rem] overflow-hidden shadow-2xl border-4 border-background ring-1 ring-border">
+              <div className={cn(
+                "w-32 h-32 md:w-44 md:h-44 overflow-hidden shadow-2xl transition-all duration-500",
+                storeSettings.templateId === "modern" && "rounded-[3rem] border-4 border-background/50 backdrop-blur-md",
+                storeSettings.templateId === "minimal" && "rounded-none border-2 border-foreground",
+                storeSettings.templateId === "bold" && "rounded-2xl border-4 border-white rotate-3",
+                storeSettings.templateId === "dark" && "rounded-full border-4 border-slate-800"
+              )}>
                 <img 
                   src={storeSettings.storeLogo} 
                   alt={storeSettings.storeName} 
@@ -118,9 +155,13 @@ const Products = () => {
             </motion.div>
           </div>
         </div>
-        {/* Subtle decorative elements */}
-        <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -mr-32 -mt-32" />
-        <div className="absolute bottom-0 left-0 w-64 h-64 bg-secondary/5 rounded-full blur-3xl -ml-32 -mb-32" />
+        {/* Decorative elements based on template */}
+        {storeSettings.templateId === "modern" && (
+          <>
+            <div className="absolute top-0 right-0 w-64 h-64 opacity-20 rounded-full blur-3xl -mr-32 -mt-32" style={{ backgroundColor: "var(--store-primary)" }} />
+            <div className="absolute bottom-0 left-0 w-64 h-64 bg-secondary/10 rounded-full blur-3xl -ml-32 -mb-32" />
+          </>
+        )}
       </div>
 
       <div className="container mx-auto px-4 py-8">
@@ -249,7 +290,13 @@ const Products = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
-              className="bg-card rounded-2xl overflow-hidden shadow-lg hover-lift group"
+              className={cn(
+                "overflow-hidden transition-all duration-500 group",
+                storeSettings.templateId === "modern" && "bg-card/50 backdrop-blur-md rounded-[2rem] shadow-xl border border-white/20 hover-lift",
+                storeSettings.templateId === "minimal" && "bg-background rounded-none border border-border shadow-sm hover:shadow-lg",
+                storeSettings.templateId === "bold" && "bg-background rounded-2xl border-2 border-foreground shadow-[10px_10px_0px_0px_rgba(0,0,0,0.05)] hover:translate-x-1 hover:translate-y-1 hover:shadow-none",
+                storeSettings.templateId === "dark" && "bg-slate-900 rounded-3xl border border-slate-800 shadow-2xl hover:border-slate-700 hover:-translate-y-2"
+              )}
             >
               {/* Image */}
               <div className="relative aspect-square overflow-hidden">
@@ -258,17 +305,27 @@ const Products = () => {
                   alt={product.name}
                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                 />
-                <div className="absolute top-4 left-4 bg-destructive text-destructive-foreground px-3 py-1.5 rounded-full text-sm font-bold">
+                <div 
+                  className="absolute top-4 left-4 text-white px-3 py-1.5 rounded-full text-sm font-black shadow-lg"
+                  style={{ backgroundColor: "var(--store-primary)" }}
+                >
                   -{Math.round((1 - product.price / product.originalPrice) * 100)}%
                 </div>
-                <div className="absolute top-4 right-4 bg-secondary text-secondary-foreground px-3 py-1.5 rounded-full text-sm font-bold">
+                <div className={cn(
+                  "absolute top-4 right-4 px-3 py-1.5 rounded-full text-sm font-bold shadow-md",
+                  storeSettings.templateId === "dark" ? "bg-slate-800 text-slate-200" : "bg-white/90 backdrop-blur-sm text-foreground"
+                )}>
                   {product.category}
                 </div>
                 
                 {/* Hover Overlay */}
-                <div className="absolute inset-0 bg-primary/80 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                   <Link to={`/product/${product.id}/${affiliateId}`}>
-                    <Button variant="glass" size="lg" className="gap-2">
+                    <Button 
+                      variant="glass" 
+                      size="lg" 
+                      className="gap-2 rounded-full font-bold"
+                    >
                       <Eye className="w-5 h-5" />
                       معاينة صفحة المنتج
                     </Button>
@@ -279,10 +336,16 @@ const Products = () => {
               {/* Content */}
               <div className="p-5 space-y-4">
                 <div>
-                  <h3 className="font-bold text-lg text-foreground line-clamp-1">
+                  <h3 className={cn(
+                    "font-bold text-lg line-clamp-1",
+                    storeSettings.templateId === "dark" ? "text-slate-100" : "text-foreground"
+                  )}>
                     {product.name}
                   </h3>
-                  <p className="text-muted-foreground text-sm line-clamp-2 mt-1">
+                  <p className={cn(
+                    "text-sm line-clamp-2 mt-1",
+                    storeSettings.templateId === "dark" ? "text-slate-400" : "text-muted-foreground"
+                  )}>
                     {product.description}
                   </p>
                 </div>
@@ -290,16 +353,28 @@ const Products = () => {
                 {/* Price & Commission */}
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-2xl font-bold text-secondary">
+                    <p 
+                      className={cn(
+                        "text-2xl font-black",
+                        storeSettings.templateId === "dark" ? "text-slate-100" : "text-foreground"
+                      )}
+                      style={storeSettings.templateId !== "dark" ? { color: "var(--store-primary)" } : {}}
+                    >
                       {product.price.toLocaleString()} دج
                     </p>
                     <p className="text-sm text-muted-foreground line-through">
                       {product.originalPrice.toLocaleString()} دج
                     </p>
                   </div>
-                  <div className="bg-accent/10 rounded-xl px-4 py-2 text-center">
-                    <p className="text-xs text-muted-foreground">عمولتك</p>
-                    <p className="text-lg font-bold text-accent flex items-center gap-1">
+                  <div className={cn(
+                    "rounded-xl px-4 py-2 text-center",
+                    storeSettings.templateId === "dark" ? "bg-slate-800" : "bg-muted"
+                  )}>
+                    <p className="text-[10px] text-muted-foreground uppercase font-bold">عملتك</p>
+                    <p 
+                      className="text-lg font-black flex items-center gap-1"
+                      style={{ color: "var(--store-primary)" }}
+                    >
                       <TrendingUp className="w-4 h-4" />
                       {product.commission.toLocaleString()} دج
                     </p>
@@ -308,8 +383,13 @@ const Products = () => {
 
                 {/* Stock */}
                 <div className="flex items-center gap-2 text-sm">
-                  <div className={`w-2 h-2 rounded-full ${product.stock > 50 ? "bg-secondary" : "bg-accent"}`} />
-                  <span className="text-muted-foreground">
+                  <div 
+                    className={cn(
+                      "w-2 h-2 rounded-full",
+                      product.stock > 50 ? "bg-emerald-500" : "bg-orange-500"
+                    )} 
+                  />
+                  <span className={storeSettings.templateId === "dark" ? "text-slate-400" : "text-muted-foreground"}>
                     {product.stock > 50 ? "متوفر بكميات كبيرة" : `متبقي ${product.stock} قطعة`}
                   </span>
                 </div>
@@ -318,7 +398,14 @@ const Products = () => {
                 <Button
                   onClick={() => copyAffiliateLink(product.id, product.name)}
                   variant={copiedId === product.id ? "secondary" : "default"}
-                  className="w-full gap-2"
+                  className={cn(
+                    "w-full gap-2 h-12 text-base font-bold transition-all duration-300",
+                    storeSettings.templateId === "modern" && "rounded-2xl shadow-lg hover:shadow-primary/20 hover:-translate-y-0.5",
+                    storeSettings.templateId === "minimal" && "rounded-none border-2 border-foreground hover:bg-foreground hover:text-background",
+                    storeSettings.templateId === "bold" && "rounded-xl border-b-4 border-black/20 hover:border-b-0 active:translate-y-1",
+                    storeSettings.templateId === "dark" && "bg-slate-800 hover:bg-slate-700 text-slate-100 rounded-xl"
+                  )}
+                  style={storeSettings.templateId !== "minimal" && storeSettings.templateId !== "dark" ? { backgroundColor: "var(--store-primary)" } : {}}
                 >
                   {copiedId === product.id ? (
                     <>
