@@ -386,7 +386,7 @@ const SellerRegister = () => {
                   <Button 
                     type="button" 
                     variant="outline" 
-                    size="hero" 
+                    size="lg" 
                     onClick={() => setStep(step - 1)} 
                     className="flex-1 rounded-2xl border-2 h-16 order-2 sm:order-1"
                   >
@@ -396,7 +396,6 @@ const SellerRegister = () => {
                 <Button 
                   type="submit" 
                   variant="hero" 
-                   size="hero" 
                   className="flex-[2] rounded-2xl h-16 text-lg shadow-xl shadow-primary/20 order-1 sm:order-2" 
                   disabled={isLoading}
                 >
