@@ -318,15 +318,112 @@ const LandingPageBuilder = () => {
   if (editingPage) {
     const savings = editingPage.originalPrice - editingPage.price;
     const discountPercent = Math.round((1 - editingPage.price / editingPage.originalPrice) * 100);
+    const shadowMap = { none: "", sm: "shadow-sm", md: "shadow-md", lg: "shadow-lg", xl: "shadow-xl" };
 
-    const renderPreview = (isMobile: boolean) => {
-      const p = editingPage;
-      const tc = textColor(p.backgroundColor);
-      const stc = subTextColor(p.backgroundColor);
-      const br = `${p.borderRadius}px`;
+      const renderPreview = (isMobile: boolean) => {
+        const p = editingPage;
+        const tc = textColor(p.backgroundColor);
+        const stc = subTextColor(p.backgroundColor);
+        const br = `${p.borderRadius}px`;
 
-      return (
-        <div className="h-full overflow-y-auto scrollbar-hide" style={{ backgroundColor: p.backgroundColor, fontFamily: p.fontFamily, color: tc }}>
+        if (p.template === "original") {
+          const totalPrice = p.price; // Simplified for preview
+          return (
+            <div className="h-full overflow-y-auto scrollbar-hide flex flex-col" style={{ backgroundColor: p.backgroundColor, fontFamily: p.fontFamily, color: tc }}>
+              {/* Header */}
+              <div className="sticky top-0 z-10 flex items-center justify-between px-4 py-3 border-b backdrop-blur-md" style={{ backgroundColor: `${p.backgroundColor}90`, borderColor: isDark(p.backgroundColor) ? "#334155" : "#e2e8f0" }}>
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center shadow-lg" style={{ backgroundColor: p.primaryColor }}>
+                    <ShoppingCart className="w-4 h-4 text-white" />
+                  </div>
+                  <span className="text-[10px] font-bold truncate max-w-[100px]">{p.productName}</span>
+                </div>
+                <button className="text-[9px] font-bold px-4 py-1.5 rounded-full text-white shadow-lg" style={{ backgroundColor: p.primaryColor }}>
+                  اطلب الآن
+                </button>
+              </div>
+
+              <div className="p-4 space-y-6">
+                <div className={`${!isMobile ? "grid grid-cols-2 gap-6 items-start" : "space-y-6"}`}>
+                  {/* Left Side: Media & Features */}
+                  <div className="space-y-4">
+                    <div className={`relative aspect-square overflow-hidden bg-muted ${shadowMap[p.shadowIntensity]}`} style={{ borderRadius: br }}>
+                      {p.heroImage ? (
+                        <img src={p.heroImage} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground gap-1">
+                          <Image className="w-8 h-8 opacity-20" />
+                          <span className="text-[8px]">صورة المنتج</span>
+                        </div>
+                      )}
+                      {discountPercent > 0 && (
+                        <div className="absolute top-2 left-2 bg-red-500 text-white px-2 py-1 rounded-full text-[8px] font-black shadow-lg">
+                          خصم {discountPercent}%
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-2">
+                      {p.features.slice(0, 4).map((f, i) => (
+                        <div key={i} className="flex items-center gap-1.5 p-2 bg-muted/30 border border-border/50 rounded-lg">
+                          <Check className="w-3 h-3 shrink-0" style={{ color: p.primaryColor }} />
+                          <span className="text-[8px] font-medium truncate">{f}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Right Side: Info & Form */}
+                  <div className="space-y-4">
+                    <div dir="rtl">
+                      <span className="text-[8px] font-bold uppercase tracking-widest" style={{ color: p.primaryColor }}>{p.category}</span>
+                      <h1 className="text-lg font-black mt-1 leading-tight">{p.productName}</h1>
+                      <p className="text-[10px] mt-2 leading-relaxed" style={{ color: stc }}>{p.heroSubtitle}</p>
+                    </div>
+
+                    <div className="p-4 rounded-xl border flex items-center gap-3" style={{ backgroundColor: `${p.primaryColor}08`, borderColor: `${p.primaryColor}20` }}>
+                      <span className="text-2xl font-black" style={{ color: p.primaryColor }}>{p.price.toLocaleString()} دج</span>
+                      {p.originalPrice > p.price && (
+                        <span className="text-xs line-through opacity-50">{p.originalPrice.toLocaleString()} دج</span>
+                      )}
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2">
+                       {[
+                         { icon: Truck, t: "توصيل مجاني" },
+                         { icon: Shield, t: "ضمان الجودة" },
+                       ].map((b, i) => (
+                         <div key={i} className="flex items-center gap-2 p-2 bg-card border border-border/50 rounded-xl">
+                           <b.icon className="w-5 h-5 shrink-0" style={{ color: p.primaryColor }} />
+                           <span className="text-[8px] font-bold">{b.t}</span>
+                         </div>
+                       ))}
+                    </div>
+
+                    <div className="bg-card border rounded-xl p-4 shadow-lg space-y-3" dir="rtl">
+                      <h3 className="text-[10px] font-bold flex items-center gap-2">
+                        <ShoppingCart className="w-3 h-3" style={{ color: p.primaryColor }} /> اطلب الآن
+                      </h3>
+                      <div className="space-y-2">
+                        {["الاسم الكامل", "رقم الهاتف", "الولاية"].map((ph, i) => (
+                          <div key={i} className="h-8 rounded-lg border px-3 flex items-center text-[9px]" style={{ borderColor: isDark(p.backgroundColor) ? "#334155" : "#e2e8f0", color: stc }}>
+                            {ph}
+                          </div>
+                        ))}
+                      </div>
+                      <button className="w-full py-2.5 text-[10px] font-black text-white rounded-lg shadow-lg" style={{ backgroundColor: p.primaryColor }}>
+                        تأكيد الطلب
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        }
+
+        return (
+          <div className="h-full overflow-y-auto scrollbar-hide" style={{ backgroundColor: p.backgroundColor, fontFamily: p.fontFamily, color: tc }}>
           {/* Urgency Bar */}
           {p.sections.includes("urgency-bar") && (
             <div className="py-2.5 px-4 text-center text-xs font-bold text-white" style={{ backgroundColor: p.primaryColor }}>
