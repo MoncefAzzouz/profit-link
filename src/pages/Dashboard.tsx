@@ -1693,6 +1693,70 @@ const Dashboard = () => {
                     </div>
                   </div>
 
+                  {/* Hero Banner Manager Section */}
+                  <div className="bg-card rounded-[2.5rem] p-8 border border-border/50 shadow-sm space-y-6">
+                    <div className="flex items-center justify-between border-b border-border pb-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-600">
+                          <ImageIcon className="w-5 h-5" />
+                        </div>
+                        <h3 className="text-xl font-bold">قسم الواجهة (Hero)</h3>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Label className="text-xs text-muted-foreground">تفعيل</Label>
+                        <input 
+                          type="checkbox" 
+                          checked={storeSettings.hero?.enabled ?? true}
+                          onChange={(e) => setStoreSettings({...storeSettings, hero: {...storeSettings.hero, enabled: e.target.checked}})}
+                          className="w-5 h-5 accent-primary cursor-pointer border-border rounded"
+                        />
+                      </div>
+                    </div>
+
+                    <div className={`space-y-4 transition-opacity ${(!storeSettings.hero?.enabled) ? "opacity-50 pointer-events-none" : ""}`}>
+                      <div className="space-y-2">
+                        <Label className="text-sm font-bold pr-1">العنوان الرئيسي</Label>
+                        <Input 
+                          value={storeSettings.hero?.title || ""}
+                          onChange={(e) => setStoreSettings({...storeSettings, hero: {...storeSettings.hero, title: e.target.value}})}
+                          className="h-11 rounded-xl bg-muted/30 border-none px-4"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-sm font-bold pr-1">العنوان الفرعي</Label>
+                        <Input 
+                          value={storeSettings.hero?.subtitle || ""}
+                          onChange={(e) => setStoreSettings({...storeSettings, hero: {...storeSettings.hero, subtitle: e.target.value}})}
+                          className="h-11 rounded-xl bg-muted/30 border-none px-4"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-sm font-bold pr-1">رابط الصورة (Banner)</Label>
+                        <Input 
+                          value={storeSettings.hero?.bannerUrl || ""}
+                          onChange={(e) => setStoreSettings({...storeSettings, hero: {...storeSettings.hero, bannerUrl: e.target.value}})}
+                          className="h-11 rounded-xl bg-muted/30 border-none px-4 text-xs font-mono"
+                          dir="ltr"
+                        />
+                        <div className="grid grid-cols-3 gap-2 mt-2">
+                           {[
+                             { name: "تجميل", url: "https://images.unsplash.com/photo-1596462502278-27bfac4033c8?auto=format&fit=crop&q=80&w=800" },
+                             { name: "تقنية", url: "https://images.unsplash.com/photo-1498049794561-7780e7231661?auto=format&fit=crop&q=80&w=800" },
+                             { name: "عام", url: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&q=80&w=800" }
+                           ].map(p => (
+                             <button 
+                               key={p.url}
+                               onClick={() => setStoreSettings({...storeSettings, hero: {...storeSettings.hero, bannerUrl: p.url}})}
+                               className={`text-[10px] py-2 rounded-lg transition-all border ${storeSettings.hero?.bannerUrl === p.url ? "bg-primary text-white border-primary" : "bg-muted hover:bg-primary/10 border-transparent"}`}
+                             >
+                               {p.name}
+                             </button>
+                           ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
                   {/* Template Selection Section */}
                   <div className="bg-card rounded-[2.5rem] p-8 border border-border/50 shadow-sm space-y-6">
                     <div className="flex items-center gap-3 border-b border-border pb-4">
@@ -1833,69 +1897,7 @@ const Dashboard = () => {
                     </div>
                   </div>
 
-                  {/* Hero Banner Manager Section */}
-                  <div className="bg-card rounded-[2.5rem] p-8 border border-border/50 shadow-sm space-y-6">
-                    <div className="flex items-center justify-between border-b border-border pb-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-600">
-                          <ImageIcon className="w-5 h-5" />
-                        </div>
-                        <h3 className="text-xl font-bold">قسم الواجهة (Hero)</h3>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Label className="text-xs text-muted-foreground">تفعيل</Label>
-                        <input 
-                          type="checkbox" 
-                          checked={storeSettings.hero?.enabled ?? true}
-                          onChange={(e) => setStoreSettings({...storeSettings, hero: {...storeSettings.hero, enabled: e.target.checked}})}
-                          className="w-5 h-5 accent-primary cursor-pointer border-border rounded"
-                        />
-                      </div>
-                    </div>
 
-                    <div className={`space-y-4 transition-opacity ${(!storeSettings.hero?.enabled) ? "opacity-50 pointer-events-none" : ""}`}>
-                      <div className="space-y-2">
-                        <Label className="text-sm font-bold pr-1">العنوان الرئيسي</Label>
-                        <Input 
-                          value={storeSettings.hero?.title || ""}
-                          onChange={(e) => setStoreSettings({...storeSettings, hero: {...storeSettings.hero, title: e.target.value}})}
-                          className="h-11 rounded-xl bg-muted/30 border-none px-4"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-sm font-bold pr-1">العنوان الفرعي</Label>
-                        <Input 
-                          value={storeSettings.hero?.subtitle || ""}
-                          onChange={(e) => setStoreSettings({...storeSettings, hero: {...storeSettings.hero, subtitle: e.target.value}})}
-                          className="h-11 rounded-xl bg-muted/30 border-none px-4"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-sm font-bold pr-1">رابط الصورة (Banner)</Label>
-                        <Input 
-                          value={storeSettings.hero?.bannerUrl || ""}
-                          onChange={(e) => setStoreSettings({...storeSettings, hero: {...storeSettings.hero, bannerUrl: e.target.value}})}
-                          className="h-11 rounded-xl bg-muted/30 border-none px-4 text-xs font-mono"
-                          dir="ltr"
-                        />
-                        <div className="grid grid-cols-3 gap-2 mt-2">
-                           {[
-                             { name: "تجميل", url: "https://images.unsplash.com/photo-1596462502278-27bfac4033c8?auto=format&fit=crop&q=80&w=800" },
-                             { name: "تقنية", url: "https://images.unsplash.com/photo-1498049794561-7780e7231661?auto=format&fit=crop&q=80&w=800" },
-                             { name: "عام", url: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&q=80&w=800" }
-                           ].map(p => (
-                             <button 
-                               key={p.url}
-                               onClick={() => setStoreSettings({...storeSettings, hero: {...storeSettings.hero, bannerUrl: p.url}})}
-                               className={`text-[10px] py-2 rounded-lg transition-all border ${storeSettings.hero?.bannerUrl === p.url ? "bg-primary text-white border-primary" : "bg-muted hover:bg-primary/10 border-transparent"}`}
-                             >
-                               {p.name}
-                             </button>
-                           ))}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
                 </div>
 
                 {/* Social & Contact Section */}
