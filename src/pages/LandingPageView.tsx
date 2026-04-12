@@ -8,6 +8,7 @@ import {
   ArrowRight, Sparkles, X
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 
 interface LandingPageConfig {
@@ -66,6 +67,7 @@ const LandingPageView = () => {
   const [orderSubmitted, setOrderSubmitted] = useState(false);
   const [countdown, setCountdown] = useState({ hours: 2, minutes: 14, seconds: 35 });
   const [faqOpen, setFaqOpen] = useState<number | null>(null);
+  const [quantity, setQuantity] = useState(1);
 
   useEffect(() => {
     const stored = localStorage.getItem("landing_pages");
@@ -179,6 +181,159 @@ const LandingPageView = () => {
     "50 برج باجي مختار", "51 أولاد جلال", "52 بني عباس", "53 عين صالح",
     "54 عين قزام", "55 تقرت", "56 جانت", "57 المغير", "58 المنيعة"
   ];
+
+  if (p.template === "original") {
+    const totalPrice = p.price * quantity;
+    const savings = (p.originalPrice - p.price) * quantity;
+
+    return (
+      <div className="min-h-screen" style={{ backgroundColor: p.backgroundColor, fontFamily: p.fontFamily, color: tc }} dir="rtl">
+        <link href={`https://fonts.googleapis.com/css2?family=${p.fontFamily === "cairo" ? "Cairo" : p.fontFamily === "tajawal" ? "Tajawal" : p.fontFamily === "almarai" ? "Almarai" : p.fontFamily === "changa" ? "Changa" : p.fontFamily === "ibm-plex" ? "IBM+Plex+Sans+Arabic" : p.fontFamily === "noto-kufi" ? "Noto+Kufi+Arabic" : "Readex+Pro"}:wght@400;600;700;800;900&display=swap`} rel="stylesheet" />
+        
+        {/* Sticky Header */}
+        <header className="sticky top-0 z-50 bg-card/80 backdrop-blur-xl border-b border-border">
+          <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+               <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg" style={{ backgroundColor: p.primaryColor }}>
+                 <ShoppingCart className="w-5 h-5 text-white" />
+               </div>
+               <span className="font-bold text-lg hidden sm:block">{p.productName}</span>
+            </div>
+            <a href="#order-form">
+              <Button style={{ backgroundColor: p.primaryColor }} className="text-white font-bold rounded-full px-6">
+                اطلب الآن
+              </Button>
+            </a>
+          </div>
+        </header>
+
+        <div className="container mx-auto px-4 py-8">
+          <div className="grid lg:grid-cols-2 gap-12">
+            {/* Product Image */}
+            <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="space-y-4">
+              <div className={`relative aspect-square overflow-hidden bg-muted ${shadowMap[p.shadowIntensity]}`} style={{ borderRadius: br }}>
+                {p.heroImage ? (
+                  <img src={p.heroImage} alt={p.productName} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground gap-2">
+                    <Image className="w-12 h-12 opacity-20" />
+                    <span>صورة المنتج</span>
+                  </div>
+                )}
+                {discountPercent > 0 && (
+                  <div className="absolute top-4 left-4 bg-red-500 text-white px-4 py-2 rounded-full font-bold shadow-lg">
+                    خصم {discountPercent}%
+                  </div>
+                )}
+              </div>
+
+              {/* Features Grid */}
+              <div className="grid grid-cols-2 gap-3 mt-6">
+                {p.features.map((feature, idx) => (
+                  <div key={idx} className="flex items-center gap-2 bg-muted/50 rounded-xl p-3 border border-border/50">
+                    <Check className="w-5 h-5" style={{ color: p.primaryColor }} />
+                    <span className="text-sm font-medium">{feature}</span>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+
+            {/* Product Info & Form */}
+            <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-6">
+              <div>
+                <span className="font-medium" style={{ color: p.primaryColor }}>{p.category}</span>
+                <h1 className="text-3xl lg:text-4xl font-bold mt-2">{p.productName}</h1>
+                <p className="mt-4 text-lg leading-relaxed" style={{ color: stc }}>{p.heroSubtitle}</p>
+              </div>
+
+              {/* Price Block */}
+              <div className="rounded-2xl p-6 border" style={{ backgroundColor: `${p.primaryColor}08`, borderColor: `${p.primaryColor}20` }}>
+                <div className="flex items-center gap-4">
+                  <span className="text-4xl font-bold" style={{ color: p.primaryColor }}>{p.price.toLocaleString()} دج</span>
+                  {p.originalPrice > p.price && (
+                    <span className="text-xl line-through opacity-50">{p.originalPrice.toLocaleString()} دج</span>
+                  )}
+                </div>
+                {savings > 0 && <p className="font-semibold mt-2 opacity-80">وفّر {savings.toLocaleString()} دج</p>}
+              </div>
+
+              {/* Trust Badges */}
+              <div className="grid grid-cols-2 gap-4">
+                {[
+                  { icon: Truck, t: "توصيل مجاني", s: "لكل الولايات" },
+                  { icon: Shield, t: "ضمان الجودة", s: "منتجات أصلية" },
+                  { icon: Clock, t: "توصيل سريع", s: "3-5 أيام" },
+                  { icon: Phone, t: "دعم متواصل", s: "24/7" },
+                ].map((badge, i) => (
+                  <div key={i} className="flex items-center gap-3 bg-card rounded-xl p-4 shadow-sm border border-border/50">
+                    <badge.icon className="w-8 h-8" style={{ color: p.primaryColor }} />
+                    <div>
+                      <p className="font-semibold text-sm">{badge.t}</p>
+                      <p className="text-xs opacity-60">{badge.s}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Order Form */}
+              <form id="order-form" onSubmit={handleOrder} className="bg-card rounded-2xl p-6 shadow-xl border border-border space-y-5">
+                <h2 className="text-xl font-bold flex items-center gap-2">
+                  <ShoppingCart className="w-6 h-6" style={{ color: p.primaryColor }} /> اطلب الآن
+                </h2>
+
+                <div className="space-y-4">
+                  <Input 
+                    placeholder="الاسم الكامل" 
+                    value={orderForm.name} 
+                    onChange={e => setOrderForm(f => ({ ...f, name: e.target.value }))}
+                    className="h-12 rounded-xl"
+                  />
+                  <Input 
+                    placeholder="رقم الهاتف" 
+                    value={orderForm.phone} 
+                    onChange={e => setOrderForm(f => ({ ...f, phone: e.target.value }))}
+                    className="h-12 rounded-xl"
+                  />
+                  <select 
+                    className="w-full h-12 rounded-xl border bg-transparent px-3 appearance-none"
+                    value={orderForm.wilaya}
+                    onChange={e => setOrderForm(f => ({ ...f, wilaya: e.target.value }))}
+                  >
+                    <option value="">اختر الولاية</option>
+                    {wilayas.map(w => <option key={w} value={w}>{w}</option>)}
+                  </select>
+
+                  <div className="flex items-center justify-between p-4 bg-muted rounded-xl">
+                    <span className="font-bold">الكمية</span>
+                    <div className="flex items-center gap-4">
+                      <button type="button" onClick={() => setQuantity(Math.max(1, quantity - 1))} className="w-8 h-8 rounded-full border border-border flex items-center justify-center">-</button>
+                      <span className="font-bold w-4 text-center">{quantity}</span>
+                      <button type="button" onClick={() => setQuantity(quantity + 1)} className="w-8 h-8 rounded-full border border-border flex items-center justify-center">+</button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="border-t pt-4 space-y-1">
+                   <div className="flex justify-between text-sm opacity-70">
+                     <span>السعر</span>
+                     <span>{totalPrice.toLocaleString()} دج</span>
+                   </div>
+                   <div className="flex justify-between font-bold text-lg">
+                     <span>المجموع</span>
+                     <span style={{ color: p.primaryColor }}>{totalPrice.toLocaleString()} دج</span>
+                   </div>
+                </div>
+
+                <Button type="submit" disabled={orderSubmitted} className="w-full h-14 text-lg font-bold rounded-xl text-white shadow-lg" style={{ backgroundColor: p.primaryColor }}>
+                   {orderSubmitted ? "تم الطلب بنجاح ✅" : "إرسال الطلب الآن"}
+                </Button>
+              </form>
+            </motion.div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: p.backgroundColor, fontFamily: p.fontFamily, color: tc }} dir="rtl">

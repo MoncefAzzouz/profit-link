@@ -126,6 +126,7 @@ const defaultNewPage = (): LandingPageConfig => ({
 });
 
 const templates = [
+  { id: "original", name: "الأصلي", icon: "💎", desc: "تصميم واجهة المتجر الكلاسيكي", preview: "from-blue-600 to-indigo-800", tag: "الأساسي" },
   { id: "modern", name: "عصري", icon: "✨", desc: "تصميم نظيف وأنيق", preview: "from-violet-600 to-indigo-700", tag: "شائع" },
   { id: "bold", name: "جريء", icon: "🔥", desc: "ألوان قوية وملفتة", preview: "from-orange-500 to-red-600", tag: "" },
   { id: "minimal", name: "بسيط", icon: "🎯", desc: "مساحة بيضاء واسعة", preview: "from-slate-100 to-gray-200", tag: "" },
@@ -134,7 +135,7 @@ const templates = [
   { id: "classic", name: "COD كلاسيكي", icon: "📦", desc: "تصميم COD تقليدي", preview: "from-amber-500 to-yellow-600", tag: "" },
   { id: "luxury", name: "فاخر", icon: "👑", desc: "تصميم ذهبي فاخر", preview: "from-amber-600 via-yellow-500 to-amber-700", tag: "جديد" },
   { id: "neon", name: "نيون", icon: "💜", desc: "ألوان نيون متوهجة", preview: "from-purple-600 via-pink-500 to-red-500", tag: "ترند" },
-  { id: "tiktok", name: "تيك توك", icon: "🎵", desc: "مستوحى من TikTok Shop", preview: "from-gray-900 via-pink-600 to-cyan-400", tag: "🔥 ترند" },
+  { id: "tiktok", name: "تيك توك", icon: "🎵", desc: "مستوقى من TikTok Shop", preview: "from-gray-900 via-pink-600 to-cyan-400", tag: "🔥 ترند" },
   { id: "instagram", name: "انستغرام", icon: "📸", desc: "ستايل انستغرام شوب", preview: "from-purple-500 via-pink-500 to-orange-400", tag: "ترند" },
   { id: "whatsapp", name: "واتساب", icon: "💬", desc: "للبيع عبر واتساب", preview: "from-green-500 to-green-700", tag: "شائع" },
   { id: "flash-sale", name: "تخفيضات", icon: "⚡", desc: "عروض محدودة الوقت", preview: "from-red-600 via-red-500 to-orange-500", tag: "مبيعات" },
