@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import {
@@ -7,8 +8,10 @@ import {
   Clock, CheckCircle, XCircle, Truck, Eye, ChevronLeft,
   Calendar, Filter, Search, SlidersHorizontal, Store, Sparkles,
   Heart, Download, PlusCircle, User, Phone, MapPin, PackagePlus, MessageSquare, Plus, Trash2, Maximize2, LayoutTemplate,
-  Save, Globe, Facebook, Instagram, Palette, Layers
+  Save, Globe, Facebook, Instagram, Palette, Layers,
+  Image as ImageIcon, ShieldCheck, CreditCard, Type, MessageCircle
 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -1797,6 +1800,102 @@ const Dashboard = () => {
                       </div>
                     </div>
                   </div>
+
+                  {/* Typography Selection Section */}
+                  <div className="bg-card rounded-[2.5rem] p-8 border border-border/50 shadow-sm space-y-6">
+                    <div className="flex items-center gap-3 border-b border-border pb-4">
+                      <div className="w-10 h-10 rounded-xl bg-teal-500/10 flex items-center justify-center text-teal-600">
+                        <Type className="w-5 h-5" />
+                      </div>
+                      <h3 className="text-xl font-bold">خطوط المتجر</h3>
+                    </div>
+
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between p-4 bg-muted/30 rounded-2xl">
+                        <div className="space-y-0.5">
+                          <Label className="font-bold">نوع الخط</Label>
+                          <p className="text-xs text-muted-foreground">الخط يؤثر على انطباع الزوار</p>
+                        </div>
+                        <Select 
+                          value={storeSettings.fontFamily || "Cairo"} 
+                          onValueChange={(v) => setStoreSettings({...storeSettings, fontFamily: v as any})}
+                        >
+                          <SelectTrigger className="w-32 border-none bg-background rounded-xl h-10">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Cairo">Cairo (عصري)</SelectItem>
+                            <SelectItem value="Tajawal">Tajawal (أنيق)</SelectItem>
+                            <SelectItem value="IBM Plex Sans Arabic">IBM Plex (رسمي)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Hero Banner Manager Section */}
+                  <div className="bg-card rounded-[2.5rem] p-8 border border-border/50 shadow-sm space-y-6">
+                    <div className="flex items-center justify-between border-b border-border pb-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-600">
+                          <ImageIcon className="w-5 h-5" />
+                        </div>
+                        <h3 className="text-xl font-bold">قسم الواجهة (Hero)</h3>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Label className="text-xs text-muted-foreground">تفعيل</Label>
+                        <input 
+                          type="checkbox" 
+                          checked={storeSettings.hero?.enabled ?? true}
+                          onChange={(e) => setStoreSettings({...storeSettings, hero: {...storeSettings.hero, enabled: e.target.checked}})}
+                          className="w-5 h-5 accent-primary cursor-pointer border-border rounded"
+                        />
+                      </div>
+                    </div>
+
+                    <div className={`space-y-4 transition-opacity ${(!storeSettings.hero?.enabled) ? "opacity-50 pointer-events-none" : ""}`}>
+                      <div className="space-y-2">
+                        <Label className="text-sm font-bold pr-1">العنوان الرئيسي</Label>
+                        <Input 
+                          value={storeSettings.hero?.title || ""}
+                          onChange={(e) => setStoreSettings({...storeSettings, hero: {...storeSettings.hero, title: e.target.value}})}
+                          className="h-11 rounded-xl bg-muted/30 border-none px-4"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-sm font-bold pr-1">العنوان الفرعي</Label>
+                        <Input 
+                          value={storeSettings.hero?.subtitle || ""}
+                          onChange={(e) => setStoreSettings({...storeSettings, hero: {...storeSettings.hero, subtitle: e.target.value}})}
+                          className="h-11 rounded-xl bg-muted/30 border-none px-4"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-sm font-bold pr-1">رابط الصورة (Banner)</Label>
+                        <Input 
+                          value={storeSettings.hero?.bannerUrl || ""}
+                          onChange={(e) => setStoreSettings({...storeSettings, hero: {...storeSettings.hero, bannerUrl: e.target.value}})}
+                          className="h-11 rounded-xl bg-muted/30 border-none px-4 text-xs font-mono"
+                          dir="ltr"
+                        />
+                        <div className="grid grid-cols-3 gap-2 mt-2">
+                           {[
+                             { name: "تجميل", url: "https://images.unsplash.com/photo-1596462502278-27bfac4033c8?auto=format&fit=crop&q=80&w=800" },
+                             { name: "تقنية", url: "https://images.unsplash.com/photo-1498049794561-7780e7231661?auto=format&fit=crop&q=80&w=800" },
+                             { name: "عام", url: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&q=80&w=800" }
+                           ].map(p => (
+                             <button 
+                               key={p.url}
+                               onClick={() => setStoreSettings({...storeSettings, hero: {...storeSettings.hero, bannerUrl: p.url}})}
+                               className={`text-[10px] py-2 rounded-lg transition-all border ${storeSettings.hero?.bannerUrl === p.url ? "bg-primary text-white border-primary" : "bg-muted hover:bg-primary/10 border-transparent"}`}
+                             >
+                               {p.name}
+                             </button>
+                           ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Social & Contact Section */}
@@ -1857,6 +1956,75 @@ const Dashboard = () => {
                           className="h-11 rounded-xl bg-muted/30 border-none px-4"
                         />
                       </div>
+                      <Label className="text-sm font-bold flex items-center justify-between p-4 bg-muted/30 rounded-2xl cursor-pointer">
+                        <span className="flex items-center gap-2">
+                          <MessageCircle className="w-5 h-5 text-emerald-500" /> 
+                          إظهار زر الواتساب العائم للزوار
+                        </span>
+                        <input 
+                          type="checkbox" 
+                          checked={storeSettings.support?.whatsappFloating ?? true}
+                          onChange={(e) => setStoreSettings({...storeSettings, support: {...storeSettings.support, whatsappFloating: e.target.checked}})}
+                          className="w-5 h-5 accent-emerald-500 cursor-pointer border-border rounded"
+                        />
+                      </Label>
+                    </div>
+                  </div>
+
+                  {/* Trust Badges (USPs) Section */}
+                  <div className="bg-card rounded-[2.5rem] p-8 border border-border/50 shadow-sm space-y-6">
+                    <div className="flex items-center justify-between border-b border-border pb-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-600">
+                          <ShieldCheck className="w-5 h-5" />
+                        </div>
+                        <h3 className="text-xl font-bold">شعارات الثقة (USPs)</h3>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Label className="text-xs text-muted-foreground">تفعيل</Label>
+                        <input 
+                          type="checkbox" 
+                          checked={storeSettings.usp?.enabled ?? true}
+                          onChange={(e) => setStoreSettings({...storeSettings, usp: {...storeSettings.usp, enabled: e.target.checked}})}
+                          className="w-5 h-5 accent-primary cursor-pointer border-border rounded"
+                        />
+                      </div>
+                    </div>
+
+                    <div className={`space-y-4 transition-opacity ${(!storeSettings.usp?.enabled) ? "opacity-50 pointer-events-none" : ""}`}>
+                      <p className="text-xs text-muted-foreground mb-4">هذه الشعارات تظهر تحت قسم الواجهة الرئيسي وتزيد من ثقة العملاء.</p>
+                      {storeSettings.usp?.items.map((item, index) => (
+                        <div key={index} className="flex gap-2">
+                          <Select 
+                            value={item.icon} 
+                            onValueChange={(v) => {
+                              const newItems = [...storeSettings.usp.items];
+                              newItems[index].icon = v;
+                              setStoreSettings({...storeSettings, usp: {...storeSettings.usp, items: newItems}});
+                            }}
+                          >
+                            <SelectTrigger className="w-[120px] bg-muted/30 border-none rounded-xl h-11">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Truck">سيارة التوصيل</SelectItem>
+                              <SelectItem value="ShieldCheck">درع الحماية</SelectItem>
+                              <SelectItem value="CreditCard">بطاقة بنك</SelectItem>
+                              <SelectItem value="Package">صندوق</SelectItem>
+                              <SelectItem value="Heart">قلب</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <Input 
+                            value={item.text}
+                            onChange={(e) => {
+                              const newItems = [...storeSettings.usp.items];
+                              newItems[index].text = e.target.value;
+                              setStoreSettings({...storeSettings, usp: {...storeSettings.usp, items: newItems}});
+                            }}
+                            className="h-11 rounded-xl bg-muted/30 border-none px-4 flex-1"
+                          />
+                        </div>
+                      ))}
                     </div>
                   </div>
 

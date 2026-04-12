@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { Copy, Check, Search, Filter, Eye, TrendingUp, SlidersHorizontal, X, Facebook, Instagram, Phone, MessageSquare, Globe, Shield, Info } from "lucide-react";
+import { Copy, Check, Search, Filter, Eye, TrendingUp, SlidersHorizontal, X, Facebook, Instagram, Phone, MessageSquare, Globe, Shield, Info, Truck, ShieldCheck, CreditCard, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -78,19 +78,120 @@ const Products = () => {
   return (
     <div 
       className={cn(
-        "min-h-screen transition-colors duration-500",
+        "min-h-screen transition-all duration-500",
         storeSettings.templateId === "dark" ? "bg-slate-950 text-slate-100 dark" : "bg-background text-foreground"
       )} 
       dir="rtl"
-      style={{ "--store-primary": storeSettings.primaryColor } as React.CSSProperties}
+      style={{ 
+        "--store-primary": storeSettings.primaryColor,
+        fontFamily: storeSettings.fontFamily + ", sans-serif" 
+      } as React.CSSProperties}
     >
       {/* Top Welcome Bar */}
       {storeSettings.welcomeBarText && (
         <div 
-          className="text-primary-foreground py-2 text-center text-xs font-bold tracking-wide"
+          className="text-primary-foreground py-2 text-center text-xs font-bold tracking-wide relative z-50 overflow-hidden"
           style={{ backgroundColor: "var(--store-primary)" }}
         >
-          {storeSettings.welcomeBarText}
+           <motion.div 
+            initial={{ x: "100%" }}
+            animate={{ x: "-100%" }}
+            transition={{ repeat: Infinity, duration: 20, ease: "linear" }}
+            className="whitespace-nowrap inline-block md:hidden"
+           >
+             {storeSettings.welcomeBarText} • {storeSettings.welcomeBarText} • {storeSettings.welcomeBarText}
+           </motion.div>
+           <div className="hidden md:block">
+            {storeSettings.welcomeBarText}
+           </div>
+        </div>
+      )}
+
+      {/* Modern Hero Section */}
+      {storeSettings.hero?.enabled && (
+        <div className="relative h-[400px] lg:h-[600px] flex items-center justify-center overflow-hidden">
+           <motion.div 
+            initial={{ scale: 1.1 }}
+            animate={{ scale: 1 }}
+            transition={{ duration: 10, repeat: Infinity, repeatType: "reverse" }}
+            className="absolute inset-0"
+           >
+             <img 
+               src={storeSettings.hero.bannerUrl} 
+               alt="Hero Banner" 
+               className="w-full h-full object-cover"
+             />
+             <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/30 to-background" />
+           </motion.div>
+
+           <div className="container mx-auto px-4 relative z-10 text-center">
+             <motion.h2 
+               initial={{ opacity: 0, y: 30 }}
+               whileInView={{ opacity: 1, y: 0 }}
+               viewport={{ once: true }}
+               transition={{ duration: 0.8 }}
+               className="text-4xl md:text-7xl font-black text-white mb-6 drop-shadow-2xl"
+             >
+               {storeSettings.hero.title}
+             </motion.h2>
+             <motion.p 
+               initial={{ opacity: 0, y: 20 }}
+               whileInView={{ opacity: 1, y: 0 }}
+               viewport={{ once: true }}
+               transition={{ duration: 0.8, delay: 0.2 }}
+               className="text-xl md:text-2xl text-white/90 max-w-3xl mx-auto drop-shadow-lg"
+             >
+               {storeSettings.hero.subtitle}
+             </motion.p>
+             <motion.div
+               initial={{ opacity: 0, scale: 0.9 }}
+               whileInView={{ opacity: 1, scale: 1 }}
+               viewport={{ once: true }}
+               transition={{ duration: 0.5, delay: 0.4 }}
+               className="mt-10"
+             >
+                <Button 
+                  size="lg"
+                  className="bg-white text-black hover:bg-white/90 px-10 py-8 text-xl font-black rounded-full shadow-2xl hover:scale-105 transition-all"
+                  onClick={() => document.getElementById('product-grid')?.scrollIntoView({ behavior: 'smooth' })}
+                >
+                  تسوق الآن
+                </Button>
+             </motion.div>
+           </div>
+        </div>
+      )}
+
+      {/* Trust Badges Bar (USP) */}
+      {storeSettings.usp?.enabled && (
+        <div className="bg-muted/30 py-8 border-y border-border/50">
+          <div className="container mx-auto px-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+               {storeSettings.usp.items.map((item, idx) => (
+                 <motion.div 
+                   key={idx}
+                   initial={{ opacity: 0, y: 20 }}
+                   whileInView={{ opacity: 1, y: 0 }}
+                   viewport={{ once: true }}
+                   transition={{ delay: idx * 0.1 }}
+                   className="flex items-center justify-center gap-4 group"
+                 >
+                   <div 
+                    className="w-14 h-14 rounded-2xl bg-background flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform"
+                    style={{ color: "var(--store-primary)" }}
+                   >
+                     {item.icon === "Truck" && <Truck className="w-7 h-7" />}
+                     {item.icon === "ShieldCheck" && <ShieldCheck className="w-7 h-7" />}
+                     {item.icon === "CreditCard" && <CreditCard className="w-7 h-7" />}
+                   </div>
+                   <div className="text-right">
+                     <p className="font-bold text-lg">{item.text}</p>
+                     <p className="text-sm text-muted-foreground">خدمة موثوقة ومضمونة</p>
+                   </div>
+                 </motion.div>
+               ))}
+            </div>
+          </div>
         </div>
       )}
 
@@ -287,15 +388,17 @@ const Products = () => {
           {filteredProducts.map((product, index) => (
             <motion.div
               key={product.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-50px" }}
+              transition={{ duration: 0.6, delay: (index % 6) * 0.1 }}
+              whileHover={{ y: -8 }}
               className={cn(
-                "overflow-hidden transition-all duration-500 group",
-                storeSettings.templateId === "modern" && "bg-card/50 backdrop-blur-md rounded-[2rem] shadow-xl border border-white/20 hover-lift",
-                storeSettings.templateId === "minimal" && "bg-background rounded-none border border-border shadow-sm hover:shadow-lg",
-                storeSettings.templateId === "bold" && "bg-background rounded-2xl border-2 border-foreground shadow-[10px_10px_0px_0px_rgba(0,0,0,0.05)] hover:translate-x-1 hover:translate-y-1 hover:shadow-none",
-                storeSettings.templateId === "dark" && "bg-slate-900 rounded-3xl border border-slate-800 shadow-2xl hover:border-slate-700 hover:-translate-y-2"
+                "overflow-hidden transition-all duration-300 group shadow-lg h-full flex flex-col",
+                storeSettings.templateId === "modern" && "bg-card/50 backdrop-blur-md rounded-[2.5rem] border border-white/20",
+                storeSettings.templateId === "minimal" && "bg-background rounded-none border border-foreground shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-none translate-y-[-4px]",
+                storeSettings.templateId === "bold" && "bg-background rounded-3xl border-4 border-foreground shadow-[12px_12px_0px_0px_rgba(0,0,0,0.1)] hover:shadow-none",
+                storeSettings.templateId === "dark" && "bg-slate-900 rounded-[2.5rem] border border-slate-800 hover:border-slate-700"
               )}
             >
               {/* Image */}
@@ -430,6 +533,26 @@ const Products = () => {
           </div>
         )}
       </div>
+
+      {/* Floating WhatsApp Support */}
+      {storeSettings.support?.whatsappFloating && (
+        <motion.a
+          href={`https://wa.me/${storeSettings.socialLinks.whatsapp.replace(/\s+/g, '')}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          initial={{ scale: 0, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          className="fixed bottom-8 right-8 z-[100] w-16 h-16 rounded-full bg-emerald-500 text-white shadow-2xl flex items-center justify-center group"
+        >
+          <div className="absolute -top-12 right-0 bg-white text-black text-xs font-bold px-3 py-1.5 rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+            تواصل معنا مباشرة 👋
+          </div>
+          <MessageCircle className="w-8 h-8" />
+          <span className="absolute inset-0 rounded-full bg-emerald-500 animate-ping opacity-25" />
+        </motion.a>
+      )}
 
       {/* Branded Footer */}
       <footer className="bg-card border-t border-border mt-20 pt-16 pb-8">
