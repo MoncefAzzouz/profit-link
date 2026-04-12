@@ -108,7 +108,7 @@ const Products = () => {
       )}
 
       {/* Modern Hero Section */}
-      {storeSettings.hero?.enabled && (
+      {(storeSettings.hero?.enabled || storeSettings.storeName || storeSettings.storeLogo) && (
         <div className="relative h-[400px] lg:h-[600px] flex items-center justify-center overflow-hidden">
            <motion.div 
             initial={{ scale: 1.1 }}
@@ -124,25 +124,75 @@ const Products = () => {
              <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/30 to-background" />
            </motion.div>
 
-           <div className="container mx-auto px-4 relative z-10 text-center">
-             <motion.h2 
-               initial={{ opacity: 0, y: 30 }}
-               whileInView={{ opacity: 1, y: 0 }}
-               viewport={{ once: true }}
-               transition={{ duration: 0.8 }}
-               className="text-4xl md:text-7xl font-black text-white mb-6 drop-shadow-2xl"
-             >
-               {storeSettings.hero.title}
-             </motion.h2>
-             <motion.p 
-               initial={{ opacity: 0, y: 20 }}
-               whileInView={{ opacity: 1, y: 0 }}
-               viewport={{ once: true }}
-               transition={{ duration: 0.8, delay: 0.2 }}
-               className="text-xl md:text-2xl text-white/90 max-w-3xl mx-auto drop-shadow-lg"
-             >
-               {storeSettings.hero.subtitle}
-             </motion.p>
+           <div className="container mx-auto px-4 relative z-10 text-center flex flex-col items-center">
+             
+             {/* Store Logo inside Hero */}
+             {storeSettings.storeLogo && (
+               <motion.div 
+                 initial={{ opacity: 0, scale: 0.8 }}
+                 whileInView={{ opacity: 1, scale: 1 }}
+                 viewport={{ once: true }}
+                 transition={{ duration: 0.6 }}
+                 className="w-24 h-24 md:w-32 md:h-32 rounded-full overflow-hidden border-4 border-background/20 shadow-2xl mb-6 mx-auto backdrop-blur-sm bg-black/20"
+               >
+                 <img src={storeSettings.storeLogo} alt={storeSettings.storeName} className="w-full h-full object-cover" />
+               </motion.div>
+             )}
+
+             {/* Store Name & Intro inside Hero */}
+             {storeSettings.storeName && (
+                <motion.h1 
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.8, delay: 0.1 }}
+                  className="text-5xl md:text-7xl font-black text-white mb-4 drop-shadow-2xl"
+                >
+                  {storeSettings.storeName}
+                </motion.h1>
+             )}
+             
+             {storeSettings.storeIntro && (
+                <motion.p 
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.8, delay: 0.2 }}
+                  className="text-xl md:text-2xl text-white/90 max-w-2xl mx-auto drop-shadow-lg mb-8 font-medium bg-black/10 p-4 rounded-3xl backdrop-blur-md"
+                >
+                  {storeSettings.storeIntro}
+                </motion.p>
+             )}
+
+             {/* Visual dash separator if both exists */}
+             {(storeSettings.hero.title || storeSettings.hero.subtitle) && (storeSettings.storeName || storeSettings.storeIntro) && (
+               <div className="w-16 h-1 bg-primary mx-auto mb-8 rounded-full opacity-80" />
+             )}
+
+             {/* Hero Subtitles/Promos */}
+             {storeSettings.hero.title && (
+               <motion.h2 
+                 initial={{ opacity: 0, y: 30 }}
+                 whileInView={{ opacity: 1, y: 0 }}
+                 viewport={{ once: true }}
+                 transition={{ duration: 0.8, delay: 0.3 }}
+                 className="text-3xl md:text-5xl font-bold text-white mb-4 drop-shadow-xl"
+               >
+                 {storeSettings.hero.title}
+               </motion.h2>
+             )}
+             
+             {storeSettings.hero.subtitle && (
+               <motion.p 
+                 initial={{ opacity: 0, y: 20 }}
+                 whileInView={{ opacity: 1, y: 0 }}
+                 viewport={{ once: true }}
+                 transition={{ duration: 0.8, delay: 0.4 }}
+                 className="text-lg md:text-xl text-white/80 max-w-3xl mx-auto drop-shadow-md"
+               >
+                 {storeSettings.hero.subtitle}
+               </motion.p>
+             )}
              <motion.div
                initial={{ opacity: 0, scale: 0.9 }}
                whileInView={{ opacity: 1, scale: 1 }}
@@ -195,75 +245,6 @@ const Products = () => {
         </div>
       )}
 
-      {/* Branded Header */}
-      <div className={cn(
-        "py-12 relative overflow-hidden transition-all duration-500",
-        storeSettings.templateId === "modern" && "bg-card/40 backdrop-blur-xl border-b border-border/50",
-        storeSettings.templateId === "minimal" && "bg-background border-b border-border",
-        storeSettings.templateId === "bold" && "border-b-4 border-foreground shadow-[8px_8px_0px_0px_rgba(0,0,0,0.1)]",
-        storeSettings.templateId === "dark" && "bg-slate-900 border-b border-slate-800",
-        storeSettings.templateId === "bold" ? "" : "bg-card border-b border-border"
-      )}
-      style={storeSettings.templateId === "bold" ? { backgroundColor: "var(--store-primary)", color: "white" } : {}}
-      >
-        <div className="container mx-auto px-4 relative z-10">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-8">
-            {/* Store Info (Left on Desktop) */}
-            <motion.div 
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="text-right md:flex-1"
-            >
-              <h1 className={cn(
-                "text-4xl lg:text-6xl font-black mb-4 tracking-tight",
-                storeSettings.templateId === "minimal" && "font-light",
-                storeSettings.templateId === "bold" && "uppercase italic",
-                storeSettings.templateId === "dark" ? "text-slate-50" : "text-foreground"
-              )}
-              style={storeSettings.templateId === "bold" ? { color: "white" } : {}}
-              >
-                {storeSettings.storeName}
-              </h1>
-              <p className={cn(
-                "text-xl max-w-2xl leading-relaxed",
-                storeSettings.templateId === "dark" ? "text-slate-400" : "text-muted-foreground"
-              )}
-              style={storeSettings.templateId === "bold" ? { color: "rgba(255,255,255,0.8)" } : {}}
-              >
-                {storeSettings.storeIntro}
-              </p>
-            </motion.div>
-
-            {/* Store Logo (Right on Desktop) */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="shrink-0"
-            >
-              <div className={cn(
-                "w-32 h-32 md:w-44 md:h-44 overflow-hidden shadow-2xl transition-all duration-500",
-                storeSettings.templateId === "modern" && "rounded-[3rem] border-4 border-background/50 backdrop-blur-md",
-                storeSettings.templateId === "minimal" && "rounded-none border-2 border-foreground",
-                storeSettings.templateId === "bold" && "rounded-2xl border-4 border-white rotate-3",
-                storeSettings.templateId === "dark" && "rounded-full border-4 border-slate-800"
-              )}>
-                <img 
-                  src={storeSettings.storeLogo} 
-                  alt={storeSettings.storeName} 
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            </motion.div>
-          </div>
-        </div>
-        {/* Decorative elements based on template */}
-        {storeSettings.templateId === "modern" && (
-          <>
-            <div className="absolute top-0 right-0 w-64 h-64 opacity-20 rounded-full blur-3xl -mr-32 -mt-32" style={{ backgroundColor: "var(--store-primary)" }} />
-            <div className="absolute bottom-0 left-0 w-64 h-64 bg-secondary/10 rounded-full blur-3xl -ml-32 -mb-32" />
-          </>
-        )}
-      </div>
 
       <div className="container mx-auto px-4 py-8">
         {/* Filters */}
