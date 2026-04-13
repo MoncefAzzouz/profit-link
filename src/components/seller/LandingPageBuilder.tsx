@@ -10,7 +10,7 @@ import {
   Camera, Video, BarChart3, Globe, Mail, Instagram, Facebook,
   Youtube, Megaphone, Target, Bolt, Crown, Gem, Rocket,
   Package, BadgePercent, Percent, AlertTriangle, ThumbsUp,
-  MousePointerClick, Ratio, ToggleLeft, Hash, AlignCenter, AlignLeft
+  MousePointerClick, Ratio, ToggleLeft, Hash, AlignCenter, AlignLeft, Upload
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -71,6 +71,7 @@ interface LandingPageConfig {
   gradientDirection: "to-r" | "to-l" | "to-b" | "to-t" | "to-br" | "to-bl";
   ctaAnimation: "none" | "pulse" | "bounce" | "shake" | "glow";
   imageStyle: "rounded" | "sharp" | "blob" | "circle";
+  pixels?: { facebook?: string; tiktok?: string; snapchat?: string };
 }
 
 const defaultNewPage = (): LandingPageConfig => ({
@@ -123,6 +124,7 @@ const defaultNewPage = (): LandingPageConfig => ({
   gradientDirection: "to-br",
   ctaAnimation: "pulse",
   imageStyle: "rounded",
+  pixels: { facebook: "", tiktok: "", snapchat: "" }
 });
 
 const templates = [
@@ -242,13 +244,106 @@ const LandingPageBuilder = () => {
   const [editingPage, setEditingPage] = useState<LandingPageConfig | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewDevice, setPreviewDevice] = useState<"desktop" | "mobile">("desktop");
-  const [activeDesignTab, setActiveDesignTab] = useState<"content" | "template" | "colors" | "sections" | "advanced">("content");
+  const [activeDesignTab, setActiveDesignTab] = useState<"magic" | "content" | "template" | "colors" | "sections" | "advanced">("magic");
   const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  // AI Magic State
+  const [isAiGenerating, setIsAiGenerating] = useState(false);
+  const [aiProgressStep, setAiProgressStep] = useState(0);
+  const [uploadedAiImage, setUploadedAiImage] = useState<string | null>(null);
+  const [aiContextInput, setAiContextInput] = useState("");
 
   // Persist pages to localStorage
   const savePages = (newPages: LandingPageConfig[]) => {
     setPages(newPages);
     localStorage.setItem("landing_pages", JSON.stringify(newPages));
+  };
+
+  const handleSimulatedAiGeneration = async () => {
+    if (!editingPage) return;
+    setIsAiGenerating(true);
+    
+    // Step 1
+    setAiProgressStep(1);
+    await new Promise(r => setTimeout(r, 1500));
+    
+    // Step 2
+    setAiProgressStep(2);
+    await new Promise(r => setTimeout(r, 1500));
+    
+    // Step 3
+    setAiProgressStep(3);
+    await new Promise(r => setTimeout(r, 1500));
+    
+    const isShoe = aiContextInput.toLowerCase().includes("حذاء") || aiContextInput.toLowerCase().includes("shoe") || aiContextInput.toLowerCase().includes("sneaker");
+    const isPerfume = aiContextInput.toLowerCase().includes("عطر") || aiContextInput.toLowerCase().includes("perfume") || aiContextInput.toLowerCase().includes("fragrance");
+    const isCosmetic = aiContextInput.toLowerCase().includes("تجميل") || aiContextInput.toLowerCase().includes("مكياج") || aiContextInput.toLowerCase().includes("makeup") || aiContextInput.toLowerCase().includes("كريم");
+
+    let dynamicTitle = "منتجك السحري المفضل";
+    let dynamicSubtitle = "تصميم خيالي يجمع بين الجودة العالية والسعر التنافسي، اكتشف الفرق بنفسك.";
+    let dynamicCategory = "منتجات متنوعة";
+    let dynamicFeatures = ["جودة ممتازة مضمونة", "توصيل سريع معتمد", "دفع عند الاستلام لمزيد من الأمان", "أفضل خيار لك ولعائلتك"];
+    let dynamicPrice = 2500;
+    
+    if (isShoe) {
+      dynamicTitle = "حذاء المشي المريح والأنيق";
+      dynamicSubtitle = "راحة لا مثيل لها لقدميك. تصميم عصري يناسب كل إطلالاتك اليومية والرياضية.";
+      dynamicCategory = "أحذية";
+      dynamicFeatures = ["نعل طبي مريح جداً", "قماش يسمح بمرور الهواء", "تصميم خفيف الوزن", "مقاوم للانزلاق"];
+      dynamicPrice = 4900;
+    } else if (isPerfume) {
+      dynamicTitle = "عطر الفخامة والجاذبية";
+      dynamicSubtitle = "رائحة تدوم طويلاً، تترك أثراً لا يُنسى أينما ذهبت.";
+      dynamicCategory = "عطور";
+      dynamicFeatures = ["تركيز عالي يدوم 48 ساعة", "مكونات فرنسية أصلية", "زجاجة فاخرة للهدايا", "رائحة مميزة وجذابة"];
+      dynamicPrice = 3800;
+    } else if (isCosmetic) {
+      dynamicTitle = "سر جمالك الطبيعي";
+      dynamicSubtitle = "مكونات طبيعية تمنحك إشراقة ونضارة لا مثيل لها من الاستعمال الأول.";
+      dynamicCategory = "صحة وجمال";
+      dynamicFeatures = ["مكونات طبيعية 100%", "مرخص طبياً وآمن", "نتائج سريعة ومضمونة", "يغذي ويرطب بعمق"];
+      dynamicPrice = 2900;
+    } else if (aiContextInput.trim() !== "") {
+      // General dynamic generation mapping directly to context
+      dynamicTitle = `اكتشف الـ ${aiContextInput.split(' ').slice(0, 3).join(' ')} المميز`;
+      dynamicSubtitle = `إليك الحل الأمثل لاحتياجاتك بخاصية فريدة وأداء ممتاز. لا تفوت هذه الفرصة.`;
+    } else {
+       // Watch default if no input
+       dynamicTitle = "أناقة لا متناهية في معصمك";
+       dynamicSubtitle = "تحكم بصحتك ووقتك مع أحدث تقنيات الساعات الذكية بتصميم فخم وميزات لا حصر لها";
+       dynamicCategory = "أكسسوارات ذكية";
+       dynamicFeatures = ["شاشة ريتينا مقاومة للخدش", "قياس دقيق لنبضات القلب والمشي", "مقاومة للماء بمعيار IP68", "بطارية تدوم حتى 7 أيام"];
+       dynamicPrice = 6500;
+    }
+
+    // Finish
+    const aiGeneratedPage: LandingPageConfig = {
+      ...editingPage,
+      productName: isShoe ? "حذاء رياضي متطور" : isPerfume ? "عطر فاخر" : isCosmetic ? "سيروم تفتيح البشرة" : "ساعة ذكية VIP",
+      template: "luxury",
+      heroTitle: dynamicTitle,
+      heroSubtitle: dynamicSubtitle,
+      heroImage: uploadedAiImage || "https://images.unsplash.com/photo-1546868871-7041f2a55e12?w=800&q=80",
+      primaryColor: "#a855f7",
+      backgroundColor: "#020617",
+      textColor: "#f8fafc",
+      price: dynamicPrice,
+      originalPrice: dynamicPrice * 2,
+      category: dynamicCategory,
+      features: dynamicFeatures,
+      urgencyText: "تبقى 3 قطع فقط بالسعر الترويجي!",
+      sections: ["hero", "urgency-bar", "video", "features", "gallery", "social-proof", "trust-badges", "cta"]
+    };
+    
+    setEditingPage(aiGeneratedPage);
+    const newPages = pages.map(p => p.id === aiGeneratedPage.id ? aiGeneratedPage : p);
+    savePages(newPages);
+    
+    setIsAiGenerating(false);
+    setAiProgressStep(0);
+    setUploadedAiImage(null);
+    setActiveDesignTab("content");
+    toast({ title: "✨ سحر الـ AI مكتمل!", description: "تم بناء صفحتك الجذابة بنجاح." });
   };
 
   const createNewPage = () => {
@@ -775,6 +870,7 @@ const LandingPageBuilder = () => {
             <div className="p-3 border-b border-border">
               <div className="flex bg-muted rounded-xl p-0.5 gap-0.5">
                 {([
+                  { id: "magic" as const, label: "سحر الـ AI", icon: Sparkles },
                   { id: "content" as const, label: "المحتوى", icon: Type },
                   { id: "template" as const, label: "القوالب", icon: LayoutTemplate },
                   { id: "colors" as const, label: "الألوان", icon: Palette },
@@ -796,6 +892,115 @@ const LandingPageBuilder = () => {
             </div>
 
             <div className="flex-1 overflow-y-auto p-4 space-y-5">
+              {/* ===== MAGIC AI TAB ===== */}
+              {activeDesignTab === "magic" && (
+                <div className="space-y-6">
+                  <div className="text-center space-y-2 mt-4 mb-8">
+                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-3xl bg-primary/10 text-primary mb-2 shadow-inner">
+                      <Sparkles className="w-8 h-8" />
+                    </div>
+                    <h2 className="text-2xl font-black text-foreground bg-clip-text text-transparent bg-gradient-to-r from-primary to-purple-600">
+                      التصميم بالذكاء الاصطناعي
+                    </h2>
+                    <p className="text-sm text-muted-foreground">صمم صفحة هبوط احترافية في ثوانٍ</p>
+                  </div>
+
+                  {!isAiGenerating && aiProgressStep === 0 && (
+                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+                      <div className="space-y-3">
+                        <Label className="text-sm font-bold">1. سياق المنتج (اختياري)</Label>
+                        <Textarea 
+                          value={aiContextInput}
+                          onChange={(e) => setAiContextInput(e.target.value)}
+                          placeholder="مثال: ساعة ذكية مقاومة للماء للرياضيين بسعر تنافسي..."
+                          className="min-h-[80px] rounded-2xl bg-muted/30 border-primary/20 text-sm focus-visible:ring-primary/40"
+                        />
+                      </div>
+
+                      <div className="space-y-3">
+                        <Label className="text-sm font-bold">2. صورة المنتج</Label>
+                        <div className="border-2 border-dashed border-primary/30 rounded-3xl p-8 text-center hover:bg-primary/5 transition-colors group cursor-pointer relative overflow-hidden" onClick={(e) => {
+                          const input = document.createElement('input');
+                          input.type = 'file';
+                          input.accept = 'image/*';
+                          input.onchange = (e: any) => {
+                            if (e.target.files?.[0]) {
+                              setUploadedAiImage(URL.createObjectURL(e.target.files[0]));
+                            }
+                          };
+                          input.click();
+                        }}>
+                          {uploadedAiImage ? (
+                            <img src={uploadedAiImage} alt="Product" className="absolute inset-0 w-full h-full object-cover opacity-60 mix-blend-overlay" />
+                          ) : null}
+                          <div className="relative z-10 flex flex-col items-center">
+                            <Upload className="w-10 h-10 text-primary/50 group-hover:text-primary transition-colors mb-4 group-hover:scale-110 duration-300" />
+                            <p className="text-sm font-bold text-foreground">التقط أو ارفع صورة للمنتج</p>
+                            <p className="text-[10px] text-muted-foreground mt-1">يدعم JPG, PNG بجودة عالية</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <Button 
+                        onClick={handleSimulatedAiGeneration} 
+                        disabled={!uploadedAiImage}
+                        className={`w-full h-14 rounded-2xl text-base font-bold shadow-xl transition-all ${
+                          uploadedAiImage ? "bg-gradient-to-l from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 hover:scale-[1.02] active:scale-[0.98]" : "bg-muted text-muted-foreground cursor-not-allowed"
+                        }`}
+                      >
+                        <Zap className="w-5 h-5 ml-2" />
+                        توليد الصفحة السحرية
+                      </Button>
+                    </motion.div>
+                  )}
+
+                  {isAiGenerating && (
+                    <div className="flex flex-col items-center justify-center py-12 space-y-8">
+                       <div className="relative w-32 h-32 flex items-center justify-center">
+                          <motion.div 
+                            animate={{ rotate: 360 }}
+                            transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+                            className="absolute inset-0 rounded-full border-[3px] border-dashed border-primary/30"
+                          />
+                          <motion.div 
+                            animate={{ rotate: -360 }}
+                            transition={{ duration: 12, repeat: Infinity, ease: "linear" }}
+                            className="absolute inset-4 rounded-full border-[3px] border-dotted border-purple-500/50"
+                          />
+                          <motion.div 
+                            animate={{ scale: [0.9, 1.1, 0.9] }}
+                            transition={{ duration: 2, repeat: Infinity }}
+                            className="w-16 h-16 bg-gradient-to-br from-primary to-purple-600 rounded-full flex items-center justify-center shadow-[0_0_30px_rgba(168,85,247,0.5)]"
+                          >
+                            <Sparkles className="w-8 h-8 text-white" />
+                          </motion.div>
+                       </div>
+
+                       <div className="space-y-4 w-full px-6">
+                        <div className="flex items-center gap-3">
+                          <Check className={`w-5 h-5 transition-colors ${aiProgressStep > 0 ? "text-primary" : "text-muted/30"}`} />
+                          <p className={`font-bold transition-all ${aiProgressStep === 1 ? "text-foreground text-lg scale-105" : aiProgressStep > 1 ? "text-muted-foreground" : "text-muted"}`}>
+                            جاري فحص الصورة وتحليل المنتج...
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <Check className={`w-5 h-5 transition-colors ${aiProgressStep > 1 ? "text-primary" : "text-muted/30"}`} />
+                          <p className={`font-bold transition-all ${aiProgressStep === 2 ? "text-foreground text-lg scale-105" : aiProgressStep > 2 ? "text-muted-foreground" : "text-muted"}`}>
+                            جاري صياغة النصوص الإعلانية الجذابة...
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <Check className={`w-5 h-5 transition-colors ${aiProgressStep > 2 ? "text-primary" : "text-muted/30"}`} />
+                          <p className={`font-bold transition-all ${aiProgressStep === 3 ? "text-foreground text-lg scale-105" : aiProgressStep > 3 ? "text-muted-foreground" : "text-muted"}`}>
+                            جاري بناء واجهة المتجر وتنسيق الألوان...
+                          </p>
+                        </div>
+                       </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* ===== CONTENT TAB ===== */}
               {activeDesignTab === "content" && (
                 <div className="space-y-4">
@@ -1107,48 +1312,74 @@ const LandingPageBuilder = () => {
                 </div>
               )}
 
-              {/* ===== ADVANCED TAB ===== */}
-              {activeDesignTab === "advanced" && (
-                <div className="space-y-5">
-                  <div className="space-y-3">
-                    <h3 className="text-xs font-bold flex items-center gap-2"><Zap className="w-3.5 h-3.5 text-primary" /> خيارات متقدمة</h3>
+            {/* ===== ADVANCED TAB ===== */}
+            {activeDesignTab === "advanced" && (
+              <div className="space-y-5">
+                <div className="space-y-3">
+                  <h3 className="text-xs font-bold flex items-center gap-2"><Zap className="w-3.5 h-3.5 text-primary" /> خيارات متقدمة</h3>
 
-                    <div className="flex items-center justify-between p-3 border border-border rounded-xl">
-                      <div>
-                        <p className="text-xs font-bold">شريط شراء ثابت</p>
-                        <p className="text-[9px] text-muted-foreground">يظهر عند التمرير للأسفل</p>
-                      </div>
-                      <Switch checked={editingPage.showStickyBar} onCheckedChange={(v) => updatePage("showStickyBar", v)} />
+                  <div className="flex items-center justify-between p-3 border border-border rounded-xl">
+                    <div>
+                      <p className="text-xs font-bold">شريط شراء ثابت</p>
+                      <p className="text-[9px] text-muted-foreground">يظهر عند التمرير للأسفل</p>
                     </div>
-
-                    <div className="flex items-center justify-between p-3 border border-border rounded-xl">
-                      <div>
-                        <p className="text-xs font-bold">زر شراء عائم</p>
-                        <p className="text-[9px] text-muted-foreground">زر ثابت في أسفل الشاشة</p>
-                      </div>
-                      <Switch checked={editingPage.showFloatingCta} onCheckedChange={(v) => updatePage("showFloatingCta", v)} />
-                    </div>
-
-                    <div className="flex items-center justify-between p-3 border border-border rounded-xl">
-                      <div>
-                        <p className="text-xs font-bold">إشعارات شراء وهمية</p>
-                        <p className="text-[9px] text-muted-foreground">تظهر عشوائياً لزيادة الثقة</p>
-                      </div>
-                      <Switch checked={editingPage.showSocialProofPopup} onCheckedChange={(v) => updatePage("showSocialProofPopup", v)} />
-                    </div>
+                    <Switch checked={editingPage.showStickyBar} onCheckedChange={(v) => updatePage("showStickyBar", v)} />
                   </div>
 
-                  <div className="space-y-2">
-                    <Label className="text-xs font-bold opacity-70">رابط الفيديو (YouTube/Vimeo)</Label>
-                    <Input value={editingPage.videoUrl} onChange={(e) => updatePage("videoUrl", e.target.value)} placeholder="https://youtube.com/watch?v=..." className="rounded-xl h-9 text-xs" dir="ltr" />
+                  <div className="flex items-center justify-between p-3 border border-border rounded-xl">
+                    <div>
+                      <p className="text-xs font-bold">زر شراء عائم</p>
+                      <p className="text-[9px] text-muted-foreground">زر ثابت في أسفل الشاشة</p>
+                    </div>
+                    <Switch checked={editingPage.showFloatingCta} onCheckedChange={(v) => updatePage("showFloatingCta", v)} />
                   </div>
 
-                  <div className="space-y-2">
-                    <Label className="text-xs font-bold opacity-70">CSS مخصص</Label>
-                    <Textarea value={editingPage.customCss} onChange={(e) => updatePage("customCss", e.target.value)} placeholder=".hero { ... }" className="rounded-xl text-xs font-mono" rows={4} dir="ltr" />
+                  <div className="flex items-center justify-between p-3 border border-border rounded-xl">
+                    <div>
+                      <p className="text-xs font-bold">إشعارات شراء وهمية</p>
+                      <p className="text-[9px] text-muted-foreground">تظهر عشوائياً لزيادة الثقة</p>
+                    </div>
+                    <Switch checked={editingPage.showSocialProofPopup} onCheckedChange={(v) => updatePage("showSocialProofPopup", v)} />
                   </div>
                 </div>
-              )}
+
+                <div className="space-y-3 pt-3 border-t">
+                  <h3 className="text-xs font-bold flex items-center gap-2"><LayoutTemplate className="w-3.5 h-3.5 text-primary" /> التتبع والبيكسل (Tracking)</h3>
+                  
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-bold">Facebook Pixel ID</Label>
+                    <Input 
+                      value={editingPage.pixels?.facebook || ""} 
+                      onChange={(e) => updatePage("pixels", { ...editingPage.pixels, facebook: e.target.value })} 
+                      placeholder="123456789012345" 
+                      className="rounded-xl h-8 text-xs font-mono bg-muted/30" 
+                      dir="ltr" 
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-bold">TikTok Pixel ID</Label>
+                    <Input 
+                      value={editingPage.pixels?.tiktok || ""} 
+                      onChange={(e) => updatePage("pixels", { ...editingPage.pixels, tiktok: e.target.value })} 
+                      placeholder="CDG123456789ABCDEF" 
+                      className="rounded-xl h-8 text-xs font-mono bg-muted/30" 
+                      dir="ltr" 
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2 pt-3 border-t">
+                  <Label className="text-xs font-bold opacity-70">رابط الفيديو (YouTube/Vimeo)</Label>
+                  <Input value={editingPage.videoUrl} onChange={(e) => updatePage("videoUrl", e.target.value)} placeholder="https://youtube.com/watch?v=..." className="rounded-xl h-9 text-xs" dir="ltr" />
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-xs font-bold opacity-70">CSS مخصص</Label>
+                  <Textarea value={editingPage.customCss} onChange={(e) => updatePage("customCss", e.target.value)} placeholder=".hero { ... }" className="rounded-xl text-xs font-mono" rows={4} dir="ltr" />
+                </div>
+              </div>
+            )}
             </div>
 
             {/* Footer */}

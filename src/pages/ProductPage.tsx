@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowRight, ShoppingCart, Check, Star, Truck, Shield, Clock, Phone } from "lucide-react";
@@ -25,6 +25,62 @@ const ProductPage = () => {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState(false);
+  
+  // Track Pixels
+  const [pixels, setPixels] = useState<{facebook: string; tiktok: string} | null>(null);
+
+  useEffect(() => {
+    const savedSettings = localStorage.getItem("affiliate_store_settings");
+    if (savedSettings) {
+      try {
+        const parsed = JSON.parse(savedSettings);
+        if (parsed.pixels) {
+          setPixels(parsed.pixels);
+          const p = parsed.pixels;
+          
+          if (p.facebook) {
+            !(function (f:any, b:any, e:any, v:any, n:any, t:any, s:any) {
+              if (f.fbq) return;
+              n = f.fbq = function () { n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments); };
+              if (!f._fbq) f._fbq = n;
+              n.push = n; n.loaded = !0; n.version = "2.0"; n.queue = [];
+              t = b.createElement(e); t.async = !0; t.src = v;
+              s = b.getElementsByTagName(e)[0]; s.parentNode.insertBefore(t, s);
+            })(window, document, "script", "https://connect.facebook.net/en_US/fbevents.js");
+            // @ts-ignore
+            window.fbq("init", p.facebook);
+            // @ts-ignore
+            window.fbq("track", "PageView");
+          }
+
+          if (p.tiktok) {
+            !(function (w:any, d:any, t:any) {
+              w.TiktokAnalyticsObject = t;
+              var ttq = (w[t] = w[t] || []);
+              ttq.methods = ["page", "track", "identify", "instances", "debug", "on", "off", "once", "ready", "alias", "group", "enableCookie", "disableCookie"];
+              ttq.setAndDefer = function (t:any, e:any) {
+                t[e] = function () { t.push([e].concat(Array.prototype.slice.call(arguments, 0))); };
+              };
+              for (var i = 0; i < ttq.methods.length; i++) ttq.setAndDefer(ttq, ttq.methods[i]);
+              ttq.instance = function (t:any) {
+                for (var e = ttq._i[t] || [], n = 0; n < ttq.methods.length; n++) ttq.setAndDefer(e, ttq.methods[n]);
+                return e;
+              };
+              ttq.load = function (e:any, n:any) {
+                var i = "https://analytics.tiktok.com/i18n/pixel/events.js";
+                ttq._i = ttq._i || {}; ttq._i[e] = []; ttq._i[e]._u = i; ttq._t = ttq._t || {}; ttq._t[e] = +new Date();
+                ttq._o = ttq._o || {}; ttq._o[e] = n || {};
+                n = document.createElement("script"); n.type = "text/javascript"; n.async = !0; n.src = i + "?sdkid=" + e + "&lib=" + t;
+                e = document.getElementsByTagName("script")[0]; e.parentNode.insertBefore(n, e);
+              };
+              ttq.load(p.tiktok);
+              ttq.page();
+            })(window, document, "ttq");
+          }
+        }
+      } catch(e){}
+    }
+  }, []);
 
   if (!product) {
     return (
@@ -56,6 +112,19 @@ const ProductPage = () => {
     setIsSubmitting(false);
     setOrderSuccess(true);
     
+    // Fire pixels
+    const conversionValue = product.price * quantity;
+    if (pixels?.facebook && typeof window !== "undefined" && (window as any).fbq) {
+      (window as any).fbq("track", "Purchase", { value: conversionValue, currency: "DZD" });
+    }
+    if (pixels?.tiktok && typeof window !== "undefined" && (window as any).ttq) {
+      (window as any).ttq.track("CompletePayment", { 
+        contents: [{ content_id: product.id, content_name: product.name, price: conversionValue, quantity: quantity }], 
+        value: conversionValue, 
+        currency: "DZD" 
+      });
+    }
+
     toast({
       title: "تم إرسال الطلب بنجاح! ✅",
       description: "سنتصل بك قريباً لتأكيد الطلب"

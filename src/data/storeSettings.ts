@@ -30,6 +30,11 @@ export interface StoreSettings {
     privacyPolicyLink: string;
     termsLink: string;
   };
+  pixels?: {
+    facebook: string;
+    tiktok: string;
+    snapchat: string;
+  };
 }
 
 export const defaultStoreSettings: StoreSettings = {
@@ -68,4 +73,9 @@ export const defaultStoreSettings: StoreSettings = {
     privacyPolicyLink: "#",
     termsLink: "#",
   },
+  pixels: {
+    facebook: "",
+    tiktok: "",
+    snapchat: "",
+  }
 };

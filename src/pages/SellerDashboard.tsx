@@ -7,7 +7,7 @@ import {
   CheckCircle, XCircle, Truck, ChevronLeft, Eye,
   BarChart3, AlertCircle, Pause, Play, Edit3, Trash2,
   Image, DollarSign, Layers, Tag, Save, X, Search,
-  MoreVertical, ArrowUpRight, Sparkles, Store, LayoutTemplate
+  MoreVertical, ArrowUpRight, Sparkles, Store, LayoutTemplate, MessageSquare
 } from "lucide-react";
 import LandingPageBuilder from "@/components/seller/LandingPageBuilder";
 import { Button } from "@/components/ui/button";
@@ -29,6 +29,7 @@ import {
   mockSellerProducts as initialProducts, mockSellerOrders, mockSellerStats,
   sellerEarningsData, SellerProduct
 } from "@/data/mockSellerData";
+import { createAndersonShipment } from "@/services/andersonShipping";
 
 type Tab = "overview" | "products" | "orders" | "earnings" | "withdrawals" | "affiliates" | "landing-pages" | "settings";
 
@@ -95,6 +96,10 @@ const SellerDashboard = () => {
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [filterCategory, setFilterCategory] = useState<string>("all");
 
+  // Orders State
+  const [orders, setOrders] = useState(mockSellerOrders);
+  const [processingOrderId, setProcessingOrderId] = useState<string | null>(null);
+
   // Withdrawal state
   const [withdrawalDialogOpen, setWithdrawalDialogOpen] = useState(false);
   const [withdrawAmount, setWithdrawAmount] = useState("");
@@ -114,6 +119,44 @@ const SellerDashboard = () => {
     localStorage.removeItem("seller_user");
     toast({ title: "تم تسجيل الخروج" });
     navigate("/");
+  };
+
+  // Order Action Handlers
+  const handleWhatsAppConfirm = (order: any) => {
+    const defaultText = `مرحباً ${order.customerName}، نتواصل معك من متجرنا لتأكيد طلبك لمنتج ${order.productName} بسعر ${order.amount.toLocaleString()} دج. هل العنوان ${order.wilaya} صحيح؟`;
+    const encodedText = encodeURIComponent(defaultText);
+    window.open(`https://wa.me/213${order.customerPhone || "000000000"}?text=${encodedText}`, "_blank");
+  };
+
+  const handleAndersonShip = async (order: any) => {
+    setProcessingOrderId(order.id);
+    try {
+      // Build payload for service
+      const payload = {
+        customerName: order.customerName,
+        phone: order.customerPhone || "000000000",
+        address: order.address || "غير محدد",
+        wilaya: order.wilaya,
+        productName: order.productName,
+        amount: order.amount
+      };
+      
+      const res = await createAndersonShipment(payload);
+      
+      if (res.success) {
+        toast({ 
+          title: "تم إرسال الطلب لشركة الشحن", 
+          description: `تم إنشاء الشحنة بنجاح. رقم التتبع: ${res.trackingNumber}` 
+        });
+        
+        // Update local status to "shipped"
+        setOrders(orders.map(o => o.id === order.id ? { ...o, status: "shipped" } : o));
+      }
+    } catch (err) {
+      toast({ title: "خطأ في الإرسال", description: "حدث مشكل أثناء التواصل مع خدمة Anderson", variant: "destructive" });
+    } finally {
+      setProcessingOrderId(null);
+    }
   };
 
   // Product CRUD handlers
@@ -538,11 +581,13 @@ const SellerDashboard = () => {
                         <th className="text-right p-4 font-semibold text-foreground text-sm">الحالة</th>
                         <th className="text-right p-4 font-semibold text-foreground text-sm">المبلغ</th>
                         <th className="text-right p-4 font-semibold text-foreground text-sm">التاريخ</th>
+                        <th className="text-right p-4 font-semibold text-foreground text-sm">الإجراءات</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border">
-                      {mockSellerOrders.map((order) => {
-                        const status = statusConfig[order.status];
+                      {orders.map((order) => {
+                        const status = statusConfig[order.status as keyof typeof statusConfig];
+                        const isProcessing = processingOrderId === order.id;
                         return (
                           <tr key={order.id} className="hover:bg-muted/30 transition-colors">
                             <td className="p-4 font-medium text-foreground text-sm">{order.productName}</td>
@@ -557,6 +602,23 @@ const SellerDashboard = () => {
                             </td>
                             <td className="p-4 font-bold text-foreground text-sm">{order.amount.toLocaleString()} دج</td>
                             <td className="p-4 text-muted-foreground text-sm">{order.date}</td>
+                            <td className="p-4">
+                              <div className="flex items-center gap-2">
+                                <Button size="sm" variant="outline" className="gap-2 text-green-600 border-green-200 hover:bg-green-50" onClick={() => handleWhatsAppConfirm(order)}>
+                                  <MessageSquare className="w-4 h-4" /> واتساب
+                                </Button>
+                                {(order.status === "pending" || order.status === "confirmed") && (
+                                  <Button size="sm" className="gap-2 bg-indigo-600 hover:bg-indigo-700 text-white" disabled={isProcessing} onClick={() => handleAndersonShip(order)}>
+                                    {isProcessing ? (
+                                      <motion.span animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }} className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full inline-block" />
+                                    ) : (
+                                      <Truck className="w-4 h-4" />
+                                    )}
+                                    {isProcessing ? "جاري الإرسال" : "Anderson"}
+                                  </Button>
+                                )}
+                              </div>
+                            </td>
                           </tr>
                         );
                       })}

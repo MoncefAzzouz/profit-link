@@ -11,6 +11,15 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 
+declare global {
+  interface Window {
+    fbq: any;
+    _fbq: any;
+    ttq: any;
+    TiktokAnalyticsObject: any;
+  }
+}
+
 interface LandingPageConfig {
   id: string;
   productName: string;
@@ -55,6 +64,7 @@ interface LandingPageConfig {
   gradientDirection: "to-r" | "to-l" | "to-b" | "to-t" | "to-br" | "to-bl";
   ctaAnimation: "none" | "pulse" | "bounce" | "shake" | "glow";
   imageStyle: "rounded" | "sharp" | "blob" | "circle";
+  pixels?: { facebook?: string; tiktok?: string; snapchat?: string };
 }
 
 const LandingPageView = () => {
@@ -124,6 +134,70 @@ const LandingPageView = () => {
     return () => clearInterval(interval);
   }, [page]);
 
+  // Inject Tracking Pixels
+  useEffect(() => {
+    if (!page?.pixels) return;
+
+    // Facebook Pixel Injection
+    if (page.pixels.facebook) {
+      !(function (f, b, e, v, n, t, s) {
+        if (f.fbq) return;
+        n = f.fbq = function () {
+          n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments);
+        };
+        if (!f._fbq) f._fbq = n;
+        n.push = n;
+        n.loaded = !0;
+        n.version = "2.0";
+        n.queue = [];
+        t = b.createElement(e);
+        t.async = !0;
+        t.src = v;
+        s = b.getElementsByTagName(e)[0];
+        s.parentNode.insertBefore(t, s);
+      })(window, document, "script", "https://connect.facebook.net/en_US/fbevents.js");
+      window.fbq("init", page.pixels.facebook);
+      window.fbq("track", "PageView");
+    }
+
+    // TikTok Pixel Injection
+    if (page.pixels.tiktok) {
+      !(function (w, d, t) {
+        w.TiktokAnalyticsObject = t;
+        var ttq = (w[t] = w[t] || []);
+        ttq.methods = ["page", "track", "identify", "instances", "debug", "on", "off", "once", "ready", "alias", "group", "enableCookie", "disableCookie"];
+        ttq.setAndDefer = function (t, e) {
+          t[e] = function () {
+            t.push([e].concat(Array.prototype.slice.call(arguments, 0)));
+          };
+        };
+        for (var i = 0; i < ttq.methods.length; i++) ttq.setAndDefer(ttq, ttq.methods[i]);
+        ttq.instance = function (t) {
+          for (var e = ttq._i[t] || [], n = 0; n < ttq.methods.length; n++) ttq.setAndDefer(e, ttq.methods[n]);
+          return e;
+        };
+        ttq.load = function (e, n) {
+          var i = "https://analytics.tiktok.com/i18n/pixel/events.js";
+          ttq._i = ttq._i || {};
+          ttq._i[e] = [];
+          ttq._i[e]._u = i;
+          ttq._t = ttq._t || {};
+          ttq._t[e] = +new Date();
+          ttq._o = ttq._o || {};
+          ttq._o[e] = n || {};
+          n = document.createElement("script");
+          n.type = "text/javascript";
+          n.async = !0;
+          n.src = i + "?sdkid=" + e + "&lib=" + t;
+          e = document.getElementsByTagName("script")[0];
+          e.parentNode.insertBefore(n, e);
+        };
+        ttq.load(page.pixels.tiktok);
+        ttq.page();
+      })(window, document, "ttq");
+    }
+  }, [page]);
+
   const handleOrder = (e: React.FormEvent) => {
     e.preventDefault();
     if (!orderForm.name || !orderForm.phone || !orderForm.wilaya) {
@@ -132,6 +206,17 @@ const LandingPageView = () => {
     }
     setOrderSubmitted(true);
     toast({ title: "✅ تم تسجيل طلبك بنجاح!", description: "سنتواصل معك قريباً لتأكيد الطلب" });
+
+    // Fire Conversion Events if Pixels exist
+    const conversionValue = page?.price || 0;
+    
+    if (page?.pixels?.facebook && typeof window !== "undefined" && window.fbq) {
+      window.fbq("track", "Purchase", { value: conversionValue, currency: "DZD" });
+    }
+    
+    if (page?.pixels?.tiktok && typeof window !== "undefined" && window.ttq) {
+      window.ttq.track("CompletePayment", { contents: [{ content_id: page.id, content_name: page.productName, price: conversionValue, quantity: quantity }], value: conversionValue, currency: "DZD" });
+    }
   };
 
   if (loading) {

@@ -54,6 +54,7 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip,
   AreaChart, Area
 } from "recharts";
+import { createAndersonShipment } from "@/services/andersonShipping";
 
 type Tab = "overview" | "products" | "my_store" | "my_store_edit" | "favorites" | "landing_pages" | "orders" | "earnings" | "withdrawals" | "levels" | "shipping" | "support";
 
@@ -112,6 +113,10 @@ const Dashboard = () => {
   const [dateTo, setDateTo] = useState<Date | undefined>(undefined);
   const [isDateFromOpen, setIsDateFromOpen] = useState(false);
   const [isDateToOpen, setIsDateToOpen] = useState(false);
+
+  // Orders State (Local)
+  const [orders, setOrders] = useState(mockOrders);
+  const [processingOrderId, setProcessingOrderId] = useState<string | null>(null);
 
   // Withdrawal states
   const [withdrawalDialogOpen, setWithdrawalDialogOpen] = useState(false);
@@ -183,6 +188,42 @@ const Dashboard = () => {
     setTimeout(() => setCopiedId(null), 2000);
   };
 
+  // Order Action Handlers
+  const handleWhatsAppConfirm = (order: any) => {
+    const defaultText = `مرحباً ${order.customerName}، نتواصل معك من متجرنا لتأكيد طلبك لمنتج ${order.productName} بسعر ${order.amount?.toLocaleString() || "0"} دج. هل العنوان ${order.wilaya} صحيح؟`;
+    const encodedText = encodeURIComponent(defaultText);
+    window.open(`https://wa.me/213${order.customerPhone || "000000000"}?text=${encodedText}`, "_blank");
+  };
+
+  const handleAndersonShip = async (order: any) => {
+    setProcessingOrderId(order.id);
+    try {
+      const payload = {
+        customerName: order.customerName,
+        phone: order.customerPhone || "000000000",
+        address: order.address || "غير محدد",
+        wilaya: order.wilaya,
+        productName: order.productName,
+        amount: order.amount || 0
+      };
+      
+      const res = await createAndersonShipment(payload);
+      
+      if (res.success) {
+        toast({ 
+          title: "تم إرسال الطلب لشركة الشحن", 
+          description: `رقم التتبع: ${res.trackingNumber}` 
+        });
+        
+        setOrders(orders.map(o => o.id === order.id ? { ...o, status: "shipped" } as any : o));
+      }
+    } catch (err) {
+      toast({ title: "خطأ في الإرسال", description: "حدث مشكل أثناء التواصل مع خدمة Anderson", variant: "destructive" });
+    } finally {
+      setProcessingOrderId(null);
+    }
+  };
+
   const toggleFavorite = (productId: string) => {
     setFavorites(prev => {
       const newSet = new Set(prev);
@@ -231,7 +272,7 @@ const Dashboard = () => {
   const hasActiveFilters = orderSearch || orderStatus !== "all" || dateFrom || dateTo;
 
   const filteredOrders = useMemo(() => {
-    return mockOrders.filter((order) => {
+    return orders.filter((order) => {
       // Search filter
       const matchesSearch = order.productName.includes(orderSearch) || 
                            order.customerName.includes(orderSearch) ||
@@ -1090,12 +1131,14 @@ const Dashboard = () => {
                         <th className="text-right p-4 font-semibold text-foreground">الحالة</th>
                         <th className="text-right p-4 font-semibold text-foreground">العمولة</th>
                         <th className="text-right p-4 font-semibold text-foreground">التاريخ</th>
+                        <th className="text-right p-4 font-semibold text-foreground">الإجراءات</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border">
                       {filteredOrders.length > 0 ? (
                         filteredOrders.map((order) => {
-                          const status = statusConfig[order.status];
+                          const status = statusConfig[order.status as keyof typeof statusConfig];
+                          const isProcessing = processingOrderId === order.id;
                           return (
                             <tr key={order.id} className="hover:bg-muted/50 transition-colors">
                               <td className="p-4 font-medium text-foreground">{order.productName}</td>
@@ -1109,6 +1152,23 @@ const Dashboard = () => {
                               </td>
                               <td className="p-4 font-bold text-secondary">{order.commission.toLocaleString()} دج</td>
                               <td className="p-4 text-muted-foreground">{order.date}</td>
+                              <td className="p-4">
+                                <div className="flex items-center gap-2">
+                                  <Button size="sm" variant="outline" className="gap-2 text-green-600 border-green-200 hover:bg-green-50" onClick={() => handleWhatsAppConfirm(order)}>
+                                    <MessageSquare className="w-4 h-4" />
+                                  </Button>
+                                  {(order.status === "pending" || order.status === "confirmed") && (
+                                    <Button size="sm" className="gap-2 bg-indigo-600 hover:bg-indigo-700 text-white" disabled={isProcessing} onClick={() => handleAndersonShip(order)}>
+                                      {isProcessing ? (
+                                        <motion.span animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }} className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full inline-block" />
+                                      ) : (
+                                        <Truck className="w-4 h-4" />
+                                      )}
+                                      {isProcessing ? "" : "شحن"}
+                                    </Button>
+                                  )}
+                                </div>
+                              </td>
                             </tr>
                           );
                         })
@@ -1897,9 +1957,46 @@ const Dashboard = () => {
                     </div>
                   </div>
 
+                  {/* Analytics & Tracking Section */}
+                  <div className="bg-card rounded-[2.5rem] p-8 border border-border/50 shadow-sm space-y-6">
+                    <div className="flex items-center gap-3 border-b border-border pb-4">
+                      <div className="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center text-green-600">
+                        <BarChart className="w-5 h-5" />
+                      </div>
+                      <h3 className="text-xl font-bold">التتبع والبيكسل (Tracking)</h3>
+                    </div>
+
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label className="text-sm font-bold pr-1">Facebook Pixel ID</Label>
+                        <Input 
+                          value={storeSettings.pixels?.facebook || ""}
+                          onChange={(e) => setStoreSettings({
+                            ...storeSettings, 
+                            pixels: { ...storeSettings.pixels, facebook: e.target.value } as any
+                          })}
+                          placeholder="123456789012345"
+                          className="h-11 rounded-xl bg-muted/30 border-none px-4 font-mono"
+                          dir="ltr"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-sm font-bold pr-1">TikTok Pixel ID</Label>
+                        <Input 
+                          value={storeSettings.pixels?.tiktok || ""}
+                          onChange={(e) => setStoreSettings({
+                            ...storeSettings, 
+                            pixels: { ...storeSettings.pixels, tiktok: e.target.value } as any
+                          })}
+                          placeholder="CDG123456789ABCDEF"
+                          className="h-11 rounded-xl bg-muted/30 border-none px-4 font-mono"
+                          dir="ltr"
+                        />
+                      </div>
+                    </div>
+                  </div>
 
                 </div>
-
                 {/* Social & Contact Section */}
                 <div className="space-y-6">
                   <div className="bg-card rounded-[2.5rem] p-8 border border-border/50 shadow-sm space-y-6">
