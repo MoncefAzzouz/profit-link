@@ -21,6 +21,7 @@ export interface SellerOrder {
   commission: number;
   date: string;
   quantity: number;
+  trackingNumber?: string;
 }
 
 export interface SellerStats {

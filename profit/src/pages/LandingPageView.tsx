@@ -65,6 +65,8 @@ interface LandingPageConfig {
   ctaAnimation: "none" | "pulse" | "bounce" | "shake" | "glow";
   imageStyle: "rounded" | "sharp" | "blob" | "circle";
   pixels?: { facebook?: string; tiktok?: string; snapchat?: string };
+  productId?: string;
+  ownerId?: string;
 }
 
 const LandingPageView = () => {
@@ -73,9 +75,13 @@ const LandingPageView = () => {
   const [page, setPage] = useState<LandingPageConfig | null>(null);
   const [loading, setLoading] = useState(true);
   const [showNotification, setShowNotification] = useState(false);
-  const [orderForm, setOrderForm] = useState({ name: "", phone: "", wilaya: "" });
+  const [orderForm, setOrderForm] = useState({ name: "", phone: "", wilaya: "", commune: "", deliveryType: "home" as "home" | "desk" });
   const [orderSubmitted, setOrderSubmitted] = useState(false);
   const [countdown, setCountdown] = useState({ hours: 2, minutes: 14, seconds: 35 });
+  const [wilayas, setWilayas] = useState<any[]>([]);
+  const [communes, setCommunes] = useState<any[]>([]);
+  const [shippingRate, setShippingRate] = useState({ home: 0, desk: 0 });
+  const [loadingDelivery, setLoadingDelivery] = useState(false);
   const [faqOpen, setFaqOpen] = useState<number | null>(null);
   const [quantity, setQuantity] = useState(1);
 
@@ -103,6 +109,50 @@ const LandingPageView = () => {
     }
     setLoading(false);
   }, [pageId]);
+
+  // Fetch Wilayas on mount
+  useEffect(() => {
+    const fetchWilayas = async () => {
+      try {
+        const res = await fetch('http://127.0.0.1:5001/api/delivery/wilayas');
+        const data = await res.json();
+        if (data.data) setWilayas(data.data);
+      } catch (err) {
+        console.error("Failed to fetch wilayas", err);
+      }
+    };
+    fetchWilayas();
+  }, []);
+
+  // Fetch Communes and Rates when Wilaya changes
+  useEffect(() => {
+    if (!orderForm.wilaya) {
+      setCommunes([]);
+      setShippingRate({ home: 0, desk: 0 });
+      return;
+    }
+
+    const fetchCommunesAndRates = async () => {
+      setLoadingDelivery(true);
+      try {
+        // Fetch Communes
+        const cRes = await fetch(`http://127.0.0.1:5001/api/delivery/communes?wilaya_id=${orderForm.wilaya}`);
+        const cData = await cRes.json();
+        if (cData.data) setCommunes(cData.data);
+
+        // Fetch Rates
+        const rRes = await fetch(`http://127.0.0.1:5001/api/delivery/rates?wilaya_id=${orderForm.wilaya}`);
+        const rData = await rRes.json();
+        if (rData.data) setShippingRate(rData.data);
+      } catch (err) {
+        console.error("Failed to fetch delivery data", err);
+      } finally {
+        setLoadingDelivery(false);
+      }
+    };
+
+    fetchCommunesAndRates();
+  }, [orderForm.wilaya]);
 
   // Countdown timer
   useEffect(() => {
@@ -140,7 +190,7 @@ const LandingPageView = () => {
 
     // Facebook Pixel Injection
     if (page.pixels.facebook) {
-      !(function (f, b, e, v, n, t, s) {
+      (function (f: any, b: any, e: any, v: any, n?: any, t?: any, s?: any) {
         if (f.fbq) return;
         n = f.fbq = function () {
           n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments);
@@ -162,21 +212,21 @@ const LandingPageView = () => {
 
     // TikTok Pixel Injection
     if (page.pixels.tiktok) {
-      !(function (w, d, t) {
+      (function (w: any, d: any, t: any) {
         w.TiktokAnalyticsObject = t;
         var ttq = (w[t] = w[t] || []);
         ttq.methods = ["page", "track", "identify", "instances", "debug", "on", "off", "once", "ready", "alias", "group", "enableCookie", "disableCookie"];
-        ttq.setAndDefer = function (t, e) {
+        ttq.setAndDefer = function (t: any, e: any) {
           t[e] = function () {
             t.push([e].concat(Array.prototype.slice.call(arguments, 0)));
           };
         };
         for (var i = 0; i < ttq.methods.length; i++) ttq.setAndDefer(ttq, ttq.methods[i]);
-        ttq.instance = function (t) {
+        ttq.instance = function (t: any) {
           for (var e = ttq._i[t] || [], n = 0; n < ttq.methods.length; n++) ttq.setAndDefer(e, ttq.methods[n]);
           return e;
         };
-        ttq.load = function (e, n) {
+        ttq.load = function (e: any, n?: any) {
           var i = "https://analytics.tiktok.com/i18n/pixel/events.js";
           ttq._i = ttq._i || {};
           ttq._i[e] = [];
@@ -189,8 +239,8 @@ const LandingPageView = () => {
           n.type = "text/javascript";
           n.async = !0;
           n.src = i + "?sdkid=" + e + "&lib=" + t;
-          e = document.getElementsByTagName("script")[0];
-          e.parentNode.insertBefore(n, e);
+          var s: any = document.getElementsByTagName("script")[0];
+          s.parentNode.insertBefore(n, s);
         };
         ttq.load(page.pixels.tiktok);
         ttq.page();
@@ -198,24 +248,53 @@ const LandingPageView = () => {
     }
   }, [page]);
 
-  const handleOrder = (e: React.FormEvent) => {
+  const handleOrder = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!orderForm.name || !orderForm.phone || !orderForm.wilaya) {
+    if (!orderForm.name || !orderForm.phone || !orderForm.wilaya || !orderForm.commune) {
       toast({ title: "⚠️ يرجى ملء جميع الحقول", variant: "destructive" });
       return;
     }
-    setOrderSubmitted(true);
-    toast({ title: "✅ تم تسجيل طلبك بنجاح!", description: "سنتواصل معك قريباً لتأكيد الطلب" });
 
-    // Fire Conversion Events if Pixels exist
-    const conversionValue = page?.price || 0;
-    
-    if (page?.pixels?.facebook && typeof window !== "undefined" && window.fbq) {
-      window.fbq("track", "Purchase", { value: conversionValue, currency: "DZD" });
-    }
-    
-    if (page?.pixels?.tiktok && typeof window !== "undefined" && window.ttq) {
-      window.ttq.track("CompletePayment", { contents: [{ content_id: page.id, content_name: page.productName, price: conversionValue, quantity: quantity }], value: conversionValue, currency: "DZD" });
+    const currentShipping = orderForm.deliveryType === "home" ? shippingRate.home : shippingRate.desk;
+    const finalAmount = (p.price * quantity) + currentShipping;
+
+    try {
+      const response = await fetch('http://127.0.0.1:5001/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          productId: p.productId || p.id,
+          affiliateId: p.ownerId || "aff-demo-123",
+          customerName: orderForm.name,
+          customerPhone: orderForm.phone,
+          wilaya: orderForm.wilaya,
+          commune: orderForm.commune,
+          address: orderForm.wilaya + " " + orderForm.commune, // Basic address for now
+          quantity: quantity,
+          totalAmount: finalAmount,
+          commissionAmount: 500, // Placeholder
+          shippingFee: currentShipping,
+          stopDesk: orderForm.deliveryType === "desk" ? 1 : 0
+        })
+      });
+
+      if (!response.ok) throw new Error('Failed to create order');
+
+      setOrderSubmitted(true);
+      toast({ title: "✅ تم تسجيل طلبك بنجاح!", description: "سنتواصل معك قريباً لتأكيد الطلب" });
+
+      // Fire Conversion Events if Pixels exist
+      const conversionValue = p.price || 0;
+      
+      if (page?.pixels?.facebook && typeof window !== "undefined" && window.fbq) {
+        window.fbq("track", "Purchase", { value: conversionValue, currency: "DZD" });
+      }
+      
+      if (page?.pixels?.tiktok && typeof window !== "undefined" && window.ttq) {
+        window.ttq.track("CompletePayment", { contents: [{ content_id: page.id, content_name: page.productName, price: conversionValue, quantity: quantity }], value: conversionValue, currency: "DZD" });
+      }
+    } catch (err) {
+      toast({ title: "خطأ", description: "فشل تسجيل الطلب، يرجى المحاولة لاحقاً", variant: "destructive" });
     }
   };
 
@@ -254,21 +333,11 @@ const LandingPageView = () => {
 
   const notificationNames = ["محمد من وهران", "سارة من الجزائر", "أحمد من قسنطينة", "فاطمة من باتنة"];
 
-  const wilayas = [
-    "01 أدرار", "02 الشلف", "03 الأغواط", "04 أم البواقي", "05 باتنة", "06 بجاية", "07 بسكرة",
-    "08 بشار", "09 البليدة", "10 البويرة", "11 تمنراست", "12 تبسة", "13 تلمسان", "14 تيارت",
-    "15 تيزي وزو", "16 الجزائر", "17 الجلفة", "18 جيجل", "19 سطيف", "20 سعيدة",
-    "21 سكيكدة", "22 سيدي بلعباس", "23 عنابة", "24 قالمة", "25 قسنطينة", "26 المدية",
-    "27 مستغانم", "28 المسيلة", "29 معسكر", "30 ورقلة", "31 وهران", "32 البيض",
-    "33 إليزي", "34 برج بوعريريج", "35 بومرداس", "36 الطارف", "37 تندوف", "38 تيسمسيلت",
-    "39 الوادي", "40 خنشلة", "41 سوق أهراس", "42 تيبازة", "43 ميلة", "44 عين الدفلى",
-    "45 النعامة", "46 عين تموشنت", "47 غرداية", "48 غليزان", "49 تيميمون",
-    "50 برج باجي مختار", "51 أولاد جلال", "52 بني عباس", "53 عين صالح",
-    "54 عين قزام", "55 تقرت", "56 جانت", "57 المغير", "58 المنيعة"
-  ];
+  // const wilayas = [ ... removed hardcoded list ... ]
 
   if (p.template === "original") {
-    const totalPrice = p.price * quantity;
+    const currentShipping = orderForm.deliveryType === "home" ? shippingRate.home : shippingRate.desk;
+    const totalPrice = (p.price * quantity) + currentShipping;
     const savings = (p.originalPrice - p.price) * quantity;
 
     return (
@@ -382,11 +451,38 @@ const LandingPageView = () => {
                   <select 
                     className="w-full h-12 rounded-xl border bg-transparent px-3 appearance-none"
                     value={orderForm.wilaya}
-                    onChange={e => setOrderForm(f => ({ ...f, wilaya: e.target.value }))}
+                    onChange={e => setOrderForm(f => ({ ...f, wilaya: e.target.value, commune: "" }))}
                   >
                     <option value="">اختر الولاية</option>
-                    {wilayas.map(w => <option key={w} value={w}>{w}</option>)}
+                    {wilayas.map(w => <option key={w.id} value={w.id}>{w.id} - {w.wilaya_name_ar}</option>)}
                   </select>
+
+                  <select 
+                    className="w-full h-12 rounded-xl border bg-transparent px-3 appearance-none"
+                    value={orderForm.commune}
+                    onChange={e => setOrderForm(f => ({ ...f, commune: e.target.value }))}
+                    disabled={!orderForm.wilaya || loadingDelivery}
+                  >
+                    <option value="">اختر البلدية</option>
+                    {communes.map(c => <option key={c.id} value={c.id}>{c.commune_name_ar}</option>)}
+                  </select>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <button 
+                      type="button"
+                      onClick={() => setOrderForm(f => ({ ...f, deliveryType: "home" }))}
+                      className={`h-12 rounded-xl border flex items-center justify-center gap-2 transition-all ${orderForm.deliveryType === "home" ? "ring-2 ring-primary border-primary bg-primary/5" : "bg-transparent"}`}
+                    >
+                      <Truck className="w-4 h-4" /> بيت
+                    </button>
+                    <button 
+                      type="button"
+                      onClick={() => setOrderForm(f => ({ ...f, deliveryType: "desk" }))}
+                      className={`h-12 rounded-xl border flex items-center justify-center gap-2 transition-all ${orderForm.deliveryType === "desk" ? "ring-2 ring-primary border-primary bg-primary/5" : "bg-transparent"}`}
+                    >
+                      <MapPin className="w-4 h-4" /> مكتب
+                    </button>
+                  </div>
 
                   <div className="flex items-center justify-between p-4 bg-muted rounded-xl">
                     <span className="font-bold">الكمية</span>
@@ -401,9 +497,13 @@ const LandingPageView = () => {
                 <div className="border-t pt-4 space-y-1">
                    <div className="flex justify-between text-sm opacity-70">
                      <span>السعر</span>
-                     <span>{totalPrice.toLocaleString()} دج</span>
+                     <span>{(p.price * quantity).toLocaleString()} دج</span>
                    </div>
-                   <div className="flex justify-between font-bold text-lg">
+                   <div className="flex justify-between text-sm opacity-70">
+                     <span>مصاريف التوصيل ({orderForm.deliveryType === "home" ? "للبيت" : "للمكتب"})</span>
+                     <span>{currentShipping.toLocaleString()} دج</span>
+                   </div>
+                   <div className="flex justify-between font-bold text-lg border-t pt-2 mt-2">
                      <span>المجموع</span>
                      <span style={{ color: p.primaryColor }}>{totalPrice.toLocaleString()} دج</span>
                    </div>

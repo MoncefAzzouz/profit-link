@@ -97,7 +97,60 @@ const SellerDashboard = () => {
   const [filterCategory, setFilterCategory] = useState<string>("all");
 
   // Orders State
-  const [orders, setOrders] = useState(mockSellerOrders);
+  const [orders, setOrders] = useState<any[]>([]);
+  const [loadingOrders, setLoadingOrders] = useState(true);
+
+  // Stats State
+  const [stats, setStats] = useState({
+    totalRevenue: 0,
+    totalOrders: 0,
+    pendingOrders: 0,
+    confirmationRate: 0,
+    activeAffiliates: 0
+  });
+
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        const response = await fetch('http://127.0.0.1:5001/api/orders/all');
+        const res = await response.json();
+        if (response.ok) {
+          const fetchedOrders = res.data.map((o: any) => ({
+            id: o.id,
+            productName: o.product?.name || "منتج محذوف",
+            affiliateName: o.affiliate?.name || "مسوق غير معروف",
+            customerName: o.customerName,
+            wilaya: o.wilaya,
+            status: o.status.toLowerCase(),
+            amount: o.totalAmount,
+            date: new Date(o.createdAt).toLocaleDateString('ar-DZ'),
+            trackingNumber: o.trackingNumber
+          }));
+          setOrders(fetchedOrders);
+
+          // Calculate stats
+          const revenue = fetchedOrders.reduce((acc: number, curr: any) => acc + curr.amount, 0);
+          const pending = fetchedOrders.filter((o: any) => o.status === 'pending').length;
+          const confirmed = fetchedOrders.filter((o: any) => o.status === 'confirmed' || o.status === 'shipped' || o.status === 'delivered').length;
+          const affiliates = new Set(fetchedOrders.map((o: any) => o.affiliateName)).size;
+
+          setStats({
+            totalRevenue: revenue,
+            totalOrders: fetchedOrders.length,
+            pendingOrders: pending,
+            confirmationRate: fetchedOrders.length > 0 ? Math.round((confirmed / fetchedOrders.length) * 100) : 0,
+            activeAffiliates: affiliates
+          });
+        }
+      } catch (err) {
+        console.error("Failed to fetch orders", err);
+      } finally {
+        setLoadingOrders(false);
+      }
+    };
+
+    fetchOrders();
+  }, []);
   const [processingOrderId, setProcessingOrderId] = useState<string | null>(null);
 
   // Withdrawal state
@@ -128,34 +181,40 @@ const SellerDashboard = () => {
     window.open(`https://wa.me/213${order.customerPhone || "000000000"}?text=${encodedText}`, "_blank");
   };
 
-  const handleAndersonShip = async (order: any) => {
+  const handleEcotrackShip = async (order: any) => {
     setProcessingOrderId(order.id);
     try {
-      // Build payload for service
-      const payload = {
-        customerName: order.customerName,
-        phone: order.customerPhone || "000000000",
-        address: order.address || "غير محدد",
-        wilaya: order.wilaya,
-        productName: order.productName,
-        amount: order.amount
-      };
+      const response = await fetch(`http://127.0.0.1:5001/api/orders/${order.id}/push-ecotrack`, {
+        method: 'POST',
+      });
+      const res = await response.json();
       
-      const res = await createAndersonShipment(payload);
-      
-      if (res.success) {
+      if (response.ok) {
         toast({ 
-          title: "تم إرسال الطلب لشركة الشحن", 
-          description: `تم إنشاء الشحنة بنجاح. رقم التتبع: ${res.trackingNumber}` 
+          title: "تم إرسال الطلب لـ Ecotrack", 
+          description: `رقم التتبع: ${res.tracking}` 
         });
-        
-        // Update local status to "shipped"
-        setOrders(orders.map(o => o.id === order.id ? { ...o, status: "shipped" } : o));
+        setOrders(orders.map(o => o.id === order.id ? { ...o, status: "shipped", trackingNumber: res.tracking } : o));
+      } else {
+        throw new Error(res.error || "Failed to push to Ecotrack");
       }
-    } catch (err) {
-      toast({ title: "خطأ في الإرسال", description: "حدث مشكل أثناء التواصل مع خدمة Anderson", variant: "destructive" });
+    } catch (err: any) {
+      toast({ title: "خطأ في الإرسال", description: err.message, variant: "destructive" });
     } finally {
       setProcessingOrderId(null);
+    }
+  };
+
+  const handleViewTracking = async (order: any) => {
+    try {
+      const response = await fetch(`http://127.0.0.1:5001/api/orders/${order.id}/tracking`);
+      const res = await response.json();
+      if (response.ok) {
+        // Here you would typically open a dialog or show the info
+        toast({ title: "حالة التتبع", description: `الحالة الحالية: ${res.data.status || "قيد المعالجة"}` });
+      }
+    } catch (err) {
+      toast({ title: "خطأ", description: "فشل في جلب معلومات التتبع", variant: "destructive" });
     }
   };
 
@@ -343,10 +402,10 @@ const SellerDashboard = () => {
             <div className="space-y-6">
               <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {[
-                  { label: "إجمالي الإيرادات", value: `${mockSellerStats.totalRevenue.toLocaleString()} دج`, icon: Wallet, iconBg: "bg-secondary/10", iconColor: "text-secondary", sub: "↑ 18% عن الشهر الماضي" },
-                  { label: "إجمالي الطلبيات", value: mockSellerStats.totalOrders, icon: ShoppingCart, iconBg: "bg-primary/10", iconColor: "text-primary", sub: `${mockSellerStats.pendingOrders} طلبية معلّقة` },
-                  { label: "المسوّقون النشطون", value: mockSellerStats.activeAffiliates, icon: Users, iconBg: "bg-accent/10", iconColor: "text-accent", sub: "يروّجون لمنتجاتك" },
-                  { label: "نسبة التأكيد", value: `${mockSellerStats.confirmationRate}%`, icon: TrendingUp, iconBg: "bg-secondary/10", iconColor: "text-secondary", sub: "أداء ممتاز" },
+                  { label: "إجمالي الإيرادات", value: `${stats.totalRevenue.toLocaleString()} دج`, icon: Wallet, iconBg: "bg-secondary/10", iconColor: "text-secondary", sub: "مبيعات حقيقية" },
+                  { label: "إجمالي الطلبيات", value: stats.totalOrders, icon: ShoppingCart, iconBg: "bg-primary/10", iconColor: "text-primary", sub: `${stats.pendingOrders} طلبية معلّقة` },
+                  { label: "المسوّقون النشطون", value: stats.activeAffiliates, icon: Users, iconBg: "bg-accent/10", iconColor: "text-accent", sub: "يروّجون لمنتجاتك" },
+                  { label: "نسبة التأكيد", value: `${stats.confirmationRate}%`, icon: TrendingUp, iconBg: "bg-secondary/10", iconColor: "text-secondary", sub: "أداء المبيعات" },
                 ].map((stat, i) => (
                   <motion.div key={i} {...cardAnim(i * 0.08)} className="dash-card-interactive p-6">
                     <div className="flex items-center justify-between">
@@ -392,8 +451,9 @@ const SellerDashboard = () => {
                   </button>
                 </div>
                 <div className="divide-y divide-border">
-                  {mockSellerOrders.slice(0, 4).map((order) => {
-                    const status = statusConfig[order.status];
+                  {orders.slice(0, 5).map((order) => {
+                    const status = statusConfig[order.status as keyof typeof statusConfig];
+                    if (!status) return null;
                     return (
                       <div key={order.id} className="p-4 flex items-center justify-between hover:bg-muted/30 transition-colors">
                         <div className="flex items-center gap-4">
@@ -567,7 +627,7 @@ const SellerDashboard = () => {
           {activeTab === "orders" && (
             <div className="space-y-6">
               <div className="flex items-center justify-between">
-                <p className="text-muted-foreground">{mockSellerOrders.length} طلبيات</p>
+                <p className="text-muted-foreground">{orders.length} طلبيات حقيقية</p>
               </div>
               <div className="dash-card overflow-hidden">
                 <div className="overflow-x-auto">
@@ -603,21 +663,24 @@ const SellerDashboard = () => {
                             <td className="p-4 font-bold text-foreground text-sm">{order.amount.toLocaleString()} دج</td>
                             <td className="p-4 text-muted-foreground text-sm">{order.date}</td>
                             <td className="p-4">
-                              <div className="flex items-center gap-2">
-                                <Button size="sm" variant="outline" className="gap-2 text-green-600 border-green-200 hover:bg-green-50" onClick={() => handleWhatsAppConfirm(order)}>
-                                  <MessageSquare className="w-4 h-4" /> واتساب
-                                </Button>
-                                {(order.status === "pending" || order.status === "confirmed") && (
-                                  <Button size="sm" className="gap-2 bg-indigo-600 hover:bg-indigo-700 text-white" disabled={isProcessing} onClick={() => handleAndersonShip(order)}>
-                                    {isProcessing ? (
-                                      <motion.span animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }} className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full inline-block" />
-                                    ) : (
-                                      <Truck className="w-4 h-4" />
-                                    )}
-                                    {isProcessing ? "جاري الإرسال" : "Anderson"}
+                                <div className="flex items-center gap-2">
+                                  <Button size="sm" variant="outline" className="gap-2 text-green-600 border-green-200 hover:bg-green-50" onClick={() => handleWhatsAppConfirm(order)}>
+                                    <MessageSquare className="w-4 h-4" /> واتساب
                                   </Button>
-                                )}
-                              </div>
+                                  {(order.status === "pending" || order.status === "confirmed") && (
+                                    <>
+                                      <Button size="sm" className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white" disabled={isProcessing} onClick={() => handleEcotrackShip(order)}>
+                                        {isProcessing ? <motion.span animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }} className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full" /> : <Truck className="w-4 h-4" />}
+                                        Ecotrack
+                                      </Button>
+                                    </>
+                                  )}
+                                  {order.trackingNumber && (
+                                    <Button size="sm" variant="ghost" className="gap-2 text-blue-600" onClick={() => handleViewTracking(order)}>
+                                      <Eye className="w-4 h-4" /> تتبع
+                                    </Button>
+                                  )}
+                                </div>
                             </td>
                           </tr>
                         );

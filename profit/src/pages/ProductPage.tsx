@@ -39,7 +39,7 @@ const ProductPage = () => {
           const p = parsed.pixels;
           
           if (p.facebook) {
-            !(function (f:any, b:any, e:any, v:any, n:any, t:any, s:any) {
+            (function (f:any, b:any, e:any, v:any, n?:any, t?:any, s?:any) {
               if (f.fbq) return;
               n = f.fbq = function () { n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments); };
               if (!f._fbq) f._fbq = n;
@@ -54,7 +54,7 @@ const ProductPage = () => {
           }
 
           if (p.tiktok) {
-            !(function (w:any, d:any, t:any) {
+            (function (w:any, d:any, t:any) {
               w.TiktokAnalyticsObject = t;
               var ttq = (w[t] = w[t] || []);
               ttq.methods = ["page", "track", "identify", "instances", "debug", "on", "off", "once", "ready", "alias", "group", "enableCookie", "disableCookie"];
@@ -66,12 +66,13 @@ const ProductPage = () => {
                 for (var e = ttq._i[t] || [], n = 0; n < ttq.methods.length; n++) ttq.setAndDefer(e, ttq.methods[n]);
                 return e;
               };
-              ttq.load = function (e:any, n:any) {
+              ttq.load = function (e:any, n?:any) {
                 var i = "https://analytics.tiktok.com/i18n/pixel/events.js";
                 ttq._i = ttq._i || {}; ttq._i[e] = []; ttq._i[e]._u = i; ttq._t = ttq._t || {}; ttq._t[e] = +new Date();
                 ttq._o = ttq._o || {}; ttq._o[e] = n || {};
                 n = document.createElement("script"); n.type = "text/javascript"; n.async = !0; n.src = i + "?sdkid=" + e + "&lib=" + t;
-                e = document.getElementsByTagName("script")[0]; e.parentNode.insertBefore(n, e);
+                var s: any = document.getElementsByTagName("script")[0];
+                s.parentNode.insertBefore(n, s);
               };
               ttq.load(p.tiktok);
               ttq.page();
@@ -107,28 +108,55 @@ const ProductPage = () => {
     }
 
     setIsSubmitting(true);
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    setIsSubmitting(false);
-    setOrderSuccess(true);
-    
-    // Fire pixels
-    const conversionValue = product.price * quantity;
-    if (pixels?.facebook && typeof window !== "undefined" && (window as any).fbq) {
-      (window as any).fbq("track", "Purchase", { value: conversionValue, currency: "DZD" });
-    }
-    if (pixels?.tiktok && typeof window !== "undefined" && (window as any).ttq) {
-      (window as any).ttq.track("CompletePayment", { 
-        contents: [{ content_id: product.id, content_name: product.name, price: conversionValue, quantity: quantity }], 
-        value: conversionValue, 
-        currency: "DZD" 
+    try {
+      const response = await fetch('http://127.0.0.1:5001/api/orders', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          productId: productId,
+          affiliateId: affiliateId,
+          customerName: formData.name,
+          customerPhone: formData.phone,
+          wilaya: formData.wilaya,
+          address: formData.address,
+          quantity: quantity,
+          totalAmount: product.price * quantity,
+          commissionAmount: product.commission * quantity
+        })
       });
-    }
 
-    toast({
-      title: "تم إرسال الطلب بنجاح! ✅",
-      description: "سنتصل بك قريباً لتأكيد الطلب"
-    });
+      if (!response.ok) throw new Error('Order submission failed');
+
+      setOrderSuccess(true);
+      
+      // Fire pixels
+      const conversionValue = product.price * quantity;
+      if (pixels?.facebook && typeof window !== "undefined" && (window as any).fbq) {
+        (window as any).fbq("track", "Purchase", { value: conversionValue, currency: "DZD" });
+      }
+      if (pixels?.tiktok && typeof window !== "undefined" && (window as any).ttq) {
+        (window as any).ttq.track("CompletePayment", { 
+          contents: [{ content_id: product.id, content_name: product.name, price: conversionValue, quantity: quantity }], 
+          value: conversionValue, 
+          currency: "DZD" 
+        });
+      }
+
+      toast({
+        title: "تم إرسال الطلب بنجاح! ✅",
+        description: "سنتصل بك قريباً لتأكيد الطلب"
+      });
+    } catch (error) {
+      toast({
+        title: "خطأ",
+        description: "فشل إرسال الطلب. يرجى المحاولة مرة أخرى",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const totalPrice = product.price * quantity;
