@@ -261,89 +261,56 @@ const LandingPageBuilder = () => {
 
   const handleSimulatedAiGeneration = async () => {
     if (!editingPage) return;
+    if (!uploadedAiImage) return;
+
     setIsAiGenerating(true);
-    
-    // Step 1
+
+    // UI Loading simulation for user experience while model thinks
     setAiProgressStep(1);
-    await new Promise(r => setTimeout(r, 1500));
-    
-    // Step 2
-    setAiProgressStep(2);
-    await new Promise(r => setTimeout(r, 1500));
-    
-    // Step 3
-    setAiProgressStep(3);
-    await new Promise(r => setTimeout(r, 1500));
-    
-    const isShoe = aiContextInput.toLowerCase().includes("حذاء") || aiContextInput.toLowerCase().includes("shoe") || aiContextInput.toLowerCase().includes("sneaker");
-    const isPerfume = aiContextInput.toLowerCase().includes("عطر") || aiContextInput.toLowerCase().includes("perfume") || aiContextInput.toLowerCase().includes("fragrance");
-    const isCosmetic = aiContextInput.toLowerCase().includes("تجميل") || aiContextInput.toLowerCase().includes("مكياج") || aiContextInput.toLowerCase().includes("makeup") || aiContextInput.toLowerCase().includes("كريم");
 
-    let dynamicTitle = "منتجك السحري المفضل";
-    let dynamicSubtitle = "تصميم خيالي يجمع بين الجودة العالية والسعر التنافسي، اكتشف الفرق بنفسك.";
-    let dynamicCategory = "منتجات متنوعة";
-    let dynamicFeatures = ["جودة ممتازة مضمونة", "توصيل سريع معتمد", "دفع عند الاستلام لمزيد من الأمان", "أفضل خيار لك ولعائلتك"];
-    let dynamicPrice = 2500;
-    
-    if (isShoe) {
-      dynamicTitle = "حذاء المشي المريح والأنيق";
-      dynamicSubtitle = "راحة لا مثيل لها لقدميك. تصميم عصري يناسب كل إطلالاتك اليومية والرياضية.";
-      dynamicCategory = "أحذية";
-      dynamicFeatures = ["نعل طبي مريح جداً", "قماش يسمح بمرور الهواء", "تصميم خفيف الوزن", "مقاوم للانزلاق"];
-      dynamicPrice = 4900;
-    } else if (isPerfume) {
-      dynamicTitle = "عطر الفخامة والجاذبية";
-      dynamicSubtitle = "رائحة تدوم طويلاً، تترك أثراً لا يُنسى أينما ذهبت.";
-      dynamicCategory = "عطور";
-      dynamicFeatures = ["تركيز عالي يدوم 48 ساعة", "مكونات فرنسية أصلية", "زجاجة فاخرة للهدايا", "رائحة مميزة وجذابة"];
-      dynamicPrice = 3800;
-    } else if (isCosmetic) {
-      dynamicTitle = "سر جمالك الطبيعي";
-      dynamicSubtitle = "مكونات طبيعية تمنحك إشراقة ونضارة لا مثيل لها من الاستعمال الأول.";
-      dynamicCategory = "صحة وجمال";
-      dynamicFeatures = ["مكونات طبيعية 100%", "مرخص طبياً وآمن", "نتائج سريعة ومضمونة", "يغذي ويرطب بعمق"];
-      dynamicPrice = 2900;
-    } else if (aiContextInput.trim() !== "") {
-      // General dynamic generation mapping directly to context
-      dynamicTitle = `اكتشف الـ ${aiContextInput.split(' ').slice(0, 3).join(' ')} المميز`;
-      dynamicSubtitle = `إليك الحل الأمثل لاحتياجاتك بخاصية فريدة وأداء ممتاز. لا تفوت هذه الفرصة.`;
-    } else {
-       // Watch default if no input
-       dynamicTitle = "أناقة لا متناهية في معصمك";
-       dynamicSubtitle = "تحكم بصحتك ووقتك مع أحدث تقنيات الساعات الذكية بتصميم فخم وميزات لا حصر لها";
-       dynamicCategory = "أكسسوارات ذكية";
-       dynamicFeatures = ["شاشة ريتينا مقاومة للخدش", "قياس دقيق لنبضات القلب والمشي", "مقاومة للماء بمعيار IP68", "بطارية تدوم حتى 7 أيام"];
-       dynamicPrice = 6500;
+    try {
+      // Step 2: Hitting our custom Gemini Route
+      setAiProgressStep(2);
+
+      const response = await fetch('http://127.0.0.1:5001/api/store/generate-ai', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          imageBase64: uploadedAiImage,
+          contextText: aiContextInput
+        })
+      });
+
+      if (!response.ok) throw new Error('AI Vision failed');
+
+      const { config } = await response.json();
+
+      setAiProgressStep(3);
+
+      // Injecting the AI output directly into the LandingPage template
+      const aiGeneratedPage: LandingPageConfig = {
+        ...editingPage,
+        ...config,
+        heroImage: uploadedAiImage, // Keep the uploaded image!
+        sections: ["hero", "urgency-bar", "features", "gallery", "social-proof", "trust-badges", "cta"]
+      };
+
+      setEditingPage(aiGeneratedPage);
+      const newPages = pages.map(p => p.id === aiGeneratedPage.id ? aiGeneratedPage : p);
+      savePages(newPages);
+
+      setIsAiGenerating(false);
+      setAiProgressStep(0);
+      setUploadedAiImage(null);
+      setActiveDesignTab("content");
+      toast({ title: "✨ سحر الـ AI مكتمل!", description: "تم بناء صفحتك باستخدام Gemini بنجاح." });
+
+    } catch (error) {
+      console.error(error);
+      setIsAiGenerating(false);
+      setAiProgressStep(0);
+      toast({ title: "خطأ", description: "فشلت عملية الذكاء الاصطناعي", variant: "destructive" });
     }
-
-    // Finish
-    const aiGeneratedPage: LandingPageConfig = {
-      ...editingPage,
-      productName: isShoe ? "حذاء رياضي متطور" : isPerfume ? "عطر فاخر" : isCosmetic ? "سيروم تفتيح البشرة" : "ساعة ذكية VIP",
-      template: "luxury",
-      heroTitle: dynamicTitle,
-      heroSubtitle: dynamicSubtitle,
-      heroImage: uploadedAiImage || "https://images.unsplash.com/photo-1546868871-7041f2a55e12?w=800&q=80",
-      primaryColor: "#a855f7",
-      backgroundColor: "#020617",
-      textColor: "#f8fafc",
-      price: dynamicPrice,
-      originalPrice: dynamicPrice * 2,
-      category: dynamicCategory,
-      features: dynamicFeatures,
-      urgencyText: "تبقى 3 قطع فقط بالسعر الترويجي!",
-      sections: ["hero", "urgency-bar", "video", "features", "gallery", "social-proof", "trust-badges", "cta"]
-    };
-    
-    setEditingPage(aiGeneratedPage);
-    const newPages = pages.map(p => p.id === aiGeneratedPage.id ? aiGeneratedPage : p);
-    savePages(newPages);
-    
-    setIsAiGenerating(false);
-    setAiProgressStep(0);
-    setUploadedAiImage(null);
-    setActiveDesignTab("content");
-    toast({ title: "✨ سحر الـ AI مكتمل!", description: "تم بناء صفحتك الجذابة بنجاح." });
   };
 
   const createNewPage = () => {
@@ -415,110 +382,110 @@ const LandingPageBuilder = () => {
     const discountPercent = Math.round((1 - editingPage.price / editingPage.originalPrice) * 100);
     const shadowMap = { none: "", sm: "shadow-sm", md: "shadow-md", lg: "shadow-lg", xl: "shadow-xl" };
 
-      const renderPreview = (isMobile: boolean) => {
-        const p = editingPage;
-        const tc = textColor(p.backgroundColor);
-        const stc = subTextColor(p.backgroundColor);
-        const br = `${p.borderRadius}px`;
+    const renderPreview = (isMobile: boolean) => {
+      const p = editingPage;
+      const tc = textColor(p.backgroundColor);
+      const stc = subTextColor(p.backgroundColor);
+      const br = `${p.borderRadius}px`;
 
-        if (p.template === "original") {
-          const totalPrice = p.price; // Simplified for preview
-          return (
-            <div className="h-full overflow-y-auto scrollbar-hide flex flex-col" style={{ backgroundColor: p.backgroundColor, fontFamily: p.fontFamily, color: tc }}>
-              {/* Header */}
-              <div className="sticky top-0 z-10 flex items-center justify-between px-4 py-3 border-b backdrop-blur-md" style={{ backgroundColor: `${p.backgroundColor}90`, borderColor: isDark(p.backgroundColor) ? "#334155" : "#e2e8f0" }}>
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg flex items-center justify-center shadow-lg" style={{ backgroundColor: p.primaryColor }}>
-                    <ShoppingCart className="w-4 h-4 text-white" />
-                  </div>
-                  <span className="text-[10px] font-bold truncate max-w-[100px]">{p.productName}</span>
+      if (p.template === "original") {
+        const totalPrice = p.price; // Simplified for preview
+        return (
+          <div className="h-full overflow-y-auto scrollbar-hide flex flex-col" style={{ backgroundColor: p.backgroundColor, fontFamily: p.fontFamily, color: tc }}>
+            {/* Header */}
+            <div className="sticky top-0 z-10 flex items-center justify-between px-4 py-3 border-b backdrop-blur-md" style={{ backgroundColor: `${p.backgroundColor}90`, borderColor: isDark(p.backgroundColor) ? "#334155" : "#e2e8f0" }}>
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center shadow-lg" style={{ backgroundColor: p.primaryColor }}>
+                  <ShoppingCart className="w-4 h-4 text-white" />
                 </div>
-                <button className="text-[9px] font-bold px-4 py-1.5 rounded-full text-white shadow-lg" style={{ backgroundColor: p.primaryColor }}>
-                  اطلب الآن
-                </button>
+                <span className="text-[10px] font-bold truncate max-w-[100px]">{p.productName}</span>
               </div>
+              <button className="text-[9px] font-bold px-4 py-1.5 rounded-full text-white shadow-lg" style={{ backgroundColor: p.primaryColor }}>
+                اطلب الآن
+              </button>
+            </div>
 
-              <div className="p-4 space-y-6">
-                <div className={`${!isMobile ? "grid grid-cols-2 gap-6 items-start" : "space-y-6"}`}>
-                  {/* Left Side: Media & Features */}
-                  <div className="space-y-4">
-                    <div className={`relative aspect-square overflow-hidden bg-muted ${shadowMap[p.shadowIntensity]}`} style={{ borderRadius: br }}>
-                      {p.heroImage ? (
-                        <img src={p.heroImage} alt="" className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground gap-1">
-                          <Image className="w-8 h-8 opacity-20" />
-                          <span className="text-[8px]">صورة المنتج</span>
-                        </div>
-                      )}
-                      {discountPercent > 0 && (
-                        <div className="absolute top-2 left-2 bg-red-500 text-white px-2 py-1 rounded-full text-[8px] font-black shadow-lg">
-                          خصم {discountPercent}%
-                        </div>
-                      )}
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-2">
-                      {p.features.slice(0, 4).map((f, i) => (
-                        <div key={i} className="flex items-center gap-1.5 p-2 bg-muted/30 border border-border/50 rounded-lg">
-                          <Check className="w-3 h-3 shrink-0" style={{ color: p.primaryColor }} />
-                          <span className="text-[8px] font-medium truncate">{f}</span>
+            <div className="p-4 space-y-6">
+              <div className={`${!isMobile ? "grid grid-cols-2 gap-6 items-start" : "space-y-6"}`}>
+                {/* Left Side: Media & Features */}
+                <div className="space-y-4">
+                  <div className={`relative aspect-square overflow-hidden bg-muted ${shadowMap[p.shadowIntensity]}`} style={{ borderRadius: br }}>
+                    {p.heroImage ? (
+                      <img src={p.heroImage} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground gap-1">
+                        <Image className="w-8 h-8 opacity-20" />
+                        <span className="text-[8px]">صورة المنتج</span>
+                      </div>
+                    )}
+                    {discountPercent > 0 && (
+                      <div className="absolute top-2 left-2 bg-red-500 text-white px-2 py-1 rounded-full text-[8px] font-black shadow-lg">
+                        خصم {discountPercent}%
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    {p.features.slice(0, 4).map((f, i) => (
+                      <div key={i} className="flex items-center gap-1.5 p-2 bg-muted/30 border border-border/50 rounded-lg">
+                        <Check className="w-3 h-3 shrink-0" style={{ color: p.primaryColor }} />
+                        <span className="text-[8px] font-medium truncate">{f}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Right Side: Info & Form */}
+                <div className="space-y-4">
+                  <div dir="rtl">
+                    <span className="text-[8px] font-bold uppercase tracking-widest" style={{ color: p.primaryColor }}>{p.category}</span>
+                    <h1 className="text-lg font-black mt-1 leading-tight">{p.productName}</h1>
+                    <p className="text-[10px] mt-2 leading-relaxed" style={{ color: stc }}>{p.heroSubtitle}</p>
+                  </div>
+
+                  <div className="p-4 rounded-xl border flex items-center gap-3" style={{ backgroundColor: `${p.primaryColor}08`, borderColor: `${p.primaryColor}20` }}>
+                    <span className="text-2xl font-black" style={{ color: p.primaryColor }}>{p.price.toLocaleString()} دج</span>
+                    {p.originalPrice > p.price && (
+                      <span className="text-xs line-through opacity-50">{p.originalPrice.toLocaleString()} دج</span>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    {[
+                      { icon: Truck, t: "توصيل مجاني" },
+                      { icon: Shield, t: "ضمان الجودة" },
+                    ].map((b, i) => (
+                      <div key={i} className="flex items-center gap-2 p-2 bg-card border border-border/50 rounded-xl">
+                        <b.icon className="w-5 h-5 shrink-0" style={{ color: p.primaryColor }} />
+                        <span className="text-[8px] font-bold">{b.t}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="bg-card border rounded-xl p-4 shadow-lg space-y-3" dir="rtl">
+                    <h3 className="text-[10px] font-bold flex items-center gap-2">
+                      <ShoppingCart className="w-3 h-3" style={{ color: p.primaryColor }} /> اطلب الآن
+                    </h3>
+                    <div className="space-y-2">
+                      {["الاسم الكامل", "رقم الهاتف", "الولاية"].map((ph, i) => (
+                        <div key={i} className="h-8 rounded-lg border px-3 flex items-center text-[9px]" style={{ borderColor: isDark(p.backgroundColor) ? "#334155" : "#e2e8f0", color: stc }}>
+                          {ph}
                         </div>
                       ))}
                     </div>
-                  </div>
-
-                  {/* Right Side: Info & Form */}
-                  <div className="space-y-4">
-                    <div dir="rtl">
-                      <span className="text-[8px] font-bold uppercase tracking-widest" style={{ color: p.primaryColor }}>{p.category}</span>
-                      <h1 className="text-lg font-black mt-1 leading-tight">{p.productName}</h1>
-                      <p className="text-[10px] mt-2 leading-relaxed" style={{ color: stc }}>{p.heroSubtitle}</p>
-                    </div>
-
-                    <div className="p-4 rounded-xl border flex items-center gap-3" style={{ backgroundColor: `${p.primaryColor}08`, borderColor: `${p.primaryColor}20` }}>
-                      <span className="text-2xl font-black" style={{ color: p.primaryColor }}>{p.price.toLocaleString()} دج</span>
-                      {p.originalPrice > p.price && (
-                        <span className="text-xs line-through opacity-50">{p.originalPrice.toLocaleString()} دج</span>
-                      )}
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-2">
-                       {[
-                         { icon: Truck, t: "توصيل مجاني" },
-                         { icon: Shield, t: "ضمان الجودة" },
-                       ].map((b, i) => (
-                         <div key={i} className="flex items-center gap-2 p-2 bg-card border border-border/50 rounded-xl">
-                           <b.icon className="w-5 h-5 shrink-0" style={{ color: p.primaryColor }} />
-                           <span className="text-[8px] font-bold">{b.t}</span>
-                         </div>
-                       ))}
-                    </div>
-
-                    <div className="bg-card border rounded-xl p-4 shadow-lg space-y-3" dir="rtl">
-                      <h3 className="text-[10px] font-bold flex items-center gap-2">
-                        <ShoppingCart className="w-3 h-3" style={{ color: p.primaryColor }} /> اطلب الآن
-                      </h3>
-                      <div className="space-y-2">
-                        {["الاسم الكامل", "رقم الهاتف", "الولاية"].map((ph, i) => (
-                          <div key={i} className="h-8 rounded-lg border px-3 flex items-center text-[9px]" style={{ borderColor: isDark(p.backgroundColor) ? "#334155" : "#e2e8f0", color: stc }}>
-                            {ph}
-                          </div>
-                        ))}
-                      </div>
-                      <button className="w-full py-2.5 text-[10px] font-black text-white rounded-lg shadow-lg" style={{ backgroundColor: p.primaryColor }}>
-                        تأكيد الطلب
-                      </button>
-                    </div>
+                    <button className="w-full py-2.5 text-[10px] font-black text-white rounded-lg shadow-lg" style={{ backgroundColor: p.primaryColor }}>
+                      تأكيد الطلب
+                    </button>
                   </div>
                 </div>
               </div>
             </div>
-          );
-        }
+          </div>
+        );
+      }
 
-        return (
-          <div className="h-full overflow-y-auto scrollbar-hide" style={{ backgroundColor: p.backgroundColor, fontFamily: p.fontFamily, color: tc }}>
+      return (
+        <div className="h-full overflow-y-auto scrollbar-hide" style={{ backgroundColor: p.backgroundColor, fontFamily: p.fontFamily, color: tc }}>
           {/* Urgency Bar */}
           {p.sections.includes("urgency-bar") && (
             <div className="py-2.5 px-4 text-center text-xs font-bold text-white" style={{ backgroundColor: p.primaryColor }}>
@@ -789,9 +756,8 @@ const LandingPageBuilder = () => {
                   ))}
                 </div>
                 <button
-                  className={`w-full py-3.5 text-sm font-black text-white shadow-xl transition-transform hover:scale-[1.02] ${
-                    p.ctaAnimation === "pulse" ? "animate-pulse" : ""
-                  } ${p.ctaStyle === "pill" ? "rounded-full" : p.ctaStyle === "rounded" ? "rounded-xl" : "rounded-none"}`}
+                  className={`w-full py-3.5 text-sm font-black text-white shadow-xl transition-transform hover:scale-[1.02] ${p.ctaAnimation === "pulse" ? "animate-pulse" : ""
+                    } ${p.ctaStyle === "pill" ? "rounded-full" : p.ctaStyle === "rounded" ? "rounded-xl" : "rounded-none"}`}
                   style={{ backgroundColor: p.primaryColor }}
                 >
                   {p.ctaText} — {p.price.toLocaleString()} دج
@@ -857,9 +823,8 @@ const LandingPageBuilder = () => {
         <div className="flex flex-1 overflow-hidden">
           {/* Live Preview */}
           <div className="hidden lg:flex flex-1 bg-muted/30 items-center justify-center p-6 overflow-y-auto">
-            <div className={`bg-background shadow-2xl rounded-2xl overflow-hidden transition-all duration-500 origin-center ${
-              previewDevice === "mobile" ? "w-[375px] h-[700px]" : "w-full max-w-4xl h-full"
-            }`}>
+            <div className={`bg-background shadow-2xl rounded-2xl overflow-hidden transition-all duration-500 origin-center ${previewDevice === "mobile" ? "w-[375px] h-[700px]" : "w-full max-w-4xl h-full"
+              }`}>
               {renderPreview(previewDevice === "mobile")}
             </div>
           </div>
@@ -880,9 +845,8 @@ const LandingPageBuilder = () => {
                   <button
                     key={tab.id}
                     onClick={() => setActiveDesignTab(tab.id)}
-                    className={`flex-1 flex items-center justify-center gap-1 py-2 rounded-lg text-[10px] font-medium transition-all ${
-                      activeDesignTab === tab.id ? "bg-card shadow-sm text-primary" : "text-muted-foreground hover:text-foreground"
-                    }`}
+                    className={`flex-1 flex items-center justify-center gap-1 py-2 rounded-lg text-[10px] font-medium transition-all ${activeDesignTab === tab.id ? "bg-card shadow-sm text-primary" : "text-muted-foreground hover:text-foreground"
+                      }`}
                   >
                     <tab.icon className="w-3 h-3" />
                     <span className="hidden sm:inline">{tab.label}</span>
@@ -909,7 +873,7 @@ const LandingPageBuilder = () => {
                     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
                       <div className="space-y-3">
                         <Label className="text-sm font-bold">1. سياق المنتج (اختياري)</Label>
-                        <Textarea 
+                        <Textarea
                           value={aiContextInput}
                           onChange={(e) => setAiContextInput(e.target.value)}
                           placeholder="مثال: ساعة ذكية مقاومة للماء للرياضيين بسعر تنافسي..."
@@ -924,8 +888,13 @@ const LandingPageBuilder = () => {
                           input.type = 'file';
                           input.accept = 'image/*';
                           input.onchange = (e: any) => {
-                            if (e.target.files?.[0]) {
-                              setUploadedAiImage(URL.createObjectURL(e.target.files[0]));
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              const reader = new FileReader();
+                              reader.onloadend = () => {
+                                setUploadedAiImage(reader.result as string);
+                              };
+                              reader.readAsDataURL(file);
                             }
                           };
                           input.click();
@@ -941,42 +910,41 @@ const LandingPageBuilder = () => {
                         </div>
                       </div>
 
-                      <Button 
-                        onClick={handleSimulatedAiGeneration} 
+                      <Button
+                        onClick={handleSimulatedAiGeneration}
                         disabled={!uploadedAiImage}
-                        className={`w-full h-14 rounded-2xl text-base font-bold shadow-xl transition-all ${
-                          uploadedAiImage ? "bg-gradient-to-l from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 hover:scale-[1.02] active:scale-[0.98]" : "bg-muted text-muted-foreground cursor-not-allowed"
-                        }`}
+                        className={`w-full h-14 rounded-2xl text-base font-bold shadow-xl transition-all ${uploadedAiImage ? "bg-gradient-to-l from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 hover:scale-[1.02] active:scale-[0.98]" : "bg-muted text-muted-foreground cursor-not-allowed"
+                          }`}
                       >
                         <Zap className="w-5 h-5 ml-2" />
-                        توليد الصفحة السحرية
+                        توليد الصفحة
                       </Button>
                     </motion.div>
                   )}
 
                   {isAiGenerating && (
                     <div className="flex flex-col items-center justify-center py-12 space-y-8">
-                       <div className="relative w-32 h-32 flex items-center justify-center">
-                          <motion.div 
-                            animate={{ rotate: 360 }}
-                            transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-                            className="absolute inset-0 rounded-full border-[3px] border-dashed border-primary/30"
-                          />
-                          <motion.div 
-                            animate={{ rotate: -360 }}
-                            transition={{ duration: 12, repeat: Infinity, ease: "linear" }}
-                            className="absolute inset-4 rounded-full border-[3px] border-dotted border-purple-500/50"
-                          />
-                          <motion.div 
-                            animate={{ scale: [0.9, 1.1, 0.9] }}
-                            transition={{ duration: 2, repeat: Infinity }}
-                            className="w-16 h-16 bg-gradient-to-br from-primary to-purple-600 rounded-full flex items-center justify-center shadow-[0_0_30px_rgba(168,85,247,0.5)]"
-                          >
-                            <Sparkles className="w-8 h-8 text-white" />
-                          </motion.div>
-                       </div>
+                      <div className="relative w-32 h-32 flex items-center justify-center">
+                        <motion.div
+                          animate={{ rotate: 360 }}
+                          transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+                          className="absolute inset-0 rounded-full border-[3px] border-dashed border-primary/30"
+                        />
+                        <motion.div
+                          animate={{ rotate: -360 }}
+                          transition={{ duration: 12, repeat: Infinity, ease: "linear" }}
+                          className="absolute inset-4 rounded-full border-[3px] border-dotted border-purple-500/50"
+                        />
+                        <motion.div
+                          animate={{ scale: [0.9, 1.1, 0.9] }}
+                          transition={{ duration: 2, repeat: Infinity }}
+                          className="w-16 h-16 bg-gradient-to-br from-primary to-purple-600 rounded-full flex items-center justify-center shadow-[0_0_30px_rgba(168,85,247,0.5)]"
+                        >
+                          <Sparkles className="w-8 h-8 text-white" />
+                        </motion.div>
+                      </div>
 
-                       <div className="space-y-4 w-full px-6">
+                      <div className="space-y-4 w-full px-6">
                         <div className="flex items-center gap-3">
                           <Check className={`w-5 h-5 transition-colors ${aiProgressStep > 0 ? "text-primary" : "text-muted/30"}`} />
                           <p className={`font-bold transition-all ${aiProgressStep === 1 ? "text-foreground text-lg scale-105" : aiProgressStep > 1 ? "text-muted-foreground" : "text-muted"}`}>
@@ -995,7 +963,7 @@ const LandingPageBuilder = () => {
                             جاري بناء واجهة المتجر وتنسيق الألوان...
                           </p>
                         </div>
-                       </div>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -1159,9 +1127,8 @@ const LandingPageBuilder = () => {
                       <button
                         key={tmpl.id}
                         onClick={() => updatePage("template", tmpl.id)}
-                        className={`relative p-2.5 rounded-xl border-2 transition-all text-center space-y-1 ${
-                          editingPage.template === tmpl.id ? "border-primary bg-primary/5 shadow-md" : "border-border/50 hover:border-border hover:shadow-sm"
-                        }`}
+                        className={`relative p-2.5 rounded-xl border-2 transition-all text-center space-y-1 ${editingPage.template === tmpl.id ? "border-primary bg-primary/5 shadow-md" : "border-border/50 hover:border-border hover:shadow-sm"
+                          }`}
                       >
                         {tmpl.tag && (
                           <span className="absolute -top-1.5 right-2 text-[8px] font-bold px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground">
@@ -1240,9 +1207,8 @@ const LandingPageBuilder = () => {
                     <div className="flex gap-2">
                       {(["pill", "rounded", "square"] as const).map(style => (
                         <button key={style} onClick={() => updatePage("ctaStyle", style)}
-                          className={`flex-1 py-2 text-[10px] font-bold border-2 transition-all ${
-                            editingPage.ctaStyle === style ? "border-primary bg-primary/5 text-primary" : "border-border text-muted-foreground"
-                          } ${style === "pill" ? "rounded-full" : style === "rounded" ? "rounded-lg" : "rounded-none"}`}>
+                          className={`flex-1 py-2 text-[10px] font-bold border-2 transition-all ${editingPage.ctaStyle === style ? "border-primary bg-primary/5 text-primary" : "border-border text-muted-foreground"
+                            } ${style === "pill" ? "rounded-full" : style === "rounded" ? "rounded-lg" : "rounded-none"}`}>
                           {style === "pill" ? "دائري" : style === "rounded" ? "مستدير" : "مربع"}
                         </button>
                       ))}
@@ -1292,9 +1258,8 @@ const LandingPageBuilder = () => {
                         key={section.id}
                         onClick={() => toggleSection(section.id)}
                         disabled={section.required}
-                        className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-all text-right ${
-                          isActive ? "border-primary bg-primary/5" : "border-border/50 hover:border-border"
-                        } ${section.required ? "opacity-60 cursor-not-allowed" : ""}`}
+                        className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-all text-right ${isActive ? "border-primary bg-primary/5" : "border-border/50 hover:border-border"
+                          } ${section.required ? "opacity-60 cursor-not-allowed" : ""}`}
                       >
                         <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${isActive ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}>
                           <section.icon className="w-4 h-4" />
@@ -1312,74 +1277,74 @@ const LandingPageBuilder = () => {
                 </div>
               )}
 
-            {/* ===== ADVANCED TAB ===== */}
-            {activeDesignTab === "advanced" && (
-              <div className="space-y-5">
-                <div className="space-y-3">
-                  <h3 className="text-xs font-bold flex items-center gap-2"><Zap className="w-3.5 h-3.5 text-primary" /> خيارات متقدمة</h3>
+              {/* ===== ADVANCED TAB ===== */}
+              {activeDesignTab === "advanced" && (
+                <div className="space-y-5">
+                  <div className="space-y-3">
+                    <h3 className="text-xs font-bold flex items-center gap-2"><Zap className="w-3.5 h-3.5 text-primary" /> خيارات متقدمة</h3>
 
-                  <div className="flex items-center justify-between p-3 border border-border rounded-xl">
-                    <div>
-                      <p className="text-xs font-bold">شريط شراء ثابت</p>
-                      <p className="text-[9px] text-muted-foreground">يظهر عند التمرير للأسفل</p>
+                    <div className="flex items-center justify-between p-3 border border-border rounded-xl">
+                      <div>
+                        <p className="text-xs font-bold">شريط شراء ثابت</p>
+                        <p className="text-[9px] text-muted-foreground">يظهر عند التمرير للأسفل</p>
+                      </div>
+                      <Switch checked={editingPage.showStickyBar} onCheckedChange={(v) => updatePage("showStickyBar", v)} />
                     </div>
-                    <Switch checked={editingPage.showStickyBar} onCheckedChange={(v) => updatePage("showStickyBar", v)} />
+
+                    <div className="flex items-center justify-between p-3 border border-border rounded-xl">
+                      <div>
+                        <p className="text-xs font-bold">زر شراء عائم</p>
+                        <p className="text-[9px] text-muted-foreground">زر ثابت في أسفل الشاشة</p>
+                      </div>
+                      <Switch checked={editingPage.showFloatingCta} onCheckedChange={(v) => updatePage("showFloatingCta", v)} />
+                    </div>
+
+                    <div className="flex items-center justify-between p-3 border border-border rounded-xl">
+                      <div>
+                        <p className="text-xs font-bold">إشعارات شراء وهمية</p>
+                        <p className="text-[9px] text-muted-foreground">تظهر عشوائياً لزيادة الثقة</p>
+                      </div>
+                      <Switch checked={editingPage.showSocialProofPopup} onCheckedChange={(v) => updatePage("showSocialProofPopup", v)} />
+                    </div>
                   </div>
 
-                  <div className="flex items-center justify-between p-3 border border-border rounded-xl">
-                    <div>
-                      <p className="text-xs font-bold">زر شراء عائم</p>
-                      <p className="text-[9px] text-muted-foreground">زر ثابت في أسفل الشاشة</p>
+                  <div className="space-y-3 pt-3 border-t">
+                    <h3 className="text-xs font-bold flex items-center gap-2"><LayoutTemplate className="w-3.5 h-3.5 text-primary" /> التتبع والبيكسل (Tracking)</h3>
+
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-bold">Facebook Pixel ID</Label>
+                      <Input
+                        value={editingPage.pixels?.facebook || ""}
+                        onChange={(e) => updatePage("pixels", { ...editingPage.pixels, facebook: e.target.value })}
+                        placeholder="123456789012345"
+                        className="rounded-xl h-8 text-xs font-mono bg-muted/30"
+                        dir="ltr"
+                      />
                     </div>
-                    <Switch checked={editingPage.showFloatingCta} onCheckedChange={(v) => updatePage("showFloatingCta", v)} />
+
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-bold">TikTok Pixel ID</Label>
+                      <Input
+                        value={editingPage.pixels?.tiktok || ""}
+                        onChange={(e) => updatePage("pixels", { ...editingPage.pixels, tiktok: e.target.value })}
+                        placeholder="CDG123456789ABCDEF"
+                        className="rounded-xl h-8 text-xs font-mono bg-muted/30"
+                        dir="ltr"
+                      />
+                    </div>
                   </div>
 
-                  <div className="flex items-center justify-between p-3 border border-border rounded-xl">
-                    <div>
-                      <p className="text-xs font-bold">إشعارات شراء وهمية</p>
-                      <p className="text-[9px] text-muted-foreground">تظهر عشوائياً لزيادة الثقة</p>
-                    </div>
-                    <Switch checked={editingPage.showSocialProofPopup} onCheckedChange={(v) => updatePage("showSocialProofPopup", v)} />
+                  <div className="space-y-2 pt-3 border-t">
+                    <Label className="text-xs font-bold opacity-70">رابط الفيديو (YouTube/Vimeo)</Label>
+                    <Input value={editingPage.videoUrl} onChange={(e) => updatePage("videoUrl", e.target.value)} placeholder="https://youtube.com/watch?v=..." className="rounded-xl h-9 text-xs" dir="ltr" />
                   </div>
-                </div>
 
-                <div className="space-y-3 pt-3 border-t">
-                  <h3 className="text-xs font-bold flex items-center gap-2"><LayoutTemplate className="w-3.5 h-3.5 text-primary" /> التتبع والبيكسل (Tracking)</h3>
-                  
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-bold">Facebook Pixel ID</Label>
-                    <Input 
-                      value={editingPage.pixels?.facebook || ""} 
-                      onChange={(e) => updatePage("pixels", { ...editingPage.pixels, facebook: e.target.value })} 
-                      placeholder="123456789012345" 
-                      className="rounded-xl h-8 text-xs font-mono bg-muted/30" 
-                      dir="ltr" 
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-bold">TikTok Pixel ID</Label>
-                    <Input 
-                      value={editingPage.pixels?.tiktok || ""} 
-                      onChange={(e) => updatePage("pixels", { ...editingPage.pixels, tiktok: e.target.value })} 
-                      placeholder="CDG123456789ABCDEF" 
-                      className="rounded-xl h-8 text-xs font-mono bg-muted/30" 
-                      dir="ltr" 
-                    />
+                    <Label className="text-xs font-bold opacity-70">CSS مخصص</Label>
+                    <Textarea value={editingPage.customCss} onChange={(e) => updatePage("customCss", e.target.value)} placeholder=".hero { ... }" className="rounded-xl text-xs font-mono" rows={4} dir="ltr" />
                   </div>
                 </div>
-
-                <div className="space-y-2 pt-3 border-t">
-                  <Label className="text-xs font-bold opacity-70">رابط الفيديو (YouTube/Vimeo)</Label>
-                  <Input value={editingPage.videoUrl} onChange={(e) => updatePage("videoUrl", e.target.value)} placeholder="https://youtube.com/watch?v=..." className="rounded-xl h-9 text-xs" dir="ltr" />
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="text-xs font-bold opacity-70">CSS مخصص</Label>
-                  <Textarea value={editingPage.customCss} onChange={(e) => updatePage("customCss", e.target.value)} placeholder=".hero { ... }" className="rounded-xl text-xs font-mono" rows={4} dir="ltr" />
-                </div>
-              </div>
-            )}
+              )}
             </div>
 
             {/* Footer */}
@@ -1467,9 +1432,8 @@ const LandingPageBuilder = () => {
                     {tmpl?.tag && (
                       <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-white/20 text-white backdrop-blur-sm">{tmpl.tag}</span>
                     )}
-                    <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                      page.status === "published" ? "bg-emerald-500 text-white" : "bg-white/20 text-white backdrop-blur-sm"
-                    }`}>
+                    <span className={`px-3 py-1 rounded-full text-xs font-bold ${page.status === "published" ? "bg-emerald-500 text-white" : "bg-white/20 text-white backdrop-blur-sm"
+                      }`}>
                       {page.status === "published" ? "منشورة" : "مسودة"}
                     </span>
                   </div>
