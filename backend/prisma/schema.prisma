@@ -82,6 +82,9 @@ model Order {
   
   status           OrderStatus @default(PENDING)
   trackingNumber   String?     // For delivery API
+  commune          String?     // Name or ID of commune
+  shippingFee      Float       @default(0.0)
+  stopDesk         Int         @default(0) // 0 for home, 1 for desk
   
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt

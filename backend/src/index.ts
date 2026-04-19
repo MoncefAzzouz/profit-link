@@ -8,6 +8,7 @@ import productsRoutes from './routes/products.routes';
 import ordersRoutes from './routes/orders.routes';
 import storeRoutes from './routes/store.routes';
 import financeRoutes from './routes/finance.routes';
+import deliveryRoutes from './routes/delivery.routes';
 
 dotenv.config();
 
@@ -31,6 +32,7 @@ app.use('/api/products', productsRoutes);
 app.use('/api/orders', ordersRoutes);
 app.use('/api/store', storeRoutes);
 app.use('/api/finance', financeRoutes);
+app.use('/api/delivery', deliveryRoutes);
 
 // Basic Route
 app.get('/', (req: Request, res: Response) => {

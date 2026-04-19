@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
+import { EcotrackService } from '../services/ecotrack.service';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -7,10 +8,42 @@ const prisma = new PrismaClient();
 // POST /api/orders (Public: Triggered by Landing Page checkout)
 router.post('/', async (req: Request, res: Response) => {
   try {
-    const { productId, affiliateId, customerName, customerPhone, wilaya, address, quantity, totalAmount, commissionAmount } = req.body;
+    const { 
+      productId, affiliateId, customerName, customerPhone, 
+      wilaya, address, quantity, totalAmount, commissionAmount,
+      commune, shippingFee, stopDesk
+    } = req.body;
 
     if (!productId || !affiliateId || !customerName || !customerPhone || !wilaya) {
       return res.status(400).json({ error: 'Missing required order fields' });
+    }
+
+    // Verify Product and Affiliate exist
+    const product = await prisma.product.findUnique({ where: { id: productId } });
+    if (!product) {
+      console.error(`❌ Order failed: Product ${productId} not found in DB`);
+      return res.status(404).json({ error: `Product ${productId} not found` });
+    }
+
+    let affiliate = await prisma.user.findUnique({ where: { id: affiliateId } });
+    
+    // AUTO-HELP: If this is a demo/testing affiliate and doesn't exist, create it to avoid FK errors
+    if (!affiliate && affiliateId.startsWith('aff-')) {
+      console.log(`📝 Creating dummy affiliate for testing: ${affiliateId}`);
+      affiliate = await prisma.user.create({
+        data: {
+          id: affiliateId,
+          email: `${affiliateId}@example.com`,
+          passwordHash: 'dummy_hash',
+          name: "Demo Affiliate",
+          role: "AFFILIATE"
+        }
+      });
+    }
+
+    if (!affiliate) {
+      console.error(`❌ Order failed: Affiliate ${affiliateId} not found in DB`);
+      return res.status(404).json({ error: `Affiliate ${affiliateId} not found` });
     }
 
     const order = await prisma.order.create({
@@ -19,17 +52,58 @@ router.post('/', async (req: Request, res: Response) => {
         affiliateId,
         customerName,
         customerPhone,
-        wilaya,
+        wilaya, // This is now the code (e.g. "06")
         address: address || "",
         quantity: quantity || 1,
         totalAmount: parseFloat(totalAmount),
-        commissionAmount: parseFloat(commissionAmount)
-      }
+        commissionAmount: parseFloat(commissionAmount),
+        commune: commune || "",
+        shippingFee: parseFloat(shippingFee || 0),
+        stopDesk: parseInt(stopDesk || 0)
+      } as any
     });
 
-    res.status(201).json({ message: 'Order submitted successfully', data: order });
+    // AUTO-PUSH TO ECOTRACK
+    let trackingTicket = null;
+    try {
+      const ecotrackData = {
+        reference: order.id,
+        nom_client: customerName,
+        telephone: customerPhone,
+        adresse: address || "",
+        code_wilaya: parseInt(String(wilaya)), // Force integer
+        commune: commune,
+        montant: Math.round(parseFloat(String(totalAmount))), // Force number
+        produit: String(product.name),
+        quantite: parseInt(String(quantity || 1)),
+        stop_desk: parseInt(String(stopDesk || 0)),
+        type: 1 
+      };
+
+      const ecotrackRes = await EcotrackService.createOrder(ecotrackData);
+      if (ecotrackRes && ecotrackRes.success && ecotrackRes.tracking) {
+        trackingTicket = ecotrackRes.tracking;
+        await prisma.order.update({
+          where: { id: order.id },
+          data: { 
+            trackingNumber: trackingTicket,
+            status: 'SHIPPED'
+          }
+        });
+      }
+    } catch (ecotrackErr) {
+      console.error('⚠️ Auto-push to Ecotrack failed:', ecotrackErr);
+      // We don't fail the whole request because the order is already in our DB
+    }
+
+    res.status(201).json({ 
+      message: 'Order submitted successfully', 
+      data: order,
+      tracking: trackingTicket
+    });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to process checkout' });
+    console.error('❌ POST /api/orders error:', error);
+    res.status(500).json({ error: 'Failed to process checkout', details: String(error) });
   }
 });
 
@@ -82,6 +156,101 @@ router.patch('/:id/status', async (req: Request, res: Response) => {
     res.json({ message: 'Order status updated', data: updatedOrder });
   } catch (error) {
     res.status(500).json({ error: 'Failed to update order' });
+  }
+});
+
+// POST /api/orders/:id/push-ecotrack (Seller/Admin pushes order to Ecotrack)
+router.post('/:id/push-ecotrack', async (req: Request, res: Response) => {
+  try {
+    const id = req.params.id;
+    const order = (await prisma.order.findUnique({
+      where: { id: id as string },
+      include: { product: true }
+    })) as any;
+
+    if (!order) return res.status(404).json({ error: 'Order not found' });
+
+    // Prepare ECOTRACK data
+    const ecotrackData = {
+      reference: order.id,
+      nom_client: order.customerName,
+      telephone: order.customerPhone,
+      adresse: order.address,
+      code_wilaya: order.wilaya,
+      commune: order.commune,
+      montant: order.totalAmount,
+      produit: order.product.name,
+      quantite: order.quantity,
+      stop_desk: order.stopDesk,
+      type: 1 // 1 = Livraison, as per Ecotrack docs
+    };
+
+    const response = await EcotrackService.createOrder(ecotrackData);
+
+    if (response.success && response.tracking) {
+      const updatedOrder = await prisma.order.update({
+        where: { id: order.id },
+        data: { 
+          trackingNumber: response.tracking,
+          status: 'SHIPPED' // Or a specific Ecotrack-linked status
+        }
+      });
+      return res.json({ message: 'Order sent to Ecotrack', tracking: response.tracking, data: updatedOrder });
+    } else {
+      return res.status(400).json({ error: 'Ecotrack API reported failure', details: response });
+    }
+  } catch (error) {
+    console.error('Push to Ecotrack failed:', error);
+    res.status(500).json({ error: 'Failed to push order to Ecotrack' });
+  }
+});
+
+// GET /api/orders/:id/tracking (Get real-time tracking status from Ecotrack)
+router.get('/:id/tracking', async (req: Request, res: Response) => {
+  try {
+    const id = req.params.id;
+    const order = await prisma.order.findUnique({ where: { id: id as string } });
+
+    if (!order || !order.trackingNumber) {
+      return res.status(404).json({ error: 'Order tracking info not found' });
+    }
+
+    const trackingInfo = await EcotrackService.getTrackingInfo(order.trackingNumber);
+    res.json({ data: trackingInfo });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch tracking data' });
+  }
+});
+
+// POST /api/orders/:id/validate (Expedite order to Ecotrack)
+router.post('/:id/validate', async (req: Request, res: Response) => {
+  try {
+    const id = req.params.id;
+    const { askCollection } = req.body;
+
+    const order = await prisma.order.findUnique({
+      where: { id: id as string }
+    });
+
+    if (!order || !order.trackingNumber) {
+      return res.status(404).json({ error: 'Order not found or missing tracking number' });
+    }
+
+    const response = await EcotrackService.validateOrder(order.trackingNumber, askCollection !== false);
+
+    if (response.success) {
+      // Update local status to reflect it's now truly dispatched/validated
+      await prisma.order.update({
+        where: { id: order.id },
+        data: { status: 'SHIPPED' } // You might want a 'VALIDATED' status later
+      });
+      return res.json({ message: 'Order validated/expedited successfully', data: response });
+    } else {
+      return res.status(400).json({ error: 'Ecotrack validation failed', details: response });
+    }
+  } catch (error) {
+    console.error('❌ POST /api/orders/:id/validate error:', error);
+    res.status(500).json({ error: 'Failed to validate order' });
   }
 });
 
