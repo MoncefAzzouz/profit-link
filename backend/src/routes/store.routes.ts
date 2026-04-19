@@ -105,21 +105,39 @@ router.post('/generate-ai', async (req: Request, res: Response) => {
     const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
     const prompt = `
-      You are an expert E-Commerce Copywriter creating high-converting landing pages for the Algerian market in Arabic.
-      Analyze the attached image.
-      If the user provided context: "${contextText || 'No context'}", use it to guide your output.
+      You are an expert E-Commerce Copywriter and UI/UX Designer creating high-converting landing pages for the Algerian market in Arabic.
+      Analyze the attached image and the provided context: "${contextText || 'No context'}".
+      
+      Generate a STUNNING landing page configuration. Your response must be an expert-level blueprint.
       
       Respond ONLY with a valid JSON object matching this exact structure, with no markdown code blocks around it:
       {
-        "productName": "Short catchy name",
-        "template": "modern", // pick one: luxury, modern, dark, neon, tiktok
-        "category": "General category",
+        "productName": "Short catchy name in Arabic",
+        "template": "modern", // pick best fit: luxury, modern, bold, dark, neon, tiktok, instagram, flash-sale
+        "category": "Arabic category name",
         "price": 4500, // Reasonable DZD price (number)
-        "originalPrice": 8000, // Higher DZD number
-        "heroTitle": "Extremely catchy 4-word title",
-        "heroSubtitle": "A persuasive 1-2 sentence hook highlighting benefits",
-        "urgencyText": "Offer ends soon text",
-        "features": ["Benefit 1", "Benefit 2", "Benefit 3", "Benefit 4"]
+        "originalPrice": 8000, 
+        "primaryColor": "#HEX_COLOR", // Pick a color that matches the product in the image
+        "accentColor": "#HEX_COLOR", // A complementary accent color
+        "backgroundColor": "#F8F9FA", // A clean background color
+        "heroTitle": "Extremely catchy Arabic title",
+        "heroSubtitle": "A persuasive Arabic hook highlighting benefits",
+        "urgencyText": "Arabic urgency/offer text",
+        "features": ["Arabic Benefit 1", "Arabic Benefit 2", "Arabic Benefit 3", "Arabic Benefit 4"],
+        "socialProof": [
+          {"name": "Arabic Name", "text": "Arabic high-converting testimonial", "rating": 5},
+          {"name": "Arabic Name", "text": "Arabic high-converting testimonial", "rating": 5}
+        ],
+        "faqItems": [
+          {"q": "Arabic Question 1?", "a": "Arabic Answer 1"},
+          {"q": "Arabic Question 2?", "a": "Arabic Answer 2"}
+        ],
+        "imageKeywords": {
+          "hero": "3 keywords for main product shot, comma separated",
+          "features": "3 keywords for lifestyle/use-case shot, comma separated",
+          "testimonials": "3 keywords for happy customer/delivery shot, comma separated"
+        },
+        "suggestedSections": ["hero", "features", "reviews", "faq", "cta"]
       }
     `;
 
