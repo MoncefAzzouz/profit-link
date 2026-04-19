@@ -1,0 +1,15 @@
+node_modules
+dist
+.env
+.env.*
+*.log
+
+# Prisma
+/prisma/migrations
+/prisma/*.db
+/prisma/*.db-journal
+
+# Editor
+.vscode
+.idea
+.DS_Store
