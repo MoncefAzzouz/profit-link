@@ -451,27 +451,42 @@ const SellerDashboard = () => {
                   </button>
                 </div>
                 <div className="divide-y divide-border">
-                  {orders.slice(0, 5).map((order) => {
-                    const status = statusConfig[order.status as keyof typeof statusConfig];
-                    if (!status) return null;
-                    return (
-                      <div key={order.id} className="p-4 flex items-center justify-between hover:bg-muted/30 transition-colors">
-                        <div className="flex items-center gap-4">
-                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center border ${status.color}`}>
-                            <status.icon className="w-5 h-5" />
+                  {loadingOrders ? (
+                    <div className="p-12 flex flex-col items-center justify-center gap-4 text-muted-foreground">
+                      <motion.div animate={{ rotate: 360 }} transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }} className="w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full" />
+                      <p className="text-sm font-medium">جاري تحميل الطلبيات...</p>
+                    </div>
+                  ) : orders.length > 0 ? (
+                    orders.slice(0, 5).map((order) => {
+                      const status = statusConfig[order.status as keyof typeof statusConfig];
+                      if (!status) return null;
+                      return (
+                        <div key={order.id} className="p-4 flex items-center justify-between hover:bg-muted/30 transition-colors">
+                          <div className="flex items-center gap-4">
+                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center border ${status.color}`}>
+                              <status.icon className="w-5 h-5" />
+                            </div>
+                            <div>
+                              <p className="font-medium text-foreground">{order.productName}</p>
+                              <p className="text-sm text-muted-foreground">{order.customerName} - {order.wilaya}</p>
+                            </div>
                           </div>
-                          <div>
-                            <p className="font-medium text-foreground">{order.productName}</p>
-                            <p className="text-sm text-muted-foreground">{order.customerName} - {order.wilaya}</p>
+                          <div className="text-left">
+                            <p className="font-bold text-foreground">{order.amount.toLocaleString()} دج</p>
+                            <p className="text-xs text-muted-foreground">{order.date}</p>
                           </div>
                         </div>
-                        <div className="text-left">
-                          <p className="font-bold text-foreground">{order.amount.toLocaleString()} دج</p>
-                          <p className="text-xs text-muted-foreground">{order.date}</p>
-                        </div>
+                      );
+                    })
+                  ) : (
+                    <div className="p-12 text-center text-muted-foreground">
+                      <div className="w-16 h-16 bg-muted/50 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <ShoppingCart className="w-8 h-8 opacity-20" />
                       </div>
-                    );
-                  })}
+                      <p className="font-medium">بانتظار وصول أول طلبية...</p>
+                      <p className="text-sm opacity-60">ستظهر هنا بمجرد قيام الزبون بعملية الشراء</p>
+                    </div>
+                  )}
                 </div>
               </motion.div>
             </div>
@@ -645,46 +660,63 @@ const SellerDashboard = () => {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border">
-                      {orders.map((order) => {
-                        const status = statusConfig[order.status as keyof typeof statusConfig];
-                        const isProcessing = processingOrderId === order.id;
-                        return (
-                          <tr key={order.id} className="hover:bg-muted/30 transition-colors">
-                            <td className="p-4 font-medium text-foreground text-sm">{order.productName}</td>
-                            <td className="p-4 text-muted-foreground text-sm">{order.affiliateName}</td>
-                            <td className="p-4 text-muted-foreground text-sm">{order.customerName}</td>
-                            <td className="p-4 text-muted-foreground text-sm">{order.wilaya}</td>
-                            <td className="p-4">
-                              <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${status.color}`}>
-                                <status.icon className="w-3.5 h-3.5" />
-                                {status.label}
-                              </span>
-                            </td>
-                            <td className="p-4 font-bold text-foreground text-sm">{order.amount.toLocaleString()} دج</td>
-                            <td className="p-4 text-muted-foreground text-sm">{order.date}</td>
-                            <td className="p-4">
-                                <div className="flex items-center gap-2">
-                                  <Button size="sm" variant="outline" className="gap-2 text-green-600 border-green-200 hover:bg-green-50" onClick={() => handleWhatsAppConfirm(order)}>
-                                    <MessageSquare className="w-4 h-4" /> واتساب
-                                  </Button>
-                                  {(order.status === "pending" || order.status === "confirmed") && (
-                                    <>
-                                      <Button size="sm" className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white" disabled={isProcessing} onClick={() => handleEcotrackShip(order)}>
-                                        {isProcessing ? <motion.span animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }} className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full" /> : <Truck className="w-4 h-4" />}
-                                        Ecotrack
-                                      </Button>
-                                    </>
-                                  )}
-                                  {order.trackingNumber && (
-                                    <Button size="sm" variant="ghost" className="gap-2 text-blue-600" onClick={() => handleViewTracking(order)}>
-                                      <Eye className="w-4 h-4" /> تتبع
+                      {loadingOrders ? (
+                        <tr>
+                          <td colSpan={8} className="p-12 text-center">
+                            <div className="flex flex-col items-center gap-3 text-muted-foreground">
+                              <motion.div animate={{ rotate: 360 }} transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }} className="w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full" />
+                              <p>جاري تحميل البيانات...</p>
+                            </div>
+                          </td>
+                        </tr>
+                      ) : orders.length > 0 ? (
+                        orders.map((order) => {
+                          const status = statusConfig[order.status as keyof typeof statusConfig];
+                          const isProcessing = processingOrderId === order.id;
+                          return (
+                            <tr key={order.id} className="hover:bg-muted/30 transition-colors">
+                              <td className="p-4 font-medium text-foreground text-sm">{order.productName}</td>
+                              <td className="p-4 text-muted-foreground text-sm">{order.affiliateName}</td>
+                              <td className="p-4 text-muted-foreground text-sm">{order.customerName}</td>
+                              <td className="p-4 text-muted-foreground text-sm">{order.wilaya}</td>
+                              <td className="p-4">
+                                <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${status.color}`}>
+                                  <status.icon className="w-3.5 h-3.5" />
+                                  {status.label}
+                                </span>
+                              </td>
+                              <td className="p-4 font-bold text-foreground text-sm">{order.amount.toLocaleString()} دج</td>
+                              <td className="p-4 text-muted-foreground text-sm">{order.date}</td>
+                              <td className="p-4">
+                                  <div className="flex items-center gap-2">
+                                    <Button size="sm" variant="outline" className="gap-2 text-green-600 border-green-200 hover:bg-green-50" onClick={() => handleWhatsAppConfirm(order)}>
+                                      <MessageSquare className="w-4 h-4" /> واتساب
                                     </Button>
-                                  )}
-                                </div>
-                            </td>
-                          </tr>
-                        );
-                      })}
+                                    {(order.status === "pending" || order.status === "confirmed") && (
+                                      <>
+                                        <Button size="sm" className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white" disabled={isProcessing} onClick={() => handleEcotrackShip(order)}>
+                                          {isProcessing ? <motion.span animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }} className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full" /> : <Truck className="w-4 h-4" />}
+                                          Ecotrack
+                                        </Button>
+                                      </>
+                                    )}
+                                    {order.trackingNumber && (
+                                      <Button size="sm" variant="ghost" className="gap-2 text-blue-600" onClick={() => handleViewTracking(order)}>
+                                        <Eye className="w-4 h-4" /> تتبع
+                                      </Button>
+                                    )}
+                                  </div>
+                              </td>
+                            </tr>
+                          );
+                        })
+                      ) : (
+                        <tr>
+                          <td colSpan={8} className="p-12 text-center text-muted-foreground italic">
+                            لا توجد طلبيات مسجلة بعد.
+                          </td>
+                        </tr>
+                      )}
                     </tbody>
                   </table>
                 </div>

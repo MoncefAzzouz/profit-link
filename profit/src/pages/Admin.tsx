@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/select";
 import { mockProducts, categories, Product } from "@/data/mockProducts";
 import { mockAffiliates, mockAdminStats, mockAllOrders, mockSellers, mockWithdrawalRequests, WithdrawalRequest, mockJoinRequests, JoinRequest } from "@/data/mockAdminData";
-import { shippingRates, shippingRegions } from "@/data/mockShippingData";
+import { ShippingRate, shippingRegions } from "@/data/mockShippingData";
 import { LandingSettings, defaultLandingSettings } from "@/data/landingSettings";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -88,6 +88,10 @@ const Admin = () => {
   const [joinSearch, setJoinSearch] = useState("");
   const [joinRole, setJoinRole] = useState("all");
   const [shippingSearch, setShippingSearch] = useState("");
+  const [shippingRatesData, setShippingRatesData] = useState<any[]>([]);
+  const [isFetchingShipping, setIsFetchingShipping] = useState(false);
+  const [shippingPage, setShippingPage] = useState(1);
+  const shippingItemsPerPage = 10;
   
   // Landing Page Editor State
   const [landingSettings, setLandingSettings] = useState<LandingSettings>(() => {
@@ -136,6 +140,33 @@ const Admin = () => {
     const uniqueProds = [...persistedProds, ...mockProducts].filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
     setProducts(uniqueProds);
   }, []);
+
+  // Fetch Shipping Rates
+  useEffect(() => {
+    if (activeTab === "shipping") {
+      const fetchShipping = async () => {
+        setIsFetchingShipping(true);
+        try {
+          const res = await fetch('http://127.0.0.1:5001/api/delivery/all-rates');
+          const data = await res.json();
+          if (res.ok) {
+            setShippingRatesData(data.data);
+          }
+        } catch (error) {
+          console.error('Error fetching shipping fees:', error);
+          toast({ title: "خطأ في جلب بيانات الشحن", variant: "destructive" });
+        } finally {
+          setIsFetchingShipping(false);
+        }
+      };
+      fetchShipping();
+    }
+  }, [activeTab]);
+
+  // Reset shipping page on search
+  useEffect(() => {
+    setShippingPage(1);
+  }, [shippingSearch]);
 
   const saveProductsToStorage = (updatedProducts: Product[]) => {
     // Only save the ones that were potentially modified or added (for simulation simplicity we save all current state)
@@ -329,11 +360,22 @@ const Admin = () => {
     toast({ title: "تم تحديث حالة المنتج" });
   };
 
-  const filteredShippingRates = useMemo(() => {
-    return shippingRates.filter(rate => 
+  const { paginatedShippingRates, totalShippingPages } = useMemo(() => {
+    const listToFilter = shippingRatesData;
+    const filtered = listToFilter.filter(rate => 
       rate.wilaya.includes(shippingSearch)
     );
-  }, [shippingSearch]);
+    // Sort by code numerically
+    filtered.sort((a, b) => parseInt(a.code || "0") - parseInt(b.code || "0"));
+    
+    const totalPages = Math.ceil(filtered.length / shippingItemsPerPage);
+    const paginated = filtered.slice((shippingPage - 1) * shippingItemsPerPage, shippingPage * shippingItemsPerPage);
+    
+    return { 
+      paginatedShippingRates: paginated, 
+      totalShippingPages: totalPages 
+    };
+  }, [shippingSearch, shippingRatesData, shippingPage]);
 
   const handleSuspendAffiliate = (id: string) => {
     toast({ title: "تم إيقاف المسوّق" });
@@ -1521,9 +1563,17 @@ const Admin = () => {
                         <th className="p-6 font-bold text-foreground text-center">وقت التوصيل</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-border">
-                      {filteredShippingRates.length > 0 ? (
-                        filteredShippingRates.map((rate, idx) => (
+                    <tbody className="divide-y divide-border relative">
+                      {isFetchingShipping && (
+                        <tr>
+                          <td colSpan={4} className="p-12 text-center text-muted-foreground">
+                            <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1 }} className="inline-block w-6 h-6 border-2 border-primary border-t-transparent rounded-full mb-2" />
+                            <p>جاري تحميل الأسعار من Ecotrack...</p>
+                          </td>
+                        </tr>
+                      )}
+                      {!isFetchingShipping && paginatedShippingRates.length > 0 ? (
+                        paginatedShippingRates.map((rate, idx) => (
                           <tr key={idx} className="hover:bg-muted/30 transition-colors group">
                             <td className="p-6">
                               <span className="font-bold text-foreground text-lg">{rate.wilaya}</span>
@@ -1546,7 +1596,7 @@ const Admin = () => {
                             </td>
                           </tr>
                         ))
-                      ) : (
+                      ) : !isFetchingShipping && (
                         <tr>
                           <td colSpan={4} className="p-12 text-center text-muted-foreground">
                             لا توجد ولاية تطابق البحث "{shippingSearch}"
@@ -1556,6 +1606,35 @@ const Admin = () => {
                     </tbody>
                   </table>
                 </div>
+                
+                {/* Shipping Pagination Footer */}
+                {!isFetchingShipping && totalShippingPages > 1 && (
+                  <div className="p-6 border-t border-border flex items-center justify-between bg-muted/20" dir="rtl">
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={shippingPage === 1}
+                        onClick={() => setShippingPage(prev => Math.max(1, prev - 1))}
+                        className="rounded-xl"
+                      >
+                        السابق
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={shippingPage === totalShippingPages}
+                        onClick={() => setShippingPage(prev => Math.min(totalShippingPages, prev + 1))}
+                        className="rounded-xl"
+                      >
+                        التالي
+                      </Button>
+                    </div>
+                    <div className="text-sm font-bold text-muted-foreground">
+                      الصفحة {shippingPage} من {totalShippingPages}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}

@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { mockProducts } from "@/data/mockProducts";
 import { wilayas } from "@/data/mockAffiliateData";
 import { useToast } from "@/hooks/use-toast";
+import { ShippingRate } from "@/data/mockShippingData";
 
 const ProductPage = () => {
   const { productId, affiliateId } = useParams();
@@ -17,11 +18,27 @@ const ProductPage = () => {
   
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
+  const [shippingRates, setShippingRates] = useState<ShippingRate[]>([]);
+
+  useEffect(() => {
+    const fetchRates = async () => {
+      try {
+        const res = await fetch('http://127.0.0.1:5001/api/delivery/all-rates');
+        const json = await res.json();
+        if (res.ok && json.data) setShippingRates(json.data);
+      } catch (err) {
+        console.error('Failed to fetch shipping rates', err);
+      }
+    };
+    fetchRates();
+  }, []);
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
     wilaya: "",
-    address: ""
+    commune: "",
+    address: "",
+    deliveryType: "home" as "home" | "office"
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState(false);
@@ -98,7 +115,7 @@ const ProductPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.name || !formData.phone || !formData.wilaya || !formData.address) {
+    if (!formData.name || !formData.phone || !formData.wilaya || !formData.commune || !formData.address) {
       toast({
         title: "خطأ",
         description: "يرجى ملء جميع الحقول",
@@ -120,10 +137,13 @@ const ProductPage = () => {
           customerName: formData.name,
           customerPhone: formData.phone,
           wilaya: formData.wilaya,
+          commune: formData.commune,
           address: formData.address,
           quantity: quantity,
-          totalAmount: product.price * quantity,
-          commissionAmount: product.commission * quantity
+          totalAmount: (product.price * quantity) + currentShippingPrice,
+          commissionAmount: product.commission * quantity,
+          shippingFee: currentShippingPrice,
+          stopDesk: formData.deliveryType === "office" ? 1 : 0
         })
       });
 
@@ -159,7 +179,12 @@ const ProductPage = () => {
     }
   };
 
-  const totalPrice = product.price * quantity;
+  const currentRate = shippingRates.find(r => r.wilaya === formData.wilaya);
+  const currentShippingPrice = currentRate 
+    ? (formData.deliveryType === "home" ? currentRate.homePrice : currentRate.officePrice)
+    : 0;
+
+  const totalPrice = (product.price * quantity) + currentShippingPrice;
   const savings = (product.originalPrice - product.price) * quantity;
 
   if (orderSuccess) {
@@ -290,7 +315,7 @@ const ProductPage = () => {
               <div className="flex items-center gap-3 bg-card rounded-xl p-4 shadow-sm">
                 <Truck className="w-8 h-8 text-secondary" />
                 <div>
-                  <p className="font-semibold text-sm">توصيل مجاني</p>
+                  <p className="font-semibold text-sm">توصيل سريع</p>
                   <p className="text-xs text-muted-foreground">لكل الولايات</p>
                 </div>
               </div>
@@ -368,6 +393,17 @@ const ProductPage = () => {
                 </div>
 
                 <div>
+                  <Label htmlFor="commune">البلدية *</Label>
+                  <Input
+                    id="commune"
+                    value={formData.commune}
+                    onChange={(e) => setFormData({ ...formData, commune: e.target.value })}
+                    placeholder="أدخل اسم البلدية"
+                    className="mt-1.5"
+                  />
+                </div>
+
+                <div>
                   <Label htmlFor="address">العنوان بالتفصيل *</Label>
                   <Input
                     id="address"
@@ -376,6 +412,26 @@ const ProductPage = () => {
                     placeholder="البلدية، الحي، الشارع..."
                     className="mt-1.5"
                   />
+                </div>
+
+                <div>
+                  <Label>نوع التوصيل</Label>
+                  <div className="flex bg-muted p-1 rounded-xl h-12 mt-1.5">
+                    <button 
+                      type="button"
+                      onClick={() => setFormData({ ...formData, deliveryType: "home" })}
+                      className={`flex-1 flex items-center justify-center rounded-lg text-xs font-bold transition-all ${formData.deliveryType === "home" ? "bg-background text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                    >
+                      للمنزل
+                    </button>
+                    <button 
+                      type="button"
+                      onClick={() => setFormData({ ...formData, deliveryType: "office" })}
+                      className={`flex-1 flex items-center justify-center rounded-lg text-xs font-bold transition-all ${formData.deliveryType === "office" ? "bg-background text-secondary shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                    >
+                      للمكتب
+                    </button>
+                  </div>
                 </div>
 
                 <div>
@@ -414,7 +470,9 @@ const ProductPage = () => {
                 </div>
                 <div className="flex justify-between">
                   <span>التوصيل</span>
-                  <span className="text-secondary">مجاني</span>
+                  <span className={currentShippingPrice === 0 ? "text-secondary" : "font-bold"}>
+                    {currentShippingPrice === 0 ? "اختر الولاية" : `${currentShippingPrice.toLocaleString()} دج`}
+                  </span>
                 </div>
                 <div className="border-t border-border pt-2 flex justify-between font-bold text-lg">
                   <span>المجموع</span>

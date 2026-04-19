@@ -44,7 +44,7 @@ import { mockOrders, mockAffiliateStats, Order, wilayas } from "@/data/mockAffil
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import EarningsChart from "@/components/dashboard/EarningsChart";
-import { shippingRates, shippingRegions } from "@/data/mockShippingData";
+import { ShippingRate, shippingRegions } from "@/data/mockShippingData";
 import { mockWithdrawalRequests } from "@/data/mockAdminData";
 import { mockSellerStats, sellerEarningsData } from "@/data/mockSellerData";
 import { StoreSettings, defaultStoreSettings } from "@/data/storeSettings";
@@ -97,6 +97,79 @@ const Dashboard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [user, setUser] = useState<any>(null);
+  const [orders, setOrders] = useState<any[]>([]);
+  const [shippingRates, setShippingRates] = useState<ShippingRate[]>([]);
+
+  // Fetch shipping rates from API on mount
+  useEffect(() => {
+    const fetchRates = async () => {
+      try {
+        const res = await fetch('http://127.0.0.1:5001/api/delivery/all-rates');
+        const json = await res.json();
+        if (res.ok && json.data) {
+          setShippingRates(json.data);
+        }
+      } catch (err) {
+        console.error('Failed to fetch shipping rates', err);
+      }
+    };
+    fetchRates();
+  }, []);
+  const [loadingOrders, setLoadingOrders] = useState(true);
+  const [stats, setStats] = useState({
+    totalRevenue: 0,
+    totalOrders: 0,
+    pendingOrders: 0,
+    confirmationRate: 0,
+    activeAffiliates: 0
+  });
+
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        const response = await fetch('http://127.0.0.1:5001/api/orders/all'); // For demo, fetching all for now
+        const res = await response.json();
+        if (response.ok) {
+          const fetchedOrders = res.data.map((o: any) => ({
+            id: o.id,
+            productName: o.product?.name || "منتج محذوف",
+            customerName: o.customerName,
+            customerPhone: o.customerPhone,
+            wilaya: o.wilaya,
+            address: o.address,
+            status: o.status.toLowerCase(),
+            amount: o.totalAmount || 0, // Fallback to 0
+            commission: o.commissionAmount || 0,
+            date: new Date(o.createdAt).toLocaleDateString('ar-DZ'),
+            trackingNumber: o.trackingNumber
+          }));
+          setOrders(fetchedOrders);
+
+          // Calculate stats for the dashboard
+          const revenue = fetchedOrders.reduce((acc: number, curr: any) => acc + (curr.amount || 0), 0);
+          const pending = fetchedOrders.filter((o: any) => o.status === 'pending').length;
+          const confirmed = fetchedOrders.filter((o: any) => o.status === 'confirmed' || o.status === 'shipped' || o.status === 'delivered').length;
+
+          setStats({
+            totalRevenue: revenue,
+            totalOrders: fetchedOrders.length,
+            pendingOrders: pending,
+            confirmationRate: fetchedOrders.length > 0 ? Math.round((confirmed / fetchedOrders.length) * 100) : 0,
+            activeAffiliates: 0
+          });
+        }
+      } catch (err) {
+        console.error("Failed to fetch orders", err);
+      } finally {
+        setLoadingOrders(false);
+      }
+    };
+
+    fetchOrders();
+    // Refresh interval
+    const interval = setInterval(fetchOrders, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Product filter states
   const [productSearch, setProductSearch] = useState("");
@@ -114,8 +187,6 @@ const Dashboard = () => {
   const [isDateFromOpen, setIsDateFromOpen] = useState(false);
   const [isDateToOpen, setIsDateToOpen] = useState(false);
 
-  // Orders State (Local)
-  const [orders, setOrders] = useState(mockOrders);
   const [processingOrderId, setProcessingOrderId] = useState<string | null>(null);
 
   // Withdrawal states
@@ -130,13 +201,17 @@ const Dashboard = () => {
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
   const [isOrderDialogOpen, setIsOrderDialogOpen] = useState(false);
+  const [communes, setCommunes] = useState<any[]>([]);
+  const [loadingCommunes, setLoadingCommunes] = useState(false);
   const [orderFormData, setOrderFormData] = useState({
     firstName: "",
     lastName: "",
     phone: "",
     wilaya: "",
+    commune: "",
     address: "",
     deliveryType: "home" as "home" | "office",
+    stopDesk: 0,
     deliveryFee: 500
   });
 
@@ -160,10 +235,44 @@ const Dashboard = () => {
       const rate = shippingRates.find(r => r.wilaya === orderFormData.wilaya);
       if (rate) {
         const fee = orderFormData.deliveryType === "home" ? rate.homePrice : rate.officePrice;
-        setOrderFormData(prev => ({ ...prev, deliveryFee: fee }));
+        setOrderFormData(prev => ({ 
+          ...prev, 
+          deliveryFee: fee,
+          stopDesk: orderFormData.deliveryType === "office" ? 1 : 0 
+        }));
       }
     }
   }, [orderFormData.wilaya, orderFormData.deliveryType]);
+
+  // Fetch communes when wilaya changes
+  useEffect(() => {
+    const fetchCommunes = async () => {
+      if (!orderFormData.wilaya || shippingRates.length === 0) {
+        setCommunes([]);
+        return;
+      }
+      
+      setLoadingCommunes(true);
+      try {
+        const wilayaData = shippingRates.find(r => r.wilaya === orderFormData.wilaya);
+        const wilayaId = wilayaData?.code || "";
+        
+        if (wilayaId) {
+          const response = await fetch(`http://127.0.0.1:5001/api/delivery/communes?wilaya_id=${parseInt(wilayaId)}`);
+          const res = await response.json();
+          if (response.ok) {
+            setCommunes(res.data || []);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch communes", err);
+      } finally {
+        setLoadingCommunes(false);
+      }
+    };
+
+    fetchCommunes();
+  }, [orderFormData.wilaya, shippingRates]);
 
   useEffect(() => {
     const storedUser = localStorage.getItem("affiliate_user");
@@ -274,21 +383,19 @@ const Dashboard = () => {
   const filteredOrders = useMemo(() => {
     return orders.filter((order) => {
       // Search filter
-      const matchesSearch = order.productName.includes(orderSearch) || 
-                           order.customerName.includes(orderSearch) ||
-                           order.wilaya.includes(orderSearch);
+      const matchesSearch = order.productName.toLowerCase().includes(orderSearch.toLowerCase()) || 
+                           order.customerName.toLowerCase().includes(orderSearch.toLowerCase()) ||
+                           order.wilaya.toLowerCase().includes(orderSearch.toLowerCase());
       
       // Status filter
       const matchesStatus = orderStatus === "all" || order.status === orderStatus;
       
-      // Date filters
-      const orderDate = parseISO(order.date);
-      const matchesDateFrom = !dateFrom || isAfter(orderDate, dateFrom) || isEqual(orderDate, dateFrom);
-      const matchesDateTo = !dateTo || isBefore(orderDate, dateTo) || isEqual(orderDate, dateTo);
+      // Date filters - for simplicity in this demo, skipping complex date filtering 
+      // if the date is already a formatted string from the backend.
       
-      return matchesSearch && matchesStatus && matchesDateFrom && matchesDateTo;
+      return matchesSearch && matchesStatus;
     });
-  }, [orderSearch, orderStatus, dateFrom, dateTo]);
+  }, [orders, orderSearch, orderStatus, dateFrom, dateTo]);
 
   const productPriceRanges = [
     { label: "الكل", min: 0, max: Infinity },
@@ -1115,7 +1222,7 @@ const Dashboard = () => {
               {/* Results Count */}
               <div className="flex items-center justify-between">
                 <p className="text-muted-foreground text-sm">
-                  عرض {filteredOrders.length} من {mockOrders.length} طلبية
+                  عرض {filteredOrders.length} من {orders.length} طلبية حقيقية
                 </p>
               </div>
 
@@ -1193,25 +1300,25 @@ const Dashboard = () => {
                 {[
                   { 
                     label: "الإيرادات الإجمالية", 
-                    value: `${mockSellerStats.totalRevenue.toLocaleString()} دج`, 
+                    value: `${stats.totalRevenue.toLocaleString()} دج`, 
                     color: "text-foreground",
                     sub: "إجمالي المبيعات المحققة",
                     icon: Wallet,
                     bg: "bg-primary/5"
                   },
                   { 
-                    label: "عمولات المسوّقين", 
-                    value: `${(mockSellerStats.totalRevenue * 0.45).toLocaleString()} دج`, 
+                    label: "إجمالي الطلبيات", 
+                    value: stats.totalOrders.toLocaleString(), 
                     color: "text-accent",
-                    sub: "المبالغ المستحقة للشركاء",
+                    sub: "عدد الطلبات المسجلة",
                     icon: Trophy,
                     bg: "bg-accent/5"
                   },
                   { 
-                    label: "صافي الربح", 
-                    value: `${(mockSellerStats.totalRevenue * 0.55).toLocaleString()} دج`, 
+                    label: "نسبة التأكيد", 
+                    value: `${stats.confirmationRate}%`, 
                     color: "text-secondary",
-                    sub: "الأرباح الصافية بعد العمولات",
+                    sub: "بناءً على الطلبات الشحن",
                     icon: TrendingUp,
                     bg: "bg-secondary/5"
                   },
@@ -1331,7 +1438,7 @@ const Dashboard = () => {
                       </PieChart>
                     </ResponsiveContainer>
                     <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                      <span className="text-4xl font-black text-foreground">944</span>
+                      <span className="text-4xl font-black text-foreground">{stats.totalOrders}</span>
                       <span className="text-[10px] text-muted-foreground font-bold tracking-widest uppercase">إجمالي الطلبات</span>
                     </div>
                   </div>
@@ -2344,6 +2451,10 @@ const Dashboard = () => {
       {/* ===== MANUAL ORDER DIALOG ===== */}
       <Dialog open={isOrderDialogOpen} onOpenChange={setIsOrderDialogOpen}>
         <DialogContent className="max-w-2xl rounded-[2.5rem] p-0 border-none overflow-hidden max-h-[95vh] flex flex-col" dir="rtl">
+          <DialogHeader className="hidden">
+            <DialogTitle>تسجيل طلب يدوي</DialogTitle>
+            <DialogDescription>سيتم تسجيل هذا الطلب باسمك وستحصل على العمولة بعد التسليم.</DialogDescription>
+          </DialogHeader>
           {selectedProduct && (
             <div className="flex flex-col flex-1 min-h-0">
               <div className="bg-primary p-8 text-primary-foreground flex flex-col md:flex-row items-center gap-6">
@@ -2363,10 +2474,10 @@ const Dashboard = () => {
                       <User className="w-4 h-4 text-primary" /> الاسم الأول
                     </Label>
                     <Input 
-                      placeholder="أدخل الاسم..." 
-                      className="h-12 rounded-2xl border-border/60"
                       value={orderFormData.firstName}
-                      onChange={(e) => setOrderFormData({...orderFormData, firstName: e.target.value})}
+                      onChange={(e) => setOrderFormData({ ...orderFormData, firstName: e.target.value })}
+                      placeholder="محمد"
+                      className="h-12 rounded-xl"
                     />
                   </div>
                   <div className="space-y-2">
@@ -2374,41 +2485,66 @@ const Dashboard = () => {
                       <User className="w-4 h-4 text-primary" /> اللقب (العائلة)
                     </Label>
                     <Input 
-                      placeholder="أدخل اللقب..." 
-                      className="h-12 rounded-2xl border-border/60"
                       value={orderFormData.lastName}
-                      onChange={(e) => setOrderFormData({...orderFormData, lastName: e.target.value})}
+                      onChange={(e) => setOrderFormData({ ...orderFormData, lastName: e.target.value })}
+                      placeholder="عزوز"
+                      className="h-12 rounded-xl"
                     />
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label className="flex items-center gap-2 text-sm font-bold ml-1">
-                    <Phone className="w-4 h-4 text-primary" /> رقم الهاتف
-                  </Label>
-                  <Input 
-                    placeholder="0xxx xx xx xx" 
-                    className="h-12 rounded-2xl border-border/60 font-mono"
-                    value={orderFormData.phone}
-                    onChange={(e) => setOrderFormData({...orderFormData, phone: e.target.value})}
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-2 text-sm font-bold ml-1">
+                      <Phone className="w-4 h-4 text-primary" /> رقم الهاتف
+                    </Label>
+                    <Input 
+                      value={orderFormData.phone}
+                      onChange={(e) => setOrderFormData({ ...orderFormData, phone: e.target.value })}
+                      placeholder="0XXXXXXXXX"
+                      className="h-12 rounded-xl"
+                    />
+                  </div>
                   <div className="space-y-2">
                     <Label className="flex items-center gap-2 text-sm font-bold ml-1">
                       <MapPin className="w-4 h-4 text-primary" /> الولاية
                     </Label>
                     <Select 
                       value={orderFormData.wilaya} 
-                      onValueChange={(val) => setOrderFormData({ ...orderFormData, wilaya: val })}
+                      onValueChange={(v) => setOrderFormData({ ...orderFormData, wilaya: v, commune: "" })}
                     >
-                      <SelectTrigger className="h-12 rounded-2xl border-border/60">
+                      <SelectTrigger className="h-12 rounded-xl">
                         <SelectValue placeholder="اختر الولاية" />
                       </SelectTrigger>
-                      <SelectContent>
-                        {wilayas.map((w) => (
-                          <SelectItem key={w} value={w}>{w}</SelectItem>
+                      <SelectContent className="max-h-[300px]">
+                        {shippingRates.map((rate) => (
+                          <SelectItem key={rate.code} value={rate.wilaya}>
+                            {rate.code} - {rate.wilaya}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-2 text-sm font-bold ml-1">
+                      <MapPin className="w-4 h-4 text-primary" /> البلدية
+                    </Label>
+                    <Select 
+                      value={orderFormData.commune} 
+                      onValueChange={(v) => setOrderFormData({ ...orderFormData, commune: v })}
+                      disabled={!orderFormData.wilaya || loadingCommunes}
+                    >
+                      <SelectTrigger className="h-12 rounded-xl">
+                        <SelectValue placeholder={loadingCommunes ? "جاري التحميل..." : "اختر البلدية"} />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-[300px]">
+                        {communes.map((c: any) => (
+                          <SelectItem key={c.commune_id || c.nom} value={c.nom}>
+                            {c.nom}
+                          </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -2417,22 +2553,18 @@ const Dashboard = () => {
                     <Label className="flex items-center gap-2 text-sm font-bold ml-1">
                       <Truck className="w-4 h-4 text-primary" /> نوع التوصيل
                     </Label>
-                    <div className="flex bg-muted p-1 rounded-xl h-12">
-                      <button 
-                        type="button"
-                        onClick={() => setOrderFormData({ ...orderFormData, deliveryType: "home" })}
-                        className={`flex-1 flex items-center justify-center rounded-lg text-xs font-bold transition-all ${orderFormData.deliveryType === "home" ? "bg-background text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
-                      >
-                        للمنزل
-                      </button>
-                      <button 
-                        type="button"
-                        onClick={() => setOrderFormData({ ...orderFormData, deliveryType: "office" })}
-                        className={`flex-1 flex items-center justify-center rounded-lg text-xs font-bold transition-all ${orderFormData.deliveryType === "office" ? "bg-background text-secondary shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
-                      >
-                        للمكتب
-                      </button>
-                    </div>
+                    <Select 
+                      value={orderFormData.deliveryType} 
+                      onValueChange={(v: any) => setOrderFormData({ ...orderFormData, deliveryType: v })}
+                    >
+                      <SelectTrigger className="h-12 rounded-xl">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="home" className="text-right" dir="rtl">توصيل للمنزل</SelectItem>
+                        <SelectItem value="office" className="text-right" dir="rtl">توصيل للمكتب (Stop Desk)</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
 
@@ -2476,14 +2608,56 @@ const Dashboard = () => {
                 <div className="flex gap-4">
                   <Button 
                     className="flex-1 h-16 rounded-[1.5rem] bg-secondary text-secondary-foreground font-black text-xl shadow-xl shadow-secondary/20 hover:scale-[1.02] active:scale-95 transition-all"
-                    onClick={() => {
-                      if (!orderFormData.firstName || !orderFormData.phone || !orderFormData.address || !orderFormData.wilaya) {
-                        toast({ title: "يرجى ملء كافة البيانات الأساسية", variant: "destructive" });
+                    onClick={async () => {
+                      if (!orderFormData.firstName || !orderFormData.lastName || !orderFormData.phone || !orderFormData.address || !orderFormData.wilaya || !orderFormData.commune) {
+                        toast({ title: "يرجى ملء كافة البيانات الأساسية", description: "تأكد من اختيار البلدية واللقب", variant: "destructive" });
                         return;
                       }
-                      toast({ title: "تم تسجيل الطلب بنجاح! 🚀", description: "سيتم تتبع الطلب من قسم طلبياتي." });
-                      setIsOrderDialogOpen(false);
-                      setOrderFormData({ firstName: "", lastName: "", phone: "", wilaya: "", address: "", deliveryType: "home", deliveryFee: 500 });
+
+                      try {
+                        const response = await fetch('http://127.0.0.1:5001/api/orders', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            productId: selectedProduct.id,
+                            affiliateId: user?.id || "aff-demo-123",
+                            customerName: `${orderFormData.firstName} ${orderFormData.lastName}`,
+                            customerPhone: orderFormData.phone,
+                            wilaya: orderFormData.wilaya,
+                            address: orderFormData.address,
+                            quantity: 1,
+                            totalAmount: selectedProduct.price + orderFormData.deliveryFee,
+                            commissionAmount: selectedProduct.commission
+                          })
+                        });
+
+                        if (!response.ok) throw new Error('Order failed');
+
+                        toast({ title: "تم تسجيل الطلب بنجاح! 🚀", description: "سيتم تتبع الطلب من قسم طلبياتي." });
+                        setIsOrderDialogOpen(false);
+                        setOrderFormData({ firstName: "", lastName: "", phone: "", wilaya: "", commune: "", address: "", deliveryType: "home", stopDesk: 0, deliveryFee: 500 });
+                        
+                        // Refetch orders immediately
+                        const res = await fetch('http://127.0.0.1:5001/api/orders/all');
+                        const data = await res.json();
+                        if (res.ok) {
+                            setOrders(data.data.map((o: any) => ({
+                                id: o.id,
+                                productName: o.product?.name || "منتج محذوف",
+                                customerName: o.customerName,
+                                customerPhone: o.customerPhone,
+                                wilaya: o.wilaya,
+                                address: o.address,
+                                status: o.status.toLowerCase(),
+                                amount: o.totalAmount, // Final sale price
+                                commission: o.commissionAmount,
+                                date: new Date(o.createdAt).toLocaleDateString('ar-DZ'),
+                                trackingNumber: o.trackingNumber
+                            })));
+                        }
+                      } catch (error) {
+                        toast({ title: "فشل تسجيل الطلب", description: "يرجى المحاولة مرة أخرى", variant: "destructive" });
+                      }
                     }}
                   >
                     تأكيد الطلب نهائياً
