@@ -1664,36 +1664,6 @@ const Dashboard = () => {
 
                 {/* Pricing Summary */}
                 <div className="lg:w-2/3 space-y-6">
-                  <div className="grid sm:grid-cols-2 gap-4">
-                    <div className="bg-gradient-to-br from-primary to-navy-900 text-white rounded-3xl p-6 shadow-xl">
-                      <div className="flex items-center gap-4 mb-4">
-                        <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center">
-                          <MapPin className="w-6 h-6" />
-                        </div>
-                        <h4 className="text-lg font-bold">التوصيل للمنزل</h4>
-                      </div>
-                      <p className="text-white/80 text-sm mb-4">يستلم الزبون المنتج في مقر سكنه في كافة الولايات.</p>
-                      <div className="flex items-baseline gap-1">
-                        <span className="text-xs">يبدأ من</span>
-                        <span className="text-3xl font-black">300 دج</span>
-                      </div>
-                    </div>
-
-                    <div className="bg-gradient-to-br from-secondary to-orange-700 text-white rounded-3xl p-6 shadow-xl">
-                      <div className="flex items-center gap-4 mb-4">
-                        <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center">
-                          <User className="w-6 h-6" />
-                        </div>
-                        <h4 className="text-lg font-bold">التوصيل للمكتب</h4>
-                      </div>
-                      <p className="text-white/80 text-sm mb-4">سعر مخفض عند استلام الزبون للطلب من مكتب الشركة.</p>
-                      <div className="flex items-baseline gap-1">
-                        <span className="text-xs">يبدأ من</span>
-                        <span className="text-3xl font-black">200 دج</span>
-                      </div>
-                    </div>
-                  </div>
-
                   <div className="bg-card rounded-3xl p-8 border border-border/50 shadow-sm relative overflow-hidden">
                     <div className="relative z-10">
                       <h4 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">

@@ -72,6 +72,7 @@ interface LandingPageConfig {
   ctaAnimation: "none" | "pulse" | "bounce" | "shake" | "glow";
   imageStyle: "rounded" | "sharp" | "blob" | "circle";
   pixels?: { facebook?: string; tiktok?: string; snapchat?: string };
+  galleryImages: string[];
 }
 
 const defaultNewPage = (): LandingPageConfig => ({
@@ -124,7 +125,8 @@ const defaultNewPage = (): LandingPageConfig => ({
   gradientDirection: "to-br",
   ctaAnimation: "pulse",
   imageStyle: "rounded",
-  pixels: { facebook: "", tiktok: "", snapchat: "" }
+  pixels: { facebook: "", tiktok: "", snapchat: "" },
+  galleryImages: []
 });
 
 const templates = [
@@ -287,12 +289,31 @@ const LandingPageBuilder = () => {
 
       setAiProgressStep(3);
 
+      // Helper to resolve stock images from keywords
+      const resolveStockImages = (keywordsObj: any) => {
+        const baseUrl = "https://images.unsplash.com/photo-";
+        const presets: Record<string, string> = {
+          "hero": "1505740420928-5e560c06d30e?auto=format&fit=crop&q=80&w=1000", // Generic tech/product
+          "features": "1460353581641-37badd45ec65?auto=format&fit=crop&q=80&w=800", // Quality/Modern
+          "testimonials": "1484860137485-951bd6ce938c?auto=format&fit=crop&q=80&w=600" // Happy people
+        };
+        
+        // Dynamic search URLs
+        const searchBase = "https://source.unsplash.com/featured/?";
+        return [
+          `${searchBase}${keywordsObj.hero || 'product'}`,
+          `${searchBase}${keywordsObj.features || 'quality'}`,
+          `${searchBase}${keywordsObj.testimonials || 'customer'}`
+        ];
+      };
+
       // Injecting the AI output directly into the LandingPage template
       const aiGeneratedPage: LandingPageConfig = {
         ...editingPage,
         ...config,
-        heroImage: uploadedAiImage, // Keep the uploaded image!
-        sections: ["hero", "urgency-bar", "features", "gallery", "social-proof", "trust-badges", "cta"]
+        heroImage: uploadedAiImage, // Keep the uploaded image as Hero
+        galleryImages: resolveStockImages(config.imageKeywords || {}),
+        sections: config.suggestedSections || ["hero", "urgency-bar", "features", "gallery", "social-proof", "faq", "cta"]
       };
 
       setEditingPage(aiGeneratedPage);
@@ -303,7 +324,7 @@ const LandingPageBuilder = () => {
       setAiProgressStep(0);
       setUploadedAiImage(null);
       setActiveDesignTab("content");
-      toast({ title: "✨ سحر الـ AI مكتمل!", description: "تم بناء صفحتك باستخدام Gemini بنجاح." });
+      toast({ title: "✨ سحر الـ AI مكتمل!", description: "تم بناء صفحتك وتوليد الصور وتنسيق الألوان بنجاح." });
 
     } catch (error) {
       console.error(error);
@@ -555,6 +576,22 @@ const LandingPageBuilder = () => {
                     <p className="text-[9px]" style={{ color: stc }}>{s.label}</p>
                   </div>
                 ))}
+              </div>
+            )}
+
+            {/* Gallery Section */}
+            {p.sections.includes("gallery") && p.galleryImages && p.galleryImages.length > 0 && (
+              <div className="space-y-3" dir="rtl">
+                <h3 className="text-sm font-bold flex items-center gap-2">
+                  <Camera className="w-4 h-4" style={{ color: p.primaryColor }} /> صور المنتج
+                </h3>
+                <div className="grid grid-cols-2 gap-2">
+                  {p.galleryImages.map((img, i) => (
+                    <div key={i} className="aspect-square overflow-hidden bg-muted rounded-xl" style={{ borderRadius: br }}>
+                      <img src={img} alt={`Gallery ${i}`} className="w-full h-full object-cover" />
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
 
@@ -947,20 +984,26 @@ const LandingPageBuilder = () => {
                       <div className="space-y-4 w-full px-6">
                         <div className="flex items-center gap-3">
                           <Check className={`w-5 h-5 transition-colors ${aiProgressStep > 0 ? "text-primary" : "text-muted/30"}`} />
-                          <p className={`font-bold transition-all ${aiProgressStep === 1 ? "text-foreground text-lg scale-105" : aiProgressStep > 1 ? "text-muted-foreground" : "text-muted"}`}>
-                            جاري فحص الصورة وتحليل المنتج...
+                          <p className={`font-bold transition-all ${aiProgressStep === 1 ? "text-foreground text-lg scale-105" : aiProgressStep > 1 ? "text-muted-foreground text-sm" : "text-muted"}`}>
+                            تحليل تفاصيل ومميزات المنتج...
                           </p>
                         </div>
                         <div className="flex items-center gap-3">
                           <Check className={`w-5 h-5 transition-colors ${aiProgressStep > 1 ? "text-primary" : "text-muted/30"}`} />
-                          <p className={`font-bold transition-all ${aiProgressStep === 2 ? "text-foreground text-lg scale-105" : aiProgressStep > 2 ? "text-muted-foreground" : "text-muted"}`}>
-                            جاري صياغة النصوص الإعلانية الجذابة...
+                          <p className={`font-bold transition-all ${aiProgressStep === 2 ? "text-foreground text-lg scale-105" : aiProgressStep > 2 ? "text-muted-foreground text-sm" : "text-muted"}`}>
+                             كتابة محتوى بيعي مقنع...
                           </p>
                         </div>
                         <div className="flex items-center gap-3">
                           <Check className={`w-5 h-5 transition-colors ${aiProgressStep > 2 ? "text-primary" : "text-muted/30"}`} />
-                          <p className={`font-bold transition-all ${aiProgressStep === 3 ? "text-foreground text-lg scale-105" : aiProgressStep > 3 ? "text-muted-foreground" : "text-muted"}`}>
-                            جاري بناء واجهة المتجر وتنسيق الألوان...
+                          <p className={`font-bold transition-all ${aiProgressStep === 3 ? "text-foreground text-lg scale-105" : aiProgressStep > 3 ? "text-muted-foreground text-sm" : "text-muted"}`}>
+                             توليد واختيار صور احترافية للمنتج...
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <Check className={`w-5 h-5 transition-colors ${aiProgressStep > 3 ? "text-primary" : "text-muted/30"}`} />
+                          <p className={`font-bold transition-all ${aiProgressStep === 4 ? "text-foreground text-lg scale-105" : aiProgressStep > 4 ? "text-muted-foreground text-sm" : "text-muted"}`}>
+                             تنسيق الألوان وبناء الهوية البصرية...
                           </p>
                         </div>
                       </div>

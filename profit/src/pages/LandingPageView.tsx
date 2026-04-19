@@ -454,7 +454,7 @@ const LandingPageView = () => {
                     onChange={e => setOrderForm(f => ({ ...f, wilaya: e.target.value, commune: "" }))}
                   >
                     <option value="">اختر الولاية</option>
-                    {wilayas.map(w => <option key={w.id} value={w.id}>{w.id} - {w.wilaya_name_ar}</option>)}
+                    {wilayas.map(w => <option key={w.wilaya_id} value={w.wilaya_id}>{w.wilaya_id} - {w.wilaya_name}</option>)}
                   </select>
 
                   <select 
@@ -464,7 +464,7 @@ const LandingPageView = () => {
                     disabled={!orderForm.wilaya || loadingDelivery}
                   >
                     <option value="">اختر البلدية</option>
-                    {communes.map(c => <option key={c.id} value={c.id}>{c.commune_name_ar}</option>)}
+                    {communes.map(c => <option key={c.commune_id || c.nom} value={c.nom}>{c.nom}</option>)}
                   </select>
 
                   <div className="grid grid-cols-2 gap-3">
@@ -921,12 +921,26 @@ const LandingPageView = () => {
                       <MapPin className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: stc }} />
                       <select
                         value={orderForm.wilaya}
-                        onChange={(e) => setOrderForm(f => ({ ...f, wilaya: e.target.value }))}
+                        onChange={(e) => setOrderForm(f => ({ ...f, wilaya: e.target.value, commune: "" }))}
                         className="w-full pr-10 h-12 text-sm border bg-transparent appearance-none cursor-pointer"
                         style={{ borderRadius: `${Math.min(p.borderRadius, 16)}px`, borderColor: isDark(p.backgroundColor) ? "#334155" : "#d1d5db", backgroundColor: isDark(p.backgroundColor) ? "#1e293b" : "#fff", color: tc, paddingLeft: "12px" }}
                       >
                         <option value="">اختر الولاية</option>
-                        {wilayas.map(w => <option key={w} value={w}>{w}</option>)}
+                        {wilayas.map(w => <option key={w.wilaya_id} value={w.wilaya_id}>{w.wilaya_id} - {w.wilaya_name}</option>)}
+                      </select>
+                    </div>
+
+                    <div className="relative">
+                      <MapPin className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: stc }} />
+                      <select
+                        value={orderForm.commune}
+                        onChange={(e) => setOrderForm(f => ({ ...f, commune: e.target.value }))}
+                        disabled={!orderForm.wilaya || loadingDelivery}
+                        className="w-full pr-10 h-12 text-sm border bg-transparent appearance-none cursor-pointer disabled:opacity-50"
+                        style={{ borderRadius: `${Math.min(p.borderRadius, 16)}px`, borderColor: isDark(p.backgroundColor) ? "#334155" : "#d1d5db", backgroundColor: isDark(p.backgroundColor) ? "#1e293b" : "#fff", color: tc, paddingLeft: "12px" }}
+                      >
+                        <option value="">{loadingDelivery ? "جاري التحميل..." : "اختر البلدية"}</option>
+                        {communes.map(c => <option key={c.commune_id || c.nom} value={c.nom}>{c.nom}</option>)}
                       </select>
                     </div>
                   </div>
