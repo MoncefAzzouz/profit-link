@@ -232,17 +232,25 @@ const Dashboard = () => {
   // Calculate delivery fee automatically
   useEffect(() => {
     if (orderFormData.wilaya) {
-      const rate = shippingRates.find(r => r.wilaya === orderFormData.wilaya);
+      const rate = shippingRates.find(r => r.code === orderFormData.wilaya);
       if (rate) {
-        const fee = orderFormData.deliveryType === "home" ? rate.homePrice : rate.officePrice;
+        // Validation: If selected commune doesn't support stop desk, force home
+        let targetType = orderFormData.deliveryType;
+        const selectedCommuneObj = communes.find(c => c.nom === orderFormData.commune);
+        if (selectedCommuneObj && selectedCommuneObj.has_stop_desk === 0 && targetType === "office") {
+          targetType = "home";
+        }
+
+        const fee = targetType === "home" ? rate.homePrice : rate.officePrice;
         setOrderFormData(prev => ({ 
           ...prev, 
+          deliveryType: targetType,
           deliveryFee: fee,
-          stopDesk: orderFormData.deliveryType === "office" ? 1 : 0 
+          stopDesk: targetType === "office" ? 1 : 0 
         }));
       }
     }
-  }, [orderFormData.wilaya, orderFormData.deliveryType]);
+  }, [orderFormData.wilaya, orderFormData.deliveryType, orderFormData.commune, communes]);
 
   // Fetch communes when wilaya changes
   useEffect(() => {
@@ -254,7 +262,7 @@ const Dashboard = () => {
       
       setLoadingCommunes(true);
       try {
-        const wilayaData = shippingRates.find(r => r.wilaya === orderFormData.wilaya);
+        const wilayaData = shippingRates.find(r => r.code === orderFormData.wilaya);
         const wilayaId = wilayaData?.code || "";
         
         if (wilayaId) {
@@ -307,27 +315,54 @@ const Dashboard = () => {
   const handleAndersonShip = async (order: any) => {
     setProcessingOrderId(order.id);
     try {
-      const payload = {
-        customerName: order.customerName,
-        phone: order.customerPhone || "000000000",
-        address: order.address || "غير محدد",
-        wilaya: order.wilaya,
-        productName: order.productName,
-        amount: order.amount || 0
-      };
+      const response = await fetch(`http://127.0.0.1:5001/api/orders/${order.id}/push-ecotrack`, {
+        method: 'POST'
+      });
+      const res = await response.json();
       
-      const res = await createAndersonShipment(payload);
-      
-      if (res.success) {
+      if (response.ok) {
         toast({ 
           title: "تم إرسال الطلب لشركة الشحن", 
-          description: `رقم التتبع: ${res.trackingNumber}` 
+          description: `رقم التتبع: ${res.tracking}` 
         });
         
-        setOrders(orders.map(o => o.id === order.id ? { ...o, status: "shipped" } as any : o));
+        setOrders(orders.map(o => o.id === order.id ? { 
+          ...o, 
+          status: "shipped", 
+          trackingNumber: res.tracking 
+        } as any : o));
+      } else {
+        throw new Error(res.error || "Failed to push to Ecotrack");
       }
-    } catch (err) {
-      toast({ title: "خطأ في الإرسال", description: "حدث مشكل أثناء التواصل مع خدمة Anderson", variant: "destructive" });
+    } catch (err: any) {
+      toast({ title: "خطأ في الإرسال", description: err.message, variant: "destructive" });
+    } finally {
+      setProcessingOrderId(null);
+    }
+  };
+
+  const handleAndersonExpedite = async (order: any) => {
+    if (!order.trackingNumber) return;
+    setProcessingOrderId(order.id);
+    try {
+      const response = await fetch(`http://127.0.0.1:5001/api/orders/${order.id}/validate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ askCollection: true })
+      });
+      const res = await response.json();
+      
+      if (response.ok) {
+        toast({ 
+          title: "تم تأكيد الشحن بنجاح! 🚀", 
+          description: "تمت معالجة الطلب في Ecotrack." 
+        });
+        setOrders(orders.map(o => o.id === order.id ? { ...o, status: "shipped" } as any : o));
+      } else {
+        throw new Error(res.error || "Failed to expedite order");
+      }
+    } catch (err: any) {
+      toast({ title: "خطأ في التأكيد", description: err.message, variant: "destructive" });
     } finally {
       setProcessingOrderId(null);
     }
@@ -1265,13 +1300,34 @@ const Dashboard = () => {
                                     <MessageSquare className="w-4 h-4" />
                                   </Button>
                                   {(order.status === "pending" || order.status === "confirmed") && (
-                                    <Button size="sm" className="gap-2 bg-indigo-600 hover:bg-indigo-700 text-white" disabled={isProcessing} onClick={() => handleAndersonShip(order)}>
+                                    <Button 
+                                      size="sm" 
+                                      className="gap-2 bg-indigo-600 hover:bg-indigo-700 text-white" 
+                                      disabled={isProcessing} 
+                                      onClick={() => handleAndersonShip(order)}
+                                    >
                                       {isProcessing ? (
                                         <motion.span animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }} className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full inline-block" />
                                       ) : (
                                         <Truck className="w-4 h-4" />
                                       )}
                                       {isProcessing ? "" : "شحن"}
+                                    </Button>
+                                  )}
+                                  {order.trackingNumber && order.status !== "delivered" && order.status !== "cancelled" && (
+                                    <Button 
+                                      size="sm" 
+                                      variant="hero"
+                                      className="gap-2 h-8 px-3 text-[10px] font-black" 
+                                      disabled={isProcessing} 
+                                      onClick={() => handleAndersonExpedite(order)}
+                                    >
+                                      {isProcessing ? (
+                                        <motion.span animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }} className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full inline-block" />
+                                      ) : (
+                                        <Check className="w-3 h-3" />
+                                      )}
+                                      {isProcessing ? "" : "تأكيد الشحن"}
                                     </Button>
                                   )}
                                 </div>
@@ -2518,7 +2574,7 @@ const Dashboard = () => {
                       </SelectTrigger>
                       <SelectContent className="max-h-[300px]">
                         {shippingRates.map((rate) => (
-                          <SelectItem key={rate.code} value={rate.wilaya}>
+                          <SelectItem key={rate.code} value={rate.code}>
                             {rate.code} - {rate.wilaya}
                           </SelectItem>
                         ))}
@@ -2534,7 +2590,15 @@ const Dashboard = () => {
                     </Label>
                     <Select 
                       value={orderFormData.commune} 
-                      onValueChange={(v) => setOrderFormData({ ...orderFormData, commune: v })}
+                      onValueChange={(v) => {
+                        const communeObj = communes.find(c => c.nom === v);
+                        const isStopDeskAvailable = communeObj?.has_stop_desk !== 0;
+                        setOrderFormData({ 
+                          ...orderFormData, 
+                          commune: v,
+                          deliveryType: (!isStopDeskAvailable && orderFormData.deliveryType === "office") ? "home" : orderFormData.deliveryType
+                        });
+                      }}
                       disabled={!orderFormData.wilaya || loadingCommunes}
                     >
                       <SelectTrigger className="h-12 rounded-xl">
@@ -2562,7 +2626,14 @@ const Dashboard = () => {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="home" className="text-right" dir="rtl">توصيل للمنزل</SelectItem>
-                        <SelectItem value="office" className="text-right" dir="rtl">توصيل للمكتب (Stop Desk)</SelectItem>
+                        <SelectItem 
+                          value="office" 
+                          className="text-right" 
+                          dir="rtl"
+                          disabled={communes.find(c => c.nom === orderFormData.commune)?.has_stop_desk === 0}
+                        >
+                          توصيل للمكتب (Stop Desk) {!communes.find(c => c.nom === orderFormData.commune)?.has_stop_desk && orderFormData.commune && "(غير متوفر)"}
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -2624,10 +2695,13 @@ const Dashboard = () => {
                             customerName: `${orderFormData.firstName} ${orderFormData.lastName}`,
                             customerPhone: orderFormData.phone,
                             wilaya: orderFormData.wilaya,
+                            commune: orderFormData.commune, // Added
                             address: orderFormData.address,
                             quantity: 1,
                             totalAmount: selectedProduct.price + orderFormData.deliveryFee,
-                            commissionAmount: selectedProduct.commission
+                            commissionAmount: selectedProduct.commission,
+                            shippingFee: orderFormData.deliveryFee, // Added
+                            stopDesk: orderFormData.stopDesk // Added
                           })
                         });
 
