@@ -345,8 +345,8 @@ const Auth = () => {
                           </h4>
                           <div className="space-y-4">
                             <div className="space-y-2">
-                              <Label className="font-black text-sm">رقم حسابك في CCP</Label>
-                              <Input value={formData.ccp} onChange={e => update("ccp", e.target.value)} placeholder="XXXXXXXXXX XX" className="h-14 rounded-2xl bg-card border-none px-6 text-center font-mono text-lg" required />
+                              <Label className="font-black text-sm">رقم حسابك في CCP (اختياري)</Label>
+                              <Input value={formData.ccp} onChange={e => update("ccp", e.target.value)} placeholder="XXXXXXXXXX XX" className="h-14 rounded-2xl bg-card border-none px-6 text-center font-mono text-lg" />
                             </div>
                             <div className="pt-4 border-t border-border/50 mt-4 space-y-3">
                               <div className="flex justify-between text-sm">
