@@ -274,7 +274,7 @@ const LandingPageBuilder = () => {
       // Step 2: Hitting our custom Gemini Route
       setAiProgressStep(2);
 
-      const response = await fetch('http://127.0.0.1:5001/api/store/generate-ai', {
+      const response = await fetch('https://profit-link.onrender.com/api/store/generate-ai', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

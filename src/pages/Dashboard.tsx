@@ -104,7 +104,7 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchRates = async () => {
       try {
-        const res = await fetch('http://127.0.0.1:5001/api/delivery/all-rates');
+        const res = await fetch('https://profit-link.onrender.com/api/delivery/all-rates');
         const json = await res.json();
         if (res.ok && json.data) {
           setShippingRates(json.data);
@@ -127,7 +127,7 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        const response = await fetch('http://127.0.0.1:5001/api/orders/all'); // For demo, fetching all for now
+        const response = await fetch('https://profit-link.onrender.com/api/orders/all'); // For demo, fetching all for now
         const res = await response.json();
         if (response.ok) {
           const fetchedOrders = res.data.map((o: any) => ({
@@ -266,7 +266,7 @@ const Dashboard = () => {
         const wilayaId = wilayaData?.code || "";
         
         if (wilayaId) {
-          const response = await fetch(`http://127.0.0.1:5001/api/delivery/communes?wilaya_id=${parseInt(wilayaId)}`);
+          const response = await fetch(`https://profit-link.onrender.com/api/delivery/communes?wilaya_id=${parseInt(wilayaId)}`);
           const res = await response.json();
           if (response.ok) {
             setCommunes(res.data || []);
@@ -315,7 +315,7 @@ const Dashboard = () => {
   const handleAndersonShip = async (order: any) => {
     setProcessingOrderId(order.id);
     try {
-      const response = await fetch(`http://127.0.0.1:5001/api/orders/${order.id}/push-ecotrack`, {
+      const response = await fetch(`https://profit-link.onrender.com/api/orders/${order.id}/push-ecotrack`, {
         method: 'POST'
       });
       const res = await response.json();
@@ -345,7 +345,7 @@ const Dashboard = () => {
     if (!order.trackingNumber) return;
     setProcessingOrderId(order.id);
     try {
-      const response = await fetch(`http://127.0.0.1:5001/api/orders/${order.id}/validate`, {
+      const response = await fetch(`https://profit-link.onrender.com/api/orders/${order.id}/validate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ askCollection: true })
@@ -2656,7 +2656,7 @@ const Dashboard = () => {
                       }
 
                       try {
-                        const response = await fetch('http://127.0.0.1:5001/api/orders', {
+                        const response = await fetch('https://profit-link.onrender.com/api/orders', {
                           method: 'POST',
                           headers: { 'Content-Type': 'application/json' },
                           body: JSON.stringify({
@@ -2682,7 +2682,7 @@ const Dashboard = () => {
                         setOrderFormData({ firstName: "", lastName: "", phone: "", wilaya: "", commune: "", address: "", deliveryType: "home", stopDesk: 0, deliveryFee: 500 });
                         
                         // Refetch orders immediately
-                        const res = await fetch('http://127.0.0.1:5001/api/orders/all');
+                        const res = await fetch('https://profit-link.onrender.com/api/orders/all');
                         const data = await res.json();
                         if (res.ok) {
                             setOrders(data.data.map((o: any) => ({

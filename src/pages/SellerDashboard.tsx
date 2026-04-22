@@ -112,7 +112,7 @@ const SellerDashboard = () => {
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        const response = await fetch('http://127.0.0.1:5001/api/orders/all');
+        const response = await fetch('https://profit-link.onrender.com/api/orders/all');
         const res = await response.json();
         if (response.ok) {
           const fetchedOrders = res.data.map((o: any) => ({
@@ -184,7 +184,7 @@ const SellerDashboard = () => {
   const handleEcotrackShip = async (order: any) => {
     setProcessingOrderId(order.id);
     try {
-      const response = await fetch(`http://127.0.0.1:5001/api/orders/${order.id}/push-ecotrack`, {
+      const response = await fetch(`https://profit-link.onrender.com/api/orders/${order.id}/push-ecotrack`, {
         method: 'POST',
       });
       const res = await response.json();
@@ -207,7 +207,7 @@ const SellerDashboard = () => {
 
   const handleViewTracking = async (order: any) => {
     try {
-      const response = await fetch(`http://127.0.0.1:5001/api/orders/${order.id}/tracking`);
+      const response = await fetch(`https://profit-link.onrender.com/api/orders/${order.id}/tracking`);
       const res = await response.json();
       if (response.ok) {
         // Here you would typically open a dialog or show the info
