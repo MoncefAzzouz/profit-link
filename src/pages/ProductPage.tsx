@@ -23,7 +23,7 @@ const ProductPage = () => {
   useEffect(() => {
     const fetchRates = async () => {
       try {
-        const res = await fetch('https://profit-link.onrender.com/api/delivery/all-rates');
+        const res = await fetch('https://profit-link-3eri.onrender.com/api/delivery/all-rates');
         const json = await res.json();
         if (res.ok && json.data) setShippingRates(json.data);
       } catch (err) {
@@ -126,7 +126,7 @@ const ProductPage = () => {
 
     setIsSubmitting(true);
     try {
-      const response = await fetch('https://profit-link.onrender.com/api/orders', {
+      const response = await fetch('https://profit-link-3eri.onrender.com/api/orders', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

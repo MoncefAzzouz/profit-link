@@ -147,7 +147,7 @@ const Admin = () => {
       const fetchShipping = async () => {
         setIsFetchingShipping(true);
         try {
-          const res = await fetch('https://profit-link.onrender.com/api/delivery/all-rates');
+          const res = await fetch('https://profit-link-3eri.onrender.com/api/delivery/all-rates');
           const data = await res.json();
           if (res.ok) {
             setShippingRatesData(data.data);
