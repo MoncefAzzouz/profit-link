@@ -11,7 +11,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'super-secret-default-key-change-in
 // POST /api/auth/register
 router.post('/register', async (req: Request, res: Response): Promise<any> => {
   try {
-    const { email, password, name, phone } = req.body;
+    const { email, password, name, phone, wilaya, ccp, storeName } = req.body;
 
     if (!email || !password || !name) {
       return res.status(400).json({ error: 'Missing required fields' });
@@ -34,6 +34,9 @@ router.post('/register', async (req: Request, res: Response): Promise<any> => {
         passwordHash,
         name,
         phone,
+        wilaya,
+        ccp,
+        storeName,
       },
     });
 
@@ -45,9 +48,9 @@ router.post('/register', async (req: Request, res: Response): Promise<any> => {
       token,
       user: { id: user.id, email: user.email, name: user.name, role: user.role },
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Registration Error:', error);
-    res.status(500).json({ error: 'Registration failed' });
+    res.status(500).json({ error: error.message || 'Registration failed' });
   }
 });
 
