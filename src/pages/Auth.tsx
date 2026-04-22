@@ -85,7 +85,10 @@ const Auth = () => {
             email: formData.email, 
             password: formData.password,
             name: `${formData.firstName} ${formData.lastName}`,
-            phone: formData.phone
+            phone: formData.phone,
+            wilaya: formData.wilaya,
+            ccp: formData.ccp,
+            storeName: formData.storeName
           };
 
       const response = await fetch(url, {
