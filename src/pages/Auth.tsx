@@ -74,42 +74,59 @@ const Auth = () => {
     }
 
     setIsLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 1500));
 
-    if (!isLogin) {
-      // Save join request for admin review
-      const newRequest = {
-        id: "jr-" + Date.now(),
-        name: `${formData.firstName} ${formData.lastName}`,
-        email: formData.email,
-        phone: formData.phone,
-        role: "affiliate", // Registration page is specifically for affiliates
-        wilaya: formData.wilaya,
-        ccp: formData.ccp,
-        status: "pending",
-        date: new Date().toISOString().split('T')[0]
-      };
+    try {
+      const endpoint = isLogin ? '/login' : '/register';
+      const url = `https://profit-link-3eri.onrender.com/api/auth${endpoint}`;
       
-      const existingRequests = JSON.parse(localStorage.getItem("admin_join_requests") || "[]");
-      localStorage.setItem("admin_join_requests", JSON.stringify([newRequest, ...existingRequests]));
+      const payload = isLogin 
+        ? { email: formData.email, password: formData.password }
+        : { 
+            email: formData.email, 
+            password: formData.password,
+            name: `${formData.firstName} ${formData.lastName}`,
+            phone: formData.phone
+          };
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "حدث خطأ غير متوقع");
+      }
+
+      // Save token and user info
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("affiliate_user", JSON.stringify({
+        id: data.user.id,
+        name: data.user.name,
+        email: data.user.email,
+        role: data.user.role,
+        wilaya: formData.wilaya,
+        storeName: formData.storeName,
+        ccp: formData.ccp
+      }));
+
+      toast({
+        title: isLogin ? "مرحباً بك مجدداً! 👋" : "تم إنشاء حسابك بنجاح! 🎉",
+        description: isLogin ? "تم تسجيل الدخول بنجاح" : "ابدأ الآن في اختيار المنتجات والربح"
+      });
+      navigate("/dashboard");
+
+    } catch (error: any) {
+      toast({
+        title: "فشل الدخول",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
     }
-
-    localStorage.setItem("affiliate_user", JSON.stringify({
-      id: "aff-" + Date.now(),
-      name: `${formData.firstName} ${formData.lastName}` || "مسوّق جديد",
-      email: formData.email,
-      phone: formData.phone,
-      wilaya: formData.wilaya,
-      storeName: formData.storeName,
-      ccp: formData.ccp
-    }));
-
-    setIsLoading(false);
-    toast({
-      title: isLogin ? "مرحباً بك مجدداً! 👋" : "تم إنشاء حسابك بنجاح! 🎉",
-      description: isLogin ? "تم تسجيل الدخول بنجاح" : "ابدأ الآن في اختيار المنتجات والربح"
-    });
-    navigate("/dashboard");
   };
 
   return (
