@@ -51,6 +51,6 @@ app.get('/health', async (req: Request, res: Response) => {
 });
 
 // Start Server
-app.listen(Number(PORT), '127.0.0.1', () => {
-  console.log(`🚀 Server running on http://127.0.0.1:${PORT}`);
+app.listen(Number(PORT), '0.0.0.0', () => {
+  console.log(`🚀 Server running on port ${PORT}`);
 });
