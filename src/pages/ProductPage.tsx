@@ -81,12 +81,16 @@ const ProductPage = () => {
         }
         const res = await fetch(`https://profit-link-3eri.onrender.com/api/delivery/communes?wilaya_id=${wilayaId}`);
         const json = await res.json();
-        if (res.ok && json.data) {
+        console.log("📦 Communes API Response:", json);
+        if (res.ok && json.data && Array.isArray(json.data)) {
           setCommunes(json.data);
-          // Auto-select first commune if available
-          if (json.data.length > 0) {
+          // Auto-select first commune if current one is invalid/empty
+          if (json.data.length > 0 && !json.data.find((c:any) => c.commune_name === formData.commune)) {
             setFormData(prev => ({ ...prev, commune: json.data[0].commune_name }));
           }
+        } else {
+          console.warn("⚠️ No communes found or invalid response:", json);
+          setCommunes([]);
         }
       } catch (err) {
         console.error("Failed to fetch communes", err);
@@ -468,7 +472,7 @@ const ProductPage = () => {
                 <div>
                   <Label htmlFor="commune">البلدية *</Label>
                   <Select
-                    value={formData.commune}
+                    value={formData.commune || ""}
                     onValueChange={(value) => setFormData({ ...formData, commune: value })}
                     disabled={!formData.wilaya || loadingCommunes}
                   >
@@ -476,13 +480,15 @@ const ProductPage = () => {
                       <SelectValue placeholder={loadingCommunes ? "جاري التحميل..." : "اختر البلدية"} />
                     </SelectTrigger>
                     <SelectContent>
-                      {communes && communes.length > 0 ? communes.map((commune) => (
-                        <SelectItem key={commune.commune_id || commune.commune_name} value={commune.commune_name}>
-                          {commune.commune_name}
-                        </SelectItem>
-                      )) : (
+                      {communes && communes.length > 0 ? (
+                        communes.map((commune) => (
+                          <SelectItem key={commune.commune_id || commune.commune_name} value={commune.commune_name}>
+                            {commune.commune_name}
+                          </SelectItem>
+                        ))
+                      ) : (
                         <SelectItem value="none" disabled>
-                          {formData.wilaya ? "لا توجد بلديات" : "اختر الولاية أولاً"}
+                          {loadingCommunes ? "جاري التحميل..." : "لا توجد بلديات"}
                         </SelectItem>
                       )}
                     </SelectContent>
