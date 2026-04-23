@@ -73,6 +73,7 @@ interface LandingPageConfig {
   imageStyle: "rounded" | "sharp" | "blob" | "circle";
   pixels?: { facebook?: string; tiktok?: string; snapchat?: string };
   galleryImages: string[];
+  productId?: string;
 }
 
 const defaultNewPage = (): LandingPageConfig => ({
@@ -234,7 +235,7 @@ const mockLandingPages: LandingPageConfig[] = [
   },
 ];
 
-const LandingPageBuilder = () => {
+const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: any }) => {
   const { toast } = useToast();
   const [pages, setPages] = useState<LandingPageConfig[]>(() => {
     const stored = localStorage.getItem("landing_pages");
@@ -260,6 +261,36 @@ const LandingPageBuilder = () => {
     setPages(newPages);
     localStorage.setItem("landing_pages", JSON.stringify(newPages));
   };
+
+  // Handle incoming product edit request
+  useEffect(() => {
+    if (initialProductToEdit) {
+      // Check if we already have a landing page for this product
+      const existingPage = pages.find((p) => p.productId === initialProductToEdit.id);
+      
+      if (existingPage) {
+        setEditingPage(existingPage);
+      } else {
+        // Create a new landing page specifically for this product
+        const newPage: LandingPageConfig = {
+          ...defaultNewPage(),
+          id: `lp-${Date.now()}`,
+          productId: initialProductToEdit.id,
+          productName: initialProductToEdit.name,
+          price: initialProductToEdit.price,
+          originalPrice: initialProductToEdit.originalPrice,
+          category: initialProductToEdit.category,
+          heroImage: initialProductToEdit.image,
+          galleryImages: initialProductToEdit.image ? [initialProductToEdit.image] : [],
+          status: "draft"
+        };
+        
+        const newPages = [...pages, newPage];
+        savePages(newPages);
+        setEditingPage(newPage);
+      }
+    }
+  }, [initialProductToEdit]);
 
   const handleSimulatedAiGeneration = async () => {
     if (!editingPage) return;

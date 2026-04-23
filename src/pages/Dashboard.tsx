@@ -103,6 +103,7 @@ const Dashboard = () => {
   const [orders, setOrders] = useState<any[]>([]);
   const [products, setProducts] = useState<any[]>([]);
   const [shippingRates, setShippingRates] = useState<ShippingRate[]>([]);
+  const [productToEditLandingPage, setProductToEditLandingPage] = useState<any>(null);
 
   const getWilayaName = (codeOrName: string) => {
     if (!codeOrName) return "";
@@ -1225,10 +1226,21 @@ const Dashboard = () => {
                         </div>
                         <div className="p-4">
                           <h4 className="font-bold text-foreground line-clamp-1 mb-2">{product.name}</h4>
-                          <div className="flex justify-between items-center">
+                          <div className="flex justify-between items-center mb-3">
                             <span className="text-primary font-bold">{product.price.toLocaleString()} دج</span>
                             <span className="text-xs text-secondary font-bold">ربحك: {product.commission.toLocaleString()} دج</span>
                           </div>
+                          <Button 
+                            variant="outline" 
+                            className="w-full text-xs font-bold gap-2 hover:bg-primary hover:text-white transition-colors"
+                            onClick={() => {
+                              setProductToEditLandingPage(product);
+                              setActiveTab("landing_pages");
+                            }}
+                          >
+                            <LayoutTemplate className="w-4 h-4" />
+                            تعديل صفحة الهبوط
+                          </Button>
                         </div>
                       </motion.div>
                     ))}
@@ -1325,7 +1337,7 @@ const Dashboard = () => {
           {/* Landing Pages Tab */}
           {activeTab === "landing_pages" && (
             <div className="space-y-6">
-              <LandingPageBuilder />
+              <LandingPageBuilder initialProductToEdit={productToEditLandingPage} />
             </div>
           )}
 
