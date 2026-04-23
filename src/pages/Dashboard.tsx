@@ -129,6 +129,26 @@ const Dashboard = () => {
       }
     };
     fetchProducts();
+
+    // Fetch saved store products from backend
+    const fetchStoreProducts = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+      try {
+        const res = await fetch('https://profit-link-3eri.onrender.com/api/store/products', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const json = await res.json();
+          if (json.data && Array.isArray(json.data)) {
+            setStoreProducts(new Set(json.data));
+          }
+        }
+      } catch (err) {
+        console.error('Failed to fetch store products', err);
+      }
+    };
+    fetchStoreProducts();
   }, []);
   const [loadingOrders, setLoadingOrders] = useState(true);
   const [dashboardStats, setDashboardStats] = useState({
@@ -470,18 +490,31 @@ const Dashboard = () => {
     });
   };
 
-  const toggleStoreProduct = (productId: string) => {
-    setStoreProducts(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(productId)) {
-        newSet.delete(productId);
-        toast({ title: "تمت الإزالة من متجرك" });
-      } else {
-        newSet.add(productId);
-        toast({ title: "تمت الإضافة لمتجرك ➕" });
-      }
-      return newSet;
-    });
+  const toggleStoreProduct = async (productId: string) => {
+    const token = localStorage.getItem("token");
+    const newSet = new Set(storeProducts);
+    if (newSet.has(productId)) {
+      newSet.delete(productId);
+      toast({ title: "تمت الإزالة من متجرك" });
+    } else {
+      newSet.add(productId);
+      toast({ title: "تمت الإضافة لمتجرك ➕" });
+    }
+    setStoreProducts(newSet);
+
+    // Save to backend
+    try {
+      await fetch('https://profit-link-3eri.onrender.com/api/store/products', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ productIds: Array.from(newSet) })
+      });
+    } catch (err) {
+      console.error('Failed to save store products', err);
+    }
   };
 
   const openProductDetail = (product: any) => {
