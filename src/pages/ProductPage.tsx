@@ -19,6 +19,8 @@ const ProductPage = () => {
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [shippingRates, setShippingRates] = useState<ShippingRate[]>([]);
+  const [communes, setCommunes] = useState<any[]>([]);
+  const [loadingCommunes, setLoadingCommunes] = useState(false);
 
   useEffect(() => {
     // Fetch product from backend
@@ -49,6 +51,33 @@ const ProductPage = () => {
     };
     fetchRates();
   }, [productId]);
+
+  // Fetch communes when wilaya changes
+  useEffect(() => {
+    const fetchCommunes = async () => {
+      if (!formData.wilaya) {
+        setCommunes([]);
+        return;
+      }
+      setLoadingCommunes(true);
+      try {
+        const res = await fetch(`https://profit-link-3eri.onrender.com/api/delivery/communes?wilaya_id=${formData.wilaya}`);
+        const json = await res.json();
+        if (res.ok && json.data) {
+          setCommunes(json.data);
+          // Auto-select first commune if available
+          if (json.data.length > 0) {
+            setFormData(prev => ({ ...prev, commune: json.data[0].commune_name }));
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch communes", err);
+      } finally {
+        setLoadingCommunes(false);
+      }
+    };
+    fetchCommunes();
+  }, [formData.wilaya]);
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
@@ -430,13 +459,22 @@ const ProductPage = () => {
 
                 <div>
                   <Label htmlFor="commune">البلدية *</Label>
-                  <Input
-                    id="commune"
+                  <Select
                     value={formData.commune}
-                    onChange={(e) => setFormData({ ...formData, commune: e.target.value })}
-                    placeholder="أدخل اسم البلدية"
-                    className="mt-1.5"
-                  />
+                    onValueChange={(value) => setFormData({ ...formData, commune: value })}
+                    disabled={!formData.wilaya || loadingCommunes}
+                  >
+                    <SelectTrigger className="mt-1.5">
+                      <SelectValue placeholder={loadingCommunes ? "جاري التحميل..." : "اختر البلدية"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {communes.map((commune) => (
+                        <SelectItem key={commune.commune_id} value={commune.commune_name}>
+                          {commune.commune_name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div>

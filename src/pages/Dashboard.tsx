@@ -96,7 +96,10 @@ const Dashboard = () => {
   const [activeTab, setActiveTab] = useState<Tab>("overview");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<any>(() => {
+    const storedUser = localStorage.getItem("affiliate_user");
+    return storedUser ? JSON.parse(storedUser) : null;
+  });
   const [orders, setOrders] = useState<any[]>([]);
   const [products, setProducts] = useState<any[]>([]);
   const [shippingRates, setShippingRates] = useState<ShippingRate[]>([]);
@@ -417,13 +420,10 @@ const Dashboard = () => {
   }, [orderFormData.wilaya, shippingRates]);
 
   useEffect(() => {
-    const storedUser = localStorage.getItem("affiliate_user");
-    if (!storedUser) {
+    if (!user) {
       navigate("/auth");
-    } else {
-      setUser(JSON.parse(storedUser));
     }
-  }, [navigate]);
+  }, [user, navigate]);
 
   const handleLogout = () => {
     localStorage.removeItem("affiliate_user");
@@ -663,8 +663,9 @@ const Dashboard = () => {
           {/* User Info */}
           <div className="p-4 border-b border-border">
             <div className="bg-muted rounded-xl p-4">
-              <p className="font-semibold text-foreground">{user.name}</p>
-              <p className="text-sm text-muted-foreground">{user.email}</p>
+              <p className="font-semibold text-foreground">{user?.name}</p>
+              <p className="text-sm text-muted-foreground">{user?.email}</p>
+              <p className="text-[10px] text-muted-foreground font-mono mt-1 opacity-70 select-all" title="Click to copy your Affiliate ID">ID: {user?.id}</p>
               <div className="mt-2 flex items-center gap-2">
                 <span className="px-2 py-1 bg-secondary/10 text-secondary text-xs rounded-full font-medium">
                   المستوى {mockAffiliateStats.currentLevel}
@@ -2756,8 +2757,8 @@ const Dashboard = () => {
                       </SelectTrigger>
                       <SelectContent className="max-h-[300px]">
                         {communes.map((c: any) => (
-                          <SelectItem key={c.commune_id || c.nom} value={c.nom}>
-                            {c.nom}
+                          <SelectItem key={c.commune_id || c.commune_name} value={c.commune_name}>
+                            {c.commune_name}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -2780,9 +2781,9 @@ const Dashboard = () => {
                           value="office" 
                           className="text-right" 
                           dir="rtl"
-                          disabled={communes.find(c => c.nom === orderFormData.commune)?.has_stop_desk === 0}
+                          disabled={communes.find(c => c.commune_name === orderFormData.commune)?.has_stop_desk === 0}
                         >
-                          توصيل للمكتب (Stop Desk) {!communes.find(c => c.nom === orderFormData.commune)?.has_stop_desk && orderFormData.commune && "(غير متوفر)"}
+                          توصيل للمكتب (Stop Desk) {!communes.find(c => c.commune_name === orderFormData.commune)?.has_stop_desk && orderFormData.commune && "(غير متوفر)"}
                         </SelectItem>
                       </SelectContent>
                     </Select>
