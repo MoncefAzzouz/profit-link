@@ -1154,12 +1154,12 @@ const Dashboard = () => {
                     <p className="text-primary-foreground/80 mb-10 max-w-2xl text-xl leading-relaxed">شارك رابط متجرك واكسب عمولة على كل منتج يشتريه الزبائن من خلالك. متجرك يحتوي حالياً على <b>{storeProducts.size}</b> منتجات.</p>
                     <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-4">
                       <div className="bg-white/10 backdrop-blur-md px-6 py-5 rounded-2xl border border-white/20 font-mono text-sm break-all flex-1 flex items-center justify-center lg:justify-start text-left" dir="ltr">
-                        {window.location.origin}/store/{user?.id || "aff-demo"}
+                        {window.location.origin}/store/{user?.storeName || user?.id || "aff-demo"}
                       </div>
                       <div className="flex gap-3">
                         <Button 
                           onClick={() => {
-                            const link = `${window.location.origin}/store/${user?.id || "aff-demo"}`;
+                            const link = `${window.location.origin}/store/${user?.storeName || user?.id || "aff-demo"}`;
                             navigator.clipboard.writeText(link);
                             toast({ title: "تم نسخ رابط المتجر! 🔗" });
                           }}
@@ -1168,13 +1168,15 @@ const Dashboard = () => {
                           <Copy className="w-6 h-6" />
                           نسخ الرابط
                         </Button>
-                        <Button 
-                          variant="outline"
-                          className="bg-white/10 border-white/20 hover:bg-white/20 text-white h-16 px-8 rounded-2xl gap-3 backdrop-blur-sm font-bold"
-                        >
-                          <Eye className="w-6 h-6" />
-                          معاينة
-                        </Button>
+                        <a href={`/store/${user?.storeName || user?.id || "aff-demo"}`} target="_blank" rel="noopener noreferrer">
+                          <Button 
+                            variant="outline"
+                            className="bg-white/10 border-white/20 hover:bg-white/20 text-white h-16 px-8 rounded-2xl gap-3 backdrop-blur-sm font-bold"
+                          >
+                            <Eye className="w-6 h-6" />
+                            معاينة
+                          </Button>
+                        </a>
                       </div>
                     </div>
                   </div>
