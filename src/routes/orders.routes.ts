@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { EcotrackService } from '../services/ecotrack.service';
-import { authenticateToken, AuthRequest } from '../middleware/auth';
+import { authenticateToken, AuthRequest, requireAdmin } from '../middleware/auth';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -133,7 +133,7 @@ router.get('/affiliate', authenticateToken, async (req: AuthRequest, res: Respon
 });
 
 // GET /api/orders/all (Admin sees everything)
-router.get('/all', async (req: Request, res: Response) => {
+router.get('/all', authenticateToken, requireAdmin, async (req: AuthRequest, res: Response) => {
   try {
     const orders = await prisma.order.findMany({
       include: { product: true, affiliate: { select: { name: true, email: true } } },

@@ -94,8 +94,8 @@ router.patch('/withdrawals/:id', authenticateToken, requireAdmin, async (req: Au
     }
 
     const withdrawal = await prisma.withdrawalRequest.update({
-      where: { id },
-      data: { status }
+      where: { id: id as string },
+      data: { status: status as any }
     });
 
     res.json({ message: `Withdrawal ${status} successfully`, data: withdrawal });
