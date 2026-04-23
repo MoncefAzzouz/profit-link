@@ -129,32 +129,88 @@ router.get('/public/:storeName', async (req: Request, res: Response): Promise<an
       }
     });
   } catch (error) {
-    console.error('Error fetching public store:', error);
+    console.error('Public store error:', error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
-
-// POST /api/store/page (Save generated Landing Page config)
-router.post('/page', async (req: Request, res: Response) => {
+// GET /api/store/pages (List all landing pages for the affiliate)
+router.get('/pages', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
-    const ownerId = req.header('x-user-id');
-    if (!ownerId) return res.status(401).json({ error: 'Missing x-user-id header' });
+    const ownerId = req.user?.userId;
+    if (!ownerId) return res.status(401).json({ error: 'Unauthorized' });
+
+    const pages = await prisma.landingPage.findMany({
+      where: { ownerId },
+      orderBy: { updatedAt: 'desc' }
+    });
+
+    res.json({ data: pages });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch landing pages' });
+  }
+});
+
+// POST /api/store/page (Save or Create Landing Page config)
+router.post('/page', authenticateToken, async (req: AuthRequest, res: Response) => {
+  try {
+    const ownerId = req.user?.userId;
+    if (!ownerId) return res.status(401).json({ error: 'Unauthorized' });
 
     const { productId, configData } = req.body;
 
-    // We store the entire visual blueprint inside 'pageConfig' json column
-    // The previous fields like productName, price, etc. belong inside this block!
     const page = await prisma.landingPage.create({
       data: {
         ownerId,
-        ...(productId && { productId }),
+        productId,
         pageConfig: configData 
       }
     });
 
     res.json({ message: 'Landing page created successfully!', data: page });
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: 'Failed to save landing page' });
+  }
+});
+
+// PUT /api/store/page/:id (Update existing landing page)
+router.put('/page/:id', authenticateToken, async (req: AuthRequest, res: Response) => {
+  try {
+    const ownerId = req.user?.userId;
+    const { id } = req.params;
+    const { configData, status } = req.body;
+
+    if (!ownerId) return res.status(401).json({ error: 'Unauthorized' });
+
+    const page = await prisma.landingPage.update({
+      where: { id: id as string, ownerId }, // Ensure owner owns the page
+      data: {
+        pageConfig: configData,
+        ...(status && { status })
+      }
+    });
+
+    res.json({ message: 'Landing page updated successfully!', data: page });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update landing page' });
+  }
+});
+
+// DELETE /api/store/page/:id (Delete landing page)
+router.delete('/page/:id', authenticateToken, async (req: AuthRequest, res: Response) => {
+  try {
+    const ownerId = req.user?.userId;
+    const { id } = req.params;
+
+    if (!ownerId) return res.status(401).json({ error: 'Unauthorized' });
+
+    await prisma.landingPage.delete({
+      where: { id: id as string, ownerId }
+    });
+
+    res.json({ message: 'Landing page deleted successfully!' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to delete landing page' });
   }
 });
 
