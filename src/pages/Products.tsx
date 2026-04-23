@@ -11,7 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { categories, Product } from "@/data/mockProducts";
+import { Product } from "@/data/mockProducts";
 import { StoreSettings, defaultStoreSettings } from "@/data/storeSettings";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -64,6 +64,11 @@ const Products = () => {
 
   const [storeSettings, setStoreSettings] = useState<StoreSettings>(defaultStoreSettings);
   const [products, setProducts] = useState<any[]>([]);
+  const [dbCategories, setDbCategories] = useState<any[]>([]);
+
+  const activeCategories = useMemo(() => {
+    return ["الكل", ...dbCategories.filter(c => c.isActive).map(c => c.name)];
+  }, [dbCategories]);
 
   useEffect(() => {
     const saved = localStorage.getItem("affiliate_store_settings");
@@ -84,6 +89,20 @@ const Products = () => {
       }
     };
     fetchProducts();
+
+    // Fetch categories from backend
+    const fetchCategories = async () => {
+      try {
+        const res = await fetch('https://profit-link-3eri.onrender.com/api/products/categories');
+        const json = await res.json();
+        if (res.ok && json.data) {
+          setDbCategories(json.data);
+        }
+      } catch (err) {
+        console.error('Failed to fetch categories', err);
+      }
+    };
+    fetchCategories();
   }, []);
 
   const [affiliateId, setAffiliateId] = useState("aff-demo-123");
@@ -373,6 +392,8 @@ const Products = () => {
                     showOnlyFeatured={showOnlyFeatured}
                     setShowOnlyFeatured={setShowOnlyFeatured}
                     categoryIcons={categoryIcons}
+                    dbCategories={dbCategories}
+                    activeCategories={activeCategories}
                    />
                 </div>
               </SheetContent>
@@ -410,6 +431,8 @@ const Products = () => {
                 showOnlyFeatured={showOnlyFeatured}
                 setShowOnlyFeatured={setShowOnlyFeatured}
                 categoryIcons={categoryIcons}
+                dbCategories={dbCategories}
+                activeCategories={activeCategories}
                />
                
                <Button 
@@ -612,7 +635,9 @@ const FilterContent = ({
   stockFilter, setStockFilter,
   showOnlyTrending, setShowOnlyTrending,
   showOnlyFeatured, setShowOnlyFeatured,
-  categoryIcons 
+  categoryIcons,
+  dbCategories,
+  activeCategories
 }: any) => {
   return (
     <div className="space-y-10">
@@ -620,8 +645,10 @@ const FilterContent = ({
       <div className="space-y-4">
         <h4 className="font-bold text-foreground text-lg">الفئات</h4>
         <div className="space-y-2">
-          {categories.map((category) => {
-            const Icon = categoryIcons[category] || LayoutGrid;
+          {activeCategories?.map((category: string) => {
+            const catObj = dbCategories?.find((c: any) => c.name === category);
+            const isAll = category === "الكل";
+            const iconChar = isAll ? "🏷️" : (catObj ? catObj.icon : "📦");
             const isActive = selectedCategory === category;
             return (
               <button
@@ -635,10 +662,10 @@ const FilterContent = ({
                 )}
               >
                 <div className={cn(
-                  "w-8 h-8 rounded-xl flex items-center justify-center transition-colors",
+                  "w-8 h-8 rounded-xl flex items-center justify-center transition-colors text-lg",
                   isActive ? "bg-white/20" : "bg-muted group-hover:bg-background"
                 )}>
-                  <Icon className="w-4 h-4" />
+                  {iconChar}
                 </div>
                 <span className="font-bold text-sm">{category}</span>
                 {isActive && <motion.div layoutId="activeCat" className="mr-auto w-1.5 h-1.5 rounded-full bg-white" />}

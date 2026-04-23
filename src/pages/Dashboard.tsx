@@ -39,7 +39,7 @@ import { Label } from "@/components/ui/label";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { format, parseISO, isAfter, isBefore, isEqual } from "date-fns";
 import { ar } from "date-fns/locale";
-import { categories } from "@/data/mockProducts";
+
 import { mockOrders, mockAffiliateStats, Order, wilayas } from "@/data/mockAffiliateData";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
@@ -104,6 +104,11 @@ const Dashboard = () => {
   const [products, setProducts] = useState<any[]>([]);
   const [shippingRates, setShippingRates] = useState<ShippingRate[]>([]);
   const [productToEditLandingPage, setProductToEditLandingPage] = useState<any>(null);
+  const [dbCategories, setDbCategories] = useState<any[]>([]);
+
+  const activeCategories = useMemo(() => {
+    return ["الكل", ...dbCategories.filter(c => c.isActive).map(c => c.name)];
+  }, [dbCategories]);
 
   const getWilayaName = (codeOrName: string) => {
     if (!codeOrName) return "";
@@ -139,6 +144,20 @@ const Dashboard = () => {
       }
     };
     fetchProducts();
+
+    // Fetch categories from backend
+    const fetchCategories = async () => {
+      try {
+        const res = await fetch('https://profit-link-3eri.onrender.com/api/products/categories');
+        const json = await res.json();
+        if (res.ok && json.data) {
+          setDbCategories(json.data);
+        }
+      } catch (err) {
+        console.error('Failed to fetch categories', err);
+      }
+    };
+    fetchCategories();
 
     // Fetch saved store products from backend
     const fetchStoreProducts = async () => {
@@ -991,7 +1010,7 @@ const Dashboard = () => {
 
                 {/* Categories */}
                 <div className="flex gap-2 flex-wrap">
-                  {categories.map((category) => (
+                  {activeCategories.map((category) => (
                     <Button
                       key={category}
                       variant={productCategory === category ? "default" : "outline"}

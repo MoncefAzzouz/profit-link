@@ -24,7 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { mockProducts, categories, Product } from "@/data/mockProducts";
+import { mockProducts, Product } from "@/data/mockProducts";
 import { mockAffiliates, mockAdminStats, mockAllOrders, mockSellers, mockWithdrawalRequests, WithdrawalRequest, mockJoinRequests, JoinRequest } from "@/data/mockAdminData";
 import { ShippingRate, shippingRegions } from "@/data/mockShippingData";
 import { LandingSettings, defaultLandingSettings } from "@/data/landingSettings";
@@ -34,7 +34,7 @@ import {
   ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell
 } from "recharts";
 
-type Tab = "overview" | "affiliates" | "join_requests" | "orders" | "products" | "analytics" | "withdrawals" | "settings" | "shipping" | "landing_editor";
+type Tab = "overview" | "affiliates" | "join_requests" | "orders" | "products" | "categories" | "analytics" | "withdrawals" | "settings" | "shipping" | "landing_editor";
 
 const statusConfig = {
   pending: { label: "قيد الانتظار", icon: Clock, color: "text-yellow-600 bg-yellow-100" },
@@ -216,6 +216,31 @@ const Admin = () => {
     adMaterials: []
   });
 
+  // Category Management States
+  const [dbCategories, setDbCategories] = useState<any[]>([]);
+  const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<any | null>(null);
+  const [categoryFormData, setCategoryFormData] = useState<any>({ name: "", icon: "📦", isActive: true });
+
+  const activeCategories = useMemo(() => {
+    return ["الكل", ...dbCategories.filter(c => c.isActive).map(c => c.name)];
+  }, [dbCategories]);
+
+  // Fetch categories from DB
+  const fetchCategories = async () => {
+    try {
+      const res = await fetch('https://profit-link-3eri.onrender.com/api/products/categories/all', {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem("token")}` }
+      });
+      if (res.ok) {
+        const json = await res.json();
+        setDbCategories(json.data || []);
+      }
+    } catch (err) {
+      console.error('Failed to fetch categories', err);
+    }
+  };
+
   // Fetch products from DB
   const fetchProducts = async () => {
     const token = localStorage.getItem("token");
@@ -240,6 +265,7 @@ const Admin = () => {
 
     // Fetch products from backend
     fetchProducts();
+    fetchCategories();
   }, []);
 
   // Fetch Shipping Rates
@@ -274,6 +300,7 @@ const Admin = () => {
   const sidebarItems = [
     { id: "overview" as Tab, label: "نظرة عامة", icon: LayoutDashboard },
     { id: "products" as Tab, label: "المنتجات", icon: Package },
+    { id: "categories" as Tab, label: "التصنيفات", icon: Layers },
     { id: "affiliates" as Tab, label: "المسوّقين", icon: Users },
 
     { id: "join_requests" as Tab, label: "طلبات الانضمام", icon: UserPlus },
@@ -389,6 +416,80 @@ const Admin = () => {
       return updated;
     });
     toast({ title: "تم رفض الطلب", variant: "destructive" });
+  };
+
+  // Category CRUD Handlers
+  const handleOpenAddCategory = () => {
+    setEditingCategory(null);
+    setCategoryFormData({ name: "", icon: "📦", isActive: true });
+    setIsCategoryDialogOpen(true);
+  };
+
+  const handleOpenEditCategory = (category: any) => {
+    setEditingCategory(category);
+    setCategoryFormData({ ...category });
+    setIsCategoryDialogOpen(true);
+  };
+
+  const handleSaveCategory = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const token = localStorage.getItem("token");
+    try {
+      const url = editingCategory
+        ? `https://profit-link-3eri.onrender.com/api/products/categories/${editingCategory.id}`
+        : 'https://profit-link-3eri.onrender.com/api/products/categories';
+
+      const res = await fetch(url, {
+        method: editingCategory ? 'PUT' : 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(categoryFormData)
+      });
+
+      if (!res.ok) throw new Error('Failed to save category');
+
+      setIsCategoryDialogOpen(false);
+      fetchCategories();
+      toast({ title: editingCategory ? "تم تحديث التصنيف بنجاح" : "تم إضافة التصنيف بنجاح" });
+    } catch (err: any) {
+      toast({ title: "خطأ", description: err.message, variant: "destructive" });
+    }
+  };
+
+  const handleDeleteCategory = async (id: string) => {
+    const token = localStorage.getItem("token");
+    try {
+      const res = await fetch(`https://profit-link-3eri.onrender.com/api/products/categories/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!res.ok) throw new Error('Failed to delete');
+      fetchCategories();
+      toast({ title: "تم حذف التصنيف", variant: "destructive" });
+    } catch (err: any) {
+      toast({ title: "خطأ", description: err.message, variant: "destructive" });
+    }
+  };
+
+  const handleToggleCategoryStatus = async (id: string, currentStatus: boolean) => {
+    const token = localStorage.getItem("token");
+    try {
+      const res = await fetch(`https://profit-link-3eri.onrender.com/api/products/categories/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ isActive: !currentStatus })
+      });
+      if (!res.ok) throw new Error('Failed to update status');
+      fetchCategories();
+      toast({ title: "تم تحديث حالة التصنيف" });
+    } catch (err: any) {
+      toast({ title: "خطأ", description: err.message, variant: "destructive" });
+    }
   };
 
   // Product CRUD Handlers
@@ -1140,6 +1241,50 @@ const Admin = () => {
             </div>
           )}
 
+          {/* Categories Tab */}
+          {activeTab === "categories" && (
+            <div className="space-y-6">
+              <div className="bg-card rounded-2xl p-6 shadow-sm space-y-4">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-lg font-bold">إدارة التصنيفات</h3>
+                  <Button className="gap-2 rounded-xl" onClick={handleOpenAddCategory}>
+                    <Plus className="w-4 h-4" />
+                    إضافة تصنيف
+                  </Button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
+                  {dbCategories.map((cat) => (
+                    <div key={cat.id} className="p-4 bg-muted/30 rounded-2xl border border-border flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-xl">
+                          {cat.icon}
+                        </div>
+                        <div>
+                          <h4 className="font-bold text-sm">{cat.name}</h4>
+                          <span className={`text-[10px] px-2 py-0.5 rounded-full ${cat.isActive ? 'bg-secondary/10 text-secondary' : 'bg-muted text-muted-foreground'}`}>
+                            {cat.isActive ? "نشط" : "مخفي"}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Button variant="ghost" size="icon" onClick={() => handleToggleCategoryStatus(cat.id, cat.isActive)}>
+                          {cat.isActive ? <Eye className="w-4 h-4 text-muted-foreground" /> : <EyeOff className="w-4 h-4 text-muted-foreground" />}
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => handleOpenEditCategory(cat)}>
+                          <Edit className="w-4 h-4 text-blue-500" />
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => handleDeleteCategory(cat.id)}>
+                          <Trash2 className="w-4 h-4 text-red-500" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Products Tab */}
           {activeTab === "products" && (
             <div className="space-y-6">
@@ -1183,7 +1328,7 @@ const Admin = () => {
 
                 {/* Categories */}
                 <div className="flex gap-2 flex-wrap">
-                  {categories.map((category) => (
+                  {activeCategories.map((category) => (
                     <Button
                       key={category}
                       variant={productCategory === category ? "default" : "outline"}
@@ -1881,6 +2026,55 @@ const Admin = () => {
         </div>
       </main>
       {/* Product Management Dialog */}
+      {/* Category Dialog */}
+      <Dialog open={isCategoryDialogOpen} onOpenChange={setIsCategoryDialogOpen}>
+        <DialogContent className="max-w-md p-6 rounded-3xl border-none font-cairo" dir="rtl">
+          <DialogHeader className="text-right mb-4">
+            <DialogTitle className="text-xl font-black">
+              {editingCategory ? "تعديل تصنيف" : "إضافة تصنيف جديد"}
+            </DialogTitle>
+          </DialogHeader>
+
+          <form onSubmit={handleSaveCategory} className="space-y-4">
+            <div className="space-y-2">
+              <Label className="font-bold text-sm">اسم التصنيف</Label>
+              <Input 
+                value={categoryFormData.name} 
+                onChange={e => setCategoryFormData({...categoryFormData, name: e.target.value})} 
+                placeholder="مثال: إلكترونيات" 
+                className="h-12 rounded-xl bg-muted/30 border-none px-4"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="font-bold text-sm">أيقونة (إيموجي)</Label>
+              <Input 
+                value={categoryFormData.icon} 
+                onChange={e => setCategoryFormData({...categoryFormData, icon: e.target.value})} 
+                placeholder="💻" 
+                className="h-12 rounded-xl bg-muted/30 border-none px-4"
+              />
+            </div>
+            <div className="flex items-center justify-between p-4 bg-muted/30 rounded-xl">
+              <div>
+                <Label className="font-bold text-sm">تفعيل التصنيف</Label>
+                <p className="text-xs text-muted-foreground">التصنيفات المخفية لن تظهر للمسوّقين.</p>
+              </div>
+              <Switch 
+                checked={categoryFormData.isActive}
+                onCheckedChange={v => setCategoryFormData({...categoryFormData, isActive: v})}
+              />
+            </div>
+            
+            <DialogFooter className="pt-4">
+              <Button type="button" variant="ghost" onClick={() => setIsCategoryDialogOpen(false)}>إلغاء</Button>
+              <Button type="submit" className="rounded-xl px-8">حفظ</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Product Dialog */}
       <Dialog open={isProductDialogOpen} onOpenChange={setIsProductDialogOpen}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-0 rounded-3xl border-none font-cairo" dir="rtl">
           <DialogHeader className="p-8 pb-0 text-right">
@@ -1921,7 +2115,7 @@ const Admin = () => {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent dir="rtl">
-                        {categories.filter(c => c !== "الكل").map(c => (
+                        {activeCategories.filter(c => c !== "الكل").map(c => (
                           <SelectItem key={c} value={c}>{c}</SelectItem>
                         ))}
                       </SelectContent>
