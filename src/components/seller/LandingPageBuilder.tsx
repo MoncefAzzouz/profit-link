@@ -237,18 +237,46 @@ const mockLandingPages: LandingPageConfig[] = [
 
 const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: any }) => {
   const { toast } = useToast();
-  const [pages, setPages] = useState<LandingPageConfig[]>(() => {
-    const stored = localStorage.getItem("landing_pages");
-    if (stored) return JSON.parse(stored);
-    // Save mock data to localStorage on first load
-    localStorage.setItem("landing_pages", JSON.stringify(mockLandingPages));
-    return mockLandingPages;
-  });
+  const [pages, setPages] = useState<LandingPageConfig[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [editingPage, setEditingPage] = useState<LandingPageConfig | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewDevice, setPreviewDevice] = useState<"desktop" | "mobile">("desktop");
   const [activeDesignTab, setActiveDesignTab] = useState<"magic" | "content" | "template" | "colors" | "sections" | "advanced">("magic");
   const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  // Fetch pages from backend on mount
+  useEffect(() => {
+    const fetchPages = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      try {
+        const response = await fetch("https://profit-link-3eri.onrender.com/api/store/pages", {
+          headers: { "Authorization": `Bearer ${token}` }
+        });
+        const json = await response.json();
+        if (response.ok && json.data) {
+          // Map backend landing pages to frontend config structure
+          const mappedPages = json.data.map((p: any) => ({
+            ...p.pageConfig,
+            id: p.id,
+            productId: p.productId,
+            status: p.status,
+            views: p.views,
+            conversions: p.conversions
+          }));
+          setPages(mappedPages);
+        }
+      } catch (err) {
+        console.error("Failed to fetch pages:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchPages();
+  }, []);
 
   // AI Magic State
   const [isAiGenerating, setIsAiGenerating] = useState(false);
@@ -256,24 +284,64 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
   const [uploadedAiImage, setUploadedAiImage] = useState<string | null>(null);
   const [aiContextInput, setAiContextInput] = useState("");
 
-  // Persist pages to localStorage
-  const savePages = (newPages: LandingPageConfig[]) => {
+  // Persist pages (In-Memory Only for smooth editing, until explicit Save)
+  const savePagesLocally = (newPages: LandingPageConfig[]) => {
     setPages(newPages);
+  };
+
+  const saveToDatabase = async (pageToSave: LandingPageConfig) => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      toast({ variant: "destructive", title: "غير مصرح", description: "يرجى تسجيل الدخول أولاً" });
+      return;
+    }
+
     try {
-      localStorage.setItem("landing_pages", JSON.stringify(newPages));
-    } catch (e) {
-      console.warn("Storage quota exceeded", e);
-      toast({
-        variant: "destructive",
-        title: "خطأ في التخزين المؤقت",
-        description: "لا يمكن حفظ الصفحة محلياً بسبب كبر حجم الصور. يرجى حفظ العمل في قاعدة البيانات."
+      // If the ID starts with "lp-", it's a temporary local ID, so we use POST
+      const isNew = pageToSave.id.startsWith("lp-");
+      const url = isNew 
+        ? "https://profit-link-3eri.onrender.com/api/store/page"
+        : `https://profit-link-3eri.onrender.com/api/store/page/${pageToSave.id}`;
+      
+      const method = isNew ? "POST" : "PUT";
+
+      // Prepare config by removing backend metadata
+      const { id, productId, status, views, conversions, ...configData } = pageToSave;
+
+      const response = await fetch(url, {
+        method,
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          productId,
+          configData,
+          status
+        })
       });
+
+      const json = await response.json();
+      if (response.ok) {
+        // Update local state with real backend ID if it was new
+        if (isNew && json.data) {
+          const updatedPage = { ...pageToSave, id: json.data.id };
+          setPages(prev => prev.map(p => p.id === pageToSave.id ? updatedPage : p));
+          setEditingPage(updatedPage);
+        }
+        toast({ title: "💾 تم الحفظ", description: "تم حفظ التغييرات في قاعدة البيانات بنجاح" });
+      } else {
+        throw new Error(json.error || "Failed to save");
+      }
+    } catch (err) {
+      console.error("Save error:", err);
+      toast({ variant: "destructive", title: "خطأ في الحفظ", description: "تعذر حفظ البيانات في السيرفر" });
     }
   };
 
   // Handle incoming product edit request
   useEffect(() => {
-    if (initialProductToEdit) {
+    if (initialProductToEdit && !isLoading) {
       // Check if we already have a landing page for this product
       const existingPage = pages.find((p) => p.productId === initialProductToEdit.id);
       
@@ -294,12 +362,12 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
           status: "draft"
         };
         
-        const newPages = [...pages, newPage];
-        savePages(newPages);
+        const newPages = [newPage, ...pages];
+        savePagesLocally(newPages);
         setEditingPage(newPage);
       }
     }
-  }, [initialProductToEdit]);
+  }, [initialProductToEdit, isLoading, pages]);
 
   const handleSimulatedAiGeneration = async () => {
     if (!editingPage) return;
@@ -358,7 +426,7 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
 
       setEditingPage(aiGeneratedPage);
       const newPages = pages.map(p => p.id === aiGeneratedPage.id ? aiGeneratedPage : p);
-      savePages(newPages);
+      savePagesLocally(newPages);
 
       setIsAiGenerating(false);
       setAiProgressStep(0);
@@ -376,7 +444,7 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
 
   const createNewPage = () => {
     const newPage = defaultNewPage();
-    savePages([newPage, ...pages]);
+    savePagesLocally([newPage, ...pages]);
     setEditingPage(newPage);
     toast({ title: "🎨 تم الإنشاء", description: "صفحة هبوط جديدة جاهزة للتخصيص" });
   };
@@ -386,7 +454,7 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
     const updated = { ...editingPage, [field]: value };
     setEditingPage(updated);
     const newPages = pages.map(p => p.id === updated.id ? updated : p);
-    savePages(newPages);
+    savePagesLocally(newPages);
   };
 
   const toggleSection = (sectionId: string) => {
@@ -399,10 +467,29 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
     updatePage("sections", sections);
   };
 
-  const deletePage = (id: string) => {
-    savePages(pages.filter(p => p.id !== id));
-    if (editingPage?.id === id) setEditingPage(null);
-    toast({ title: "🗑️ تم الحذف" });
+  const deletePage = async (id: string) => {
+    const token = localStorage.getItem("token");
+    if (id.startsWith("lp-")) {
+      // Only local, just filter it
+      setPages(pages.filter(p => p.id !== id));
+      if (editingPage?.id === id) setEditingPage(null);
+      toast({ title: "🗑️ تم الحذف" });
+      return;
+    }
+
+    try {
+      const res = await fetch(`https://profit-link-3eri.onrender.com/api/store/page/${id}`, {
+        method: "DELETE",
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      if (res.ok) {
+        setPages(pages.filter(p => p.id !== id));
+        if (editingPage?.id === id) setEditingPage(null);
+        toast({ title: "🗑️ تم الحذف من قاعدة البيانات" });
+      }
+    } catch (err) {
+      toast({ variant: "destructive", title: "فشل الحذف" });
+    }
   };
 
   const copyLink = (page: LandingPageConfig) => {
@@ -419,7 +506,7 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
   const publishPage = (page: LandingPageConfig) => {
     const newStatus = page.status === "published" ? "draft" : "published";
     const newPages = pages.map(p => p.id === page.id ? { ...p, status: newStatus as "draft" | "published" } : p);
-    savePages(newPages);
+    savePagesLocally(newPages);
     if (editingPage?.id === page.id) setEditingPage({ ...editingPage, status: newStatus });
     toast({ title: newStatus === "published" ? "🚀 تم النشر" : "📝 تحويل إلى مسودة" });
     if (newStatus === "published") {
