@@ -149,6 +149,26 @@ const Dashboard = () => {
       }
     };
     fetchStoreProducts();
+
+    // Fetch saved favorites from backend
+    const fetchFavorites = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+      try {
+        const res = await fetch('https://profit-link-3eri.onrender.com/api/store/favorites', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const json = await res.json();
+          if (json.data && Array.isArray(json.data)) {
+            setFavorites(new Set(json.data));
+          }
+        }
+      } catch (err) {
+        console.error('Failed to fetch favorites', err);
+      }
+    };
+    fetchFavorites();
   }, []);
   const [loadingOrders, setLoadingOrders] = useState(true);
   const [dashboardStats, setDashboardStats] = useState({
@@ -476,18 +496,30 @@ const Dashboard = () => {
     }
   };
 
-  const toggleFavorite = (productId: string) => {
-    setFavorites(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(productId)) {
-        newSet.delete(productId);
-        toast({ title: "تمت الإزالة من المفضلة" });
-      } else {
-        newSet.add(productId);
-        toast({ title: "تمت الإضافة للمفضلة ❤️" });
-      }
-      return newSet;
-    });
+  const toggleFavorite = async (productId: string) => {
+    const token = localStorage.getItem("token");
+    const newSet = new Set(favorites);
+    if (newSet.has(productId)) {
+      newSet.delete(productId);
+      toast({ title: "تمت الإزالة من المفضلة" });
+    } else {
+      newSet.add(productId);
+      toast({ title: "تمت الإضافة للمفضلة ❤️" });
+    }
+    setFavorites(newSet);
+
+    try {
+      await fetch('https://profit-link-3eri.onrender.com/api/store/favorites', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ productIds: Array.from(newSet) })
+      });
+    } catch (err) {
+      console.error('Failed to save favorites', err);
+    }
   };
 
   const toggleStoreProduct = async (productId: string) => {
