@@ -16,8 +16,11 @@ router.post('/', async (req: Request, res: Response) => {
     } = req.body;
 
     if (!productId || !affiliateId || !customerName || !customerPhone || !wilaya) {
+      console.error('❌ Missing fields:', { productId, affiliateId, customerName, customerPhone, wilaya });
       return res.status(400).json({ error: 'Missing required order fields' });
     }
+
+    console.log(`📦 Creating order for Product: ${productId}, Affiliate: ${affiliateId}`);
 
     // Verify Product and Affiliate exist
     const product = await prisma.product.findUnique({ where: { id: productId } });
@@ -44,7 +47,7 @@ router.post('/', async (req: Request, res: Response) => {
 
     if (!affiliate) {
       console.error(`❌ Order failed: Affiliate ${affiliateId} not found in DB`);
-      return res.status(404).json({ error: `Affiliate ${affiliateId} not found` });
+      return res.status(404).json({ error: `Affiliate ${affiliateId} not found. Please use your real ID from the dashboard.` });
     }
 
     const order = await prisma.order.create({
@@ -53,16 +56,18 @@ router.post('/', async (req: Request, res: Response) => {
         affiliateId,
         customerName,
         customerPhone,
-        wilaya, // This is now the code (e.g. "06")
+        wilaya, 
         address: address || "",
         quantity: quantity || 1,
-        totalAmount: parseFloat(totalAmount),
-        commissionAmount: parseFloat(commissionAmount),
+        totalAmount: parseFloat(String(totalAmount)),
+        commissionAmount: parseFloat(String(commissionAmount)),
         commune: commune || "",
-        shippingFee: parseFloat(shippingFee || 0),
-        stopDesk: parseInt(stopDesk || 0)
-      } as any
+        shippingFee: parseFloat(String(shippingFee || 0)),
+        stopDesk: parseInt(String(stopDesk || 0))
+      }
     });
+
+    console.log(`✅ Order created successfully: ${order.id}`);
 
     // AUTO-PUSH TO ECOTRACK
     let trackingTicket = null;
@@ -112,6 +117,7 @@ router.post('/', async (req: Request, res: Response) => {
 router.get('/affiliate', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
     const affiliateId = req.user?.userId;
+    console.log(`🔍 Fetching orders for affiliate: ${affiliateId}`);
     if (!affiliateId) return res.status(401).json({ error: 'Unauthorized' });
 
     const orders = await prisma.order.findMany({
