@@ -127,6 +127,24 @@ const Dashboard = () => {
   useEffect(() => {
     const token = localStorage.getItem("token");
     
+    const fetchStoreSettings = async () => {
+      try {
+        if (!token) return;
+        const res = await fetch('https://profit-link-3eri.onrender.com/api/store/settings', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const json = await res.json();
+          if (json.data) {
+            // Merge with defaultStoreSettings to ensure missing fields exist
+            setStoreSettings({ ...defaultStoreSettings, ...json.data });
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch store settings", err);
+      }
+    };
+
     const fetchDashboardStats = async () => {
       try {
         if (!token) return;
@@ -179,6 +197,7 @@ const Dashboard = () => {
 
     fetchDashboardStats();
     fetchOrders();
+    fetchStoreSettings();
     // Refresh interval
     const interval = setInterval(() => {
       fetchDashboardStats();
@@ -232,17 +251,37 @@ const Dashboard = () => {
   });
 
   // Store Editor State
-  const [storeSettings, setStoreSettings] = useState<StoreSettings>(() => {
-    const saved = localStorage.getItem("affiliate_store_settings");
-    return saved ? JSON.parse(saved) : defaultStoreSettings;
-  });
+  const [storeSettings, setStoreSettings] = useState<StoreSettings>(defaultStoreSettings);
 
-  const saveStoreSettings = () => {
-    localStorage.setItem("affiliate_store_settings", JSON.stringify(storeSettings));
-    toast({
-      title: "تم حفظ إعدادات المتجر! ✅",
-      description: "تم تحديث مظهر متجرك العام بنجاح.",
-    });
+  const saveStoreSettings = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    try {
+      const res = await fetch('https://profit-link-3eri.onrender.com/api/store/settings', {
+        method: 'PUT',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(storeSettings)
+      });
+
+      if (res.ok) {
+        toast({
+          title: "تم حفظ إعدادات المتجر! ✅",
+          description: "تم تحديث مظهر متجرك العام بنجاح.",
+        });
+      } else {
+        throw new Error("Failed to save");
+      }
+    } catch (err) {
+      toast({
+        title: "خطأ",
+        description: "تعذر حفظ إعدادات المتجر.",
+        variant: "destructive"
+      });
+    }
   };
 
   // Calculate delivery fee automatically
