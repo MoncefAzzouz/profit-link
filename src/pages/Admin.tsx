@@ -33,8 +33,9 @@ import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell
 } from "recharts";
+import LandingPageBuilder from "@/components/seller/LandingPageBuilder";
 
-type Tab = "overview" | "affiliates" | "join_requests" | "orders" | "products" | "categories" | "analytics" | "withdrawals" | "settings" | "shipping" | "landing_editor";
+type Tab = "overview" | "affiliates" | "join_requests" | "orders" | "products" | "categories" | "analytics" | "withdrawals" | "settings" | "shipping" | "landing_editor" | "landing_pages";
 
 const statusConfig = {
   pending: { label: "قيد الانتظار", icon: Clock, color: "text-yellow-600 bg-yellow-100" },
@@ -199,6 +200,7 @@ const Admin = () => {
   const [products, setProducts] = useState<any[]>([]);
   const [isProductDialogOpen, setIsProductDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<any | null>(null);
+  const [productToEditLandingPage, setProductToEditLandingPage] = useState<any>(null);
   const [productFormData, setProductFormData] = useState<any>({
     name: "",
     description: "",
@@ -308,6 +310,7 @@ const Admin = () => {
     { id: "withdrawals" as Tab, label: "طلبات السحب", icon: Wallet },
     { id: "shipping" as Tab, label: "التوصيل", icon: Truck },
     { id: "landing_editor" as Tab, label: "تعديل الواجهة", icon: LayoutTemplate },
+    { id: "landing_pages" as Tab, label: "صفحات الهبوط", icon: FileText },
     { id: "analytics" as Tab, label: "الإحصائيات", icon: BarChart3 },
     { id: "settings" as Tab, label: "الإعدادات", icon: Settings },
   ];
@@ -1444,11 +1447,18 @@ const Admin = () => {
                         </div>
                       </div>
                       <div className="flex gap-2 mt-6">
+                        <Button variant="default" className="flex-1 gap-2 rounded-xl h-10 font-bold text-[10px] bg-secondary hover:bg-secondary/90 text-white" onClick={() => {
+                          setProductToEditLandingPage(product);
+                          setActiveTab("landing_pages");
+                        }}>
+                          <LayoutTemplate className="w-3.5 h-3.5" />
+                          صفحة الهبوط
+                        </Button>
                         <Button variant="outline" className="flex-1 gap-2 rounded-xl h-10 font-bold text-xs" onClick={() => handleOpenEditProduct(product)}>
                           <Edit className="w-3.5 h-3.5" />
                           تعديل
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-10 w-10 text-destructive hover:bg-destructive/10 rounded-xl" onClick={() => handleDeleteProduct(product.id)}>
+                        <Button variant="ghost" size="icon" className="h-10 w-10 text-destructive hover:bg-destructive/10 rounded-xl shrink-0" onClick={() => handleDeleteProduct(product.id)}>
                           <Trash2 className="w-4 h-4" />
                         </Button>
                       </div>
@@ -1834,6 +1844,13 @@ const Admin = () => {
                   </div>
                 )}
               </div>
+            </div>
+          )}
+
+          {/* Landing pages Tab */}
+          {activeTab === "landing_pages" && (
+            <div className="space-y-6">
+              <LandingPageBuilder initialProductToEdit={productToEditLandingPage} />
             </div>
           )}
 
