@@ -92,6 +92,40 @@ const Admin = () => {
   const [isFetchingShipping, setIsFetchingShipping] = useState(false);
   const [shippingPage, setShippingPage] = useState(1);
   const shippingItemsPerPage = 10;
+
+  // Admin Dashboard Stats (live from DB)
+  const [adminStats, setAdminStats] = useState({
+    totalRevenue: 0,
+    totalOrders: 0,
+    confirmationRate: 0,
+    totalAffiliates: 0,
+    activeAffiliates: 0,
+    ordersThisMonth: 0,
+  });
+
+  // Fetch admin stats from backend
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    const fetchAdminStats = async () => {
+      try {
+        const res = await fetch('https://profit-link-3eri.onrender.com/api/admin/dashboard', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setAdminStats(data);
+        }
+      } catch (err) {
+        console.error('Failed to fetch admin stats', err);
+      }
+    };
+
+    fetchAdminStats();
+    const interval = setInterval(fetchAdminStats, 30000);
+    return () => clearInterval(interval);
+  }, []);
   
   // Landing Page Editor State
   const [landingSettings, setLandingSettings] = useState<LandingSettings>(() => {
@@ -491,7 +525,7 @@ const Admin = () => {
                     <div>
                       <p className="text-muted-foreground text-sm">إجمالي الإيرادات</p>
                       <p className="text-3xl font-bold text-foreground mt-1">
-                        {mockAdminStats.totalRevenue.toLocaleString()}
+                        {adminStats.totalRevenue.toLocaleString()}
                       </p>
                       <p className="text-sm text-muted-foreground">دج</p>
                     </div>
@@ -511,9 +545,9 @@ const Admin = () => {
                     <div>
                       <p className="text-muted-foreground text-sm">المسوّقين النشطين</p>
                       <p className="text-3xl font-bold text-foreground mt-1">
-                        {mockAdminStats.activeAffiliates}
+                        {adminStats.activeAffiliates}
                       </p>
-                      <p className="text-sm text-secondary">من {mockAdminStats.totalAffiliates}</p>
+                      <p className="text-sm text-secondary">من {adminStats.totalAffiliates}</p>
                     </div>
                     <div className="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center">
                       <Users className="w-7 h-7 text-primary" />
@@ -531,9 +565,9 @@ const Admin = () => {
                     <div>
                       <p className="text-muted-foreground text-sm">إجمالي الطلبيات</p>
                       <p className="text-3xl font-bold text-foreground mt-1">
-                        {mockAdminStats.totalOrders}
+                        {adminStats.totalOrders}
                       </p>
-                      <p className="text-sm text-secondary">+{mockAdminStats.ordersThisMonth} هذا الشهر</p>
+                      <p className="text-sm text-secondary">+{adminStats.ordersThisMonth} هذا الشهر</p>
                     </div>
                     <div className="w-14 h-14 bg-accent/10 rounded-2xl flex items-center justify-center">
                       <ShoppingCart className="w-7 h-7 text-accent" />
@@ -551,7 +585,7 @@ const Admin = () => {
                     <div>
                       <p className="text-muted-foreground text-sm">نسبة التأكيد</p>
                       <p className="text-3xl font-bold text-foreground mt-1">
-                        {mockAdminStats.averageConfirmationRate}%
+                        {adminStats.confirmationRate}%
                       </p>
                       <p className="text-sm text-secondary">معدل ممتاز</p>
                     </div>
