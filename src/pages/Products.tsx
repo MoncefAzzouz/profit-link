@@ -86,7 +86,21 @@ const Products = () => {
     fetchProducts();
   }, []);
 
-  const affiliateId = "aff-demo-123";
+  const [affiliateId, setAffiliateId] = useState("aff-demo-123");
+
+  useEffect(() => {
+    const userStr = localStorage.getItem("affiliate_user");
+    if (userStr) {
+      try {
+        const user = JSON.parse(userStr);
+        if (user && user.id) {
+          setAffiliateId(user.id);
+        }
+      } catch (e) {
+        console.error("Error parsing user data", e);
+      }
+    }
+  }, []);
 
   const filteredProducts = useMemo(() => {
     return products
@@ -453,6 +467,7 @@ const Products = () => {
                     storeSettings={storeSettings}
                     copyAffiliateLink={copyAffiliateLink}
                     copiedId={copiedId}
+                    affiliateId={affiliateId}
                     onQuickView={() => {
                       setQuickViewProduct(product);
                       setIsQuickViewOpen(true);
@@ -498,6 +513,7 @@ const Products = () => {
         storeSettings={storeSettings}
         copyAffiliateLink={copyAffiliateLink}
         copiedId={copiedId}
+        affiliateId={affiliateId}
       />
 
       {/* Floating WhatsApp Support */}
@@ -720,7 +736,7 @@ const FilterContent = ({
   );
 };
 
-const ProductCard = ({ product, index, viewMode, storeSettings, copyAffiliateLink, copiedId, onQuickView }: any) => {
+const ProductCard = ({ product, index, viewMode, storeSettings, copyAffiliateLink, copiedId, onQuickView, affiliateId }: any) => {
   const [isHovered, setIsHovered] = useState(false);
   const discount = Math.round((1 - product.price / product.originalPrice) * 100);
 
@@ -788,7 +804,7 @@ const ProductCard = ({ product, index, viewMode, storeSettings, copyAffiliateLin
                 >
                   <ZoomIn className="w-5 h-5" /> نظرة سريعة
                 </Button>
-                <Link to={`/product/${product.id}/aff-demo-123`} className="w-full">
+                <Link to={`/product/${product.id}/${affiliateId}`} className="w-full">
                   <Button variant="outline" className="w-full rounded-full font-bold h-12 bg-white/10 border-white/30 text-white hover:bg-white/20">
                     صفحة المنتج
                   </Button>
@@ -871,7 +887,7 @@ const ProductCard = ({ product, index, viewMode, storeSettings, copyAffiliateLin
   );
 };
 
-const QuickViewModal = ({ isOpen, onOpenChange, product, storeSettings, copyAffiliateLink, copiedId }: any) => {
+const QuickViewModal = ({ isOpen, onOpenChange, product, storeSettings, copyAffiliateLink, copiedId, affiliateId }: any) => {
   if (!product) return null;
 
   return (
@@ -945,7 +961,7 @@ const QuickViewModal = ({ isOpen, onOpenChange, product, storeSettings, copyAffi
                 {copiedId === product.id ? <Check className="w-6 h-6" /> : <Copy className="w-6 h-6" />}
                 {copiedId === product.id ? "تم النسخ" : "نسخ رابط الإحالة الآن"}
               </Button>
-               <Link to={`/product/${product.id}/aff-demo-123`} className="block">
+               <Link to={`/product/${product.id}/${affiliateId}`} className="block">
                 <Button variant="outline" className="w-full h-14 rounded-2xl font-bold gap-2">
                   زيارة صفحة المنتج الكاملة
                   <ArrowRight className="w-5 h-5" />
