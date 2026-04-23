@@ -1,16 +1,16 @@
 import { Router, Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { authenticateToken, AuthRequest } from '../middleware/auth';
 
 const router = Router();
 const prisma = new PrismaClient();
 
-// GET /api/store/settings (Fetch affiliate store and pixel settings)
-router.get('/settings', async (req: Request, res: Response) => {
+// GET /api/store/settings (Fetch affiliate store settings)
+router.get('/settings', authenticateToken, async (req: AuthRequest, res: Response): Promise<any> => {
   try {
-    // TODO: Replace with real JWT Auth middleware
-    const affiliateId = req.header('x-user-id');
-    if (!affiliateId) return res.status(401).json({ error: 'Missing x-user-id header' });
+    const affiliateId = req.user?.userId;
+    if (!affiliateId) return res.status(401).json({ error: 'Unauthorized' });
 
     const settings = await prisma.storeSettings.findUnique({
       where: { affiliateId }
@@ -19,28 +19,57 @@ router.get('/settings', async (req: Request, res: Response) => {
     if (!settings) {
       return res.json({ message: 'No settings configured yet', data: null });
     }
-    res.json({ data: settings });
+    
+    // Return the combined settings object (merging top-level DB fields with the dynamic config JSON)
+    const combinedSettings = {
+      storeName: settings.storeName,
+      storeLogo: settings.logoUrl,
+      primaryColor: settings.primaryColor,
+      fontFamily: settings.fontFamily,
+      templateId: settings.templateId,
+      ...(typeof settings.config === 'object' && settings.config !== null ? settings.config : {})
+    };
+    
+    res.json({ data: combinedSettings });
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 
-// PUT /api/store/settings (Update colors/logos/pixels)
-router.put('/settings', async (req: Request, res: Response) => {
+// PUT /api/store/settings (Update store customizations)
+router.put('/settings', authenticateToken, async (req: AuthRequest, res: Response): Promise<any> => {
   try {
-    const affiliateId = req.header('x-user-id');
-    if (!affiliateId) return res.status(401).json({ error: 'Missing x-user-id header' });
+    const affiliateId = req.user?.userId;
+    if (!affiliateId) return res.status(401).json({ error: 'Unauthorized' });
 
-    const { storeName, logoUrl, primaryColor, fontFamily, templateId, pixelsConfig } = req.body;
+    // The frontend sends the entire StoreSettings object in req.body
+    const { storeName, storeLogo, primaryColor, fontFamily, templateId, ...restConfig } = req.body;
 
     const settings = await prisma.storeSettings.upsert({
       where: { affiliateId },
-      update: { storeName, logoUrl, primaryColor, fontFamily, templateId, pixelsConfig },
-      create: { affiliateId, storeName, logoUrl, primaryColor, fontFamily, templateId, pixelsConfig }
+      update: { 
+        storeName: storeName || 'My Store', 
+        logoUrl: storeLogo, 
+        primaryColor, 
+        fontFamily, 
+        templateId, 
+        config: restConfig // Save USPs, Hero, Social Links here
+      },
+      create: { 
+        affiliateId, 
+        storeName: storeName || 'My Store', 
+        logoUrl: storeLogo, 
+        primaryColor, 
+        fontFamily, 
+        templateId, 
+        config: restConfig 
+      }
     });
 
     res.json({ message: 'Settings saved successfully', data: settings });
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });

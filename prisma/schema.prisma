@@ -123,8 +123,8 @@ model StoreSettings {
   fontFamily       String   @default("Cairo")
   templateId       String   @default("modern")
   
-  // Facebook/Tiktok pixels 
-  pixelsConfig     Json?     
+  // Holds hero, usp, socialLinks, pixels, etc.
+  config           Json?     
   
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
