@@ -78,9 +78,15 @@ router.get('/public/:storeName', async (req: Request, res: Response): Promise<an
   try {
     const storeNameStr = String(req.params.storeName);
     
-    // Find the affiliate by storeName
+    // Find the affiliate by storeName or ID
     const affiliate = await prisma.user.findFirst({
-      where: { storeName: { equals: storeNameStr, mode: 'insensitive' }, role: 'AFFILIATE' },
+      where: { 
+        OR: [
+          { storeName: { equals: storeNameStr, mode: 'insensitive' } },
+          { id: storeNameStr }
+        ],
+        role: 'AFFILIATE' 
+      },
       include: { storeSettings: true }
     }) as any;
 
