@@ -259,7 +259,16 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
   // Persist pages to localStorage
   const savePages = (newPages: LandingPageConfig[]) => {
     setPages(newPages);
-    localStorage.setItem("landing_pages", JSON.stringify(newPages));
+    try {
+      localStorage.setItem("landing_pages", JSON.stringify(newPages));
+    } catch (e) {
+      console.warn("Storage quota exceeded", e);
+      toast({
+        variant: "destructive",
+        title: "خطأ في التخزين المؤقت",
+        description: "لا يمكن حفظ الصفحة محلياً بسبب كبر حجم الصور. يرجى حفظ العمل في قاعدة البيانات."
+      });
+    }
   };
 
   // Handle incoming product edit request
