@@ -452,19 +452,17 @@ const ProductPage = () => {
                     value={formData.wilaya}
                     onValueChange={(value) => setFormData({ ...formData, wilaya: value })}
                   >
-                    <SelectTrigger className="mt-1.5">
+                    <SelectTrigger className="mt-1.5 h-11 rounded-xl">
                       <SelectValue placeholder="اختر الولاية" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="max-h-[300px]">
                       {shippingRates.length > 0 ? shippingRates.map((rate) => (
-                        <SelectItem key={rate.code || rate.wilaya} value={rate.code || rate.wilaya}>
-                          {rate.wilaya}
+                        <SelectItem key={rate.code} value={rate.code}>
+                          {rate.code} - {rate.wilaya}
                         </SelectItem>
-                      )) : wilayas.map((wilaya) => (
-                        <SelectItem key={wilaya} value={wilaya}>
-                          {wilaya}
-                        </SelectItem>
-                      ))}
+                      )) : (
+                        <SelectItem value="loading" disabled>جاري تحميل الولايات...</SelectItem>
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
@@ -472,7 +470,6 @@ const ProductPage = () => {
                 <div>
                   <Label htmlFor="commune">البلدية *</Label>
                   <Select
-                    key={formData.wilaya}
                     value={formData.commune || ""}
                     onValueChange={(value) => setFormData({ ...formData, commune: value })}
                     disabled={!formData.wilaya || loadingCommunes}
