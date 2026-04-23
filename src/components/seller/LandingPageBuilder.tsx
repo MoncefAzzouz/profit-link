@@ -242,7 +242,9 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
   const [editingPage, setEditingPage] = useState<LandingPageConfig | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewDevice, setPreviewDevice] = useState<"desktop" | "mobile">("desktop");
-  const [activeDesignTab, setActiveDesignTab] = useState<"magic" | "content" | "template" | "colors" | "sections" | "advanced">("magic");
+  const userStr = localStorage.getItem("affiliate_user");
+  const isAdmin = userStr ? JSON.parse(userStr).role?.toUpperCase() === "ADMIN" : false;
+  const [activeDesignTab, setActiveDesignTab] = useState<"magic" | "content" | "template" | "colors" | "sections" | "advanced">(isAdmin ? "magic" : "content");
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   // Fetch pages from backend on mount
@@ -990,7 +992,7 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
             <div className="p-3 border-b border-border">
               <div className="flex bg-muted rounded-xl p-0.5 gap-0.5">
                 {([
-                  { id: "magic" as const, label: "سحر الـ AI", icon: Sparkles },
+                  ...(isAdmin ? [{ id: "magic" as const, label: "سحر الـ AI", icon: Sparkles }] : []),
                   { id: "content" as const, label: "المحتوى", icon: Type },
                   { id: "template" as const, label: "القوالب", icon: LayoutTemplate },
                   { id: "colors" as const, label: "الألوان", icon: Palette },
