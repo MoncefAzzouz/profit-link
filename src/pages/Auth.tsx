@@ -120,7 +120,7 @@ const Auth = () => {
         description: isLogin ? "تم تسجيل الدخول بنجاح" : "ابدأ الآن في اختيار المنتجات والربح"
       });
       // Redirect based on role
-      if (data.user.role === "admin") {
+      if (data.user.role === "ADMIN" || data.user.role === "admin") {
         navigate("/admin");
       } else {
         navigate("/dashboard");
