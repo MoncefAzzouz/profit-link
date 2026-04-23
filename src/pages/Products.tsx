@@ -11,7 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { mockProducts, categories, Product } from "@/data/mockProducts";
+import { categories, Product } from "@/data/mockProducts";
 import { StoreSettings, defaultStoreSettings } from "@/data/storeSettings";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -63,18 +63,33 @@ const Products = () => {
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
 
   const [storeSettings, setStoreSettings] = useState<StoreSettings>(defaultStoreSettings);
+  const [products, setProducts] = useState<any[]>([]);
 
   useEffect(() => {
     const saved = localStorage.getItem("affiliate_store_settings");
     if (saved) {
       setStoreSettings(JSON.parse(saved));
     }
+
+    // Fetch products from backend
+    const fetchProducts = async () => {
+      try {
+        const res = await fetch('https://profit-link-3eri.onrender.com/api/products');
+        const json = await res.json();
+        if (res.ok && json.data) {
+          setProducts(json.data);
+        }
+      } catch (err) {
+        console.error('Failed to fetch products', err);
+      }
+    };
+    fetchProducts();
   }, []);
 
   const affiliateId = "aff-demo-123";
 
   const filteredProducts = useMemo(() => {
-    return mockProducts
+    return products
       .filter(product => {
         const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
                               product.description.toLowerCase().includes(searchQuery.toLowerCase());
@@ -95,7 +110,7 @@ const Products = () => {
         if (sortBy === "stock-desc") return b.stock - a.stock;
         return 0;
       });
-  }, [searchQuery, selectedCategory, selectedPriceRange, stockFilter, showOnlyTrending, showOnlyFeatured, sortBy]);
+  }, [searchQuery, selectedCategory, selectedPriceRange, stockFilter, showOnlyTrending, showOnlyFeatured, sortBy, products]);
 
   const categoryIcons: Record<string, any> = {
     "الكل": LayoutGrid,
