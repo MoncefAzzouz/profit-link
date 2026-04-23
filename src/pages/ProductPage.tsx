@@ -211,7 +211,7 @@ const ProductPage = () => {
     }
   };
 
-  const currentRate = shippingRates.find(r => r.wilaya === formData.wilaya);
+  const currentRate = shippingRates.find(r => r.code === formData.wilaya || r.wilaya === formData.wilaya);
   const currentShippingPrice = currentRate 
     ? (formData.deliveryType === "home" ? currentRate.homePrice : currentRate.officePrice)
     : 0;
@@ -415,7 +415,11 @@ const ProductPage = () => {
                       <SelectValue placeholder="اختر الولاية" />
                     </SelectTrigger>
                     <SelectContent>
-                      {wilayas.map((wilaya) => (
+                      {shippingRates.length > 0 ? shippingRates.map((rate) => (
+                        <SelectItem key={rate.code || rate.wilaya} value={rate.code || rate.wilaya}>
+                          {rate.wilaya}
+                        </SelectItem>
+                      )) : wilayas.map((wilaya) => (
                         <SelectItem key={wilaya} value={wilaya}>
                           {wilaya}
                         </SelectItem>

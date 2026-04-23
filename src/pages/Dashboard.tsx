@@ -101,6 +101,12 @@ const Dashboard = () => {
   const [products, setProducts] = useState<any[]>([]);
   const [shippingRates, setShippingRates] = useState<ShippingRate[]>([]);
 
+  const getWilayaName = (codeOrName: string) => {
+    if (!codeOrName) return "";
+    const rate = shippingRates.find(r => r.code === codeOrName);
+    return rate ? rate.wilaya : codeOrName;
+  };
+
   // Fetch shipping rates from API on mount
   useEffect(() => {
     const fetchRates = async () => {
@@ -435,7 +441,7 @@ const Dashboard = () => {
 
   // Order Action Handlers
   const handleWhatsAppConfirm = (order: any) => {
-    const defaultText = `مرحباً ${order.customerName}، نتواصل معك من متجرنا لتأكيد طلبك لمنتج ${order.productName} بسعر ${order.amount?.toLocaleString() || "0"} دج. هل العنوان ${order.wilaya} صحيح؟`;
+    const defaultText = `مرحباً ${order.customerName}، نتواصل معك من متجرنا لتأكيد طلبك لمنتج ${order.productName} بسعر ${order.amount?.toLocaleString() || "0"} دج. هل العنوان ${getWilayaName(order.wilaya)} صحيح؟`;
     const encodedText = encodeURIComponent(defaultText);
     window.open(`https://wa.me/213${order.customerPhone || "000000000"}?text=${encodedText}`, "_blank");
   };
@@ -929,7 +935,7 @@ const Dashboard = () => {
                           </div>
                           <div>
                             <p className="font-medium text-foreground">{order.productName}</p>
-                            <p className="text-sm text-muted-foreground">{order.customerName} - {order.wilaya}</p>
+                            <p className="text-sm text-muted-foreground">{order.customerName} - {getWilayaName(order.wilaya)}</p>
                           </div>
                         </div>
                         <div className="text-left">
@@ -1438,7 +1444,7 @@ const Dashboard = () => {
                             <tr key={order.id} className="hover:bg-muted/50 transition-colors">
                               <td className="p-4 font-medium text-foreground">{order.productName}</td>
                               <td className="p-4 text-muted-foreground">{order.customerName}</td>
-                              <td className="p-4 text-muted-foreground">{order.wilaya}</td>
+                              <td className="p-4 text-muted-foreground">{getWilayaName(order.wilaya)}</td>
                               <td className="p-4">
                                 <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium ${status.color}`}>
                                   <status.icon className="w-4 h-4" />
