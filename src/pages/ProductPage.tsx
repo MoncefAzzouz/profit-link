@@ -85,8 +85,11 @@ const ProductPage = () => {
         if (res.ok && json.data && Array.isArray(json.data)) {
           setCommunes(json.data);
           // Auto-select first commune if current one is invalid/empty
-          if (json.data.length > 0 && !json.data.find((c:any) => c.commune_name === formData.commune)) {
-            setFormData(prev => ({ ...prev, commune: json.data[0].commune_name }));
+          if (json.data.length > 0) {
+            const firstCommuneName = json.data[0].nom || json.data[0].commune_name;
+            if (!formData.commune || !json.data.find((c:any) => (c.nom || c.commune_name) === formData.commune)) {
+              setFormData(prev => ({ ...prev, commune: firstCommuneName }));
+            }
           }
         } else {
           console.warn("⚠️ No communes found or invalid response:", json);
@@ -480,8 +483,8 @@ const ProductPage = () => {
                     <SelectContent className="max-h-[300px]">
                       {communes && communes.length > 0 ? (
                         communes.map((c: any) => (
-                          <SelectItem key={c.commune_id || c.commune_name} value={c.commune_name}>
-                            {c.commune_name}
+                          <SelectItem key={c.nom || c.commune_id} value={c.nom || c.commune_name}>
+                            {c.nom || c.commune_name}
                           </SelectItem>
                         ))
                       ) : (

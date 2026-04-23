@@ -2757,8 +2757,8 @@ const Dashboard = () => {
                       </SelectTrigger>
                       <SelectContent className="max-h-[300px]">
                         {communes.map((c: any) => (
-                          <SelectItem key={c.commune_id || c.commune_name} value={c.commune_name}>
-                            {c.commune_name}
+                          <SelectItem key={c.nom || c.commune_id} value={c.nom || c.commune_name}>
+                            {c.nom || c.commune_name}
                           </SelectItem>
                         ))}
                       </SelectContent>
