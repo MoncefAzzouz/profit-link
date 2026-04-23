@@ -262,4 +262,46 @@ router.put('/products', authenticateToken, async (req: AuthRequest, res: Respons
   }
 });
 
+// GET /api/store/favorites (Fetch affiliate's favorite product IDs)
+router.get('/favorites', authenticateToken, async (req: AuthRequest, res: Response): Promise<any> => {
+  try {
+    const affiliateId = req.user?.userId;
+    if (!affiliateId) return res.status(401).json({ error: 'Unauthorized' });
+
+    const settings = await prisma.storeSettings.findUnique({ where: { affiliateId } });
+    if (!settings || !settings.config) return res.json({ data: [] });
+
+    const config = settings.config as any;
+    res.json({ data: config.favoriteProductIds || [] });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// PUT /api/store/favorites (Save affiliate's favorite product IDs)
+router.put('/favorites', authenticateToken, async (req: AuthRequest, res: Response): Promise<any> => {
+  try {
+    const affiliateId = req.user?.userId;
+    if (!affiliateId) return res.status(401).json({ error: 'Unauthorized' });
+
+    const { productIds } = req.body;
+
+    const existing = await prisma.storeSettings.findUnique({ where: { affiliateId } });
+    const existingConfig = (existing?.config as any) || {};
+    const updatedConfig = { ...existingConfig, favoriteProductIds: productIds };
+
+    await prisma.storeSettings.upsert({
+      where: { affiliateId },
+      update: { config: updatedConfig },
+      create: { affiliateId, storeName: 'My Store', config: updatedConfig }
+    });
+
+    res.json({ message: 'Favorites saved successfully' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
 export default router;
