@@ -22,6 +22,17 @@ const ProductPage = () => {
   const [communes, setCommunes] = useState<any[]>([]);
   const [loadingCommunes, setLoadingCommunes] = useState(false);
 
+  const [formData, setFormData] = useState({
+    name: "",
+    phone: "",
+    wilaya: "",
+    commune: "",
+    address: "",
+    deliveryType: "home" as "home" | "office"
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [orderSuccess, setOrderSuccess] = useState(false);
+
   useEffect(() => {
     // Fetch product from backend
     const fetchProduct = async () => {
@@ -78,16 +89,6 @@ const ProductPage = () => {
     };
     fetchCommunes();
   }, [formData.wilaya]);
-  const [formData, setFormData] = useState({
-    name: "",
-    phone: "",
-    wilaya: "",
-    commune: "",
-    address: "",
-    deliveryType: "home" as "home" | "office"
-  });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [orderSuccess, setOrderSuccess] = useState(false);
   
   // Track Pixels
   const [pixels, setPixels] = useState<{facebook: string; tiktok: string} | null>(null);
