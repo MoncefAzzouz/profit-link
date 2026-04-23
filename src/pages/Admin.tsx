@@ -142,10 +142,10 @@ const Admin = () => {
   };
   
   // Product Management States
-  const [products, setProducts] = useState(mockProducts);
+  const [products, setProducts] = useState<any[]>([]);
   const [isProductDialogOpen, setIsProductDialogOpen] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  const [productFormData, setProductFormData] = useState<Partial<Product>>({
+  const [editingProduct, setEditingProduct] = useState<any | null>(null);
+  const [productFormData, setProductFormData] = useState<any>({
     name: "",
     description: "",
     adText: "",
@@ -162,17 +162,30 @@ const Admin = () => {
     adMaterials: []
   });
 
+  // Fetch products from DB
+  const fetchProducts = async () => {
+    const token = localStorage.getItem("token");
+    try {
+      const res = await fetch('https://profit-link-3eri.onrender.com/api/products/all', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const json = await res.json();
+        setProducts(json.data || []);
+      }
+    } catch (err) {
+      console.error('Failed to fetch products', err);
+    }
+  };
+
   useEffect(() => {
     // Load persisted requests
     const persistedReqs = JSON.parse(localStorage.getItem("admin_join_requests") || "[]");
     const uniqueReqs = [...persistedReqs, ...mockJoinRequests].filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
     setJoinRequests(uniqueReqs);
 
-    // Load persisted products
-    const persistedProds = JSON.parse(localStorage.getItem("admin_products") || "[]");
-    // Merge with mock products but ensure persistence overrides/complements
-    const uniqueProds = [...persistedProds, ...mockProducts].filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
-    setProducts(uniqueProds);
+    // Fetch products from backend
+    fetchProducts();
   }, []);
 
   // Fetch Shipping Rates
@@ -202,10 +215,7 @@ const Admin = () => {
     setShippingPage(1);
   }, [shippingSearch]);
 
-  const saveProductsToStorage = (updatedProducts: Product[]) => {
-    // Only save the ones that were potentially modified or added (for simulation simplicity we save all current state)
-    localStorage.setItem("admin_products", JSON.stringify(updatedProducts));
-  };
+
 
   const sidebarItems = [
     { id: "overview" as Tab, label: "نظرة عامة", icon: LayoutDashboard },
@@ -353,45 +363,91 @@ const Admin = () => {
     setIsProductDialogOpen(true);
   };
 
-  const handleSaveProduct = (e: React.FormEvent) => {
+  const handleSaveProduct = async (e: React.FormEvent) => {
     e.preventDefault();
-    const productToSave = {
-      ...productFormData,
-      id: editingProduct?.id || `prod-${Date.now()}`,
-      images: productFormData.image ? [productFormData.image] : [],
-      features: productFormData.features || []
-    } as Product;
+    const token = localStorage.getItem("token");
+    
+    try {
+      const payload = {
+        name: productFormData.name,
+        description: productFormData.description,
+        adText: productFormData.adText,
+        price: productFormData.price,
+        originalPrice: productFormData.originalPrice,
+        commission: productFormData.commission,
+        category: productFormData.category,
+        stock: productFormData.stock,
+        image: productFormData.image,
+        images: productFormData.image ? [productFormData.image] : [],
+        videoUrl: productFormData.videoUrl,
+        isVisible: productFormData.isVisible,
+        isTrend: productFormData.isTrend,
+        isFeatured: productFormData.isFeatured,
+        features: productFormData.features || []
+      };
 
-    const updatedProducts = editingProduct 
-      ? products.map(p => p.id === editingProduct.id ? productToSave : p)
-      : [productToSave, ...products];
+      const url = editingProduct
+        ? `https://profit-link-3eri.onrender.com/api/products/${editingProduct.id}`
+        : 'https://profit-link-3eri.onrender.com/api/products';
 
-    setProducts(updatedProducts);
-    saveProductsToStorage(updatedProducts);
-    setIsProductDialogOpen(false);
-    toast({
-      title: editingProduct ? "تم تحديث المنتج بنجاح" : "تم إضافة المنتج بنجاح",
-      description: `المنتج "${productToSave.name}" جاهز الآن.`,
-    });
+      const res = await fetch(url, {
+        method: editingProduct ? 'PUT' : 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || 'Failed to save product');
+
+      setIsProductDialogOpen(false);
+      fetchProducts(); // Refresh list from DB
+      toast({
+        title: editingProduct ? "تم تحديث المنتج بنجاح" : "تم إضافة المنتج بنجاح",
+        description: `المنتج "${productFormData.name}" جاهز الآن.`,
+      });
+    } catch (err: any) {
+      toast({ title: "خطأ", description: err.message, variant: "destructive" });
+    }
   };
 
-  const handleDeleteProduct = (id: string) => {
-    const updatedProducts = products.filter(p => p.id !== id);
-    setProducts(updatedProducts);
-    saveProductsToStorage(updatedProducts);
-    toast({ title: "تم حذف المنتج", variant: "destructive" });
+  const handleDeleteProduct = async (id: string) => {
+    const token = localStorage.getItem("token");
+    try {
+      const res = await fetch(`https://profit-link-3eri.onrender.com/api/products/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!res.ok) throw new Error('Failed to delete');
+      fetchProducts();
+      toast({ title: "تم حذف المنتج", variant: "destructive" });
+    } catch (err: any) {
+      toast({ title: "خطأ", description: err.message, variant: "destructive" });
+    }
   };
 
-  const handleToggleProductStatus = (id: string, field: keyof Product) => {
-    const updatedProducts = products.map(p => {
-      if (p.id === id) {
-        return { ...p, [field]: !p[field] };
-      }
-      return p;
-    });
-    setProducts(updatedProducts);
-    saveProductsToStorage(updatedProducts);
-    toast({ title: "تم تحديث حالة المنتج" });
+  const handleToggleProductStatus = async (id: string, field: string) => {
+    const token = localStorage.getItem("token");
+    const product = products.find(p => p.id === id);
+    if (!product) return;
+
+    try {
+      const res = await fetch(`https://profit-link-3eri.onrender.com/api/products/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ [field]: !product[field] })
+      });
+      if (!res.ok) throw new Error('Failed to update');
+      fetchProducts();
+      toast({ title: "تم تحديث حالة المنتج" });
+    } catch (err: any) {
+      toast({ title: "خطأ", description: err.message, variant: "destructive" });
+    }
   };
 
   const { paginatedShippingRates, totalShippingPages } = useMemo(() => {
