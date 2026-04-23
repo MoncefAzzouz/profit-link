@@ -347,6 +347,7 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
       
       if (existingPage) {
         setEditingPage(existingPage);
+        setActiveDesignTab("content");
       } else {
         // Create a new landing page specifically for this product
         const newPage: LandingPageConfig = {
@@ -354,17 +355,28 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
           id: `lp-${Date.now()}`,
           productId: initialProductToEdit.id,
           productName: initialProductToEdit.name,
+          template: "original", // Default to the original/classic design as requested
+          heroTitle: initialProductToEdit.name,
+          heroSubtitle: initialProductToEdit.description || "أفضل جودة بأفضل سعر في السوق الجزائري",
           price: initialProductToEdit.price,
           originalPrice: initialProductToEdit.originalPrice,
           category: initialProductToEdit.category,
           heroImage: initialProductToEdit.image,
-          galleryImages: initialProductToEdit.image ? [initialProductToEdit.image] : [],
+          galleryImages: initialProductToEdit.images && initialProductToEdit.images.length > 0 
+            ? initialProductToEdit.images 
+            : (initialProductToEdit.image ? [initialProductToEdit.image] : []),
+          features: initialProductToEdit.features && initialProductToEdit.features.length > 0
+            ? initialProductToEdit.features
+            : ["جودة عالية مضمونة", "توصيل سريع لكل الولايات", "الدفع عند الاستلام", "ضمان الاستبدال والاسترجاع"],
+          videoUrl: initialProductToEdit.videoUrl || "",
+          sections: ["hero", "urgency-bar", "features", "gallery", "social-proof", "reviews", "shipping", "cta"],
           status: "draft"
         };
         
         const newPages = [newPage, ...pages];
         savePagesLocally(newPages);
         setEditingPage(newPage);
+        setActiveDesignTab("content");
       }
     }
   }, [initialProductToEdit, isLoading, pages]);
