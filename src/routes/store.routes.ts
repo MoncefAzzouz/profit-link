@@ -104,7 +104,7 @@ router.get('/public/:storeName', async (req: Request, res: Response): Promise<an
           primaryColor: affiliate.storeSettings?.primaryColor || '#000000',
           fontFamily: affiliate.storeSettings?.fontFamily || 'Cairo',
           templateId: affiliate.storeSettings?.templateId || 'modern',
-          config: affiliate.storeSettings?.config || {}
+          ...(typeof affiliate.storeSettings?.config === 'object' && affiliate.storeSettings.config !== null ? affiliate.storeSettings.config : {})
         },
         products: products.map(p => ({
           id: p.id,
