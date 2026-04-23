@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { EcotrackService } from '../services/ecotrack.service';
+import { authenticateToken, AuthRequest } from '../middleware/auth';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -108,10 +109,10 @@ router.post('/', async (req: Request, res: Response) => {
 });
 
 // GET /api/orders/affiliate (Affiliate sees their own generated orders)
-router.get('/affiliate', async (req: Request, res: Response) => {
+router.get('/affiliate', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
-    const affiliateId = req.header('x-user-id');
-    if (!affiliateId) return res.status(401).json({ error: 'Missing auth header' });
+    const affiliateId = req.user?.userId;
+    if (!affiliateId) return res.status(401).json({ error: 'Unauthorized' });
 
     const orders = await prisma.order.findMany({
       where: { affiliateId },
