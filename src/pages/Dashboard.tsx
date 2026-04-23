@@ -116,21 +116,46 @@ const Dashboard = () => {
     fetchRates();
   }, []);
   const [loadingOrders, setLoadingOrders] = useState(true);
-  const [stats, setStats] = useState({
+  const [dashboardStats, setDashboardStats] = useState({
     totalRevenue: 0,
     totalOrders: 0,
-    pendingOrders: 0,
+    pendingEarnings: 0,
     confirmationRate: 0,
-    activeAffiliates: 0
+    confirmedOrders: 0
   });
 
   useEffect(() => {
+    const token = localStorage.getItem("token");
+    
+    const fetchDashboardStats = async () => {
+      try {
+        if (!token) return;
+        const res = await fetch('https://profit-link-3eri.onrender.com/api/finance/dashboard', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setDashboardStats({
+            totalRevenue: data.totalEarnings || 0,
+            totalOrders: data.totalOrders || 0,
+            pendingEarnings: data.pendingEarnings || 0,
+            confirmationRate: data.confirmationRate || 0,
+            confirmedOrders: data.confirmedOrders || 0
+          });
+        }
+      } catch (err) {
+        console.error("Failed to fetch dashboard stats", err);
+      }
+    };
+
     const fetchOrders = async () => {
       try {
-        const response = await fetch('https://profit-link-3eri.onrender.com/api/orders/all'); // For demo, fetching all for now
-        const res = await response.json();
-        if (response.ok) {
-          const fetchedOrders = res.data.map((o: any) => ({
+        const res = await fetch('https://profit-link-3eri.onrender.com/api/orders/affiliate', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const json = await res.json();
+        if (res.ok && json.data) {
+          const fetchedOrders = json.data.map((o: any) => ({
             id: o.id,
             productName: o.product?.name || "منتج محذوف",
             customerName: o.customerName,
@@ -144,19 +169,6 @@ const Dashboard = () => {
             trackingNumber: o.trackingNumber
           }));
           setOrders(fetchedOrders);
-
-          // Calculate stats for the dashboard
-          const revenue = fetchedOrders.reduce((acc: number, curr: any) => acc + (curr.amount || 0), 0);
-          const pending = fetchedOrders.filter((o: any) => o.status === 'pending').length;
-          const confirmed = fetchedOrders.filter((o: any) => o.status === 'confirmed' || o.status === 'shipped' || o.status === 'delivered').length;
-
-          setStats({
-            totalRevenue: revenue,
-            totalOrders: fetchedOrders.length,
-            pendingOrders: pending,
-            confirmationRate: fetchedOrders.length > 0 ? Math.round((confirmed / fetchedOrders.length) * 100) : 0,
-            activeAffiliates: 0
-          });
         }
       } catch (err) {
         console.error("Failed to fetch orders", err);
@@ -165,9 +177,13 @@ const Dashboard = () => {
       }
     };
 
+    fetchDashboardStats();
     fetchOrders();
     // Refresh interval
-    const interval = setInterval(fetchOrders, 30000);
+    const interval = setInterval(() => {
+      fetchDashboardStats();
+      fetchOrders();
+    }, 30000);
     return () => clearInterval(interval);
   }, []);
 
@@ -596,7 +612,7 @@ const Dashboard = () => {
                     <div>
                       <p className="text-muted-foreground text-sm">إجمالي الأرباح</p>
                       <p className="text-3xl font-bold text-foreground mt-1">
-                        {mockAffiliateStats.totalEarnings.toLocaleString()}
+                        {dashboardStats.totalRevenue.toLocaleString()}
                       </p>
                       <p className="text-sm text-muted-foreground">دج</p>
                     </div>
@@ -616,7 +632,7 @@ const Dashboard = () => {
                     <div>
                       <p className="text-muted-foreground text-sm">الأرباح المعلّقة</p>
                       <p className="text-3xl font-bold text-foreground mt-1">
-                        {mockAffiliateStats.pendingEarnings.toLocaleString()}
+                        {dashboardStats.pendingEarnings.toLocaleString()}
                       </p>
                       <p className="text-sm text-muted-foreground">دج</p>
                     </div>
@@ -636,9 +652,9 @@ const Dashboard = () => {
                     <div>
                       <p className="text-muted-foreground text-sm">إجمالي الطلبيات</p>
                       <p className="text-3xl font-bold text-foreground mt-1">
-                        {mockAffiliateStats.totalOrders}
+                        {dashboardStats.totalOrders}
                       </p>
-                      <p className="text-sm text-secondary">+{mockAffiliateStats.confirmedOrders} مؤكد</p>
+                      <p className="text-sm text-secondary">+{dashboardStats.confirmedOrders} مؤكد</p>
                     </div>
                     <div className="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center">
                       <ShoppingCart className="w-7 h-7 text-primary" />
@@ -656,7 +672,7 @@ const Dashboard = () => {
                     <div>
                       <p className="text-muted-foreground text-sm">نسبة التأكيد</p>
                       <p className="text-3xl font-bold text-foreground mt-1">
-                        {mockAffiliateStats.confirmationRate}%
+                        {dashboardStats.confirmationRate}%
                       </p>
                       <p className="text-sm text-secondary">ممتاز</p>
                     </div>
@@ -2308,7 +2324,7 @@ const Dashboard = () => {
                 onChange={(e) => setWithdrawAmount(e.target.value)}
                 className="rounded-xl h-12 text-lg font-bold"
               />
-              <p className="text-[11px] text-muted-foreground">الرصيد القابل للسحب: {mockAffiliateStats.totalEarnings.toLocaleString()} دج</p>
+              <p className="text-[11px] text-muted-foreground">الرصيد القابل للسحب: {dashboardStats.totalRevenue.toLocaleString()} دج</p>
             </div>
 
             <div className="space-y-2">
