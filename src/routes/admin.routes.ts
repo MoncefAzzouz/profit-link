@@ -49,4 +49,60 @@ router.get('/dashboard', authenticateToken, requireAdmin, async (req: AuthReques
   }
 });
 
+// GET /api/admin/withdrawals (Admin sees all payout requests)
+router.get('/withdrawals', authenticateToken, requireAdmin, async (req: AuthRequest, res: Response): Promise<any> => {
+  try {
+    const withdrawals = await prisma.withdrawalRequest.findMany({
+      include: {
+        user: {
+          select: {
+            name: true,
+            role: true
+          }
+        }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    // Map to a cleaner format for the frontend
+    const formatted = withdrawals.map(w => ({
+      id: w.id,
+      amount: w.amount,
+      method: w.method,
+      accountDetails: w.accountDetails,
+      status: w.status,
+      createdAt: w.createdAt,
+      requesterName: w.user.name,
+      requesterRole: w.user.role
+    }));
+
+    res.json({ data: formatted });
+  } catch (error) {
+    console.error('Error fetching admin withdrawals:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// PATCH /api/admin/withdrawals/:id (Admin approves/rejects payout)
+router.patch('/withdrawals/:id', authenticateToken, requireAdmin, async (req: AuthRequest, res: Response): Promise<any> => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body; // 'approved' or 'rejected'
+
+    if (!['approved', 'rejected', 'pending'].includes(status)) {
+      return res.status(400).json({ error: 'Invalid status' });
+    }
+
+    const withdrawal = await prisma.withdrawalRequest.update({
+      where: { id },
+      data: { status }
+    });
+
+    res.json({ message: `Withdrawal ${status} successfully`, data: withdrawal });
+  } catch (error) {
+    console.error('Error updating withdrawal:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
 export default router;
