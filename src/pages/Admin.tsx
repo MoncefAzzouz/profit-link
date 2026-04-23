@@ -2050,15 +2050,49 @@ const Admin = () => {
                  </div>
 
                  <div className="space-y-2">
-                    <Label className="font-bold text-sm">رابط الصورة الرئيسية</Label>
-                    <div className="relative">
-                      <ImageIcon className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input 
-                        value={productFormData.image} 
-                        onChange={e => setProductFormData({...productFormData, image: e.target.value})} 
-                        placeholder="https://images..." 
-                        className="h-12 pr-12 rounded-xl bg-muted/30 border-none px-4"
-                      />
+                    <Label className="font-bold text-sm">صورة المنتج الرئيسية</Label>
+                    <div className="flex flex-col items-center gap-3">
+                      {productFormData.image && (
+                        <div className="w-full h-32 rounded-xl overflow-hidden bg-muted/30 border border-dashed border-border">
+                          <img src={productFormData.image} alt="Preview" className="w-full h-full object-contain" />
+                        </div>
+                      )}
+                      <label className="w-full cursor-pointer">
+                        <div className="flex items-center justify-center gap-2 h-12 rounded-xl bg-muted/30 border border-dashed border-border hover:bg-muted/50 transition-colors px-4">
+                          <Upload className="w-4 h-4 text-muted-foreground" />
+                          <span className="text-sm text-muted-foreground">
+                            {productFormData.image ? "تغيير الصورة" : "اختر صورة المنتج"}
+                          </span>
+                        </div>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            if (!file) return;
+                            const token = localStorage.getItem("token");
+                            const formData = new FormData();
+                            formData.append("image", file);
+                            try {
+                              const res = await fetch("https://profit-link-3eri.onrender.com/api/upload/image", {
+                                method: "POST",
+                                headers: { "Authorization": `Bearer ${token}` },
+                                body: formData,
+                              });
+                              const json = await res.json();
+                              if (res.ok && json.url) {
+                                setProductFormData({ ...productFormData, image: json.url });
+                                toast({ title: "تم رفع الصورة بنجاح ✅" });
+                              } else {
+                                throw new Error(json.error || "Upload failed");
+                              }
+                            } catch (err: any) {
+                              toast({ title: "خطأ في رفع الصورة", description: err.message, variant: "destructive" });
+                            }
+                          }}
+                        />
+                      </label>
                     </div>
                  </div>
 
