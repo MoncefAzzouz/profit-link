@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { mockProducts } from "@/data/mockProducts";
 import { wilayas } from "@/data/mockAffiliateData";
 import { useToast } from "@/hooks/use-toast";
 import { ShippingRate } from "@/data/mockShippingData";
@@ -14,13 +13,31 @@ import { ShippingRate } from "@/data/mockShippingData";
 const ProductPage = () => {
   const { productId, affiliateId } = useParams();
   const { toast } = useToast();
-  const product = mockProducts.find(p => p.id === productId);
+  const [product, setProduct] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
   
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [shippingRates, setShippingRates] = useState<ShippingRate[]>([]);
 
   useEffect(() => {
+    // Fetch product from backend
+    const fetchProduct = async () => {
+      try {
+        const res = await fetch('https://profit-link-3eri.onrender.com/api/products');
+        const json = await res.json();
+        if (res.ok && json.data) {
+          const found = json.data.find((p: any) => p.id === productId);
+          setProduct(found || null);
+        }
+      } catch (err) {
+        console.error('Failed to fetch product', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProduct();
+
     const fetchRates = async () => {
       try {
         const res = await fetch('https://profit-link-3eri.onrender.com/api/delivery/all-rates');
@@ -31,7 +48,7 @@ const ProductPage = () => {
       }
     };
     fetchRates();
-  }, []);
+  }, [productId]);
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
@@ -99,6 +116,21 @@ const ProductPage = () => {
       } catch(e){}
     }
   }, []);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center">
+          <motion.span
+            animate={{ rotate: 360 }}
+            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+            className="w-10 h-10 border-4 border-primary/30 border-t-primary rounded-full inline-block mb-4"
+          />
+          <p className="text-muted-foreground">جاري تحميل المنتج...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!product) {
     return (
@@ -243,7 +275,7 @@ const ProductPage = () => {
           >
             <div className="relative aspect-square rounded-3xl overflow-hidden bg-muted">
               <img
-                src={product.images[selectedImage]}
+                src={(product.images?.length > 0 ? product.images[selectedImage] : product.image) || '/placeholder.png'}
                 alt={product.name}
                 className="w-full h-full object-cover"
               />
@@ -252,7 +284,7 @@ const ProductPage = () => {
               </div>
             </div>
             
-            {product.images.length > 1 && (
+            {(product.images?.length || 0) > 1 && (
               <div className="flex gap-3">
                 {product.images.map((img, idx) => (
                   <button
@@ -270,7 +302,7 @@ const ProductPage = () => {
 
             {/* Features */}
             <div className="grid grid-cols-2 gap-3 mt-6">
-              {product.features.map((feature, idx) => (
+              {(product.features || []).map((feature: string, idx: number) => (
                 <div key={idx} className="flex items-center gap-2 bg-muted rounded-xl p-3">
                   <Check className="w-5 h-5 text-secondary" />
                   <span className="text-sm font-medium">{feature}</span>
