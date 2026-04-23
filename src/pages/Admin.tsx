@@ -102,6 +102,8 @@ const Admin = () => {
     activeAffiliates: 0,
     ordersThisMonth: 0,
   });
+  const [withdrawals, setWithdrawals] = useState<any[]>([]);
+  const [isFetchingWithdrawals, setIsFetchingWithdrawals] = useState(false);
 
   // Fetch admin stats from backend
   useEffect(() => {
@@ -126,6 +128,58 @@ const Admin = () => {
     const interval = setInterval(fetchAdminStats, 30000);
     return () => clearInterval(interval);
   }, []);
+
+  const fetchWithdrawals = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    
+    setIsFetchingWithdrawals(true);
+    try {
+      const res = await fetch('https://profit-link-3eri.onrender.com/api/admin/withdrawals', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setWithdrawals(data.data);
+      }
+    } catch (err) {
+      console.error('Failed to fetch withdrawals', err);
+    } finally {
+      setIsFetchingWithdrawals(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchWithdrawals();
+  }, []);
+
+  const updateWithdrawalStatus = async (id: string, status: string) => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    try {
+      const res = await fetch(`https://profit-link-3eri.onrender.com/api/admin/withdrawals/${id}`, {
+        method: 'PATCH',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}` 
+        },
+        body: JSON.stringify({ status })
+      });
+
+      if (res.ok) {
+        toast({ 
+          title: status === 'approved' ? "تم قبول الطلب" : "تم رفض الطلب", 
+          description: status === 'approved' ? "سيتم تحويل المبلغ قريباً" : "تم تحديث الحالة بنجاح" 
+        });
+        fetchWithdrawals(); // Refresh list
+      } else {
+        throw new Error("Failed to update");
+      }
+    } catch (err) {
+      toast({ title: "خطأ", description: "فشل تحديث الحالة", variant: "destructive" });
+    }
+  };
   
   // Landing Page Editor State
   const [landingSettings, setLandingSettings] = useState<LandingSettings>(() => {
@@ -263,13 +317,15 @@ const Admin = () => {
   }, [orderSearch, orderStatus]);
 
   const filteredWithdrawals = useMemo(() => {
-    return mockWithdrawalRequests.filter((req) => {
-      const matchesSearch = req.requesterName.includes(withdrawalSearch) ||
-        req.accountDetails.includes(withdrawalSearch);
+    return withdrawals.filter((req) => {
+      const name = req.requesterName || "";
+      const details = req.accountDetails || "";
+      const matchesSearch = name.toLowerCase().includes(withdrawalSearch.toLowerCase()) ||
+        details.toLowerCase().includes(withdrawalSearch.toLowerCase());
       const matchesStatus = withdrawalStatus === "all" || req.status === withdrawalStatus;
       return matchesSearch && matchesStatus;
     });
-  }, [withdrawalSearch, withdrawalStatus]);
+  }, [withdrawals, withdrawalSearch, withdrawalStatus]);
 
   const productPriceRanges = [
     { label: "الكل", min: 0, max: Infinity },
@@ -1366,8 +1422,8 @@ const Admin = () => {
               {/* Stats for Withdrawals */}
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 {[
-                  { label: "طلبات معلقة", value: mockWithdrawalRequests.filter(r => r.status === "pending").length, color: "text-amber-600 bg-amber-50" },
-                  { label: "إجمالي السحوبات", value: `${mockWithdrawalRequests.filter(r => r.status === "completed").reduce((sum, r) => sum + r.amount, 0).toLocaleString()} دج`, color: "text-emerald-600 bg-emerald-50 col-span-2" },
+                  { label: "طلبات معلقة", value: withdrawals.filter(r => r.status === "pending").length, color: "text-amber-600 bg-amber-50" },
+                  { label: "إجمالي السحوبات", value: `${withdrawals.filter(r => r.status === "approved").reduce((sum, r) => sum + r.amount, 0).toLocaleString()} دج`, color: "text-emerald-600 bg-emerald-50 col-span-2" },
                 ].map((stat, i) => (
                   <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className={`dash-card p-4 flex flex-col items-center justify-center text-center ${stat.color}`}>
                     <p className="text-2xl font-black">{stat.value}</p>
@@ -1420,8 +1476,8 @@ const Admin = () => {
                         <tr key={req.id} className="hover:bg-muted/50 transition-colors">
                           <td className="p-4">
                             <p className="font-bold text-foreground text-sm">{req.requesterName}</p>
-                            <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${req.requesterType === "seller" ? "bg-emerald-100 text-emerald-700" : "bg-blue-100 text-blue-700"}`}>
-                              {req.requesterType === "seller" ? "بائع" : "مسوّق"}
+                            <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${req.requesterRole === "SELLER" ? "bg-emerald-100 text-emerald-700" : "bg-blue-100 text-blue-700"}`}>
+                              {req.requesterRole === "SELLER" ? "بائع" : "مسوّق"}
                             </span>
                           </td>
                           <td className="p-4 font-black text-foreground text-sm">
@@ -1433,20 +1489,29 @@ const Admin = () => {
                           </td>
                           <td className="p-4">
                             <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold ${req.status === "pending" ? "bg-amber-100 text-amber-700" :
-                                req.status === "completed" ? "bg-emerald-100 text-emerald-700" :
+                                req.status === "approved" ? "bg-emerald-100 text-emerald-700" :
                                   "bg-red-100 text-red-700"
                               }`}>
-                              {req.status === "pending" ? "قيد الانتظار" : req.status === "completed" ? "تم الدفع" : "مرفوض"}
+                              {req.status === "pending" ? "قيد الانتظار" : req.status === "approved" ? "تم الدفع" : "مرفوض"}
                             </span>
                           </td>
-                          <td className="p-4 text-xs text-muted-foreground">{req.date}</td>
+                          <td className="p-4 text-xs text-muted-foreground">{new Date(req.createdAt).toLocaleDateString('ar-DZ')}</td>
                           <td className="p-4">
                             {req.status === "pending" && (
                               <div className="flex gap-2">
-                                <Button size="sm" className="h-8 text-[10px] bg-emerald-600 hover:bg-emerald-700" onClick={() => toast({ title: "تم قبول الطلب", description: "سيتم تحويل المبلغ قريباً" })}>
+                                <Button 
+                                  size="sm" 
+                                  className="h-8 text-[10px] bg-emerald-600 hover:bg-emerald-700" 
+                                  onClick={() => updateWithdrawalStatus(req.id, 'approved')}
+                                >
                                   قبول
                                 </Button>
-                                <Button size="sm" variant="destructive" className="h-8 text-[10px]" onClick={() => toast({ title: "تم رفض الطلب", variant: "destructive" })}>
+                                <Button 
+                                  size="sm" 
+                                  variant="destructive" 
+                                  className="h-8 text-[10px]" 
+                                  onClick={() => updateWithdrawalStatus(req.id, 'rejected')}
+                                >
                                   رفض
                                 </Button>
                               </div>
