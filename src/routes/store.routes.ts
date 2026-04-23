@@ -76,13 +76,13 @@ router.put('/settings', authenticateToken, async (req: AuthRequest, res: Respons
 // GET /api/store/public/:storeName (Public storefront data)
 router.get('/public/:storeName', async (req: Request, res: Response): Promise<any> => {
   try {
-    const { storeName } = req.params;
+    const storeNameStr = String(req.params.storeName);
     
     // Find the affiliate by storeName
     const affiliate = await prisma.user.findFirst({
-      where: { storeName: { equals: storeName, mode: 'insensitive' }, role: 'AFFILIATE' },
+      where: { storeName: { equals: storeNameStr, mode: 'insensitive' }, role: 'AFFILIATE' },
       include: { storeSettings: true }
-    });
+    }) as any;
 
     if (!affiliate) {
       return res.status(404).json({ error: 'Store not found' });
