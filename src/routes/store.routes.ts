@@ -133,6 +133,31 @@ router.get('/public/:storeName', async (req: Request, res: Response): Promise<an
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
+// GET /api/store/pages/:id/public (Fetch a specific landing page for public view)
+router.get('/pages/:id/public', async (req: Request, res: Response): Promise<any> => {
+  try {
+    const { id } = req.params;
+    const page = await prisma.landingPage.findUnique({
+      where: { id: String(id) }
+    });
+
+    if (!page) {
+      return res.status(404).json({ error: 'Landing page not found' });
+    }
+
+    // Increment views safely in the background
+    prisma.landingPage.update({
+      where: { id: String(id) },
+      data: { views: { increment: 1 } }
+    }).catch(err => console.error('Failed to increment views', err));
+
+    res.json({ data: page.pageConfig });
+  } catch (error) {
+    console.error('Public landing page error:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
 // GET /api/store/pages (List all landing pages for the affiliate)
 router.get('/pages', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
