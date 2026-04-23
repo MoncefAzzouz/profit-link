@@ -6,7 +6,7 @@ import {
   Settings, Menu, X, TrendingUp, CheckCircle, XCircle,
   Truck, Clock, Eye, Edit, Ban, Search, Filter, Plus,
   BarChart3, ChevronLeft, AlertTriangle, SlidersHorizontal, Store, UserPlus, Check, MapPin, CreditCard,
-  Video, Star, EyeOff, Trash2, Upload, FileText, Film, Image as ImageIcon, User, LayoutTemplate
+  Video, Star, EyeOff, Trash2, Upload, FileText, Film, Image as ImageIcon, User, LayoutTemplate, Layers
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
