@@ -40,6 +40,7 @@ model User {
   ccp            String?
   storeName      String?
   role           Role     @default(AFFILIATE)
+  tier           String   @default("المستوى 1 - مبتدئ")
   
   // Financial
   walletBalance  Float    @default(0.0)
