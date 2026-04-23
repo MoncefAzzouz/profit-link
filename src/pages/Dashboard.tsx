@@ -2641,6 +2641,19 @@ const Dashboard = () => {
                     <ShoppingCart className="w-6 h-6" />
                     اطلب المنتج الآن
                   </Button>
+                  <Link 
+                    to={`/product/${selectedProduct.id}/${user?.id || "aff-demo"}`} 
+                    target="_blank"
+                    className="flex-1"
+                  >
+                    <Button 
+                      variant="outline"
+                      className="w-full h-14 rounded-2xl border-2 font-black text-lg gap-3"
+                    >
+                      <Globe className="w-6 h-6" />
+                      صفحة المنتج
+                    </Button>
+                  </Link>
                   <Button 
                     variant="outline"
                     className={`h-14 w-14 rounded-2xl border-2 flex items-center justify-center ${storeProducts.has(selectedProduct.id) ? "border-secondary text-secondary bg-secondary/5" : "border-border"}`}
