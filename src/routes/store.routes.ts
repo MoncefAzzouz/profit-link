@@ -207,4 +207,59 @@ router.post('/generate-ai', async (req: Request, res: Response) => {
   }
 });
 
+// GET /api/store/products (Fetch affiliate's store product IDs)
+router.get('/products', authenticateToken, async (req: AuthRequest, res: Response): Promise<any> => {
+  try {
+    const affiliateId = req.user?.userId;
+    if (!affiliateId) return res.status(401).json({ error: 'Unauthorized' });
+
+    const settings = await prisma.storeSettings.findUnique({
+      where: { affiliateId }
+    });
+
+    if (!settings || !settings.config) {
+      return res.json({ data: [] });
+    }
+
+    const config = settings.config as any;
+    res.json({ data: config.storeProductIds || [] });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// PUT /api/store/products (Save affiliate's store product IDs)
+router.put('/products', authenticateToken, async (req: AuthRequest, res: Response): Promise<any> => {
+  try {
+    const affiliateId = req.user?.userId;
+    if (!affiliateId) return res.status(401).json({ error: 'Unauthorized' });
+
+    const { productIds } = req.body; // Array of product IDs
+
+    // Get existing config or create new
+    const existing = await prisma.storeSettings.findUnique({
+      where: { affiliateId }
+    });
+
+    const existingConfig = (existing?.config as any) || {};
+    const updatedConfig = { ...existingConfig, storeProductIds: productIds };
+
+    await prisma.storeSettings.upsert({
+      where: { affiliateId },
+      update: { config: updatedConfig },
+      create: {
+        affiliateId,
+        storeName: 'My Store',
+        config: updatedConfig
+      }
+    });
+
+    res.json({ message: 'Store products saved successfully' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
 export default router;
