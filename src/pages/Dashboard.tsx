@@ -39,7 +39,7 @@ import { Label } from "@/components/ui/label";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { format, parseISO, isAfter, isBefore, isEqual } from "date-fns";
 import { ar } from "date-fns/locale";
-import { mockProducts, categories } from "@/data/mockProducts";
+import { categories } from "@/data/mockProducts";
 import { mockOrders, mockAffiliateStats, Order, wilayas } from "@/data/mockAffiliateData";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
@@ -98,6 +98,7 @@ const Dashboard = () => {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [user, setUser] = useState<any>(null);
   const [orders, setOrders] = useState<any[]>([]);
+  const [products, setProducts] = useState<any[]>([]);
   const [shippingRates, setShippingRates] = useState<ShippingRate[]>([]);
 
   // Fetch shipping rates from API on mount
@@ -114,6 +115,20 @@ const Dashboard = () => {
       }
     };
     fetchRates();
+
+    // Fetch products from backend
+    const fetchProducts = async () => {
+      try {
+        const res = await fetch('https://profit-link-3eri.onrender.com/api/products');
+        const json = await res.json();
+        if (res.ok && json.data) {
+          setProducts(json.data);
+        }
+      } catch (err) {
+        console.error('Failed to fetch products', err);
+      }
+    };
+    fetchProducts();
   }, []);
   const [loadingOrders, setLoadingOrders] = useState(true);
   const [dashboardStats, setDashboardStats] = useState({
@@ -523,7 +538,7 @@ const Dashboard = () => {
 
   const filteredProducts = useMemo(() => {
     const range = productPriceRanges[productPriceRange];
-    return mockProducts
+    return products
       .filter((product) => {
         const matchesSearch = product.name.includes(productSearch) || product.description.includes(productSearch);
         const matchesCategory = productCategory === "الكل" || product.category === productCategory;
@@ -538,7 +553,7 @@ const Dashboard = () => {
         if (productSort === "stock-desc") return b.stock - a.stock;
         return 0;
       });
-  }, [productSearch, productCategory, productPriceRange, productSort, productStockFilter]);
+  }, [productSearch, productCategory, productPriceRange, productSort, productStockFilter, products]);
 
   const sidebarItems = [
     { id: "overview" as Tab, label: "نظرة عامة", icon: LayoutDashboard },
@@ -965,7 +980,7 @@ const Dashboard = () => {
                 {(productCategory !== "الكل" || productPriceRange !== 0 || productStockFilter !== "all") && (
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Filter className="w-4 h-4" />
-                    <span>{filteredProducts.length} منتج من أصل {mockProducts.length}</span>
+                    <span>{filteredProducts.length} منتج من أصل {products.length}</span>
                   </div>
                 )}
               </div>
@@ -1117,7 +1132,7 @@ const Dashboard = () => {
 
                 {storeProducts.size > 0 ? (
                   <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                    {mockProducts.filter(p => storeProducts.has(p.id)).map((product) => (
+                    {products.filter(p => storeProducts.has(p.id)).map((product) => (
                       <motion.div
                         key={product.id}
                         layout
@@ -1177,7 +1192,7 @@ const Dashboard = () => {
 
               {favorites.size > 0 ? (
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                  {mockProducts.filter(p => favorites.has(p.id)).map((product) => (
+                  {products.filter(p => favorites.has(p.id)).map((product) => (
                     <motion.div
                       key={product.id}
                       initial={{ opacity: 0, y: 20 }}
