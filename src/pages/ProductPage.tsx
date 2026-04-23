@@ -472,18 +472,19 @@ const ProductPage = () => {
                 <div>
                   <Label htmlFor="commune">البلدية *</Label>
                   <Select
+                    key={formData.wilaya}
                     value={formData.commune || ""}
                     onValueChange={(value) => setFormData({ ...formData, commune: value })}
                     disabled={!formData.wilaya || loadingCommunes}
                   >
-                    <SelectTrigger className="mt-1.5">
+                    <SelectTrigger className="mt-1.5 h-11 rounded-xl">
                       <SelectValue placeholder={loadingCommunes ? "جاري التحميل..." : "اختر البلدية"} />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="max-h-[300px]">
                       {communes && communes.length > 0 ? (
-                        communes.map((commune) => (
-                          <SelectItem key={commune.commune_id || commune.commune_name} value={commune.commune_name}>
-                            {commune.commune_name}
+                        communes.map((c: any) => (
+                          <SelectItem key={c.commune_id || c.commune_name} value={c.commune_name}>
+                            {c.commune_name}
                           </SelectItem>
                         ))
                       ) : (
