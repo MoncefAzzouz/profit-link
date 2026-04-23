@@ -73,6 +73,60 @@ router.put('/settings', authenticateToken, async (req: AuthRequest, res: Respons
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
+// GET /api/store/public/:storeName (Public storefront data)
+router.get('/public/:storeName', async (req: Request, res: Response): Promise<any> => {
+  try {
+    const { storeName } = req.params;
+    
+    // Find the affiliate by storeName
+    const affiliate = await prisma.user.findFirst({
+      where: { storeName: { equals: storeName, mode: 'insensitive' }, role: 'AFFILIATE' },
+      include: { storeSettings: true }
+    });
+
+    if (!affiliate) {
+      return res.status(404).json({ error: 'Store not found' });
+    }
+
+    // Fetch active products for the store
+    const products = await prisma.product.findMany({
+      where: { status: 'active', isVisible: true },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    // We only send safe public data
+    res.json({
+      data: {
+        storeInfo: {
+          id: affiliate.id,
+          storeName: affiliate.storeSettings?.storeName || affiliate.storeName,
+          storeLogo: affiliate.storeSettings?.logoUrl,
+          primaryColor: affiliate.storeSettings?.primaryColor || '#000000',
+          fontFamily: affiliate.storeSettings?.fontFamily || 'Cairo',
+          templateId: affiliate.storeSettings?.templateId || 'modern',
+          config: affiliate.storeSettings?.config || {}
+        },
+        products: products.map(p => ({
+          id: p.id,
+          name: p.name,
+          description: p.description,
+          price: p.price,
+          originalPrice: p.originalPrice,
+          image: p.image,
+          images: p.images,
+          category: p.category,
+          stock: p.stock,
+          isTrend: p.isTrend,
+          isFeatured: p.isFeatured,
+          features: p.features
+        }))
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching public store:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
 
 // POST /api/store/page (Save generated Landing Page config)
 router.post('/page', async (req: Request, res: Response) => {
