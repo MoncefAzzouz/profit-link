@@ -33,7 +33,8 @@ router.get('/all', authenticateToken, requireAdmin, async (req: AuthRequest, res
 // POST /api/products (Admin: Create new product)
 router.post('/', authenticateToken, requireAdmin, async (req: AuthRequest, res: Response): Promise<any> => {
   try {
-    const { name, description, adText, price, originalPrice, commission, category, images, image, videoUrl, stock, isVisible, isTrend, isFeatured, features } = req.body;
+    const { name, description, adText, price, originalPrice, commission, category, images, videoUrl, stock, isVisible, isTrend, isFeatured, features } = req.body;
+    const image: string | undefined = req.body.image;
 
     if (!name || !price || !commission || !category) {
       return res.status(400).json({ error: 'Missing required product fields (name, price, commission, category)' });
@@ -49,7 +50,7 @@ router.post('/', authenticateToken, requireAdmin, async (req: AuthRequest, res: 
         commission: parseFloat(commission),
         category,
         images: images || [],
-        image: image || null,
+        image: (image as string) || null,
         videoUrl: videoUrl || null,
         stock: parseInt(stock) || 0,
         isVisible: isVisible !== undefined ? isVisible : true,
@@ -70,10 +71,11 @@ router.post('/', authenticateToken, requireAdmin, async (req: AuthRequest, res: 
 router.put('/:id', authenticateToken, requireAdmin, async (req: AuthRequest, res: Response): Promise<any> => {
   try {
     const { id } = req.params;
-    const { name, description, adText, price, originalPrice, commission, category, images, image, videoUrl, stock, isVisible, isTrend, isFeatured, features, status } = req.body;
+    const { name, description, adText, price, originalPrice, commission, category, images, videoUrl, stock, isVisible, isTrend, isFeatured, features, status } = req.body;
+    const image: string | undefined = req.body.image;
 
     const product = await prisma.product.update({
-      where: { id },
+      where: { id: id as string },
       data: {
         ...(name !== undefined && { name }),
         ...(description !== undefined && { description }),
@@ -83,7 +85,7 @@ router.put('/:id', authenticateToken, requireAdmin, async (req: AuthRequest, res
         ...(commission !== undefined && { commission: parseFloat(commission) }),
         ...(category !== undefined && { category }),
         ...(images !== undefined && { images }),
-        ...(image !== undefined && { image }),
+        ...(image !== undefined && { image: image as string }),
         ...(videoUrl !== undefined && { videoUrl }),
         ...(stock !== undefined && { stock: parseInt(stock) }),
         ...(isVisible !== undefined && { isVisible }),
@@ -105,7 +107,7 @@ router.put('/:id', authenticateToken, requireAdmin, async (req: AuthRequest, res
 router.delete('/:id', authenticateToken, requireAdmin, async (req: AuthRequest, res: Response): Promise<any> => {
   try {
     const { id } = req.params;
-    await prisma.product.delete({ where: { id } });
+    await prisma.product.delete({ where: { id: id as string } });
     res.json({ message: 'Product deleted successfully' });
   } catch (error) {
     console.error('Error deleting product:', error);
