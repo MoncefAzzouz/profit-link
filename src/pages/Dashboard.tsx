@@ -2876,7 +2876,10 @@ const Dashboard = () => {
                         setOrderFormData({ firstName: "", lastName: "", phone: "", wilaya: "", commune: "", address: "", deliveryType: "home", stopDesk: 0, deliveryFee: 500 });
                         
                         // Refetch orders immediately
-                        const res = await fetch('https://profit-link-3eri.onrender.com/api/orders/all');
+                        const currentToken = localStorage.getItem("token");
+                        const res = await fetch('https://profit-link-3eri.onrender.com/api/orders/affiliate', {
+                          headers: { 'Authorization': `Bearer ${currentToken}` }
+                        });
                         const data = await res.json();
                         if (res.ok) {
                             setOrders(data.data.map((o: any) => ({
