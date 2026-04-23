@@ -18,6 +18,81 @@ router.get('/', async (req: Request, res: Response) => {
   }
 });
 
+// ==================== CATEGORIES ====================
+
+// GET /api/products/categories (Public: list active categories)
+router.get('/categories', async (req: Request, res: Response) => {
+  try {
+    const categories = await prisma.category.findMany({
+      where: { isActive: true },
+      orderBy: { createdAt: 'asc' }
+    });
+    res.json({ data: categories });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch categories' });
+  }
+});
+
+// GET /api/products/categories/all (Admin: list all categories)
+router.get('/categories/all', authenticateToken, requireAdmin, async (req: AuthRequest, res: Response): Promise<any> => {
+  try {
+    const categories = await prisma.category.findMany({
+      orderBy: { createdAt: 'asc' }
+    });
+    res.json({ data: categories });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch categories' });
+  }
+});
+
+// POST /api/products/categories (Admin: create category)
+router.post('/categories', authenticateToken, requireAdmin, async (req: AuthRequest, res: Response): Promise<any> => {
+  try {
+    const { name, icon, isActive } = req.body;
+    if (!name) return res.status(400).json({ error: 'Category name is required' });
+
+    const category = await prisma.category.create({
+      data: { name, icon: icon || "📦", isActive: isActive ?? true }
+    });
+    res.status(201).json({ data: category });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to create category' });
+  }
+});
+
+// PUT /api/products/categories/:id (Admin: update category)
+router.put('/categories/:id', authenticateToken, requireAdmin, async (req: AuthRequest, res: Response): Promise<any> => {
+  try {
+    const { id } = req.params;
+    const { name, icon, isActive } = req.body;
+    
+    const category = await prisma.category.update({
+      where: { id: id as string },
+      data: {
+        ...(name !== undefined && { name }),
+        ...(icon !== undefined && { icon }),
+        ...(isActive !== undefined && { isActive })
+      }
+    });
+    res.json({ data: category });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update category' });
+  }
+});
+
+// DELETE /api/products/categories/:id (Admin: delete category)
+router.delete('/categories/:id', authenticateToken, requireAdmin, async (req: AuthRequest, res: Response): Promise<any> => {
+  try {
+    const { id } = req.params;
+    await prisma.category.delete({ where: { id: id as string } });
+    res.json({ message: 'Category deleted' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to delete category' });
+  }
+});
+
+// ==================== PRODUCTS ====================
+
 // GET /api/products/all (Admin: List ALL products including hidden)
 router.get('/all', authenticateToken, requireAdmin, async (req: AuthRequest, res: Response): Promise<any> => {
   try {
