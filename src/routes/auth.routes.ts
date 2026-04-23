@@ -115,5 +115,29 @@ router.get('/me', async (req: Request, res: Response): Promise<any> => {
     res.status(401).json({ error: 'Invalid or expired token' });
   }
 });
+// POST /api/auth/seed-admin (One-time: create admin account on production)
+router.post('/seed-admin', async (req: Request, res: Response): Promise<any> => {
+  try {
+    const email = 'admin@admin.fr';
+    const password = 'admin123.';
+    const name = 'Admin';
+
+    const existing = await prisma.user.findUnique({ where: { email } });
+    if (existing) {
+      await prisma.user.update({ where: { email }, data: { role: 'ADMIN' } });
+      return res.json({ message: 'Admin already exists — role updated to ADMIN' });
+    }
+
+    const passwordHash = await bcrypt.hash(password, 10);
+    await prisma.user.create({
+      data: { email, passwordHash, name, role: 'ADMIN' }
+    });
+
+    res.status(201).json({ message: 'Admin account created successfully!' });
+  } catch (error: any) {
+    console.error('Seed Admin Error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
 
 export default router;
