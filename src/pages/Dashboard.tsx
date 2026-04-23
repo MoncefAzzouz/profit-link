@@ -145,6 +145,21 @@ const Dashboard = () => {
       }
     };
 
+    const fetchWithdrawals = async () => {
+      try {
+        if (!token) return;
+        const res = await fetch('https://profit-link-3eri.onrender.com/api/finance/withdraw', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const json = await res.json();
+          if (json.data) setWithdrawals(json.data);
+        }
+      } catch (err) {
+        console.error("Failed to fetch withdrawals", err);
+      }
+    };
+
     const fetchDashboardStats = async () => {
       try {
         if (!token) return;
@@ -198,10 +213,12 @@ const Dashboard = () => {
     fetchDashboardStats();
     fetchOrders();
     fetchStoreSettings();
+    fetchWithdrawals();
     // Refresh interval
     const interval = setInterval(() => {
       fetchDashboardStats();
       fetchOrders();
+      fetchWithdrawals();
     }, 30000);
     return () => clearInterval(interval);
   }, []);
@@ -229,6 +246,7 @@ const Dashboard = () => {
   const [withdrawAmount, setWithdrawAmount] = useState("");
   const [withdrawMethod, setWithdrawMethod] = useState("CCP");
   const [withdrawAccount, setWithdrawAccount] = useState("");
+  const [withdrawals, setWithdrawals] = useState<any[]>([]);
 
   // Product Redesign States
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
@@ -1611,9 +1629,8 @@ const Dashboard = () => {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border">
-                      {mockWithdrawalRequests
-                        .filter(r => r.requesterType === "affiliate")
-                        .map((req) => (
+                      {withdrawals
+                        .map((req: any) => (
                           <tr key={req.id} className="hover:bg-muted/50 transition-colors">
                             <td className="p-4 font-bold text-foreground text-sm">{req.amount.toLocaleString()} دج</td>
                             <td className="p-4">
@@ -1623,13 +1640,13 @@ const Dashboard = () => {
                             <td className="p-4">
                               <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold ${
                                 req.status === "pending" ? "bg-amber-100 text-amber-700" :
-                                req.status === "completed" ? "bg-emerald-100 text-emerald-700" :
+                                req.status === "approved" ? "bg-emerald-100 text-emerald-700" :
                                 "bg-red-100 text-red-700"
                               }`}>
-                                {req.status === "pending" ? "قيد الانتظار" : req.status === "completed" ? "تم الدفع" : "مرفوض"}
+                                {req.status === "pending" ? "قيد الانتظار" : req.status === "approved" ? "تم الدفع" : "مرفوض"}
                                 </span>
                             </td>
-                            <td className="p-4 text-xs text-muted-foreground">{req.date}</td>
+                            <td className="p-4 text-xs text-muted-foreground">{new Date(req.createdAt).toLocaleDateString('ar-DZ')}</td>
                           </tr>
                         ))}
                     </tbody>
@@ -2393,9 +2410,31 @@ const Dashboard = () => {
           <DialogFooter className="sm:justify-start gap-2">
             <Button
               className="w-full h-12 rounded-xl bg-secondary text-secondary-foreground font-bold"
-              onClick={() => {
-                toast({ title: "تم إرسال طلب السحب بنجاح! ✅" });
-                setWithdrawalDialogOpen(false);
+              onClick={async () => {
+                try {
+                  const token = localStorage.getItem("token");
+                  const res = await fetch('https://profit-link-3eri.onrender.com/api/finance/withdraw', {
+                    method: 'POST',
+                    headers: { 
+                      'Content-Type': 'application/json',
+                      'Authorization': `Bearer ${token}` 
+                    },
+                    body: JSON.stringify({
+                      amount: withdrawAmount,
+                      method: withdrawMethod,
+                      accountDetails: withdrawAccount
+                    })
+                  });
+                  const json = await res.json();
+                  if (!res.ok) throw new Error(json.error || "Failed to request withdrawal");
+                  
+                  toast({ title: "تم إرسال طلب السحب بنجاح! ✅" });
+                  setWithdrawalDialogOpen(false);
+                  setWithdrawAmount("");
+                  setWithdrawAccount("");
+                } catch (err: any) {
+                  toast({ title: "خطأ", description: err.message, variant: "destructive" });
+                }
               }}
             >
               تأكيد الطلب
