@@ -71,8 +71,15 @@ const ProductPage = () => {
         return;
       }
       setLoadingCommunes(true);
+      console.log(`🔍 Fetching communes for wilaya_id: ${formData.wilaya}`);
       try {
-        const res = await fetch(`https://profit-link-3eri.onrender.com/api/delivery/communes?wilaya_id=${formData.wilaya}`);
+        const wilayaId = parseInt(formData.wilaya);
+        if (isNaN(wilayaId)) {
+          console.warn("⚠️ wilaya_id is not a number:", formData.wilaya);
+          setLoadingCommunes(false);
+          return;
+        }
+        const res = await fetch(`https://profit-link-3eri.onrender.com/api/delivery/communes?wilaya_id=${wilayaId}`);
         const json = await res.json();
         if (res.ok && json.data) {
           setCommunes(json.data);
@@ -469,11 +476,15 @@ const ProductPage = () => {
                       <SelectValue placeholder={loadingCommunes ? "جاري التحميل..." : "اختر البلدية"} />
                     </SelectTrigger>
                     <SelectContent>
-                      {communes.map((commune) => (
-                        <SelectItem key={commune.commune_id} value={commune.commune_name}>
+                      {communes && communes.length > 0 ? communes.map((commune) => (
+                        <SelectItem key={commune.commune_id || commune.commune_name} value={commune.commune_name}>
                           {commune.commune_name}
                         </SelectItem>
-                      ))}
+                      )) : (
+                        <SelectItem value="none" disabled>
+                          {formData.wilaya ? "لا توجد بلديات" : "اختر الولاية أولاً"}
+                        </SelectItem>
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
