@@ -119,7 +119,12 @@ const Auth = () => {
         title: isLogin ? "مرحباً بك مجدداً! 👋" : "تم إنشاء حسابك بنجاح! 🎉",
         description: isLogin ? "تم تسجيل الدخول بنجاح" : "ابدأ الآن في اختيار المنتجات والربح"
       });
-      navigate("/dashboard");
+      // Redirect based on role
+      if (data.user.role === "admin") {
+        navigate("/admin");
+      } else {
+        navigate("/dashboard");
+      }
 
     } catch (error: any) {
       toast({
