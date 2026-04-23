@@ -75,7 +75,7 @@ const LandingPageView = () => {
   const [page, setPage] = useState<LandingPageConfig | null>(null);
   const [loading, setLoading] = useState(true);
   const [showNotification, setShowNotification] = useState(false);
-  const [orderForm, setOrderForm] = useState({ name: "", phone: "", wilaya: "", commune: "", deliveryType: "home" as "home" | "desk" });
+  const [orderForm, setOrderForm] = useState({ name: "", phone: "", wilaya: "", commune: "", address: "", deliveryType: "home" as "home" | "desk" });
   const [orderSubmitted, setOrderSubmitted] = useState(false);
   const [countdown, setCountdown] = useState({ hours: 2, minutes: 14, seconds: 35 });
   const [wilayas, setWilayas] = useState<any[]>([]);
@@ -86,28 +86,38 @@ const LandingPageView = () => {
   const [quantity, setQuantity] = useState(1);
 
   useEffect(() => {
-    const stored = localStorage.getItem("landing_pages");
-    if (stored) {
-      const pages: LandingPageConfig[] = JSON.parse(stored);
-      const found = pages.find(p => p.id === pageId);
-      console.log("LandingPageView -> Found page:", found);
-      if (found) {
-        // Ensure arrays and nested objects exist to prevent crashes from old mock data
-        const safeFound = {
-          ...found,
-          features: found.features || [],
-          socialProof: found.socialProof || [],
-          faqItems: found.faqItems || [],
-          trustBadges: found.trustBadges || [],
-          beforeAfterImages: found.beforeAfterImages || { before: "", after: "" }
-        };
-        setPage(safeFound);
-        // Increment views
-        const updated = pages.map(p => p.id === pageId ? { ...safeFound, views: (safeFound.views || 0) + 1 } : p);
-        localStorage.setItem("landing_pages", JSON.stringify(updated));
+    const fetchPage = async () => {
+      try {
+        const res = await fetch(`https://profit-link-3eri.onrender.com/api/store/pages/${pageId}/public`);
+        const json = await res.json();
+        if (res.ok && json.data) {
+          const found = json.data;
+          // Ensure arrays and nested objects exist to prevent crashes
+          const safeFound = {
+            ...found,
+            features: found.features || [],
+            socialProof: found.socialProof || [],
+            faqItems: found.faqItems || [],
+            trustBadges: found.trustBadges || [],
+            beforeAfterImages: found.beforeAfterImages || { before: "", after: "" }
+          };
+          setPage(safeFound);
+        } else {
+          // Fallback to localStorage for existing unsaved pages (optional/backward compatibility)
+          const stored = localStorage.getItem("landing_pages");
+          if (stored) {
+            const pages: LandingPageConfig[] = JSON.parse(stored);
+            const foundLocal = pages.find(p => p.id === pageId);
+            if (foundLocal) setPage(foundLocal);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to fetch page', err);
+      } finally {
+        setLoading(false);
       }
-    }
-    setLoading(false);
+    };
+    if (pageId) fetchPage();
   }, [pageId]);
 
   // Fetch Wilayas on mount
@@ -250,8 +260,8 @@ const LandingPageView = () => {
 
   const handleOrder = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!orderForm.name || !orderForm.phone || !orderForm.wilaya || !orderForm.commune) {
-      toast({ title: "⚠️ يرجى ملء جميع الحقول", variant: "destructive" });
+    if (!orderForm.name || !orderForm.phone || !orderForm.wilaya || !orderForm.commune || !orderForm.address) {
+      toast({ title: "⚠️ يرجى ملء جميع الحقول الإجبارية بما في ذلك العنوان", variant: "destructive" });
       return;
     }
 
@@ -269,7 +279,7 @@ const LandingPageView = () => {
           customerPhone: orderForm.phone,
           wilaya: orderForm.wilaya,
           commune: orderForm.commune,
-          address: orderForm.wilaya + " " + orderForm.commune, // Basic address for now
+          address: orderForm.address,
           quantity: quantity,
           totalAmount: finalAmount,
           commissionAmount: 500, // Placeholder
@@ -436,82 +446,135 @@ const LandingPageView = () => {
                 </h2>
 
                 <div className="space-y-4">
-                  <Input 
-                    placeholder="الاسم الكامل" 
-                    value={orderForm.name} 
-                    onChange={e => setOrderForm(f => ({ ...f, name: e.target.value }))}
-                    className="h-12 rounded-xl"
-                  />
-                  <Input 
-                    placeholder="رقم الهاتف" 
-                    value={orderForm.phone} 
-                    onChange={e => setOrderForm(f => ({ ...f, phone: e.target.value }))}
-                    className="h-12 rounded-xl"
-                  />
-                  <select 
-                    className="w-full h-12 rounded-xl border bg-transparent px-3 appearance-none"
-                    value={orderForm.wilaya}
-                    onChange={e => setOrderForm(f => ({ ...f, wilaya: e.target.value, commune: "" }))}
-                  >
-                    <option value="">اختر الولاية</option>
-                    {wilayas.map(w => <option key={w.wilaya_id} value={w.wilaya_id}>{w.wilaya_id} - {w.wilaya_name}</option>)}
-                  </select>
-
-                  <select 
-                    className="w-full h-12 rounded-xl border bg-transparent px-3 appearance-none"
-                    value={orderForm.commune}
-                    onChange={e => setOrderForm(f => ({ ...f, commune: e.target.value }))}
-                    disabled={!orderForm.wilaya || loadingDelivery}
-                  >
-                    <option value="">اختر البلدية</option>
-                    {communes.map(c => <option key={c.commune_id || c.nom} value={c.nom}>{c.nom}</option>)}
-                  </select>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <button 
-                      type="button"
-                      onClick={() => setOrderForm(f => ({ ...f, deliveryType: "home" }))}
-                      className={`h-12 rounded-xl border flex items-center justify-center gap-2 transition-all ${orderForm.deliveryType === "home" ? "ring-2 ring-primary border-primary bg-primary/5" : "bg-transparent"}`}
-                    >
-                      <Truck className="w-4 h-4" /> بيت
-                    </button>
-                    <button 
-                      type="button"
-                      onClick={() => setOrderForm(f => ({ ...f, deliveryType: "desk" }))}
-                      className={`h-12 rounded-xl border flex items-center justify-center gap-2 transition-all ${orderForm.deliveryType === "desk" ? "ring-2 ring-primary border-primary bg-primary/5" : "bg-transparent"}`}
-                    >
-                      <MapPin className="w-4 h-4" /> مكتب
-                    </button>
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold opacity-70">الاسم الكامل *</label>
+                    <Input 
+                      placeholder="أدخل اسمك الكامل" 
+                      value={orderForm.name} 
+                      onChange={e => setOrderForm(f => ({ ...f, name: e.target.value }))}
+                      className="h-12 rounded-xl"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold opacity-70">رقم الهاتف *</label>
+                    <Input 
+                      placeholder="07XXXXXXXX" 
+                      value={orderForm.phone} 
+                      onChange={e => setOrderForm(f => ({ ...f, phone: e.target.value }))}
+                      className="h-12 rounded-xl"
+                    />
                   </div>
 
-                  <div className="flex items-center justify-between p-4 bg-muted rounded-xl">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-bold opacity-70">الولاية *</label>
+                      <select 
+                        className="w-full h-12 rounded-xl border bg-transparent px-3 appearance-none focus:ring-2"
+                        style={{ outlineColor: p.primaryColor }}
+                        value={orderForm.wilaya}
+                        onChange={e => setOrderForm(f => ({ ...f, wilaya: e.target.value, commune: "" }))}
+                      >
+                        <option value="">اختر الولاية</option>
+                        {wilayas.map(w => <option key={w.wilaya_id} value={w.wilaya_id}>{w.wilaya_id} - {w.wilaya_name}</option>)}
+                      </select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-bold opacity-70">البلدية *</label>
+                      <select 
+                        className="w-full h-12 rounded-xl border bg-transparent px-3 appearance-none focus:ring-2"
+                        style={{ outlineColor: p.primaryColor }}
+                        value={orderForm.commune}
+                        onChange={e => setOrderForm(f => ({ ...f, commune: e.target.value }))}
+                        disabled={!orderForm.wilaya || loadingDelivery}
+                      >
+                        <option value="">اختر البلدية</option>
+                        {communes.map(c => <option key={c.commune_id || c.nom} value={c.nom}>{c.nom}</option>)}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold opacity-70">العنوان بالتفصيل *</label>
+                    <Input 
+                      placeholder="البلدية، الحي، الشارع..." 
+                      value={orderForm.address} 
+                      onChange={e => setOrderForm(f => ({ ...f, address: e.target.value }))}
+                      className="h-12 rounded-xl"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold opacity-70">نوع التوصيل</label>
+                    <div className="grid grid-cols-2 gap-3">
+                      <button 
+                        type="button"
+                        onClick={() => setOrderForm(f => ({ ...f, deliveryType: "home" }))}
+                        className={`h-12 rounded-xl border flex items-center justify-center gap-2 transition-all ${orderForm.deliveryType === "home" ? "ring-2 ring-primary border-primary bg-primary/5" : "bg-transparent"}`}
+                        style={{ 
+                          borderColor: orderForm.deliveryType === "home" ? p.primaryColor : undefined,
+                          color: orderForm.deliveryType === "home" ? p.primaryColor : undefined,
+                          backgroundColor: orderForm.deliveryType === "home" ? `${p.primaryColor}10` : undefined,
+                        }}
+                      >
+                        <Truck className="w-4 h-4" /> للمنزل
+                      </button>
+                      <button 
+                        type="button"
+                        onClick={() => setOrderForm(f => ({ ...f, deliveryType: "desk" }))}
+                        className={`h-12 rounded-xl border flex items-center justify-center gap-2 transition-all ${orderForm.deliveryType === "desk" ? "ring-2 ring-primary border-primary bg-primary/5" : "bg-transparent"}`}
+                        style={{ 
+                          borderColor: orderForm.deliveryType === "desk" ? p.primaryColor : undefined,
+                          color: orderForm.deliveryType === "desk" ? p.primaryColor : undefined,
+                          backgroundColor: orderForm.deliveryType === "desk" ? `${p.primaryColor}10` : undefined,
+                        }}
+                      >
+                        <MapPin className="w-4 h-4" /> للمكتب
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between p-4 bg-muted/50 rounded-xl border border-border/50">
                     <span className="font-bold">الكمية</span>
                     <div className="flex items-center gap-4">
-                      <button type="button" onClick={() => setQuantity(Math.max(1, quantity - 1))} className="w-8 h-8 rounded-full border border-border flex items-center justify-center">-</button>
-                      <span className="font-bold w-4 text-center">{quantity}</span>
-                      <button type="button" onClick={() => setQuantity(quantity + 1)} className="w-8 h-8 rounded-full border border-border flex items-center justify-center">+</button>
+                      <button type="button" onClick={() => setQuantity(Math.max(1, quantity - 1))} className="w-10 h-10 rounded-full border border-border flex items-center justify-center bg-background hover:bg-muted transition-colors">-</button>
+                      <span className="font-black text-lg w-4 text-center">{quantity}</span>
+                      <button type="button" onClick={() => setQuantity(quantity + 1)} className="w-10 h-10 rounded-full border border-border flex items-center justify-center bg-background hover:bg-muted transition-colors">+</button>
                     </div>
                   </div>
                 </div>
 
-                <div className="border-t pt-4 space-y-1">
-                   <div className="flex justify-between text-sm opacity-70">
-                     <span>السعر</span>
-                     <span>{(p.price * quantity).toLocaleString()} دج</span>
+                <div className="bg-muted/30 rounded-2xl p-6 space-y-3 mt-6">
+                   <div className="flex justify-between text-sm">
+                     <span className="opacity-60">السعر</span>
+                     <span className="font-bold">{(p.price * quantity).toLocaleString()} دج</span>
                    </div>
-                   <div className="flex justify-between text-sm opacity-70">
-                     <span>مصاريف التوصيل ({orderForm.deliveryType === "home" ? "للبيت" : "للمكتب"})</span>
-                     <span>{currentShipping.toLocaleString()} دج</span>
+                   {savings > 0 && (
+                     <div className="flex justify-between text-sm text-green-600 font-bold">
+                       <span>التوفير</span>
+                       <span>-{savings.toLocaleString()} دج</span>
+                     </div>
+                   )}
+                   <div className="flex justify-between text-sm">
+                     <span className="opacity-60">التوصيل</span>
+                     <span className="font-medium">{orderForm.wilaya ? `${currentShipping.toLocaleString()} دج` : "اختر الولاية"}</span>
                    </div>
-                   <div className="flex justify-between font-bold text-lg border-t pt-2 mt-2">
+                   <div className="flex justify-between font-black text-xl border-t border-border/50 pt-3 mt-2">
                      <span>المجموع</span>
                      <span style={{ color: p.primaryColor }}>{totalPrice.toLocaleString()} دج</span>
                    </div>
                 </div>
 
-                <Button type="submit" disabled={orderSubmitted} className="w-full h-14 text-lg font-bold rounded-xl text-white shadow-lg" style={{ backgroundColor: p.primaryColor }}>
-                   {orderSubmitted ? "تم الطلب بنجاح ✅" : "إرسال الطلب الآن"}
+                <Button 
+                  type="submit" 
+                  disabled={orderSubmitted} 
+                  className="w-full h-16 text-xl font-black rounded-2xl text-white shadow-2xl hover:scale-[1.02] active:scale-[0.98] transition-all" 
+                  style={{ backgroundColor: p.primaryColor }}
+                >
+                   {orderSubmitted ? "تم الطلب بنجاح ✅" : "تأكيد الطلب الآن"}
                 </Button>
+                <p className="text-center text-[10px] opacity-40">بضغطك على الزر فأنت توافق على شروط الخدمة وسياسة الخصوصية</p>
               </form>
             </motion.div>
           </div>
@@ -695,18 +758,20 @@ const LandingPageView = () => {
           <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}
             className="px-4 sm:px-6 pb-8">
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-2xl mx-auto">
-              {p.trustBadges.map((badge, i) => {
-                const icons = [Shield, Truck, Award, Check];
-                const Icon = icons[i % icons.length];
-                return (
-                  <motion.div key={i} initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
-                    className={`flex flex-col items-center gap-2 p-4 border rounded-2xl text-center ${shadowMap[p.shadowIntensity]}`}
-                    style={{ borderColor: isDark(p.backgroundColor) ? "#334155" : "#e2e8f0", borderRadius: br }}>
-                    <Icon className="w-6 h-6" style={{ color: p.primaryColor }} />
-                    <span className="text-xs font-bold">{badge}</span>
-                  </motion.div>
-                );
-              })}
+              {[
+                { icon: Truck, t: "توصيل سريع", s: "3-5 أيام" },
+                { icon: Shield, t: "ضمان الجودة", s: "منتج أصلي" },
+                { icon: Clock, t: "شحن مجاني", s: "لكل الولايات" },
+                { icon: Phone, t: "دعم متواصل", s: "24/7" },
+              ].map((badge, i) => (
+                <motion.div key={i} initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
+                  className={`flex flex-col items-center gap-2 p-4 border rounded-2xl text-center ${shadowMap[p.shadowIntensity]}`}
+                  style={{ borderColor: isDark(p.backgroundColor) ? "#334155" : "#e2e8f0", borderRadius: br }}>
+                  <badge.icon className="w-6 h-6" style={{ color: p.primaryColor }} />
+                  <span className="text-xs font-bold">{badge.t}</span>
+                  <span className="text-[10px] opacity-60">{badge.s}</span>
+                </motion.div>
+              ))}
             </div>
           </motion.div>
         )}
@@ -888,76 +953,171 @@ const LandingPageView = () => {
                   <p className="text-sm" style={{ color: stc }}>سنتواصل معك عبر الهاتف لتأكيد الطلب</p>
                 </motion.div>
               ) : (
-                <form onSubmit={handleOrder} className="space-y-4">
+                <form onSubmit={handleOrder} className="space-y-4 text-right" dir="rtl">
                   <div className="text-center space-y-2 mb-6">
                     <h3 className="text-xl font-black flex items-center justify-center gap-2">
                       <ShoppingCart className="w-5 h-5" style={{ color: p.primaryColor }} /> اطلب الآن
                     </h3>
-                    <p className="text-sm" style={{ color: stc }}>املأ النموذج التالي وسنتواصل معك</p>
+                    <p className="text-sm" style={{ color: stc }}>املأ النموذج التالي وسنتواصل معك لتأكيد الطلب</p>
                   </div>
 
-                  <div className="space-y-3">
-                    <div className="relative">
-                      <User className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: stc }} />
-                      <Input
-                        placeholder="الاسم الكامل"
-                        value={orderForm.name}
-                        onChange={(e) => setOrderForm(f => ({ ...f, name: e.target.value }))}
-                        className="pr-10 h-12 rounded-xl text-sm"
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-bold opacity-70">الاسم الكامل *</label>
+                      <Input 
+                        placeholder="أدخل اسمك الكامل" 
+                        value={orderForm.name} 
+                        onChange={e => setOrderForm(f => ({ ...f, name: e.target.value }))}
+                        className="h-12 rounded-xl"
                         style={{ borderRadius: `${Math.min(p.borderRadius, 16)}px`, borderColor: isDark(p.backgroundColor) ? "#334155" : "#d1d5db", backgroundColor: isDark(p.backgroundColor) ? "#1e293b" : "#fff", color: tc }}
                       />
                     </div>
-                    <div className="relative">
-                      <Phone className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: stc }} />
-                      <Input
-                        placeholder="رقم الهاتف (مثال: 0555123456)"
-                        value={orderForm.phone}
-                        onChange={(e) => setOrderForm(f => ({ ...f, phone: e.target.value }))}
-                        className="pr-10 h-12 rounded-xl text-sm"
+                    
+                    <div className="space-y-2">
+                      <label className="text-sm font-bold opacity-70">رقم الهاتف *</label>
+                      <Input 
+                        placeholder="07XXXXXXXX" 
+                        value={orderForm.phone} 
+                        onChange={e => setOrderForm(f => ({ ...f, phone: e.target.value }))}
+                        className="h-12 rounded-xl"
                         style={{ borderRadius: `${Math.min(p.borderRadius, 16)}px`, borderColor: isDark(p.backgroundColor) ? "#334155" : "#d1d5db", backgroundColor: isDark(p.backgroundColor) ? "#1e293b" : "#fff", color: tc }}
                       />
                     </div>
-                    <div className="relative">
-                      <MapPin className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: stc }} />
-                      <select
-                        value={orderForm.wilaya}
-                        onChange={(e) => setOrderForm(f => ({ ...f, wilaya: e.target.value, commune: "" }))}
-                        className="w-full pr-10 h-12 text-sm border bg-transparent appearance-none cursor-pointer"
-                        style={{ borderRadius: `${Math.min(p.borderRadius, 16)}px`, borderColor: isDark(p.backgroundColor) ? "#334155" : "#d1d5db", backgroundColor: isDark(p.backgroundColor) ? "#1e293b" : "#fff", color: tc, paddingLeft: "12px" }}
-                      >
-                        <option value="">اختر الولاية</option>
-                        {wilayas.map(w => <option key={w.wilaya_id} value={w.wilaya_id}>{w.wilaya_id} - {w.wilaya_name}</option>)}
-                      </select>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <label className="text-sm font-bold opacity-70">الولاية *</label>
+                        <select 
+                          className="w-full h-12 rounded-xl border bg-transparent px-3 appearance-none focus:ring-2"
+                          style={{ 
+                            borderRadius: `${Math.min(p.borderRadius, 16)}px`, 
+                            borderColor: isDark(p.backgroundColor) ? "#334155" : "#d1d5db", 
+                            backgroundColor: isDark(p.backgroundColor) ? "#1e293b" : "#fff", 
+                            color: tc,
+                            outlineColor: p.primaryColor 
+                          }}
+                          value={orderForm.wilaya}
+                          onChange={e => setOrderForm(f => ({ ...f, wilaya: e.target.value, commune: "" }))}
+                        >
+                          <option value="">اختر الولاية</option>
+                          {wilayas.map(w => <option key={w.wilaya_id} value={w.wilaya_id}>{w.wilaya_id} - {w.wilaya_name}</option>)}
+                        </select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-sm font-bold opacity-70">البلدية *</label>
+                        <select 
+                          className="w-full h-12 rounded-xl border bg-transparent px-3 appearance-none focus:ring-2"
+                          style={{ 
+                            borderRadius: `${Math.min(p.borderRadius, 16)}px`, 
+                            borderColor: isDark(p.backgroundColor) ? "#334155" : "#d1d5db", 
+                            backgroundColor: isDark(p.backgroundColor) ? "#1e293b" : "#fff", 
+                            color: tc,
+                            outlineColor: p.primaryColor 
+                          }}
+                          value={orderForm.commune}
+                          onChange={e => setOrderForm(f => ({ ...f, commune: e.target.value }))}
+                          disabled={!orderForm.wilaya || loadingDelivery}
+                        >
+                          <option value="">اختر البلدية</option>
+                          {communes.map(c => <option key={c.commune_id || c.nom} value={c.nom}>{c.nom}</option>)}
+                        </select>
+                      </div>
                     </div>
 
-                    <div className="relative">
-                      <MapPin className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: stc }} />
-                      <select
-                        value={orderForm.commune}
-                        onChange={(e) => setOrderForm(f => ({ ...f, commune: e.target.value }))}
-                        disabled={!orderForm.wilaya || loadingDelivery}
-                        className="w-full pr-10 h-12 text-sm border bg-transparent appearance-none cursor-pointer disabled:opacity-50"
-                        style={{ borderRadius: `${Math.min(p.borderRadius, 16)}px`, borderColor: isDark(p.backgroundColor) ? "#334155" : "#d1d5db", backgroundColor: isDark(p.backgroundColor) ? "#1e293b" : "#fff", color: tc, paddingLeft: "12px" }}
-                      >
-                        <option value="">{loadingDelivery ? "جاري التحميل..." : "اختر البلدية"}</option>
-                        {communes.map(c => <option key={c.commune_id || c.nom} value={c.nom}>{c.nom}</option>)}
-                      </select>
+                    <div className="space-y-2">
+                      <label className="text-sm font-bold opacity-70">العنوان بالتفصيل *</label>
+                      <Input 
+                        placeholder="البلدية، الحي، الشارع..." 
+                        value={orderForm.address} 
+                        onChange={e => setOrderForm(f => ({ ...f, address: e.target.value }))}
+                        className="h-12 rounded-xl"
+                        style={{ borderRadius: `${Math.min(p.borderRadius, 16)}px`, borderColor: isDark(p.backgroundColor) ? "#334155" : "#d1d5db", backgroundColor: isDark(p.backgroundColor) ? "#1e293b" : "#fff", color: tc }}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-bold opacity-70">نوع التوصيل</label>
+                      <div className="grid grid-cols-2 gap-3">
+                        <button 
+                          type="button"
+                          onClick={() => setOrderForm(f => ({ ...f, deliveryType: "home" }))}
+                          className={`h-12 rounded-xl border flex items-center justify-center gap-2 transition-all ${orderForm.deliveryType === "home" ? "ring-2 ring-primary" : ""}`}
+                          style={{ 
+                            borderRadius: `${Math.min(p.borderRadius, 16)}px`,
+                            borderColor: orderForm.deliveryType === "home" ? p.primaryColor : (isDark(p.backgroundColor) ? "#334155" : "#d1d5db"),
+                            color: orderForm.deliveryType === "home" ? p.primaryColor : tc,
+                            backgroundColor: orderForm.deliveryType === "home" ? `${p.primaryColor}15` : "transparent",
+                          }}
+                        >
+                          <Truck className="w-4 h-4" /> للمنزل
+                        </button>
+                        <button 
+                          type="button"
+                          onClick={() => setOrderForm(f => ({ ...f, deliveryType: "desk" }))}
+                          className={`h-12 rounded-xl border flex items-center justify-center gap-2 transition-all ${orderForm.deliveryType === "desk" ? "ring-2 ring-primary" : ""}`}
+                          style={{ 
+                            borderRadius: `${Math.min(p.borderRadius, 16)}px`,
+                            borderColor: orderForm.deliveryType === "desk" ? p.primaryColor : (isDark(p.backgroundColor) ? "#334155" : "#d1d5db"),
+                            color: orderForm.deliveryType === "desk" ? p.primaryColor : tc,
+                            backgroundColor: orderForm.deliveryType === "desk" ? `${p.primaryColor}15` : "transparent",
+                          }}
+                        >
+                          <MapPin className="w-4 h-4" /> للمكتب
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between p-4 bg-muted/20 rounded-xl border border-border/30">
+                      <span className="font-bold">الكمية</span>
+                      <div className="flex items-center gap-4">
+                        <button type="button" onClick={() => setQuantity(Math.max(1, quantity - 1))} className="w-10 h-10 rounded-full border border-border flex items-center justify-center bg-background hover:bg-muted transition-colors">-</button>
+                        <span className="font-black text-lg w-4 text-center">{quantity}</span>
+                        <button type="button" onClick={() => setQuantity(quantity + 1)} className="w-10 h-10 rounded-full border border-border flex items-center justify-center bg-background hover:bg-muted transition-colors">+</button>
+                      </div>
                     </div>
                   </div>
 
-                  <button type="submit"
-                    className={`w-full py-4 text-lg font-black text-white shadow-2xl transition-all hover:scale-[1.02] ${
-                      p.ctaAnimation === "pulse" ? "animate-pulse" : p.ctaAnimation === "bounce" ? "animate-bounce" : ""
-                    } ${p.ctaStyle === "pill" ? "rounded-full" : p.ctaStyle === "rounded" ? "rounded-xl" : "rounded-none"}`}
-                    style={{ backgroundColor: p.primaryColor }}>
-                    {p.ctaText} — {p.price.toLocaleString()} دج
-                  </button>
-
-                  <div className="flex items-center justify-center gap-4 text-xs" style={{ color: stc }}>
-                    <span className="flex items-center gap-1"><Shield className="w-4 h-4" /> آمن</span>
-                    <span className="flex items-center gap-1"><Truck className="w-4 h-4" /> شحن مجاني</span>
-                    <span className="flex items-center gap-1"><Award className="w-4 h-4" /> ضمان</span>
+                  <div className="bg-muted/10 rounded-2xl p-4 border border-border/20 space-y-2 mt-6">
+                     {/* Dynamic pricing calculation */}
+                     {(() => {
+                        const currentShipping = orderForm.deliveryType === "home" ? shippingRate.home : shippingRate.desk;
+                        const totalPrice = (p.price * quantity) + currentShipping;
+                        const savings = (p.originalPrice - p.price) * quantity;
+                        return (
+                          <>
+                            <div className="flex justify-between text-sm">
+                              <span className="opacity-60">السعر</span>
+                              <span className="font-bold">{(p.price * quantity).toLocaleString()} دج</span>
+                            </div>
+                            {savings > 0 && (
+                              <div className="flex justify-between text-sm text-green-600 font-bold">
+                                <span>التوفير</span>
+                                <span>-{savings.toLocaleString()} دج</span>
+                              </div>
+                            )}
+                            <div className="flex justify-between text-sm">
+                              <span className="opacity-60">التوصيل</span>
+                              <span className="font-medium">{orderForm.wilaya ? `${currentShipping.toLocaleString()} دج` : "اختر الولاية"}</span>
+                            </div>
+                            <div className="flex justify-between font-black text-xl border-t border-border/20 pt-3 mt-2">
+                              <span>المجموع</span>
+                              <span style={{ color: p.primaryColor }}>{totalPrice.toLocaleString()} دج</span>
+                            </div>
+                          </>
+                        );
+                     })()}
                   </div>
+
+                  <Button 
+                    type="submit" 
+                    disabled={orderSubmitted} 
+                    className="w-full h-16 text-xl font-black rounded-2xl text-white shadow-2xl hover:scale-[1.02] active:scale-[0.98] transition-all mt-4" 
+                    style={{ backgroundColor: p.primaryColor }}
+                  >
+                     تأكيد الطلب الآن
+                  </Button>
+                  <p className="text-center text-[10px] opacity-40">بضغطك على الزر فأنت توافق على شروط الخدمة وسياسة الخصوصية</p>
                 </form>
               )}
             </div>
@@ -965,28 +1125,42 @@ const LandingPageView = () => {
         )}
 
         {/* Footer */}
-        <div className="border-t py-6 text-center" style={{ borderColor: isDark(p.backgroundColor) ? "#334155" : "#e2e8f0" }}>
-          <p className="text-xs" style={{ color: stc }}>© 2024 {p.productName} — جميع الحقوق محفوظة</p>
+        <div className="border-t py-8 text-center mt-12" style={{ borderColor: isDark(p.backgroundColor) ? "#334155" : "#e2e8f0" }}>
+          <p className="text-xs opacity-60" style={{ color: tc }}>© {new Date().getFullYear()} {p.productName} — جميع الحقوق محفوظة</p>
+          <p className="text-[10px] opacity-40 mt-2">نحن نستخدم ملفات تعريف الارتباط لتحسين تجربتك على موقعنا</p>
         </div>
       </div>
 
-      {/* Floating CTA */}
+      {/* Floating WhatsApp / CTA */}
       {p.showFloatingCta && (
-        <motion.a href="#order-form" initial={{ y: 100 }} animate={{ y: 0 }} transition={{ delay: 2 }}
-          className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 text-white font-bold px-8 py-4 rounded-full shadow-2xl text-sm transition-transform hover:scale-105"
-          style={{ backgroundColor: p.primaryColor }}>
-          {p.ctaText} 🛒
+        <motion.a 
+          href="#order-form" 
+          initial={{ y: 100, opacity: 0 }} 
+          animate={{ y: 0, opacity: 1 }} 
+          transition={{ delay: 2, type: "spring" }}
+          className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 text-white font-black px-10 py-4 rounded-full shadow-[0_20px_50px_rgba(0,0,0,0.3)] text-base transition-all hover:scale-110 active:scale-95 flex items-center gap-2"
+          style={{ backgroundColor: p.primaryColor }}
+        >
+          <ShoppingCart className="w-5 h-5" /> {p.ctaText}
         </motion.a>
       )}
 
       {/* Social Proof Notification Popup */}
       <AnimatePresence>
         {showNotification && p.sections.includes("notification-popup") && (
-          <motion.div initial={{ x: -300, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -300, opacity: 0 }}
-            className="fixed bottom-6 left-6 z-50 p-4 border rounded-2xl flex items-center gap-3 shadow-2xl max-w-xs"
-            style={{ borderColor: isDark(p.backgroundColor) ? "#334155" : "#e2e8f0", borderRadius: br, backgroundColor: isDark(p.backgroundColor) ? "#1e293b" : "#ffffff" }}>
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: `${p.primaryColor}15` }}>
-              <ShoppingCart className="w-5 h-5" style={{ color: p.primaryColor }} />
+          <motion.div 
+            initial={{ x: -300, opacity: 0 }} 
+            animate={{ x: 0, opacity: 1 }} 
+            exit={{ x: -300, opacity: 0 }}
+            className="fixed bottom-6 right-6 z-50 p-4 border rounded-2xl flex items-center gap-3 shadow-2xl max-w-xs"
+            style={{ 
+              borderColor: isDark(p.backgroundColor) ? "#334155" : "#e2e8f0", 
+              borderRadius: br, 
+              backgroundColor: isDark(p.backgroundColor) ? "#1e293b" : "#ffffff" 
+            }}
+          >
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0" style={{ backgroundColor: `${p.primaryColor}15` }}>
+              <ShoppingCart className="w-6 h-6" style={{ color: p.primaryColor }} />
             </div>
             <div>
               <p className="text-sm font-bold" style={{ color: tc }}>{notificationNames[Math.floor(Math.random() * notificationNames.length)]}</p>

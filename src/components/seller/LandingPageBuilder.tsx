@@ -505,464 +505,420 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
   };
 
   const copyLink = (page: LandingPageConfig) => {
-    navigator.clipboard.writeText(`${window.location.origin}/lp/${page.id}`);
+    const link = `${window.location.origin}/lp/${page.id}`;
+    navigator.clipboard.writeText(link);
     setCopiedId(page.id);
-    toast({ title: "تم نسخ الرابط! 🔗" });
     setTimeout(() => setCopiedId(null), 2000);
+    toast({ title: "✅ تم نسخ الرابط" });
   };
-
-  const viewPage = (page: LandingPageConfig) => {
-    window.open(`/lp/${page.id}`, "_blank");
-  };
-
-  const publishPage = (page: LandingPageConfig) => {
-    const newStatus = page.status === "published" ? "draft" : "published";
-    const newPages = pages.map(p => p.id === page.id ? { ...p, status: newStatus as "draft" | "published" } : p);
-    savePagesLocally(newPages);
-    if (editingPage?.id === page.id) setEditingPage({ ...editingPage, status: newStatus });
-    toast({ title: newStatus === "published" ? "🚀 تم النشر" : "📝 تحويل إلى مسودة" });
-    if (newStatus === "published") {
-      window.open(`/lp/${page.id}`, "_blank");
-    }
-  };
-
-  const cardAnim = (delay = 0) => ({
-    initial: { opacity: 0, y: 24 },
-    animate: { opacity: 1, y: 0 },
-    transition: { delay, duration: 0.5, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] },
-  });
 
   const isDark = (bg: string) => bg.startsWith("#0") || bg.startsWith("#1") || bg.startsWith("#2") || bg === "#020617";
-  const textColor = (bg: string) => isDark(bg) ? "#f1f5f9" : "#0f172a";
-  const subTextColor = (bg: string) => isDark(bg) ? "#94a3b8" : "#64748b";
 
-  // ==================== EDITOR VIEW ====================
-  if (editingPage) {
-    const savings = editingPage.originalPrice - editingPage.price;
-    const discountPercent = Math.round((1 - editingPage.price / editingPage.originalPrice) * 100);
-    const shadowMap = { none: "", sm: "shadow-sm", md: "shadow-md", lg: "shadow-lg", xl: "shadow-xl" };
+  const renderPreview = (isMobile: boolean) => {
+    const p = editingPage;
+    if (!p) return null;
 
-    const renderPreview = (isMobile: boolean) => {
-      const p = editingPage;
-      const tc = textColor(p.backgroundColor);
-      const stc = subTextColor(p.backgroundColor);
-      const br = `${p.borderRadius}px`;
+    const tc = isDark(p.backgroundColor) ? "#ffffff" : "#0f172a";
+    const stc = isDark(p.backgroundColor) ? "#94a3b8" : "#64748b";
+    const br = `${p.borderRadius}px`;
+    const discountPercent = p.originalPrice > p.price ? Math.round((1 - p.price / p.originalPrice) * 100) : 0;
 
-      if (p.template === "original") {
-        const totalPrice = p.price; // Simplified for preview
-        return (
-          <div className="h-full overflow-y-auto scrollbar-hide flex flex-col" style={{ backgroundColor: p.backgroundColor, fontFamily: p.fontFamily, color: tc }}>
-            {/* Header */}
-            <div className="sticky top-0 z-10 flex items-center justify-between px-4 py-3 border-b backdrop-blur-md" style={{ backgroundColor: `${p.backgroundColor}90`, borderColor: isDark(p.backgroundColor) ? "#334155" : "#e2e8f0" }}>
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg flex items-center justify-center shadow-lg" style={{ backgroundColor: p.primaryColor }}>
-                  <ShoppingCart className="w-4 h-4 text-white" />
-                </div>
-                <span className="text-[10px] font-bold truncate max-w-[100px]">{p.productName}</span>
-              </div>
-              <button className="text-[9px] font-bold px-4 py-1.5 rounded-full text-white shadow-lg" style={{ backgroundColor: p.primaryColor }}>
-                اطلب الآن
-              </button>
+    const shadowMap = {
+      none: "shadow-none",
+      sm: "shadow-sm",
+      md: "shadow-md",
+      lg: "shadow-lg",
+      xl: "shadow-xl",
+    };
+
+    const OrderForm = () => (
+      <div className="bg-card border-2 rounded-2xl p-6 shadow-xl space-y-6" dir="rtl" style={{ borderColor: p.primaryColor, borderRadius: br }}>
+        <h3 className="text-xl font-bold flex items-center gap-2">
+          <ShoppingCart className="w-6 h-6" style={{ color: p.primaryColor }} /> اطلب الآن
+        </h3>
+        
+        <div className="space-y-4">
+          <div className="space-y-1.5">
+            <Label className="text-[11px] font-bold opacity-70">الاسم الكامل *</Label>
+            <div className="h-10 rounded-xl border px-3 flex items-center text-xs bg-muted/20" style={{ borderColor: isDark(p.backgroundColor) ? "#334155" : "#e2e8f0" }}>
+              أدخل اسمك الكامل
             </div>
+          </div>
+          
+          <div className="space-y-1.5">
+            <Label className="text-[11px] font-bold opacity-70">رقم الهاتف *</Label>
+            <div className="h-10 rounded-xl border px-3 flex items-center text-xs bg-muted/20" style={{ borderColor: isDark(p.backgroundColor) ? "#334155" : "#e2e8f0" }}>
+              07XXXXXXXX
+            </div>
+          </div>
 
-            <div className="p-4 space-y-6">
-              <div className={`${!isMobile ? "grid grid-cols-2 gap-6 items-start" : "space-y-6"}`}>
-                {/* Left Side: Media & Features */}
-                <div className="space-y-4">
-                  <div className={`relative aspect-square overflow-hidden bg-muted ${shadowMap[p.shadowIntensity]}`} style={{ borderRadius: br }}>
-                    {p.heroImage ? (
-                      <img src={p.heroImage} alt="" className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground gap-1">
-                        <Image className="w-8 h-8 opacity-20" />
-                        <span className="text-[8px]">صورة المنتج</span>
-                      </div>
-                    )}
-                    {discountPercent > 0 && (
-                      <div className="absolute top-2 left-2 bg-red-500 text-white px-2 py-1 rounded-full text-[8px] font-black shadow-lg">
-                        خصم {discountPercent}%
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2">
-                    {p.features.slice(0, 4).map((f, i) => (
-                      <div key={i} className="flex items-center gap-1.5 p-2 bg-muted/30 border border-border/50 rounded-lg">
-                        <Check className="w-3 h-3 shrink-0" style={{ color: p.primaryColor }} />
-                        <span className="text-[8px] font-medium truncate">{f}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Right Side: Info & Form */}
-                <div className="space-y-4">
-                  <div dir="rtl">
-                    <span className="text-[8px] font-bold uppercase tracking-widest" style={{ color: p.primaryColor }}>{p.category}</span>
-                    <h1 className="text-lg font-black mt-1 leading-tight">{p.productName}</h1>
-                    <p className="text-[10px] mt-2 leading-relaxed" style={{ color: stc }}>{p.heroSubtitle}</p>
-                  </div>
-
-                  <div className="p-4 rounded-xl border flex items-center gap-3" style={{ backgroundColor: `${p.primaryColor}08`, borderColor: `${p.primaryColor}20` }}>
-                    <span className="text-2xl font-black" style={{ color: p.primaryColor }}>{p.price.toLocaleString()} دج</span>
-                    {p.originalPrice > p.price && (
-                      <span className="text-xs line-through opacity-50">{p.originalPrice.toLocaleString()} دج</span>
-                    )}
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2">
-                    {[
-                      { icon: Truck, t: "توصيل مجاني" },
-                      { icon: Shield, t: "ضمان الجودة" },
-                    ].map((b, i) => (
-                      <div key={i} className="flex items-center gap-2 p-2 bg-card border border-border/50 rounded-xl">
-                        <b.icon className="w-5 h-5 shrink-0" style={{ color: p.primaryColor }} />
-                        <span className="text-[8px] font-bold">{b.t}</span>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="bg-card border rounded-xl p-4 shadow-lg space-y-3" dir="rtl">
-                    <h3 className="text-[10px] font-bold flex items-center gap-2">
-                      <ShoppingCart className="w-3 h-3" style={{ color: p.primaryColor }} /> اطلب الآن
-                    </h3>
-                    <div className="space-y-2">
-                      {["الاسم الكامل", "رقم الهاتف", "الولاية"].map((ph, i) => (
-                        <div key={i} className="h-8 rounded-lg border px-3 flex items-center text-[9px]" style={{ borderColor: isDark(p.backgroundColor) ? "#334155" : "#e2e8f0", color: stc }}>
-                          {ph}
-                        </div>
-                      ))}
-                    </div>
-                    <button className="w-full py-2.5 text-[10px] font-black text-white rounded-lg shadow-lg" style={{ backgroundColor: p.primaryColor }}>
-                      تأكيد الطلب
-                    </button>
-                  </div>
-                </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label className="text-[11px] font-bold opacity-70">الولاية *</Label>
+              <div className="h-10 rounded-xl border px-3 flex items-center justify-between text-xs bg-muted/20" style={{ borderColor: isDark(p.backgroundColor) ? "#334155" : "#e2e8f0" }}>
+                اختر الولاية <ChevronDown className="w-3 h-3 opacity-40" />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-[11px] font-bold opacity-70">البلدية *</Label>
+              <div className="h-10 rounded-xl border px-3 flex items-center justify-between text-xs bg-muted/20" style={{ borderColor: isDark(p.backgroundColor) ? "#334155" : "#e2e8f0" }}>
+                اختر البلدية <ChevronDown className="w-3 h-3 opacity-40" />
               </div>
             </div>
           </div>
-        );
-      }
 
+          <div className="space-y-1.5">
+            <Label className="text-[11px] font-bold opacity-70">العنوان بالتفصيل *</Label>
+            <div className="h-10 rounded-xl border px-3 flex items-center text-xs bg-muted/20" style={{ borderColor: isDark(p.backgroundColor) ? "#334155" : "#e2e8f0" }}>
+              البلدية، الحي، الشارع...
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label className="text-[11px] font-bold opacity-70">نوع التوصيل</Label>
+            <div className="flex bg-muted/30 p-1 rounded-xl h-10">
+              <div className="flex-1 flex items-center justify-center rounded-lg text-[10px] font-bold bg-background shadow-sm">للمنزل</div>
+              <div className="flex-1 flex items-center justify-center rounded-lg text-[10px] font-bold opacity-40">للمكتب</div>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between pt-2 border-t border-border/50">
+            <Label className="text-[11px] font-bold opacity-70">الكمية</Label>
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg border flex items-center justify-center text-sm font-bold opacity-40">-</div>
+              <span className="w-6 text-center text-sm font-black">1</span>
+              <div className="w-8 h-8 rounded-lg border flex items-center justify-center text-sm font-bold opacity-40">+</div>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-muted/30 rounded-2xl p-4 space-y-2.5">
+          <div className="flex justify-between text-xs">
+            <span className="opacity-60">السعر</span>
+            <span className="font-bold">{p.price.toLocaleString()} دج</span>
+          </div>
+          <div className="flex justify-between text-xs text-emerald-600 font-bold">
+            <span>التوفير</span>
+            <span>-{(p.originalPrice - p.price).toLocaleString()} دج</span>
+          </div>
+          <div className="flex justify-between text-xs">
+            <span className="opacity-60">التوصيل</span>
+            <span className="font-bold text-primary">اختر الولاية</span>
+          </div>
+          <div className="border-t border-border/30 pt-2.5 flex justify-between font-black text-base">
+            <span>المجموع</span>
+            <span style={{ color: p.primaryColor }}>{p.price.toLocaleString()} دج</span>
+          </div>
+        </div>
+
+        <button
+          className={`w-full py-4 text-sm font-black text-white shadow-xl transition-transform hover:scale-[1.02] ${p.ctaAnimation === "pulse" ? "animate-pulse" : ""
+            } ${p.ctaStyle === "pill" ? "rounded-full" : p.ctaStyle === "rounded" ? "rounded-2xl" : "rounded-none"}`}
+          style={{ backgroundColor: p.primaryColor }}
+        >
+          {p.ctaText} — {p.price.toLocaleString()} دج
+        </button>
+      </div>
+    );
+
+    if (p.template === "original") {
       return (
-        <div className="h-full overflow-y-auto scrollbar-hide" style={{ backgroundColor: p.backgroundColor, fontFamily: p.fontFamily, color: tc }}>
-          {/* Urgency Bar */}
-          {p.sections.includes("urgency-bar") && (
-            <div className="py-2.5 px-4 text-center text-xs font-bold text-white" style={{ backgroundColor: p.primaryColor }}>
-              <span className="animate-pulse">🔥</span> {p.urgencyText} <span className="animate-pulse">🔥</span>
-            </div>
-          )}
-
+        <div className="h-full overflow-y-auto scrollbar-hide flex flex-col" style={{ backgroundColor: p.backgroundColor, fontFamily: p.fontFamily, color: tc }}>
           {/* Header */}
-          <div className="flex items-center justify-between px-4 sm:px-6 py-3 border-b" style={{ borderColor: isDark(p.backgroundColor) ? "#334155" : "#e2e8f0" }}>
+          <div className="sticky top-0 z-10 flex items-center justify-between px-4 py-3 border-b backdrop-blur-md" style={{ backgroundColor: `${p.backgroundColor}90`, borderColor: isDark(p.backgroundColor) ? "#334155" : "#e2e8f0" }}>
             <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ backgroundColor: p.primaryColor }}>
-                <ShoppingCart className="w-3.5 h-3.5 text-white" />
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center shadow-lg" style={{ backgroundColor: p.primaryColor }}>
+                <ShoppingCart className="w-4 h-4 text-white" />
               </div>
-              <span className="text-xs font-bold">{p.productName}</span>
+              <span className="text-[10px] font-bold truncate max-w-[150px]">{p.productName}</span>
             </div>
-            <button className="text-[10px] font-bold px-3 py-1.5 rounded-full text-white" style={{ backgroundColor: p.primaryColor }}>
-              {p.ctaText}
+            <button className="text-[9px] font-bold px-4 py-1.5 rounded-full text-white shadow-lg" style={{ backgroundColor: p.primaryColor }}>
+              اطلب الآن
             </button>
           </div>
 
-          <div className="p-4 sm:p-6 space-y-6">
-            {/* Hero Section */}
-            {p.sections.includes("hero") && (
-              <div className={`${!isMobile && p.heroLayout === "split" ? "grid grid-cols-2 gap-6 items-center" : "space-y-4"}`}>
-                <div className={`relative overflow-hidden bg-muted ${p.imageStyle === "circle" ? "rounded-full aspect-square max-w-[280px] mx-auto" : p.imageStyle === "blob" ? "rounded-[30%_70%_70%_30%/30%_30%_70%_70%]" : p.imageStyle === "sharp" ? "" : ""}`}
-                  style={{ borderRadius: p.imageStyle === "rounded" ? br : undefined, aspectRatio: p.imageStyle === "circle" ? "1" : "4/3" }}>
+          <div className="p-4 space-y-8">
+            <div className={`${!isMobile ? "grid grid-cols-2 gap-10 items-start" : "space-y-6"}`}>
+              {/* Left Side: Media & Features */}
+              <div className="space-y-6">
+                <div className={`relative aspect-square overflow-hidden bg-muted ${shadowMap[p.shadowIntensity]}`} style={{ borderRadius: br }}>
                   {p.heroImage ? (
                     <img src={p.heroImage} alt="" className="w-full h-full object-cover" />
                   ) : (
-                    <div className="w-full h-full flex flex-col items-center justify-center gap-2 py-16" style={{ color: stc }}>
-                      <Image className="w-10 h-10 opacity-20" />
-                      <span className="text-[10px]">صورة المنتج</span>
+                    <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground gap-1">
+                      <Image className="w-8 h-8 opacity-20" />
+                      <span className="text-[8px]">صورة المنتج</span>
                     </div>
                   )}
                   {discountPercent > 0 && (
-                    <div className="absolute top-3 left-3 bg-destructive text-white px-3 py-1 rounded-full text-[10px] font-black shadow-lg">
+                    <div className="absolute top-4 left-4 bg-destructive text-white px-3 py-1.5 rounded-full text-[10px] font-black shadow-lg">
                       خصم {discountPercent}%
                     </div>
                   )}
                 </div>
 
-                <div className={`space-y-3 ${!isMobile && p.heroLayout === "split" ? "" : "text-center"}`} dir="rtl">
-                  <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: p.primaryColor }}>{p.category}</span>
-                  <h1 className="text-xl sm:text-2xl font-black leading-tight">{p.heroTitle}</h1>
-                  <p className="text-xs leading-relaxed" style={{ color: stc }}>{p.heroSubtitle}</p>
-
-                  {/* Price */}
-                  <div className="p-3 rounded-xl inline-flex items-center gap-3" style={{ backgroundColor: `${p.primaryColor}15`, borderRadius: br }}>
-                    <span className="text-2xl font-black" style={{ color: p.primaryColor }}>{p.price.toLocaleString()} دج</span>
-                    <span className="text-sm line-through" style={{ color: stc }}>{p.originalPrice.toLocaleString()} دج</span>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Social Proof Numbers */}
-            {p.sections.includes("social-proof") && (
-              <div className="grid grid-cols-3 gap-3 text-center">
-                {[
-                  { icon: Users, val: "2,340+", label: "مشتري" },
-                  { icon: Star, val: "4.9/5", label: "تقييم" },
-                  { icon: ThumbsUp, val: "98%", label: "رضا" },
-                ].map((s, i) => (
-                  <div key={i} className="p-3 rounded-xl border" style={{ borderColor: isDark(p.backgroundColor) ? "#334155" : "#e2e8f0", borderRadius: br }}>
-                    <s.icon className="w-4 h-4 mx-auto mb-1" style={{ color: p.primaryColor }} />
-                    <p className="text-sm font-black">{s.val}</p>
-                    <p className="text-[9px]" style={{ color: stc }}>{s.label}</p>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Gallery Section */}
-            {p.sections.includes("gallery") && p.galleryImages && p.galleryImages.length > 0 && (
-              <div className="space-y-3" dir="rtl">
-                <h3 className="text-sm font-bold flex items-center gap-2">
-                  <Camera className="w-4 h-4" style={{ color: p.primaryColor }} /> صور المنتج
-                </h3>
-                <div className="grid grid-cols-2 gap-2">
-                  {p.galleryImages.map((img, i) => (
-                    <div key={i} className="aspect-square overflow-hidden bg-muted rounded-xl" style={{ borderRadius: br }}>
-                      <img src={img} alt={`Gallery ${i}`} className="w-full h-full object-cover" />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Features */}
-            {p.sections.includes("features") && (
-              <div className="space-y-3" dir="rtl">
-                <h3 className="text-sm font-bold flex items-center gap-2">
-                  <Star className="w-4 h-4" style={{ color: p.primaryColor }} /> لماذا هذا المنتج؟
-                </h3>
-                <div className="grid grid-cols-2 gap-2">
-                  {p.features.map((f, i) => (
-                    <div key={i} className="flex items-center gap-2 p-2.5 border rounded-xl" style={{ borderColor: isDark(p.backgroundColor) ? "#334155" : "#e2e8f0", borderRadius: br }}>
+                <div className="grid grid-cols-2 gap-3" dir="rtl">
+                  {p.features.slice(0, 4).map((f, i) => (
+                    <div key={i} className="flex items-center gap-2 p-3 bg-muted/30 border border-border/50 rounded-xl">
                       <div className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: `${p.primaryColor}15` }}>
-                        <Check className="w-3 h-3" style={{ color: p.primaryColor }} />
+                        <Check className="w-3.5 h-3.5" style={{ color: p.primaryColor }} />
                       </div>
-                      <span className="text-[10px] font-bold">{f}</span>
+                      <span className="text-[10px] font-bold leading-tight">{f}</span>
                     </div>
                   ))}
                 </div>
               </div>
-            )}
 
-            {/* Video */}
-            {p.sections.includes("video") && (
-              <div className="relative aspect-video rounded-xl overflow-hidden bg-muted flex items-center justify-center" style={{ borderRadius: br }}>
-                <div className="w-14 h-14 rounded-full flex items-center justify-center shadow-xl" style={{ backgroundColor: p.primaryColor }}>
-                  <Play className="w-6 h-6 text-white fill-white ml-1" />
+              {/* Right Side: Info & Form */}
+              <div className="space-y-6">
+                <div dir="rtl">
+                  <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-md" style={{ backgroundColor: `${p.primaryColor}15`, color: p.primaryColor }}>{p.category}</span>
+                  <h1 className="text-2xl sm:text-3xl font-black mt-3 leading-tight">{p.productName}</h1>
+                  <p className="text-xs sm:text-sm mt-3 leading-relaxed opacity-70">{p.heroSubtitle}</p>
                 </div>
-                <p className="absolute bottom-3 text-[10px] font-bold" style={{ color: stc }}>شاهد الفيديو التوضيحي</p>
-              </div>
-            )}
 
-            {/* Before/After */}
-            {p.sections.includes("before-after") && (
-              <div className="space-y-3" dir="rtl">
-                <h3 className="text-sm font-bold text-center">قبل وبعد الاستخدام</h3>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="rounded-xl overflow-hidden border-2 border-destructive/30" style={{ borderRadius: br }}>
-                    <div className="bg-destructive/10 text-center py-1 text-[10px] font-bold text-destructive">قبل ❌</div>
-                    <div className="aspect-square bg-muted flex items-center justify-center">
-                      <Image className="w-8 h-8 opacity-20" />
-                    </div>
-                  </div>
-                  <div className="rounded-xl overflow-hidden border-2" style={{ borderColor: p.primaryColor, borderRadius: br }}>
-                    <div className="text-center py-1 text-[10px] font-bold text-white" style={{ backgroundColor: p.primaryColor }}>بعد ✅</div>
-                    <div className="aspect-square bg-muted flex items-center justify-center">
-                      <Image className="w-8 h-8 opacity-20" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Trust Badges */}
-            {p.sections.includes("trust-badges") && (
-              <div className="grid grid-cols-2 gap-2">
-                {p.trustBadges.map((badge, i) => {
-                  const icons = [Shield, Truck, Award, Check];
-                  const Icon = icons[i % icons.length];
-                  return (
-                    <div key={i} className="flex items-center gap-2 p-2.5 border rounded-xl" style={{ borderColor: isDark(p.backgroundColor) ? "#334155" : "#e2e8f0", borderRadius: br }}>
-                      <Icon className="w-4 h-4 shrink-0" style={{ color: p.primaryColor }} />
-                      <span className="text-[10px] font-bold">{badge}</span>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-
-            {/* Reviews */}
-            {p.sections.includes("reviews") && (
-              <div className="space-y-3" dir="rtl">
-                <h3 className="text-sm font-bold flex items-center gap-2">
-                  <MessageSquare className="w-4 h-4" style={{ color: p.primaryColor }} /> آراء العملاء
-                </h3>
-                {p.socialProof.map((review, i) => (
-                  <div key={i} className="p-3 border rounded-xl space-y-2" style={{ borderColor: isDark(p.backgroundColor) ? "#334155" : "#e2e8f0", borderRadius: br }}>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 rounded-full flex items-center justify-center text-white text-[10px] font-bold" style={{ backgroundColor: p.primaryColor }}>
-                          {review.name[0]}
-                        </div>
-                        <span className="text-xs font-bold">{review.name}</span>
-                      </div>
-                      <div className="flex gap-0.5">
-                        {Array.from({ length: review.rating }).map((_, j) => (
-                          <Star key={j} className="w-3 h-3 fill-amber-400 text-amber-400" />
-                        ))}
-                      </div>
-                    </div>
-                    <p className="text-[10px]" style={{ color: stc }}>{review.text}</p>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Countdown */}
-            {p.sections.includes("countdown") && (
-              <div className="p-4 rounded-xl text-center space-y-2" style={{ backgroundColor: `${p.primaryColor}10`, borderRadius: br }}>
-                <p className="text-xs font-bold" style={{ color: p.primaryColor }}>⏰ العرض ينتهي خلال</p>
-                <div className="flex justify-center gap-3" dir="ltr">
-                  {[{ v: "02", l: "يوم" }, { v: "14", l: "ساعة" }, { v: "35", l: "دقيقة" }, { v: "09", l: "ثانية" }].map((t, i) => (
-                    <div key={i} className="text-center">
-                      <div className="w-12 h-12 rounded-lg flex items-center justify-center text-lg font-black text-white" style={{ backgroundColor: p.primaryColor }}>
-                        {t.v}
-                      </div>
-                      <p className="text-[8px] mt-1" style={{ color: stc }}>{t.l}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Bundle */}
-            {p.sections.includes("bundle") && (
-              <div className="space-y-2" dir="rtl">
-                <h3 className="text-sm font-bold flex items-center gap-2">
-                  <Gift className="w-4 h-4" style={{ color: p.primaryColor }} /> عروض خاصة
-                </h3>
-                {[
-                  { qty: "1x", price: p.price, label: "قطعة واحدة", save: 0, popular: false },
-                  { qty: "2x", price: Math.round(p.price * 1.7), label: "قطعتين", save: 15, popular: true },
-                  { qty: "3x", price: Math.round(p.price * 2.3), label: "ثلاث قطع", save: 25, popular: false },
-                ].map((b, i) => (
-                  <div key={i} className={`flex items-center justify-between p-3 border-2 rounded-xl relative ${b.popular ? "shadow-md" : ""}`}
-                    style={{ borderColor: b.popular ? p.primaryColor : (isDark(p.backgroundColor) ? "#334155" : "#e2e8f0"), borderRadius: br }}>
-                    {b.popular && (
-                      <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 text-white text-[8px] font-bold px-2 py-0.5 rounded-full" style={{ backgroundColor: p.primaryColor }}>
-                        الأكثر طلباً
-                      </div>
+                {/* Pricing Box */}
+                <div className="p-6 rounded-2xl border flex flex-col gap-2 shadow-sm" dir="rtl" style={{ background: `linear-gradient(135deg, ${p.primaryColor}08, ${p.accentColor}08)`, borderColor: `${p.primaryColor}20` }}>
+                  <div className="flex items-center gap-4">
+                    <span className="text-3xl font-black" style={{ color: p.primaryColor }}>{p.price.toLocaleString()} دج</span>
+                    {p.originalPrice > p.price && (
+                      <span className="text-base line-through opacity-40">{p.originalPrice.toLocaleString()} دج</span>
                     )}
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-black" style={{ color: p.primaryColor }}>{b.qty}</span>
-                      <span className="text-xs font-bold">{b.label}</span>
-                    </div>
-                    <div className="text-left">
-                      <span className="text-sm font-black">{b.price.toLocaleString()} دج</span>
-                      {b.save > 0 && <span className="text-[9px] font-bold text-destructive mr-2">وفّر {b.save}%</span>}
-                    </div>
                   </div>
-                ))}
-              </div>
-            )}
+                  {p.originalPrice > p.price && (
+                    <p className="text-xs font-bold" style={{ color: p.accentColor }}>
+                      وفّر {(p.originalPrice - p.price).toLocaleString()} دج
+                    </p>
+                  )}
+                </div>
 
-            {/* FAQ */}
-            {p.sections.includes("faq") && (
-              <div className="space-y-2" dir="rtl">
-                <h3 className="text-sm font-bold flex items-center gap-2">
-                  <MessageSquare className="w-4 h-4" style={{ color: p.primaryColor }} /> أسئلة شائعة
-                </h3>
-                {p.faqItems.map((faq, i) => (
-                  <div key={i} className="p-3 border rounded-xl" style={{ borderColor: isDark(p.backgroundColor) ? "#334155" : "#e2e8f0", borderRadius: br }}>
-                    <p className="text-xs font-bold">{faq.q}</p>
-                    <p className="text-[10px] mt-1" style={{ color: stc }}>{faq.a}</p>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Guarantee */}
-            {p.sections.includes("guarantee") && (
-              <div className="p-4 rounded-xl border-2 border-dashed text-center space-y-2" style={{ borderColor: p.primaryColor, borderRadius: br }}>
-                <Shield className="w-8 h-8 mx-auto" style={{ color: p.primaryColor }} />
-                <p className="text-sm font-bold">ضمان 30 يوم</p>
-                <p className="text-[10px]" style={{ color: stc }}>إذا لم يعجبك المنتج، يمكنك إرجاعه واسترداد أموالك بالكامل</p>
-              </div>
-            )}
-
-            {/* Shipping */}
-            {p.sections.includes("shipping") && (
-              <div className="p-4 rounded-xl border space-y-3" dir="rtl" style={{ borderColor: isDark(p.backgroundColor) ? "#334155" : "#e2e8f0", borderRadius: br }}>
-                <h3 className="text-sm font-bold flex items-center gap-2">
-                  <Truck className="w-4 h-4" style={{ color: p.primaryColor }} /> معلومات التوصيل
-                </h3>
-                {[
-                  { icon: Truck, text: "توصيل مجاني لجميع الولايات" },
-                  { icon: Clock, text: "التوصيل خلال 2-5 أيام عمل" },
-                  { icon: ShoppingCart, text: "الدفع عند الاستلام COD" },
-                ].map((item, i) => (
-                  <div key={i} className="flex items-center gap-2">
-                    <item.icon className="w-3.5 h-3.5" style={{ color: p.primaryColor }} />
-                    <span className="text-[10px] font-medium">{item.text}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* CTA Form */}
-            {p.sections.includes("cta") && (
-              <div className="p-4 border-2 rounded-xl space-y-3" dir="rtl" style={{ borderColor: p.primaryColor, borderRadius: br }}>
-                <h3 className="text-sm font-bold flex items-center gap-2">
-                  <ShoppingCart className="w-4 h-4" style={{ color: p.primaryColor }} /> اطلب الآن
-                </h3>
-                <div className="space-y-2">
-                  {["الاسم الكامل", "رقم الهاتف", "الولاية"].map((ph, i) => (
-                    <div key={i} className="h-9 rounded-lg border px-3 flex items-center text-[10px]" style={{ borderColor: isDark(p.backgroundColor) ? "#334155" : "#d1d5db", color: stc, borderRadius: `${Math.min(p.borderRadius, 12)}px` }}>
-                      {ph}
+                {/* Trust Badges Grid */}
+                <div className="grid grid-cols-2 gap-3" dir="rtl">
+                  {[
+                    { icon: Truck, t: "توصيل سريع", s: "لكل الولايات" },
+                    { icon: Shield, t: "ضمان الجودة", s: "منتجات أصلية" },
+                    { icon: Clock, t: "توصيل سريع", s: "3-5 أيام" },
+                    { icon: Phone, t: "دعم متواصل", s: "24/7" },
+                  ].map((b, i) => (
+                    <div key={i} className="flex items-center gap-3 p-3 bg-card border border-border/50 rounded-xl shadow-sm">
+                      <b.icon className="w-8 h-8 shrink-0 opacity-80" style={{ color: p.primaryColor }} />
+                      <div>
+                        <p className="text-[10px] font-black leading-none">{b.t}</p>
+                        <p className="text-[8px] opacity-60 mt-1">{b.s}</p>
+                      </div>
                     </div>
                   ))}
                 </div>
-                <button
-                  className={`w-full py-3.5 text-sm font-black text-white shadow-xl transition-transform hover:scale-[1.02] ${p.ctaAnimation === "pulse" ? "animate-pulse" : ""
-                    } ${p.ctaStyle === "pill" ? "rounded-full" : p.ctaStyle === "rounded" ? "rounded-xl" : "rounded-none"}`}
-                  style={{ backgroundColor: p.primaryColor }}
-                >
-                  {p.ctaText} — {p.price.toLocaleString()} دج
-                </button>
-                <div className="flex items-center justify-center gap-3 text-[9px]" style={{ color: stc }}>
-                  <span className="flex items-center gap-1"><Shield className="w-3 h-3" /> آمن</span>
-                  <span className="flex items-center gap-1"><Truck className="w-3 h-3" /> مجاني</span>
-                  <span className="flex items-center gap-1"><Award className="w-3 h-3" /> ضمان</span>
-                </div>
-              </div>
-            )}
 
-            {/* Notification Popup Preview */}
-            {p.sections.includes("notification-popup") && (
-              <div className="fixed-preview p-3 border rounded-xl flex items-center gap-3 shadow-lg" style={{ borderColor: isDark(p.backgroundColor) ? "#334155" : "#e2e8f0", borderRadius: br, backgroundColor: isDark(p.backgroundColor) ? "#1e293b" : "#ffffff" }}>
-                <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: `${p.primaryColor}15` }}>
-                  <ShoppingCart className="w-4 h-4" style={{ color: p.primaryColor }} />
-                </div>
-                <div>
-                  <p className="text-[10px] font-bold">أحمد من الجزائر</p>
-                  <p className="text-[9px]" style={{ color: stc }}>اشترى هذا المنتج منذ 3 دقائق</p>
-                </div>
+                <OrderForm />
               </div>
-            )}
+            </div>
           </div>
         </div>
       );
-    };
+    }
 
+    return (
+      <div className="h-full overflow-y-auto scrollbar-hide" style={{ backgroundColor: p.backgroundColor, fontFamily: p.fontFamily, color: tc }}>
+        {/* Urgency Bar */}
+        {p.sections.includes("urgency-bar") && (
+          <div className="py-2.5 px-4 text-center text-xs font-bold text-white" style={{ backgroundColor: p.primaryColor }}>
+            <span className="animate-pulse">🔥</span> {p.urgencyText} <span className="animate-pulse">🔥</span>
+          </div>
+        )}
+
+        {/* Header */}
+        <div className="flex items-center justify-between px-4 sm:px-6 py-3 border-b" style={{ borderColor: isDark(p.backgroundColor) ? "#334155" : "#e2e8f0" }}>
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center shadow-md" style={{ backgroundColor: p.primaryColor }}>
+              <ShoppingCart className="w-3.5 h-3.5 text-white" />
+            </div>
+            <span className="text-xs font-bold">{p.productName}</span>
+          </div>
+          <button className="text-[10px] font-bold px-3 py-1.5 rounded-full text-white shadow-sm" style={{ backgroundColor: p.primaryColor }}>
+            {p.ctaText}
+          </button>
+        </div>
+
+        <div className="p-4 sm:p-6 space-y-8">
+          {/* Hero Section */}
+          {p.sections.includes("hero") && (
+            <div className={`${!isMobile && p.heroLayout === "split" ? "grid grid-cols-2 gap-8 items-center" : "space-y-6"}`}>
+              <div className={`relative overflow-hidden bg-muted shadow-lg ${p.imageStyle === "circle" ? "rounded-full aspect-square max-w-[320px] mx-auto" : p.imageStyle === "blob" ? "rounded-[30%_70%_70%_30%/30%_30%_70%_70%]" : p.imageStyle === "sharp" ? "" : ""}`}
+                style={{ borderRadius: p.imageStyle === "rounded" ? br : undefined, aspectRatio: p.imageStyle === "circle" ? "1" : "4/3" }}>
+                {p.heroImage ? (
+                  <img src={p.heroImage} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex flex-col items-center justify-center gap-2 py-16" style={{ color: stc }}>
+                    <Image className="w-10 h-10 opacity-20" />
+                    <span className="text-[10px]">صورة المنتج</span>
+                  </div>
+                )}
+                {discountPercent > 0 && (
+                  <div className="absolute top-4 left-4 bg-destructive text-white px-3 py-1.5 rounded-full text-[10px] font-black shadow-lg">
+                    خصم {discountPercent}%
+                  </div>
+                )}
+              </div>
+
+              <div className={`space-y-4 ${!isMobile && p.heroLayout === "split" ? "" : "text-center"}`} dir="rtl">
+                <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded bg-primary/10" style={{ color: p.primaryColor }}>{p.category}</span>
+                <h1 className="text-2xl sm:text-3xl font-black leading-tight">{p.heroTitle}</h1>
+                <p className="text-sm leading-relaxed opacity-70">{p.heroSubtitle}</p>
+
+                {/* Price Box */}
+                <div className="p-4 rounded-2xl inline-flex flex-col gap-1 border shadow-sm" style={{ background: `linear-gradient(135deg, ${p.primaryColor}08, ${p.accentColor}08)`, borderColor: `${p.primaryColor}20`, borderRadius: br }}>
+                  <div className="flex items-center gap-4">
+                    <span className="text-3xl font-black" style={{ color: p.primaryColor }}>{p.price.toLocaleString()} دج</span>
+                    <span className="text-base line-through opacity-40">{p.originalPrice.toLocaleString()} دج</span>
+                  </div>
+                  {p.originalPrice > p.price && (
+                    <p className="text-xs font-bold text-emerald-600">
+                      وفّر {(p.originalPrice - p.price).toLocaleString()} دج
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Social Proof Numbers */}
+          {p.sections.includes("social-proof") && (
+            <div className="grid grid-cols-3 gap-3 text-center">
+              {[
+                { icon: Users, val: "2,340+", label: "مشتري" },
+                { icon: Star, val: "4.9/5", label: "تقييم" },
+                { icon: ThumbsUp, val: "98%", label: "رضا" },
+              ].map((s, i) => (
+                <div key={i} className="p-3 rounded-xl border bg-card shadow-sm" style={{ borderColor: isDark(p.backgroundColor) ? "#334155" : "#e2e8f0", borderRadius: br }}>
+                  <s.icon className="w-4 h-4 mx-auto mb-1" style={{ color: p.primaryColor }} />
+                  <p className="text-sm font-black">{s.val}</p>
+                  <p className="text-[9px]" style={{ color: stc }}>{s.label}</p>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Gallery Section */}
+          {p.sections.includes("gallery") && p.galleryImages && p.galleryImages.length > 0 && (
+            <div className="space-y-4" dir="rtl">
+              <h3 className="text-base font-bold flex items-center gap-2">
+                <Camera className="w-5 h-5" style={{ color: p.primaryColor }} /> صور المنتج
+              </h3>
+              <div className="grid grid-cols-2 gap-3">
+                {p.galleryImages.map((img, i) => (
+                  <div key={i} className="aspect-square overflow-hidden bg-muted rounded-2xl shadow-sm" style={{ borderRadius: br }}>
+                    <img src={img} alt={`Gallery ${i}`} className="w-full h-full object-cover" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Features */}
+          {p.sections.includes("features") && (
+            <div className="space-y-4" dir="rtl">
+              <h3 className="text-base font-bold flex items-center gap-2">
+                <Star className="w-5 h-5" style={{ color: p.primaryColor }} /> لماذا هذا المنتج؟
+              </h3>
+              <div className="grid grid-cols-2 gap-3">
+                {p.features.map((f, i) => (
+                  <div key={i} className="flex items-center gap-2.5 p-3.5 border rounded-2xl bg-card shadow-sm" style={{ borderColor: isDark(p.backgroundColor) ? "#334155" : "#e2e8f0", borderRadius: br }}>
+                    <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: `${p.primaryColor}15` }}>
+                      <Check className="w-4 h-4" style={{ color: p.primaryColor }} />
+                    </div>
+                    <span className="text-[11px] font-bold leading-tight">{f}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Video */}
+          {p.sections.includes("video") && (
+            <div className="relative aspect-video rounded-2xl overflow-hidden bg-muted flex items-center justify-center shadow-lg" style={{ borderRadius: br }}>
+              <div className="w-16 h-16 rounded-full flex items-center justify-center shadow-2xl" style={{ backgroundColor: p.primaryColor }}>
+                <Play className="w-7 h-7 text-white fill-white ml-1" />
+              </div>
+              <p className="absolute bottom-4 text-xs font-bold text-white bg-black/20 backdrop-blur-md px-3 py-1 rounded-full">شاهد الفيديو التوضيحي</p>
+            </div>
+          )}
+
+          {/* Reviews */}
+          {p.sections.includes("reviews") && (
+            <div className="space-y-4" dir="rtl">
+              <h3 className="text-base font-bold flex items-center gap-2">
+                <MessageSquare className="w-5 h-5" style={{ color: p.primaryColor }} /> آراء العملاء
+              </h3>
+              {p.socialProof.map((review, i) => (
+                <div key={i} className="p-4 border rounded-2xl bg-card shadow-sm space-y-3" style={{ borderColor: isDark(p.backgroundColor) ? "#334155" : "#e2e8f0", borderRadius: br }}>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-md" style={{ backgroundColor: p.primaryColor }}>
+                        {review.name[0]}
+                      </div>
+                      <span className="text-sm font-bold">{review.name}</span>
+                    </div>
+                    <div className="flex gap-0.5">
+                      {Array.from({ length: review.rating }).map((_, j) => (
+                        <Star key={j} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                      ))}
+                    </div>
+                  </div>
+                  <p className="text-xs leading-relaxed opacity-80">{review.text}</p>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Shipping Info */}
+          {p.sections.includes("shipping") && (
+            <div className="p-5 rounded-2xl border bg-card shadow-sm space-y-4" dir="rtl" style={{ borderColor: isDark(p.backgroundColor) ? "#334155" : "#e2e8f0", borderRadius: br }}>
+              <h3 className="text-base font-bold flex items-center gap-2">
+                <Truck className="w-5 h-5" style={{ color: p.primaryColor }} /> معلومات التوصيل
+              </h3>
+              <div className="grid gap-3">
+                {[
+                  { icon: Truck, text: "توصيل سريع لكل الولايات" },
+                  { icon: Clock, text: "التوصيل خلال 3-5 أيام" },
+                  { icon: ShoppingCart, text: "الدفع عند الاستلام COD" },
+                  { icon: Phone, text: "دعم متواصل 24/7" },
+                ].map((item, i) => (
+                  <div key={i} className="flex items-center gap-3">
+                    <item.icon className="w-5 h-5 opacity-60" style={{ color: p.primaryColor }} />
+                    <span className="text-xs font-bold">{item.text}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* CTA Form */}
+          {p.sections.includes("cta") && (
+            <OrderForm />
+          )}
+
+          {/* Trust Badges Footer */}
+          {p.sections.includes("trust-badges") && (
+            <div className="grid grid-cols-2 gap-3 pb-8">
+              {p.trustBadges.slice(0, 4).map((badge, i) => {
+                const icons = [Shield, Truck, Award, Check];
+                const Icon = icons[i % icons.length];
+                return (
+                  <div key={i} className="flex items-center gap-2.5 p-3.5 border rounded-2xl bg-card" style={{ borderColor: isDark(p.backgroundColor) ? "#334155" : "#e2e8f0", borderRadius: br }}>
+                    <Icon className="w-4 h-4 shrink-0" style={{ color: p.primaryColor }} />
+                    <span className="text-[10px] font-bold">{badge}</span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  if (editingPage) {
     return (
       <div className="flex flex-col h-[calc(100vh-140px)] -m-4 sm:-m-6">
         {/* Editor header */}
