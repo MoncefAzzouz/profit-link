@@ -1429,7 +1429,7 @@ const Dashboard = () => {
                 {[
                   { 
                     label: "الإيرادات الإجمالية", 
-                    value: `${stats.totalRevenue.toLocaleString()} دج`, 
+                    value: `${dashboardStats.totalRevenue.toLocaleString()} دج`, 
                     color: "text-foreground",
                     sub: "إجمالي المبيعات المحققة",
                     icon: Wallet,
@@ -1437,7 +1437,7 @@ const Dashboard = () => {
                   },
                   { 
                     label: "إجمالي الطلبيات", 
-                    value: stats.totalOrders.toLocaleString(), 
+                    value: dashboardStats.totalOrders.toLocaleString(), 
                     color: "text-accent",
                     sub: "عدد الطلبات المسجلة",
                     icon: Trophy,
@@ -1445,7 +1445,7 @@ const Dashboard = () => {
                   },
                   { 
                     label: "نسبة التأكيد", 
-                    value: `${stats.confirmationRate}%`, 
+                    value: `${dashboardStats.confirmationRate}%`, 
                     color: "text-secondary",
                     sub: "بناءً على الطلبات الشحن",
                     icon: TrendingUp,
@@ -1567,7 +1567,7 @@ const Dashboard = () => {
                       </PieChart>
                     </ResponsiveContainer>
                     <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                      <span className="text-4xl font-black text-foreground">{stats.totalOrders}</span>
+                      <span className="text-4xl font-black text-foreground">{dashboardStats.totalOrders}</span>
                       <span className="text-[10px] text-muted-foreground font-bold tracking-widest uppercase">إجمالي الطلبات</span>
                     </div>
                   </div>
