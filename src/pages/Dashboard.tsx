@@ -857,7 +857,7 @@ const Dashboard = () => {
                 <div className="flex items-center justify-between mb-4">
                   <div>
                     <p className="text-primary-foreground/70">مستواك الحالي</p>
-                    <p className="text-2xl font-bold">المستوى {mockAffiliateStats.currentLevel} - فضي</p>
+                    <p className="text-2xl font-bold">{user?.tier || "المستوى 1 - مبتدئ"}</p>
                   </div>
                   <Trophy className="w-12 h-12 text-accent" />
                 </div>

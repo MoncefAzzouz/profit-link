@@ -110,6 +110,7 @@ const Auth = () => {
         name: data.user.name,
         email: data.user.email,
         role: data.user.role,
+        tier: data.user.tier,
         wilaya: formData.wilaya,
         storeName: formData.storeName,
         ccp: formData.ccp
