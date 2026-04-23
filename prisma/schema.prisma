@@ -50,14 +50,22 @@ model Product {
   
   name           String
   description    String
+  adText         String?  // Ad copy text
   price          Float    // Selling price
   originalPrice  Float    // Fake discount price
   commission     Float    // Affiliate commission
   
   images         String[] // URLs
+  image          String?  // Main image URL
+  videoUrl       String?  // Product video URL
   category       String
   stock          Int      @default(0)
   status         String   @default("active") // active, out_of_stock, disabled
+
+  isVisible      Boolean  @default(true)
+  isTrend        Boolean  @default(false)
+  isFeatured     Boolean  @default(false)
+  features       String[] // Product features list
   
   orders         Order[]
   landingPages   LandingPage[]
