@@ -506,8 +506,17 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
     }
   };
 
+  const getProductUrl = (page: LandingPageConfig) => {
+    const userStr = localStorage.getItem("affiliate_user");
+    const user = userStr ? JSON.parse(userStr) : null;
+    if (page.productId && user?.id) {
+      return `${window.location.origin}/product/${page.productId}/${user.id}`;
+    }
+    return `${window.location.origin}/lp/${page.id}`;
+  };
+
   const copyLink = (page: LandingPageConfig) => {
-    const link = `${window.location.origin}/lp/${page.id}`;
+    const link = getProductUrl(page);
     navigator.clipboard.writeText(link);
     setCopiedId(page.id);
     setTimeout(() => setCopiedId(null), 2000);
@@ -515,7 +524,8 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
   };
 
   const viewPage = (page: LandingPageConfig) => {
-    window.open(`${window.location.origin}/lp/${page.id}`, "_blank");
+    const link = getProductUrl(page);
+    window.open(link, "_blank");
   };
 
   const publishPage = async (page: LandingPageConfig) => {
