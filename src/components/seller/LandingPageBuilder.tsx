@@ -512,6 +512,29 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
     toast({ title: "✅ تم نسخ الرابط" });
   };
 
+  const viewPage = (page: LandingPageConfig) => {
+    window.open(`${window.location.origin}/lp/${page.id}`, "_blank");
+  };
+
+  const publishPage = async (page: LandingPageConfig) => {
+    const updated: LandingPageConfig = {
+      ...page,
+      status: page.status === "published" ? "draft" : "published",
+    };
+    const newPages = pages.map(p => p.id === updated.id ? updated : p);
+    setPages(newPages);
+    savePagesLocally(newPages);
+    if (editingPage?.id === updated.id) setEditingPage(updated);
+    await saveToDatabase(updated);
+    toast({ title: updated.status === "published" ? "🚀 تم نشر الصفحة" : "📝 تم تحويلها إلى مسودة" });
+  };
+
+  const cardAnim = (delay = 0) => ({
+    initial: { opacity: 0, y: 24 },
+    animate: { opacity: 1, y: 0 },
+    transition: { delay, duration: 0.5, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] },
+  });
+
   const isDark = (bg: string) => bg.startsWith("#0") || bg.startsWith("#1") || bg.startsWith("#2") || bg === "#020617";
 
   const renderPreview = (isMobile: boolean) => {
