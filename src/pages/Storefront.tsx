@@ -163,7 +163,7 @@ const Storefront = () => {
             className="absolute inset-0"
            >
              <img 
-               src={storeSettings.hero.bannerUrl} 
+               src={storeSettings.hero?.bannerUrl} 
                alt="Hero Banner" 
                className="w-full h-full object-cover"
              />
@@ -211,12 +211,12 @@ const Storefront = () => {
              )}
 
              {/* Visual dash separator if both exists */}
-             {(storeSettings.hero.title || storeSettings.hero.subtitle) && (storeSettings.storeName || storeSettings.storeIntro) && (
+             {(storeSettings.hero?.title || storeSettings.hero?.subtitle) && (storeSettings.storeName || storeSettings.storeIntro) && (
                <div className="w-16 h-1 bg-primary mx-auto mb-8 rounded-full opacity-80" />
              )}
 
              {/* Hero Subtitles/Promos */}
-             {storeSettings.hero.title && (
+             {storeSettings.hero?.title && (
                <motion.h2 
                  initial={{ opacity: 0, y: 30 }}
                  whileInView={{ opacity: 1, y: 0 }}
@@ -228,7 +228,7 @@ const Storefront = () => {
                </motion.h2>
              )}
              
-             {storeSettings.hero.subtitle && (
+             {storeSettings.hero?.subtitle && (
                <motion.p 
                  initial={{ opacity: 0, y: 20 }}
                  whileInView={{ opacity: 1, y: 0 }}
@@ -263,7 +263,7 @@ const Storefront = () => {
         <div className="bg-muted/30 py-8 border-y border-border/50">
           <div className="container mx-auto px-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-               {storeSettings.usp.items.map((item, idx) => (
+               {storeSettings.usp?.items?.map((item: any, idx: number) => (
                  <motion.div 
                    key={idx}
                    initial={{ opacity: 0, y: 20 }}
@@ -489,7 +489,7 @@ const Storefront = () => {
       />
 
       {/* Floating WhatsApp Support */}
-      {storeSettings.support?.whatsappFloating && (
+      {storeSettings.support?.whatsappFloating && storeSettings.socialLinks?.whatsapp && (
         <motion.a
           href={`https://wa.me/${storeSettings.socialLinks.whatsapp.replace(/\s+/g, '')}`}
           target="_blank"
@@ -523,17 +523,17 @@ const Storefront = () => {
                 {storeSettings.storeIntro}
               </p>
               <div className="flex gap-4">
-                {storeSettings.socialLinks.facebook && (
+                {storeSettings.socialLinks?.facebook && (
                   <a href={storeSettings.socialLinks.facebook} target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center hover:bg-primary hover:text-white transition-colors">
                     <Facebook className="w-5 h-5" />
                   </a>
                 )}
-                {storeSettings.socialLinks.instagram && (
+                {storeSettings.socialLinks?.instagram && (
                   <a href={storeSettings.socialLinks.instagram} target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center hover:bg-primary hover:text-white transition-colors">
                     <Instagram className="w-5 h-5" />
                   </a>
                 )}
-                {storeSettings.socialLinks.phone && (
+                {storeSettings.socialLinks?.phone && (
                   <a href={`tel:${storeSettings.socialLinks.phone}`} className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center hover:bg-secondary hover:text-white transition-colors">
                     <Phone className="w-5 h-5" />
                   </a>
@@ -544,8 +544,8 @@ const Storefront = () => {
             <div className="space-y-4">
               <h4 className="font-bold text-foreground">روابط قانونية</h4>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><a href={storeSettings.footerInfo.privacyPolicyLink} className="hover:text-primary transition-colors">سياسة الخصوصية</a></li>
-                <li><a href={storeSettings.footerInfo.termsLink} className="hover:text-primary transition-colors">الشروط والأحكام</a></li>
+                <li><a href={storeSettings.footerInfo?.privacyPolicyLink || "#"} className="hover:text-primary transition-colors">سياسة الخصوصية</a></li>
+                <li><a href={storeSettings.footerInfo?.termsLink || "#"} className="hover:text-primary transition-colors">الشروط والأحكام</a></li>
               </ul>
             </div>
 
@@ -554,9 +554,9 @@ const Storefront = () => {
               <div className="space-y-3 text-sm text-muted-foreground">
                 <div className="flex items-center gap-2">
                   <Phone className="w-4 h-4 text-secondary" />
-                  <span>{storeSettings.socialLinks.phone}</span>
+                  <span>{storeSettings.socialLinks?.phone || "غير متوفر"}</span>
                 </div>
-                {storeSettings.socialLinks.whatsapp && (
+                {storeSettings.socialLinks?.whatsapp && (
                   <div className="flex items-center gap-2">
                     <MessageSquare className="w-4 h-4 text-emerald-500" />
                     <span>واتساب</span>
