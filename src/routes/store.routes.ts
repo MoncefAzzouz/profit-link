@@ -94,9 +94,15 @@ router.get('/public/:storeName', async (req: Request, res: Response): Promise<an
       return res.status(404).json({ error: 'Store not found' });
     }
 
-    // Fetch active products for the store
+    // Get products specifically added to this store
+    const storeProductIds = (affiliate.storeSettings?.config as any)?.storeProductIds || [];
+    
     const products = await prisma.product.findMany({
-      where: { status: 'active', isVisible: true },
+      where: { 
+        status: 'active', 
+        isVisible: true,
+        ...(storeProductIds.length > 0 ? { id: { in: storeProductIds } } : { id: 'none' }) // If empty, show nothing
+      },
       orderBy: { createdAt: 'desc' }
     });
 
