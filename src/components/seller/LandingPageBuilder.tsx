@@ -567,7 +567,7 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
   };
 
   const viewPage = (page: LandingPageConfig) => {
-    const link = getProductUrl(page);
+    const link = `${window.location.origin}/lp/${page.id}`;
     window.open(link, "_blank");
   };
 
