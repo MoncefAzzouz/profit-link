@@ -19,12 +19,15 @@ const prisma = new PrismaClient();
 const PORT = process.env.PORT || 5000;
 
 // Middleware
-app.use(cors({
-  origin: function (origin, callback) {
-    callback(null, true);
+const corsOptions = {
+  origin: function (origin: any, callback: any) {
+    callback(null, origin || true);
   },
   credentials: true
-}));
+};
+
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 
 // Increased limits for large AI image payloads
 app.use(express.json({ limit: '100mb' }));
