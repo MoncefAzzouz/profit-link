@@ -21,12 +21,23 @@ const PORT = process.env.PORT || 5000;
 // Middleware
 const corsOptions = {
   origin: function (origin: any, callback: any) {
-    callback(null, origin || true);
+    // Allow all origins in development or explicitly reflect the origin
+    callback(null, true);
   },
-  credentials: true
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
+  preflightContinue: false,
+  optionsSuccessStatus: 204
 };
 
 app.use(cors(corsOptions));
+
+// Logging middleware
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.path} - Origin: ${req.headers.origin}`);
+  next();
+});
 
 // Increased limits for large AI image payloads
 app.use(express.json({ limit: '100mb' }));
