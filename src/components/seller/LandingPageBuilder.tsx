@@ -246,7 +246,7 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
   const affiliateUser = userStr ? JSON.parse(userStr) : null;
   const isAdmin = affiliateUser?.role?.toUpperCase() === "ADMIN";
   const defaultStoreName = affiliateUser?.storeName || "متجري";
-  const [activeDesignTab, setActiveDesignTab] = useState<"magic" | "content" | "template" | "colors" | "sections" | "advanced">(isAdmin ? "magic" : "content");
+  const [activeDesignTab, setActiveDesignTab] = useState<"magic" | "content" | "template" | "colors" | "sections">(isAdmin ? "magic" : "content");
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   // Fetch pages from backend on mount
@@ -1122,7 +1122,6 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
                   { id: "template" as const, label: "القوالب", icon: LayoutTemplate },
                   { id: "colors" as const, label: "الألوان", icon: Palette },
                   { id: "sections" as const, label: "الأقسام", icon: Layers },
-                  { id: "advanced" as const, label: "متقدم", icon: Settings2 },
                 ]).map(tab => (
                   <button
                     key={tab.id}
@@ -1570,74 +1569,6 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
                 </div>
               )}
 
-              {/* ===== ADVANCED TAB ===== */}
-              {activeDesignTab === "advanced" && (
-                <div className="space-y-5">
-                  <div className="space-y-3">
-                    <h3 className="text-xs font-bold flex items-center gap-2"><Zap className="w-3.5 h-3.5 text-primary" /> خيارات متقدمة</h3>
-
-                    <div className="flex items-center justify-between p-3 border border-border rounded-xl">
-                      <div>
-                        <p className="text-xs font-bold">شريط شراء ثابت</p>
-                        <p className="text-[9px] text-muted-foreground">يظهر عند التمرير للأسفل</p>
-                      </div>
-                      <Switch checked={editingPage.showStickyBar} onCheckedChange={(v) => updatePage("showStickyBar", v)} />
-                    </div>
-
-                    <div className="flex items-center justify-between p-3 border border-border rounded-xl">
-                      <div>
-                        <p className="text-xs font-bold">زر شراء عائم</p>
-                        <p className="text-[9px] text-muted-foreground">زر ثابت في أسفل الشاشة</p>
-                      </div>
-                      <Switch checked={editingPage.showFloatingCta} onCheckedChange={(v) => updatePage("showFloatingCta", v)} />
-                    </div>
-
-                    <div className="flex items-center justify-between p-3 border border-border rounded-xl">
-                      <div>
-                        <p className="text-xs font-bold">إشعارات شراء وهمية</p>
-                        <p className="text-[9px] text-muted-foreground">تظهر عشوائياً لزيادة الثقة</p>
-                      </div>
-                      <Switch checked={editingPage.showSocialProofPopup} onCheckedChange={(v) => updatePage("showSocialProofPopup", v)} />
-                    </div>
-                  </div>
-
-                  <div className="space-y-3 pt-3 border-t">
-                    <h3 className="text-xs font-bold flex items-center gap-2"><LayoutTemplate className="w-3.5 h-3.5 text-primary" /> التتبع والبيكسل (Tracking)</h3>
-
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-bold">Facebook Pixel ID</Label>
-                      <Input
-                        value={editingPage.pixels?.facebook || ""}
-                        onChange={(e) => updatePage("pixels", { ...editingPage.pixels, facebook: e.target.value })}
-                        placeholder="123456789012345"
-                        className="rounded-xl h-8 text-xs font-mono bg-muted/30"
-                        dir="ltr"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-bold">TikTok Pixel ID</Label>
-                      <Input
-                        value={editingPage.pixels?.tiktok || ""}
-                        onChange={(e) => updatePage("pixels", { ...editingPage.pixels, tiktok: e.target.value })}
-                        placeholder="CDG123456789ABCDEF"
-                        className="rounded-xl h-8 text-xs font-mono bg-muted/30"
-                        dir="ltr"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2 pt-3 border-t">
-                    <Label className="text-xs font-bold opacity-70">رابط الفيديو (YouTube/Vimeo)</Label>
-                    <Input value={editingPage.videoUrl} onChange={(e) => updatePage("videoUrl", e.target.value)} placeholder="https://youtube.com/watch?v=..." className="rounded-xl h-9 text-xs" dir="ltr" />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label className="text-xs font-bold opacity-70">CSS مخصص</Label>
-                    <Textarea value={editingPage.customCss} onChange={(e) => updatePage("customCss", e.target.value)} placeholder=".hero { ... }" className="rounded-xl text-xs font-mono" rows={4} dir="ltr" />
-                  </div>
-                </div>
-              )}
             </div>
 
             {/* Footer */}
