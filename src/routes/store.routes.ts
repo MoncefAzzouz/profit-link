@@ -207,8 +207,13 @@ router.put('/page/:id', authenticateToken, async (req: AuthRequest, res: Respons
 
     if (!ownerId) return res.status(401).json({ error: 'Unauthorized' });
 
+    const existingPage = await prisma.landingPage.findUnique({ where: { id: id as string } });
+    if (!existingPage || existingPage.ownerId !== ownerId) {
+      return res.status(404).json({ error: 'Page not found or unauthorized' });
+    }
+
     const page = await prisma.landingPage.update({
-      where: { id: id as string, ownerId }, // Ensure owner owns the page
+      where: { id: id as string },
       data: {
         pageConfig: configData,
         ...(status && { status })
@@ -229,8 +234,13 @@ router.delete('/page/:id', authenticateToken, async (req: AuthRequest, res: Resp
 
     if (!ownerId) return res.status(401).json({ error: 'Unauthorized' });
 
+    const existingPage = await prisma.landingPage.findUnique({ where: { id: id as string } });
+    if (!existingPage || existingPage.ownerId !== ownerId) {
+      return res.status(404).json({ error: 'Page not found or unauthorized' });
+    }
+
     await prisma.landingPage.delete({
-      where: { id: id as string, ownerId }
+      where: { id: id as string }
     });
 
     res.json({ message: 'Landing page deleted successfully!' });
