@@ -11,6 +11,7 @@ import financeRoutes from './routes/finance.routes';
 import deliveryRoutes from './routes/delivery.routes';
 import adminRoutes from './routes/admin.routes';
 import uploadRoutes from './routes/upload.routes';
+import levelsRoutes from './routes/levels.routes';
 
 dotenv.config();
 
@@ -52,6 +53,7 @@ app.use('/api/finance', financeRoutes);
 app.use('/api/delivery', deliveryRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/levels', levelsRoutes);
 
 // Basic Route
 app.get('/', (req: Request, res: Response) => {
