@@ -157,7 +157,17 @@ router.get('/pages/:id/public', async (req: Request, res: Response): Promise<any
       data: { views: { increment: 1 } }
     }).catch(err => console.error('Failed to increment views', err));
 
-    res.json({ data: page.pageConfig });
+    res.json({ 
+      data: {
+        ...(page.pageConfig as any),
+        id: page.id,
+        productId: page.productId,
+        ownerId: page.ownerId,
+        status: page.status,
+        views: page.views,
+        conversions: page.conversions
+      } 
+    });
   } catch (error) {
     console.error('Public landing page error:', error);
     res.status(500).json({ error: 'Internal Server Error' });
@@ -189,7 +199,17 @@ router.get('/product-page/:productId/:affiliateId', async (req: Request, res: Re
       data: { views: { increment: 1 } }
     }).catch(err => console.error('Failed to increment views', err));
 
-    res.json({ data: page.pageConfig, id: page.id });
+    res.json({ 
+      data: {
+        ...(page.pageConfig as any),
+        id: page.id,
+        productId: page.productId,
+        ownerId: page.ownerId,
+        status: page.status,
+        views: page.views,
+        conversions: page.conversions
+      } 
+    });
   } catch (error) {
     console.error('Public product page lookup error:', error);
     res.status(500).json({ error: 'Internal Server Error' });

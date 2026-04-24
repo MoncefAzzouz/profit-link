@@ -15,9 +15,19 @@ router.post('/', async (req: Request, res: Response) => {
       commune, shippingFee, stopDesk
     } = req.body;
 
-    if (!productId || !affiliateId || !customerName || !customerPhone || !wilaya) {
-      console.error('❌ Missing fields:', { productId, affiliateId, customerName, customerPhone, wilaya });
-      return res.status(400).json({ error: 'Missing required order fields' });
+    const missing = [];
+    if (!productId) missing.push('productId');
+    if (!affiliateId) missing.push('affiliateId');
+    if (!customerName) missing.push('customerName');
+    if (!customerPhone) missing.push('customerPhone');
+    if (!wilaya) missing.push('wilaya');
+
+    if (missing.length > 0) {
+      console.error('❌ Missing fields:', missing);
+      return res.status(400).json({ 
+        error: 'Missing required order fields', 
+        missingFields: missing 
+      });
     }
 
     console.log(`📦 Creating order for Product: ${productId}, Affiliate: ${affiliateId}`);
@@ -60,7 +70,7 @@ router.post('/', async (req: Request, res: Response) => {
         address: address || "",
         quantity: quantity || 1,
         totalAmount: parseFloat(String(totalAmount)),
-        commissionAmount: parseFloat(String(commissionAmount)),
+        commissionAmount: parseFloat(String(commissionAmount || product.commission || 0)),
         commune: commune || "",
         shippingFee: parseFloat(String(shippingFee || 0)),
         stopDesk: parseInt(String(stopDesk || 0))
