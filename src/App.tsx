@@ -14,6 +14,7 @@ import SellerRegister from "./pages/SellerRegister";
 import SellerDashboard from "./pages/SellerDashboard";
 import LandingPageView from "./pages/LandingPageView";
 import Storefront from "./pages/Storefront";
+import ProductRouteManager from "./pages/ProductRouteManager";
 
 const queryClient = new QueryClient();
 
@@ -26,7 +27,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/products" element={<Products />} />
-          <Route path="/product/:productId/:affiliateId" element={<ProductPage />} />
+          <Route path="/product/:productId/:affiliateId" element={<ProductRouteManager />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/admin" element={<Admin />} />

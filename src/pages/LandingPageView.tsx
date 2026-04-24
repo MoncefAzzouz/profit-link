@@ -70,7 +70,7 @@ interface LandingPageConfig {
 }
 
 const LandingPageView = () => {
-  const { pageId } = useParams();
+  const { pageId, productId, affiliateId } = useParams();
   const { toast } = useToast();
   const [page, setPage] = useState<LandingPageConfig | null>(null);
   const [loading, setLoading] = useState(true);
@@ -88,7 +88,11 @@ const LandingPageView = () => {
   useEffect(() => {
     const fetchPage = async () => {
       try {
-        const res = await fetch(`https://profit-link-3eri.onrender.com/api/store/pages/${pageId}/public`);
+        const url = pageId 
+          ? `https://profit-link-3eri.onrender.com/api/store/pages/${pageId}/public`
+          : `https://profit-link-3eri.onrender.com/api/store/product-page/${productId}/${affiliateId}`;
+        
+        const res = await fetch(url);
         const json = await res.json();
         if (res.ok && json.data) {
           const found = json.data;
@@ -117,8 +121,8 @@ const LandingPageView = () => {
         setLoading(false);
       }
     };
-    if (pageId) fetchPage();
-  }, [pageId]);
+    if (pageId || (productId && affiliateId)) fetchPage();
+  }, [pageId, productId, affiliateId]);
 
   // Fetch Wilayas on mount
   useEffect(() => {
