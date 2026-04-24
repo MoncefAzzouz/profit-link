@@ -492,7 +492,7 @@ const ProductPage = () => {
                     disabled={!formData.wilaya || loadingCommunes}
                   >
                     <SelectTrigger className="mt-1.5 h-11 rounded-xl">
-                      <SelectValue placeholder={loadingCommunes ? "جاري التحميل..." : "اختر البلدية"} />
+                        <SelectValue placeholder={loadingCommunes ? "جاري التحميل..." : "اختر البلدية"} />
                     </SelectTrigger>
                     <SelectContent className="max-h-[300px]">
                       {communes && communes.length > 0 ? (

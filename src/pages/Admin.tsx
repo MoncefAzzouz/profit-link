@@ -270,6 +270,18 @@ const Admin = () => {
   const [editingCategory, setEditingCategory] = useState<any | null>(null);
   const [categoryFormData, setCategoryFormData] = useState<any>({ name: "", icon: "📦", isActive: true });
 
+  // Levels Management States
+  const [dbLevels, setDbLevels] = useState<any[]>([]);
+  const [isLevelDialogOpen, setIsLevelDialogOpen] = useState(false);
+  const [editingLevel, setEditingLevel] = useState<any | null>(null);
+  const [levelFormData, setLevelFormData] = useState<any>({ 
+    name: "", 
+    levelNumber: 1, 
+    targetOrders: 0, 
+    reward: "", 
+    color: "blue" 
+  });
+
   const activeCategories = useMemo(() => {
     return ["الكل", ...dbCategories.filter(c => c.isActive).map(c => c.name)];
   }, [dbCategories]);
@@ -315,7 +327,70 @@ const Admin = () => {
     // Fetch products from backend
     fetchProducts();
     fetchCategories();
+    fetchLevels();
   }, []);
+
+  const fetchLevels = async () => {
+    try {
+      const res = await fetch('https://profit-link-3eri.onrender.com/api/levels');
+      if (res.ok) {
+        const json = await res.json();
+        setDbLevels(json.data || []);
+      }
+    } catch (err) {
+      console.error('Failed to fetch levels', err);
+    }
+  };
+
+  const handleSaveLevel = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    try {
+      const url = editingLevel 
+        ? `https://profit-link-3eri.onrender.com/api/levels/${editingLevel.id}`
+        : 'https://profit-link-3eri.onrender.com/api/levels';
+      const method = editingLevel ? 'PUT' : 'POST';
+
+      const res = await fetch(url, {
+        method,
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}` 
+        },
+        body: JSON.stringify(levelFormData)
+      });
+
+      if (res.ok) {
+        toast({ title: "تم الحفظ بنجاح ✅" });
+        setIsLevelDialogOpen(false);
+        fetchLevels();
+      } else {
+        throw new Error("Failed to save");
+      }
+    } catch (err) {
+      toast({ title: "خطأ", description: "فشل حفظ المستوى", variant: "destructive" });
+    }
+  };
+
+  const handleDeleteLevel = async (id: string) => {
+    if (!window.confirm("هل أنت متأكد من حذف هذا المستوى؟")) return;
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    try {
+      const res = await fetch(`https://profit-link-3eri.onrender.com/api/levels/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        toast({ title: "تم الحذف بنجاح" });
+        fetchLevels();
+      }
+    } catch (err) {
+      toast({ title: "خطأ", description: "فشل حذف المستوى", variant: "destructive" });
+    }
+  };
 
   // Fetch Shipping Rates
   useEffect(() => {
@@ -355,6 +430,7 @@ const Admin = () => {
     { id: "join_requests" as Tab, label: "طلبات الانضمام", icon: UserPlus },
     { id: "orders" as Tab, label: "الطلبيات", icon: ShoppingCart },
     { id: "withdrawals" as Tab, label: "طلبات السحب", icon: Wallet },
+    { id: "levels" as Tab, label: "المستويات", icon: Trophy },
     { id: "shipping" as Tab, label: "التوصيل", icon: Truck },
     { id: "landing_editor" as Tab, label: "تعديل الواجهة", icon: LayoutTemplate },
     { id: "landing_pages" as Tab, label: "صفحات الهبوط", icon: FileText },
@@ -1720,6 +1796,101 @@ const Admin = () => {
             </div>
           )}
 
+          {/* Levels Tab */}
+          {activeTab === "levels" && (
+            <div className="space-y-6">
+              <div className="bg-card rounded-3xl p-8 border border-border/50 shadow-sm space-y-6">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-border pb-6 gap-4">
+                  <div>
+                    <h3 className="text-2xl font-black text-foreground flex items-center gap-3">
+                      <Trophy className="w-8 h-8 text-secondary" />
+                      إدارة مستويات المسوّقين
+                    </h3>
+                    <p className="text-muted-foreground mt-1 text-sm">حدد الأهداف والمكافآت لكل مستوى لتحفيز المسوّقين.</p>
+                  </div>
+                  <Button 
+                    className="gap-2 rounded-2xl h-12 px-6 shadow-lg shadow-primary/20 w-full sm:w-auto" 
+                    onClick={() => {
+                      setEditingLevel(null);
+                      setLevelFormData({ name: "", levelNumber: dbLevels.length + 1, targetOrders: 0, reward: "", color: "blue" });
+                      setIsLevelDialogOpen(true);
+                    }}
+                  >
+                    <Plus className="w-5 h-5" />
+                    إضافة مستوى جديد
+                  </Button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-4">
+                  {dbLevels.map((level) => (
+                    <motion.div
+                      key={level.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="bg-muted/20 rounded-[2.5rem] p-8 border border-border/50 relative group hover:border-primary/30 transition-all shadow-sm hover:shadow-md"
+                    >
+                      <div className="flex justify-between items-start mb-6">
+                        <div className="w-14 h-14 rounded-2xl bg-white flex items-center justify-center shadow-sm text-primary border border-border/50">
+                          <Sparkles className="w-7 h-7" />
+                        </div>
+                        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-10 w-10 rounded-xl text-blue-500 hover:text-blue-600 hover:bg-blue-50"
+                            onClick={() => {
+                              setEditingLevel(level);
+                              setLevelFormData(level);
+                              setIsLevelDialogOpen(true);
+                            }}
+                          >
+                            <Edit className="w-5 h-5" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-10 w-10 rounded-xl text-red-500 hover:text-red-600 hover:bg-red-50"
+                            onClick={() => handleDeleteLevel(level.id)}
+                          >
+                            <Trash2 className="w-5 h-5" />
+                          </Button>
+                        </div>
+                      </div>
+
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <h4 className="font-black text-2xl tracking-tight">{level.name}</h4>
+                          <Badge variant="outline" className={`rounded-xl border-${level.color}-500/20 text-${level.color}-600 bg-${level.color}-500/5 font-black px-3 py-1`}>
+                            Lvl {level.levelNumber}
+                          </Badge>
+                        </div>
+                        
+                        <div className="flex items-center gap-3 py-4 border-y border-border/40">
+                          <div className="w-10 h-10 rounded-full bg-secondary/10 flex items-center justify-center text-secondary">
+                            <CheckCircle className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">الهدف المطلوب</p>
+                            <p className="font-black text-lg">{level.targetOrders} طلبية مؤكدة</p>
+                          </div>
+                        </div>
+
+                        {level.reward && (
+                          <div className="mt-4 bg-white/40 p-4 rounded-2xl border border-dashed border-border/60">
+                             <p className="text-[10px] text-muted-foreground font-bold mb-1 opacity-60">المكافآت الحصرية 🎁</p>
+                             <p className="text-xs font-bold text-foreground/80 leading-relaxed italic">
+                               "{level.reward}"
+                             </p>
+                          </div>
+                        )}
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Analytics Tab */}
           {activeTab === "analytics" && (
             <div className="space-y-6">
@@ -2229,6 +2400,88 @@ const Admin = () => {
       </Dialog>
 
       {/* Product Dialog */}
+      {/* Levels Dialog */}
+      <Dialog open={isLevelDialogOpen} onOpenChange={setIsLevelDialogOpen}>
+        <DialogContent className="sm:max-w-[500px] rounded-[3rem] p-8 shadow-2xl border-none" dir="rtl">
+          <DialogHeader className="text-right">
+            <DialogTitle className="text-3xl font-black flex items-center gap-3">
+               <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
+                 <Trophy className="w-6 h-6" />
+               </div>
+               {editingLevel ? "تعديل المستوى" : "إضافة مستوى جديد"}
+            </DialogTitle>
+            <DialogDescription className="text-muted-foreground pr-1">أدخل تفاصيل المستوى والأهداف والمكافآت للمسوّقين.</DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-6 py-6">
+            <div className="space-y-2">
+              <Label className="font-bold text-sm pr-1">اسم المستوى</Label>
+              <Input 
+                value={levelFormData.name}
+                onChange={(e) => setLevelFormData({...levelFormData, name: e.target.value})}
+                placeholder="مثال: المستوى 1 - مبتدئ"
+                className="h-14 rounded-2xl bg-muted/40 border-none px-6 text-lg font-bold focus-visible:ring-primary/20"
+              />
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="font-bold text-sm pr-1">رقم الترتيب</Label>
+                <Input 
+                  type="number"
+                  value={levelFormData.levelNumber}
+                  onChange={(e) => setLevelFormData({...levelFormData, levelNumber: parseInt(e.target.value)})}
+                  className="h-12 rounded-2xl bg-muted/40 border-none px-6 font-bold focus-visible:ring-primary/20"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="font-bold text-sm pr-1">هدف الطلبيات</Label>
+                <Input 
+                  type="number"
+                  value={levelFormData.targetOrders}
+                  onChange={(e) => setLevelFormData({...levelFormData, targetOrders: parseInt(e.target.value)})}
+                  className="h-12 rounded-2xl bg-muted/40 border-none px-6 font-bold focus-visible:ring-primary/20"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="font-bold text-sm pr-1">المكافآت (اختياري)</Label>
+              <Textarea 
+                value={levelFormData.reward}
+                onChange={(e) => setLevelFormData({...levelFormData, reward: e.target.value})}
+                placeholder="صف المكافآت التي يحصل عليها المسوّق عند الوصول لهذا المستوى..."
+                className="min-h-[120px] rounded-[2rem] bg-muted/40 border-none p-6 font-medium focus-visible:ring-primary/20"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label className="font-bold text-sm pr-1">اللون المميز في الواجهة</Label>
+              <Select value={levelFormData.color} onValueChange={(v) => setLevelFormData({...levelFormData, color: v})}>
+                <SelectTrigger className="h-12 rounded-2xl bg-muted/40 border-none px-6 font-bold focus-visible:ring-primary/20">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="rounded-[1.5rem] p-2">
+                  <SelectItem value="blue" className="rounded-xl font-bold text-blue-600">أزرق</SelectItem>
+                  <SelectItem value="green" className="rounded-xl font-bold text-green-600">أخضر</SelectItem>
+                  <SelectItem value="purple" className="rounded-xl font-bold text-purple-600">أرجواني</SelectItem>
+                  <SelectItem value="orange" className="rounded-xl font-bold text-orange-600">برتقالي</SelectItem>
+                  <SelectItem value="gold" className="rounded-xl font-bold text-yellow-600">ذهبي</SelectItem>
+                  <SelectItem value="red" className="rounded-xl font-bold text-red-600">أحمر</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <DialogFooter className="gap-3 sm:justify-start pt-4">
+            <Button variant="ghost" className="rounded-2xl h-12 px-8 font-bold" onClick={() => setIsLevelDialogOpen(false)}>إلغاء</Button>
+            <Button className="rounded-2xl h-12 px-10 font-black shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all" onClick={handleSaveLevel}>
+              {editingLevel ? "تحديث المستوى" : "إنشاء المستوى"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={isProductDialogOpen} onOpenChange={setIsProductDialogOpen}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-0 rounded-3xl border-none font-cairo" dir="rtl">
           <DialogHeader className="p-8 pb-0 text-right">

@@ -90,12 +90,40 @@ const statusConfig = {
   cancelled: { label: "ملغي", icon: XCircle, color: "text-destructive bg-destructive/10" }
 };
 
-const getAffiliateLevel = (confirmedCount: number) => {
-  if (confirmedCount >= 500) return { name: "المستوى 5 - أسطورة", next: null, target: 500, prevTarget: 200 };
-  if (confirmedCount >= 200) return { name: "المستوى 4 - محترف", next: "المستوى 5", target: 500, prevTarget: 200 };
-  if (confirmedCount >= 50) return { name: "المستوى 3 - متقدم", next: "المستوى 4", target: 200, prevTarget: 50 };
-  if (confirmedCount >= 10) return { name: "المستوى 2 - نشط", next: "المستوى 3", target: 50, prevTarget: 10 };
-  return { name: "المستوى 1 - مبتدئ", next: "المستوى 2", target: 10, prevTarget: 0 };
+// Function to get current level info based on confirmed orders and fetched levels
+const getLevelInfo = (confirmedCount: number, levels: any[]) => {
+  if (!levels || levels.length === 0) {
+    return { name: "المستوى 1 - مبتدئ", next: "المستوى 2", target: 10, prevTarget: 0, levelNumber: 1, color: "blue" };
+  }
+  
+  const sortedLevels = [...levels].sort((a, b) => b.levelNumber - a.levelNumber);
+  
+  for (const level of sortedLevels) {
+    if (confirmedCount >= level.targetOrders) {
+      const nextLevel = levels.find(l => l.levelNumber === level.levelNumber + 1);
+      return {
+        name: level.name,
+        next: nextLevel ? nextLevel.name : null,
+        target: nextLevel ? nextLevel.targetOrders : level.targetOrders,
+        prevTarget: level.targetOrders,
+        levelNumber: level.levelNumber,
+        color: level.color,
+        reward: level.reward
+      };
+    }
+  }
+  
+  // Fallback if no levels match (though level 1 usually starts at 0)
+  const level1 = levels.find(l => l.levelNumber === 1) || { name: "المستوى 1", targetOrders: 0 };
+  const level2 = levels.find(l => l.levelNumber === 2) || { name: "المستوى 2", targetOrders: 10 };
+  return { 
+    name: level1.name, 
+    next: level2.name, 
+    target: level2.targetOrders, 
+    prevTarget: 0,
+    levelNumber: 1,
+    color: level1.color || "blue"
+  };
 };
 
 const Dashboard = () => {
@@ -302,15 +330,29 @@ const Dashboard = () => {
       }
     };
 
+    const fetchLevels = async () => {
+      try {
+        const res = await fetch('https://profit-link-3eri.onrender.com/api/levels');
+        if (res.ok) {
+          const json = await res.json();
+          setDbLevels(json.data || []);
+        }
+      } catch (err) {
+        console.error('Failed to fetch levels', err);
+      }
+    };
+
     fetchDashboardStats();
     fetchOrders();
     fetchStoreSettings();
     fetchWithdrawals();
+    fetchLevels();
     // Refresh interval
     const interval = setInterval(() => {
       fetchDashboardStats();
       fetchOrders();
       fetchWithdrawals();
+      fetchLevels();
     }, 30000);
     return () => clearInterval(interval);
   }, []);
@@ -362,6 +404,13 @@ const Dashboard = () => {
 
   // Store Editor State
   const [storeSettings, setStoreSettings] = useState<StoreSettings>(defaultStoreSettings);
+
+  // Levels state
+  const [dbLevels, setDbLevels] = useState<any[]>([]);
+
+  const currentLevelInfo = useMemo(() => {
+    return getLevelInfo(dashboardStats.confirmedOrders, dbLevels);
+  }, [dashboardStats.confirmedOrders, dbLevels]);
 
   // Shipping filter states
   const [shippingSearch, setShippingSearch] = useState("");
@@ -756,7 +805,7 @@ const Dashboard = () => {
               <p className="text-[10px] text-muted-foreground font-mono mt-1 opacity-70 select-all" title="Click to copy your Affiliate ID">ID: {user?.id}</p>
               <div className="mt-2 flex items-center gap-2">
                 <span className="px-2 py-1 bg-secondary/10 text-secondary text-xs rounded-full font-medium">
-                  المستوى {mockAffiliateStats.currentLevel}
+                  {currentLevelInfo.name}
                 </span>
               </div>
             </div>
@@ -935,34 +984,37 @@ const Dashboard = () => {
                 <div className="flex items-center justify-between mb-4 relative z-10">
                   <div>
                     <p className="text-primary-foreground/70 text-sm">مستواك الحالي</p>
-                    <p className="text-2xl font-bold">{getAffiliateLevel(dashboardStats.confirmedOrders).name}</p>
+                    <p className="text-2xl font-bold">{currentLevelInfo.name}</p>
                   </div>
                   <div className="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center backdrop-blur-md">
                     <Trophy className="w-10 h-10 text-accent animate-pulse-glow" />
                   </div>
                 </div>
                 
-                {getAffiliateLevel(dashboardStats.confirmedOrders).next && (
+                {currentLevelInfo.next && (
                   <>
                     <div className="bg-white/10 rounded-full h-3 mb-3 relative z-10 overflow-hidden">
                       <motion.div
                         initial={{ width: 0 }}
-                        animate={{ width: `${Math.min(100, (dashboardStats.confirmedOrders / getAffiliateLevel(dashboardStats.confirmedOrders).target) * 100)}%` }}
+                        animate={{ width: `${Math.min(100, (dashboardStats.confirmedOrders / currentLevelInfo.target) * 100)}%` }}
                         className="bg-gradient-to-r from-secondary to-accent h-full rounded-full shadow-[0_0_15px_rgba(245,158,11,0.5)]"
                       />
                     </div>
                     <div className="flex justify-between items-center relative z-10">
                       <p className="text-xs text-primary-foreground/70">
-                        باقي {Math.max(0, getAffiliateLevel(dashboardStats.confirmedOrders).target - dashboardStats.confirmedOrders)} طلبيات مؤكدة للترقية لـ {getAffiliateLevel(dashboardStats.confirmedOrders).next}
+                        باقي {Math.max(0, currentLevelInfo.target - dashboardStats.confirmedOrders)} طلبيات مؤكدة للترقية لـ {currentLevelInfo.next}
                       </p>
                       <p className="text-[10px] font-mono text-primary-foreground/50">
-                        {dashboardStats.confirmedOrders} / {getAffiliateLevel(dashboardStats.confirmedOrders).target}
+                        {dashboardStats.confirmedOrders} / {currentLevelInfo.target}
                       </p>
                     </div>
                   </>
                 )}
-                {!getAffiliateLevel(dashboardStats.confirmedOrders).next && (
+                {!currentLevelInfo.next && (
                   <p className="text-sm text-accent font-bold mt-2 relative z-10">
+                    أنت الآن في أعلى مستوى متاح! تهانينا 🎉
+                  </p>
+                )}
                     تهانينا! لقد وصلت لأعلى مستوى حالياً 🎉
                   </p>
                 )}
@@ -1885,33 +1937,63 @@ const Dashboard = () => {
 
           {/* Levels Tab */}
           {activeTab === "levels" && (
-            <div className="grid md:grid-cols-3 gap-6">
-              {[
-                { level: 1, name: "برونزي", orders: 0, commission: "50%", color: "from-amber-600 to-amber-800" },
-                { level: 2, name: "فضي", orders: 30, commission: "50% + امتيازات", color: "from-gray-400 to-gray-600" },
-                { level: 3, name: "ذهبي", orders: 100, commission: "50% + دعم VIP", color: "from-yellow-400 to-yellow-600" },
-              ].map((tier, index) => (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {dbLevels.map((tier, index) => (
                 <motion.div
-                  key={tier.level}
+                  key={tier.id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
-                  className={`bg-gradient-to-br ${tier.color} rounded-2xl p-6 text-white ${
-                    mockAffiliateStats.currentLevel === tier.level ? "ring-4 ring-secondary" : ""
+                  className={`bg-card border-2 rounded-[2.5rem] p-8 relative overflow-hidden transition-all shadow-sm ${
+                    currentLevelInfo.levelNumber === tier.levelNumber ? "border-primary shadow-xl shadow-primary/10" : "border-border/50 hover:border-primary/30"
                   }`}
                 >
-                  <Trophy className="w-12 h-12 mb-4" />
-                  <h3 className="text-2xl font-bold">المستوى {tier.level}</h3>
-                  <p className="text-xl font-semibold mt-1">{tier.name}</p>
-                  <div className="mt-4 space-y-2 text-white/90">
-                    <p>• {tier.orders}+ طلبية مؤكدة</p>
-                    <p>• عمولة: {tier.commission}</p>
+                  <div className={`w-14 h-14 rounded-2xl mb-6 flex items-center justify-center text-white shadow-lg bg-gradient-to-br ${
+                    tier.color === 'blue' ? 'from-blue-500 to-blue-700' :
+                    tier.color === 'green' ? 'from-green-500 to-green-700' :
+                    tier.color === 'purple' ? 'from-purple-500 to-purple-700' :
+                    tier.color === 'orange' ? 'from-orange-500 to-orange-700' :
+                    tier.color === 'gold' ? 'from-yellow-400 to-yellow-600' :
+                    'from-gray-500 to-gray-700'
+                  }`}>
+                    <Trophy className="w-7 h-7" />
                   </div>
-                  {mockAffiliateStats.currentLevel === tier.level && (
-                    <div className="mt-4 bg-white/20 rounded-lg px-3 py-1.5 text-sm font-medium inline-block">
-                      ✓ مستواك الحالي
+                  
+                  <div className="space-y-2 relative z-10">
+                    <h3 className="text-3xl font-black text-foreground">المستوى {tier.levelNumber}</h3>
+                    <p className="text-xl font-bold text-muted-foreground">{tier.name}</p>
+                  </div>
+
+                  <div className="mt-8 space-y-4 relative z-10">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-secondary/10 flex items-center justify-center text-secondary">
+                        <CheckCircle className="w-4 h-4" />
+                      </div>
+                      <span className="font-bold text-sm text-foreground/80">{tier.targetOrders}+ طلبية مؤكدة</span>
+                    </div>
+                    {tier.reward && (
+                      <div className="flex items-start gap-3 p-4 bg-muted/30 rounded-2xl border border-dashed border-border">
+                        <span className="text-xl">🎁</span>
+                        <p className="text-xs font-bold leading-relaxed text-muted-foreground">{tier.reward}</p>
+                      </div>
+                    )}
+                  </div>
+
+                  {currentLevelInfo.levelNumber === tier.levelNumber && (
+                    <div className="mt-6 bg-primary text-white rounded-xl px-4 py-2.5 text-sm font-black flex items-center justify-center gap-2 shadow-lg shadow-primary/20">
+                      <Sparkles className="w-4 h-4" />
+                      مستواك الحالي
                     </div>
                   )}
+
+                  {currentLevelInfo.levelNumber < tier.levelNumber && (
+                    <div className="mt-6 bg-muted/50 text-muted-foreground rounded-xl px-4 py-2.5 text-sm font-bold flex items-center justify-center gap-2">
+                       قيد التقدم
+                    </div>
+                  )}
+
+                  {/* Decorative background */}
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -mr-16 -mt-16" />
                 </motion.div>
               ))}
             </div>
