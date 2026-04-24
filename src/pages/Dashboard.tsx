@@ -2131,18 +2131,15 @@ const Dashboard = () => {
                       </div>
 
                       <div className="space-y-2">
-                        <Label className="text-sm font-bold pr-1">رابط الشعار (Logo URL)</Label>
-                        <div className="flex gap-4">
-                          <div className="flex-1 relative group">
-                            <Input 
-                              value={storeSettings.storeLogo}
-                              onChange={(e) => setStoreSettings({...storeSettings, storeLogo: e.target.value})}
-                              placeholder="ضع رابط الشعار أو ارفعه من جهازك"
-                              className="h-12 rounded-xl bg-muted/30 border-none px-4 flex-1"
-                            />
-                            <div className="absolute left-2 top-1/2 -translate-y-1/2 flex items-center gap-2">
-                              <label className={`p-2 hover:bg-background/80 rounded-lg cursor-pointer transition-all text-primary border border-primary/20 ${isUploading ? "opacity-50 cursor-not-allowed" : ""}`}>
-                                {isUploading ? <Sparkles className="w-5 h-5 animate-spin" /> : <PlusCircle className="w-5 h-5" />}
+                        <Label className="text-sm font-bold pr-1">شعار المتجر (Logo)</Label>
+                        <div className="flex items-center gap-4">
+                          {storeSettings.storeLogo ? (
+                            <div className="relative group w-24 h-24 rounded-3xl overflow-hidden border-2 border-primary/20 shadow-md bg-muted">
+                              <img src={storeSettings.storeLogo} alt="Logo" className="w-full h-full object-contain p-2" />
+                              <label className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer">
+                                <div className="bg-white/20 backdrop-blur-md p-2 rounded-full text-white">
+                                  <PlusCircle className="w-6 h-6" />
+                                </div>
                                 <input 
                                   type="file" 
                                   className="hidden" 
@@ -2154,13 +2151,35 @@ const Dashboard = () => {
                                   }}
                                 />
                               </label>
+                              <button 
+                                onClick={() => setStoreSettings({...storeSettings, storeLogo: ""})}
+                                className="absolute top-1 right-1 bg-destructive/80 text-white p-1 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                              </button>
                             </div>
-                          </div>
-                          {storeSettings.storeLogo && (
-                            <div className="w-12 h-12 rounded-xl overflow-hidden border border-border shrink-0 shadow-sm">
-                              <img src={storeSettings.storeLogo} alt="Logo Preview" className="w-full h-full object-cover" />
-                            </div>
+                          ) : (
+                            <label className="flex-1 h-24 rounded-[2rem] border-2 border-dashed border-primary/20 bg-primary/5 flex flex-col items-center justify-center cursor-pointer hover:bg-primary/10 transition-all gap-2 group">
+                              <div className="bg-primary/10 p-2 rounded-full text-primary/50 group-hover:text-primary transition-colors">
+                                {isUploading ? <Sparkles className="w-6 h-6 animate-spin" /> : <PlusCircle className="w-6 h-6" />}
+                              </div>
+                              <span className="text-[10px] font-bold text-muted-foreground group-hover:text-primary">ارفع شعار المتجر</span>
+                              <input 
+                                type="file" 
+                                className="hidden" 
+                                accept="image/*"
+                                disabled={isUploading}
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) handleImageUpload(file, 'logo');
+                                }}
+                              />
+                            </label>
                           )}
+                          <div className="flex-1 space-y-1">
+                            <p className="text-xs font-bold">هوية متجرك</p>
+                            <p className="text-[10px] text-muted-foreground leading-relaxed">يظهر الشعار في أعلى المتجر وفي فواتير الطلبيات. يفضل استخدام خلفية شفافة.</p>
+                          </div>
                         </div>
                       </div>
 
@@ -2224,18 +2243,43 @@ const Dashboard = () => {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-sm font-bold pr-1">رابط الصورة (Banner)</Label>
-                        <div className="relative group">
-                          <Input 
-                            value={storeSettings.hero?.bannerUrl || ""}
-                            onChange={(e) => setStoreSettings({...storeSettings, hero: {...storeSettings.hero, bannerUrl: e.target.value}})}
-                            className="h-11 rounded-xl bg-muted/30 border-none px-4 text-xs font-mono"
-                            placeholder="ضع رابط البانر أو ارفعه من جهازك"
-                            dir="ltr"
-                          />
-                          <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-2">
-                            <label className={`p-2 hover:bg-background/80 rounded-lg cursor-pointer transition-all text-primary border border-primary/20 ${isUploading ? "opacity-50 cursor-not-allowed" : ""}`}>
-                              {isUploading ? <Sparkles className="w-4 h-4 animate-spin" /> : <PlusCircle className="w-4 h-4" />}
+                        <Label className="text-sm font-bold pr-1">صورة الواجهة (Banner)</Label>
+                        <div className="w-full">
+                          {storeSettings.hero?.bannerUrl ? (
+                            <div className="relative group w-full aspect-[21/9] rounded-[2rem] overflow-hidden border-2 border-primary/20 shadow-lg bg-muted">
+                              <img src={storeSettings.hero.bannerUrl} alt="Banner" className="w-full h-full object-cover" />
+                              <label className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center cursor-pointer text-white gap-2">
+                                <div className="bg-white/20 backdrop-blur-md p-3 rounded-full">
+                                  {isUploading ? <Sparkles className="w-8 h-8 animate-spin" /> : <PlusCircle className="w-8 h-8" />}
+                                </div>
+                                <span className="font-bold text-sm">تغيير الصورة</span>
+                                <input 
+                                  type="file" 
+                                  className="hidden" 
+                                  accept="image/*"
+                                  disabled={isUploading}
+                                  onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (file) handleImageUpload(file, 'banner');
+                                  }}
+                                />
+                              </label>
+                              <button 
+                                onClick={() => setStoreSettings({...storeSettings, hero: {...storeSettings.hero, bannerUrl: ""}})}
+                                className="absolute top-4 right-4 bg-destructive/90 text-white p-2 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                              >
+                                <Trash2 className="w-5 h-5" />
+                              </button>
+                            </div>
+                          ) : (
+                            <label className="w-full h-40 rounded-[2.5rem] border-2 border-dashed border-primary/20 bg-primary/5 flex flex-col items-center justify-center cursor-pointer hover:bg-primary/10 transition-all gap-3 group">
+                              <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary/50 group-hover:text-primary transition-colors">
+                                {isUploading ? <Sparkles className="w-8 h-8 animate-spin" /> : <PlusCircle className="w-8 h-8" />}
+                              </div>
+                              <div className="text-center">
+                                <p className="text-sm font-bold text-foreground">ارفع صورة الواجهة</p>
+                                <p className="text-[10px] text-muted-foreground mt-1">المقاس الموصى به: 1920x800</p>
+                              </div>
                               <input 
                                 type="file" 
                                 className="hidden" 
@@ -2247,7 +2291,7 @@ const Dashboard = () => {
                                 }}
                               />
                             </label>
-                          </div>
+                          )}
                         </div>
                         <div className="grid grid-cols-3 gap-2 mt-2">
                            {[
