@@ -20,7 +20,9 @@ const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(cors({
-  origin: '*', 
+  origin: function (origin, callback) {
+    callback(null, true);
+  },
   credentials: true
 }));
 
