@@ -158,6 +158,38 @@ router.get('/pages/:id/public', async (req: Request, res: Response): Promise<any
   }
 });
 
+// GET /api/store/product-page/:productId/:affiliateId (Public: Fetch by product and affiliate)
+router.get('/product-page/:productId/:affiliateId', async (req: Request, res: Response): Promise<any> => {
+  try {
+    const { productId, affiliateId } = req.params;
+    
+    // Find the latest published landing page for this product and affiliate
+    const page = await prisma.landingPage.findFirst({
+      where: { 
+        productId: String(productId),
+        ownerId: String(affiliateId),
+        status: 'published'
+      },
+      orderBy: { updatedAt: 'desc' }
+    });
+
+    if (!page) {
+      return res.status(404).json({ error: 'Landing page not found' });
+    }
+
+    // Increment views safely
+    prisma.landingPage.update({
+      where: { id: page.id },
+      data: { views: { increment: 1 } }
+    }).catch(err => console.error('Failed to increment views', err));
+
+    res.json({ data: page.pageConfig, id: page.id });
+  } catch (error) {
+    console.error('Public product page lookup error:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
 // GET /api/store/pages (List all landing pages for the affiliate)
 router.get('/pages', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
