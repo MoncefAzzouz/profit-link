@@ -2339,22 +2339,42 @@ const Admin = () => {
                     </div>
                     <div className="space-y-2">
                       <Label className="text-xs font-bold text-primary">العمولة (دج)</Label>
-                      <div className="relative">
-                        <Input 
-                          type="number"
-                          value={productFormData.commission} 
-                          onChange={e => setProductFormData({...productFormData, commission: Number(e.target.value)})} 
-                          placeholder="50% من سعر البيع؟"
-                          className="h-12 rounded-xl bg-primary/5 border-primary/20 px-4 font-black text-primary text-xl"
-                        />
+                      <div className="flex items-center gap-3">
                         <Button 
                           type="button"
-                          variant="ghost" 
-                          size="sm" 
-                          onClick={() => setProductFormData({...productFormData, commission: (productFormData.price || 0) * 0.5})}
-                          className="absolute left-2 top-1/2 -translate-y-1/2 h-8 text-[10px] font-black hover:bg-primary/10"
+                          variant="outline" 
+                          size="icon" 
+                          onClick={() => setProductFormData({...productFormData, commission: Math.max(0, (productFormData.commission || 0) - 100)})}
+                          className="h-12 w-12 rounded-xl border-primary/20 text-primary hover:bg-primary/10 shrink-0"
                         >
-                          حساب 50%
+                          -
+                        </Button>
+                        <div className="relative flex-1">
+                          <Input 
+                            type="number"
+                            value={productFormData.commission} 
+                            onChange={e => setProductFormData({...productFormData, commission: Number(e.target.value)})} 
+                            placeholder="50% من سعر البيع؟"
+                            className="h-14 rounded-xl bg-primary/5 border-primary/20 px-4 font-black text-primary text-2xl text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                          />
+                          <Button 
+                            type="button"
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={() => setProductFormData({...productFormData, commission: (productFormData.price || 0) * 0.5})}
+                            className="absolute left-2 top-1/2 -translate-y-1/2 h-8 text-[10px] font-black hover:bg-primary/10 px-2"
+                          >
+                            حساب 50%
+                          </Button>
+                        </div>
+                        <Button 
+                          type="button"
+                          variant="outline" 
+                          size="icon" 
+                          onClick={() => setProductFormData({...productFormData, commission: (productFormData.commission || 0) + 100})}
+                          className="h-12 w-12 rounded-xl border-primary/20 text-primary hover:bg-primary/10 shrink-0"
+                        >
+                          +
                         </Button>
                       </div>
                     </div>
@@ -2420,28 +2440,8 @@ const Admin = () => {
                     </div>
                  </div>
 
-                 <div className="flex gap-4 pt-4 border-t border-border">
-                    <div className="flex items-center gap-2">
-                       <Switch 
-                        checked={productFormData.isTrend} 
-                        onCheckedChange={v => setProductFormData({...productFormData, isTrend: v})} 
-                       />
-                       <span className="text-sm font-bold flex items-center gap-1.5"><TrendingUp className="w-4 h-4 text-orange-500" /> ترند</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                       <Switch 
-                        checked={productFormData.isFeatured} 
-                        onCheckedChange={v => setProductFormData({...productFormData, isFeatured: v})} 
-                       />
-                       <span className="text-sm font-bold flex items-center gap-1.5"><Star className="w-4 h-4 text-yellow-500 fill-yellow-500" /> مميز</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                       <Switch 
-                        checked={productFormData.isVisible} 
-                        onCheckedChange={v => setProductFormData({...productFormData, isVisible: v})} 
-                       />
-                       <span className="text-sm font-bold flex items-center gap-1.5"><Eye className="w-4 h-4" /> مرئي</span>
-                    </div>
+                 <div className="pt-4 border-t border-border">
+                    <p className="text-xs text-muted-foreground font-medium">ملاحظة: سيتم نشر المنتج فوراً وبشكل مرئي للمسوّقين.</p>
                  </div>
               </div>
             </div>

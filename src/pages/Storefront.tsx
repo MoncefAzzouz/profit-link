@@ -57,8 +57,6 @@ const Storefront = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [stockFilter, setStockFilter] = useState("all");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-  const [showOnlyTrending, setShowOnlyTrending] = useState(false);
-  const [showOnlyFeatured, setShowOnlyFeatured] = useState(false);
   const [isQuickViewOpen, setIsQuickViewOpen] = useState(false);
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
 
@@ -118,10 +116,7 @@ const Storefront = () => {
         const matchesStock = stockFilter === "all" || 
                            (stockFilter === "in-stock" && product.stock > 0) || 
                            (stockFilter === "low" && product.stock <= 50 && product.stock > 0);
-        const matchesTrending = !showOnlyTrending || product.isTrend;
-        const matchesFeatured = !showOnlyFeatured || product.isFeatured;
-
-        return matchesSearch && matchesCategory && matchesPrice && matchesStock && matchesTrending && matchesFeatured;
+        return matchesSearch && matchesCategory && matchesPrice && matchesStock;
       })
       .sort((a, b) => {
         if (sortBy === "price-asc") return a.price - b.price;
@@ -130,7 +125,7 @@ const Storefront = () => {
         if (sortBy === "stock-desc") return b.stock - a.stock;
         return 0;
       });
-  }, [searchQuery, selectedCategory, selectedPriceRange, stockFilter, showOnlyTrending, showOnlyFeatured, sortBy, products]);
+  }, [searchQuery, selectedCategory, selectedPriceRange, stockFilter, sortBy, products]);
 
   const categoryIcons: Record<string, any> = {
     "الكل": LayoutGrid,
@@ -363,10 +358,6 @@ const Storefront = () => {
                     setSelectedPriceRange={setSelectedPriceRange}
                     stockFilter={stockFilter}
                     setStockFilter={setStockFilter}
-                    showOnlyTrending={showOnlyTrending}
-                    setShowOnlyTrending={setShowOnlyTrending}
-                    showOnlyFeatured={showOnlyFeatured}
-                    setShowOnlyFeatured={setShowOnlyFeatured}
                     categoryIcons={categoryIcons}
                     dbCategories={dbCategories}
                     activeCategories={activeCategories}
@@ -402,10 +393,6 @@ const Storefront = () => {
                 setSelectedPriceRange={setSelectedPriceRange}
                 stockFilter={stockFilter}
                 setStockFilter={setStockFilter}
-                showOnlyTrending={showOnlyTrending}
-                setShowOnlyTrending={setShowOnlyTrending}
-                showOnlyFeatured={showOnlyFeatured}
-                setShowOnlyFeatured={setShowOnlyFeatured}
                 categoryIcons={categoryIcons}
                 dbCategories={dbCategories}
                 activeCategories={activeCategories}
@@ -419,8 +406,6 @@ const Storefront = () => {
                   setSelectedCategory("الكل");
                   setSelectedPriceRange([0, 20000]);
                   setStockFilter("all");
-                  setShowOnlyTrending(false);
-                  setShowOnlyFeatured(false);
                 }}
               >
                 مسح كافة الفلاتر
@@ -605,8 +590,6 @@ const FilterContent = ({
   selectedCategory, setSelectedCategory, 
   selectedPriceRange, setSelectedPriceRange,
   stockFilter, setStockFilter,
-  showOnlyTrending, setShowOnlyTrending,
-  showOnlyFeatured, setShowOnlyFeatured,
   categoryIcons,
   dbCategories,
   activeCategories
@@ -669,53 +652,6 @@ const FilterContent = ({
         </div>
       </div>
 
-      {/* Quick Toggles */}
-      <div className="space-y-4">
-        <h4 className="font-bold text-foreground text-lg">فرز سريع</h4>
-        <div className="space-y-3">
-          <button 
-            onClick={() => setShowOnlyTrending(!showOnlyTrending)}
-            className={cn(
-              "w-full flex items-center justify-between p-4 rounded-2xl border-2 transition-all",
-              showOnlyTrending ? "border-orange-500 bg-orange-500/5" : "border-border hover:border-border/80"
-            )}
-          >
-            <div className="flex items-center gap-3">
-              <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", showOnlyTrending ? "bg-orange-500 text-white" : "bg-muted text-orange-500")}>
-                <Flame className="w-5 h-5" />
-              </div>
-              <span className="font-bold text-sm lowercase">Trending</span>
-            </div>
-            <div className={cn("w-10 h-5 rounded-full relative transition-colors", showOnlyTrending ? "bg-orange-500" : "bg-muted")}>
-              <motion.div 
-                animate={{ x: showOnlyTrending ? -20 : 0 }}
-                className="absolute right-1 top-1 w-3 h-3 rounded-full bg-white shadow-sm"
-              />
-            </div>
-          </button>
-
-          <button 
-            onClick={() => setShowOnlyFeatured(!showOnlyFeatured)}
-            className={cn(
-              "w-full flex items-center justify-between p-4 rounded-2xl border-2 transition-all",
-              showOnlyFeatured ? "border-yellow-500 bg-yellow-500/5" : "border-border hover:border-border/80"
-            )}
-          >
-            <div className="flex items-center gap-3">
-              <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", showOnlyFeatured ? "bg-yellow-500 text-white" : "bg-muted text-yellow-500")}>
-                <Star className="w-5 h-5" />
-              </div>
-              <span className="font-bold text-sm lowercase">Featured</span>
-            </div>
-            <div className={cn("w-10 h-5 rounded-full relative transition-colors", showOnlyFeatured ? "bg-yellow-500" : "bg-muted")}>
-              <motion.div 
-                animate={{ x: showOnlyFeatured ? -20 : 0 }}
-                className="absolute right-1 top-1 w-3 h-3 rounded-full bg-white shadow-sm"
-              />
-            </div>
-          </button>
-        </div>
-      </div>
 
       {/* Stock Status */}
       <div className="space-y-4">
