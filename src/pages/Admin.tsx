@@ -292,6 +292,7 @@ const Admin = () => {
   // Fetch products from DB
   const fetchProducts = async () => {
     const token = localStorage.getItem("token");
+    if (!token) return;
     try {
       const res = await fetch('https://profit-link-3eri.onrender.com/api/products/all', {
         headers: { 'Authorization': `Bearer ${token}` }
