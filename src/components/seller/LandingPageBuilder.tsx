@@ -696,7 +696,7 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
           </div>
           <div className="flex justify-between text-xs">
             <span className="opacity-60">التوصيل</span>
-            <span className="font-bold text-primary">اختر الولاية</span>
+            <span className="font-bold text-primary">{p.showFreeShipping ? "مجاني ✅" : "اختر الولاية"}</span>
           </div>
           <div className="border-t border-border/30 pt-2.5 flex justify-between font-black text-base">
             <span>المجموع</span>
@@ -791,9 +791,9 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
                 {p.sections.includes("trust-badges") && (
                   <div className="grid grid-cols-2 gap-3" dir="rtl">
                     {[
-                      { icon: Truck, t: "توصيل سريع", s: "لكل الولايات" },
+                      { icon: Truck, t: p.showFreeShipping ? "توصيل مجاني" : "توصيل سريع", s: "لكل الولايات" },
                       { icon: Shield, t: "ضمان الجودة", s: "منتجات أصلية" },
-                      { icon: Clock, t: "توصيل سريع", s: "3-5 أيام" },
+                      { icon: Clock, t: p.showFreeShipping ? "توصيل مجاني" : "توصيل سريع", s: "3-5 أيام" },
                       { icon: Phone, t: "دعم متواصل", s: "24/7" },
                     ].map((b, i) => (
                       <div key={i} className="flex items-center gap-3 p-3 bg-card border border-border/50 rounded-xl shadow-sm">
@@ -1030,8 +1030,8 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
               </h3>
               <div className="grid gap-3">
                 {[
-                  { icon: Truck, text: "توصيل سريع لكل الولايات" },
-                  { icon: Clock, text: "التوصيل خلال 3-5 أيام" },
+                  { icon: Truck, text: p.showFreeShipping ? "توصيل مجاني لكل الولايات" : "توصيل سريع لكل الولايات" },
+                  { icon: Clock, text: p.showFreeShipping ? "التوصيل مجاني" : "التوصيل خلال 3-5 أيام" },
                   { icon: ShoppingCart, text: "الدفع عند الاستلام COD" },
                   { icon: Phone, text: "دعم متواصل 24/7" },
                 ].map((item, i) => (
@@ -1302,6 +1302,30 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
                   <div className="space-y-2">
                     <Label className="text-xs font-bold opacity-70">نص الاستعجال</Label>
                     <Input value={editingPage.urgencyText} onChange={(e) => updatePage("urgencyText", e.target.value)} className="rounded-xl h-9 text-sm" />
+                  </div>
+
+                  {/* Free Delivery Toggle */}
+                  <div className="flex items-center justify-between p-3 bg-primary/5 rounded-2xl border border-primary/10">
+                    <div className="space-y-0.5">
+                      <Label className="text-xs font-bold">توصيل مجاني</Label>
+                      <p className="text-[10px] text-muted-foreground">تفعيل التوصيل المجاني لكل الولايات</p>
+                    </div>
+                    <Switch 
+                      checked={editingPage.showFreeShipping} 
+                      onCheckedChange={(checked) => updatePage("showFreeShipping", checked)} 
+                    />
+                  </div>
+
+                  {/* Free Delivery Toggle */}
+                  <div className="flex items-center justify-between p-3 bg-primary/5 rounded-2xl border border-primary/10">
+                    <div className="space-y-0.5">
+                      <Label className="text-xs font-bold">توصيل مجاني</Label>
+                      <p className="text-[10px] text-muted-foreground">تفعيل التوصيل المجاني لكل الولايات</p>
+                    </div>
+                    <Switch 
+                      checked={editingPage.showFreeShipping} 
+                      onCheckedChange={(checked) => updatePage("showFreeShipping", checked)} 
+                    />
                   </div>
 
                   {/* Features */}
