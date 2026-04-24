@@ -471,6 +471,47 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
     savePagesLocally(newPages);
   };
 
+  const applyTemplate = (tmplId: string) => {
+    if (!editingPage) return;
+    
+    let updates: Partial<LandingPageConfig> = { template: tmplId };
+    
+    switch (tmplId) {
+      case "original":
+        updates = { ...updates, backgroundColor: "#ffffff", primaryColor: "#3b82f6", fontFamily: "cairo", shadowIntensity: "md" };
+        break;
+      case "modern":
+        updates = { ...updates, backgroundColor: "#f8fafc", primaryColor: "#8b5cf6", fontFamily: "tajawal", shadowIntensity: "lg" };
+        break;
+      case "bold":
+        updates = { ...updates, backgroundColor: "#fffbeb", primaryColor: "#f97316", fontFamily: "almarai", shadowIntensity: "xl", ctaStyle: "square" };
+        break;
+      case "minimal":
+        updates = { ...updates, backgroundColor: "#ffffff", primaryColor: "#0f172a", fontFamily: "ibm-plex", shadowIntensity: "none", ctaStyle: "rounded" };
+        break;
+      case "dark":
+        updates = { ...updates, backgroundColor: "#020617", primaryColor: "#10b981", accentColor: "#3b82f6", fontFamily: "cairo", shadowIntensity: "lg", ctaStyle: "pill" };
+        break;
+      case "luxury":
+        updates = { ...updates, backgroundColor: "#1e1b4b", primaryColor: "#eab308", accentColor: "#f59e0b", fontFamily: "readex-pro", shadowIntensity: "xl" };
+        break;
+      case "neon":
+        updates = { ...updates, backgroundColor: "#020617", primaryColor: "#ec4899", accentColor: "#a855f7", fontFamily: "cairo", shadowIntensity: "lg" };
+        break;
+      case "tiktok":
+        updates = { ...updates, backgroundColor: "#0f172a", primaryColor: "#ec4899", accentColor: "#06b6d4", heroLayout: "fullscreen" };
+        break;
+      case "whatsapp":
+        updates = { ...updates, backgroundColor: "#eff6ff", primaryColor: "#10b981", accentColor: "#059669", ctaText: "اطلب عبر واتساب" };
+        break;
+    }
+
+    const updated = { ...editingPage, ...updates };
+    setEditingPage(updated as LandingPageConfig);
+    const newPages = pages.map(p => p.id === updated.id ? (updated as LandingPageConfig) : p);
+    savePagesLocally(newPages);
+  };
+
   const toggleSection = (sectionId: string) => {
     if (!editingPage) return;
     const section = availableSections.find(s => s.id === sectionId);
@@ -692,16 +733,18 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
                   )}
                 </div>
 
-                <div className="grid grid-cols-2 gap-3" dir="rtl">
-                  {p.features.slice(0, 4).map((f, i) => (
-                    <div key={i} className="flex items-center gap-2 p-3 bg-muted/30 border border-border/50 rounded-xl">
-                      <div className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: `${p.primaryColor}15` }}>
-                        <Check className="w-3.5 h-3.5" style={{ color: p.primaryColor }} />
+                {p.sections.includes("features") && (
+                  <div className="grid grid-cols-2 gap-3" dir="rtl">
+                    {p.features.slice(0, 4).map((f, i) => (
+                      <div key={i} className="flex items-center gap-2 p-3 bg-muted/30 border border-border/50 rounded-xl">
+                        <div className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: `${p.primaryColor}15` }}>
+                          <Check className="w-3.5 h-3.5" style={{ color: p.primaryColor }} />
+                        </div>
+                        <span className="text-[10px] font-bold leading-tight">{f}</span>
                       </div>
-                      <span className="text-[10px] font-bold leading-tight">{f}</span>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* Right Side: Info & Form */}
@@ -728,22 +771,24 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
                 </div>
 
                 {/* Trust Badges Grid */}
-                <div className="grid grid-cols-2 gap-3" dir="rtl">
-                  {[
-                    { icon: Truck, t: "توصيل سريع", s: "لكل الولايات" },
-                    { icon: Shield, t: "ضمان الجودة", s: "منتجات أصلية" },
-                    { icon: Clock, t: "توصيل سريع", s: "3-5 أيام" },
-                    { icon: Phone, t: "دعم متواصل", s: "24/7" },
-                  ].map((b, i) => (
-                    <div key={i} className="flex items-center gap-3 p-3 bg-card border border-border/50 rounded-xl shadow-sm">
-                      <b.icon className="w-8 h-8 shrink-0 opacity-80" style={{ color: p.primaryColor }} />
-                      <div>
-                        <p className="text-[10px] font-black leading-none">{b.t}</p>
-                        <p className="text-[8px] opacity-60 mt-1">{b.s}</p>
+                {p.sections.includes("trust-badges") && (
+                  <div className="grid grid-cols-2 gap-3" dir="rtl">
+                    {[
+                      { icon: Truck, t: "توصيل سريع", s: "لكل الولايات" },
+                      { icon: Shield, t: "ضمان الجودة", s: "منتجات أصلية" },
+                      { icon: Clock, t: "توصيل سريع", s: "3-5 أيام" },
+                      { icon: Phone, t: "دعم متواصل", s: "24/7" },
+                    ].map((b, i) => (
+                      <div key={i} className="flex items-center gap-3 p-3 bg-card border border-border/50 rounded-xl shadow-sm">
+                        <b.icon className="w-8 h-8 shrink-0 opacity-80" style={{ color: p.primaryColor }} />
+                        <div>
+                          <p className="text-[10px] font-bold leading-none">{b.t}</p>
+                          <p className="text-[8px] opacity-60 mt-1">{b.s}</p>
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
 
                 <OrderForm />
               </div>
@@ -1299,7 +1344,7 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
                     {templates.map((tmpl) => (
                       <button
                         key={tmpl.id}
-                        onClick={() => updatePage("template", tmpl.id)}
+                        onClick={() => applyTemplate(tmpl.id)}
                         className={`relative p-2.5 rounded-xl border-2 transition-all text-center space-y-1 ${editingPage.template === tmpl.id ? "border-primary bg-primary/5 shadow-md" : "border-border/50 hover:border-border hover:shadow-sm"
                           }`}
                       >
