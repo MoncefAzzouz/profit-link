@@ -671,7 +671,7 @@ const Dashboard = () => {
       }`}>
         <div className="flex flex-col h-full">
           {/* Logo */}
-          <div className="p-6 border-b border-border">
+          <div className="p-6 border-b border-border shrink-0">
             <Link to="/" className="flex items-center gap-3">
               <div className="w-10 h-10 bg-gradient-to-br from-secondary to-emerald-600 rounded-xl flex items-center justify-center">
                 <span className="text-white font-bold text-lg">L</span>
@@ -681,7 +681,7 @@ const Dashboard = () => {
           </div>
 
           {/* User Info */}
-          <div className="p-4 border-b border-border">
+          <div className="p-4 border-b border-border shrink-0">
             <div className="bg-muted rounded-xl p-4">
               <p className="font-semibold text-foreground">{user?.name}</p>
               <p className="text-sm text-muted-foreground">{user?.email}</p>
@@ -695,7 +695,7 @@ const Dashboard = () => {
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 p-4 space-y-1">
+          <nav className="flex-1 p-4 space-y-1 overflow-y-auto scrollbar-hide">
             {sidebarItems.map((item) => (
               <button
                 key={item.id}
@@ -716,7 +716,7 @@ const Dashboard = () => {
           </nav>
 
           {/* Logout */}
-          <div className="p-4 border-t border-border">
+          <div className="p-4 border-t border-border shrink-0">
             <button
               onClick={handleLogout}
               className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-destructive hover:bg-destructive/10 transition-all"

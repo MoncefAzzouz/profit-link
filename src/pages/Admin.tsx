@@ -642,7 +642,7 @@ const Admin = () => {
         }`}>
         <div className="flex flex-col h-full">
           {/* Logo */}
-          <div className="p-4 pt-5">
+          <div className="p-4 pt-5 shrink-0">
             <div className="rounded-2xl border border-white/10 bg-white/[0.06] p-4 backdrop-blur-md">
               <Link to="/" className="flex items-center gap-3">
                 <div className="w-11 h-11 bg-gradient-to-br from-emerald-400 to-emerald-700 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/30 ring-2 ring-white/10">
@@ -677,7 +677,7 @@ const Admin = () => {
           </nav>
 
           {/* Footer */}
-          <div className="p-4 border-t border-white/[0.08]">
+          <div className="p-4 border-t border-white/[0.08] shrink-0">
             <Link to="/dashboard">
               <Button variant="secondary" className="w-full gap-2 rounded-xl bg-white/10 text-white border-white/15 hover:bg-white/20 hover:text-white">
                 <ChevronLeft className="w-4 h-4" />

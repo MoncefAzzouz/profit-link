@@ -308,7 +308,7 @@ const SellerDashboard = () => {
         sidebarOpen ? "translate-x-0" : "translate-x-full lg:translate-x-0"
       }`}>
         <div className="flex flex-col h-full">
-          <div className="p-4 pt-5">
+          <div className="p-4 pt-5 shrink-0">
             <div className="rounded-2xl border border-white/10 bg-white/[0.07] p-4 backdrop-blur-md">
               <Link to="/" className="flex items-center gap-3">
                 <div className="w-11 h-11 bg-gradient-to-br from-emerald-400 to-teal-600 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-600/35 ring-2 ring-white/15">
@@ -322,7 +322,7 @@ const SellerDashboard = () => {
             </div>
           </div>
 
-          <div className="px-4 pb-4">
+          <div className="px-4 pb-4 shrink-0">
             <div className="rounded-2xl border border-emerald-400/20 bg-gradient-to-br from-emerald-500/10 to-teal-900/20 p-4 backdrop-blur-sm">
               <p className="font-semibold text-white truncate">{user.storeName || user.name}</p>
               <p className="text-sm text-emerald-100/75 truncate">{user.email}</p>
@@ -353,7 +353,7 @@ const SellerDashboard = () => {
             ))}
           </nav>
 
-          <div className="p-4 border-t border-white/[0.08]">
+          <div className="p-4 border-t border-white/[0.08] shrink-0">
             <button
               type="button"
               onClick={handleLogout}
