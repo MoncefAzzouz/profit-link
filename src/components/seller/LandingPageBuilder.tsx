@@ -567,7 +567,7 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
   };
 
   const viewPage = (page: LandingPageConfig) => {
-    const link = `${window.location.origin}/lp/${page.id}`;
+    const link = getProductUrl(page);
     window.open(link, "_blank");
   };
 
@@ -598,6 +598,21 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
     const tc = isDark(p.backgroundColor) ? "#ffffff" : "#0f172a";
     const stc = isDark(p.backgroundColor) ? "#94a3b8" : "#64748b";
     const br = `${p.borderRadius}px`;
+
+    // Handle styling for different templates
+    if (p.template === "dark") {
+      p.backgroundColor = "#0f172a";
+      p.primaryColor = p.primaryColor || "#38bdf8";
+    }
+    if (p.template === "bold") {
+      p.borderRadius = 0;
+      p.fontFamily = "cairo";
+    }
+    if (p.template === "minimal") {
+      p.backgroundColor = "#ffffff";
+      p.shadowIntensity = "none";
+    }
+
     const discountPercent = p.originalPrice > p.price ? Math.round((1 - p.price / p.originalPrice) * 100) : 0;
 
     const shadowMap = {
@@ -702,13 +717,13 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
       return (
         <div className="h-full overflow-y-auto scrollbar-hide flex flex-col" style={{ backgroundColor: p.backgroundColor, fontFamily: p.fontFamily, color: tc }}>
           {/* Header */}
-          <div className="sticky top-0 z-10 flex items-center justify-between px-4 py-3 border-b backdrop-blur-md" style={{ backgroundColor: `${p.backgroundColor}90`, borderColor: isDark(p.backgroundColor) ? "#334155" : "#e2e8f0" }}>
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center shadow-lg" style={{ backgroundColor: p.primaryColor }}>
-                <ShoppingCart className="w-4 h-4 text-white" />
+          <div className="sticky top-0 z-10 flex items-center justify-between px-3 h-10 border-b bg-card/80 backdrop-blur-md">
+              <div className="flex items-center gap-1.5 overflow-hidden">
+                <div className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: p.primaryColor }}>
+                  <ShoppingCart className="w-3 h-3 text-white" />
+                </div>
+                <span className="text-[10px] font-bold truncate max-w-[150px]">{p.productName || defaultStoreName}</span>
               </div>
-              <span className="text-[10px] font-bold truncate max-w-[150px]">{defaultStoreName}</span>
-            </div>
             <button className="text-[9px] font-bold px-4 py-1.5 rounded-full text-white shadow-lg" style={{ backgroundColor: p.primaryColor }}>
               اطلب الآن
             </button>
@@ -792,6 +807,60 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
                 )}
 
                 <OrderForm />
+
+                {/* Additional Sections for Original Template */}
+                {p.sections.includes("video") && (
+                  <div className="space-y-3">
+                    <h3 className="text-sm font-bold border-r-4 border-primary pr-3 mt-4">فيديو المنتج</h3>
+                    <div className="aspect-video bg-muted rounded-xl flex items-center justify-center overflow-hidden border">
+                      {p.videoUrl ? (
+                         <div className="text-[8px] opacity-40">Video: {p.videoUrl}</div>
+                      ) : (
+                         <Play className="w-6 h-6 opacity-20" />
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {p.sections.includes("reviews") && (
+                  <div className="space-y-3">
+                    <h3 className="text-sm font-bold border-r-4 border-primary pr-3 mt-4">آراء العملاء</h3>
+                    <div className="space-y-2">
+                      {p.socialProof.slice(0, 2).map((r, i) => (
+                        <div key={i} className="p-3 bg-muted/20 border border-border/50 rounded-xl">
+                          <div className="flex items-center justify-between mb-1">
+                             <span className="text-[10px] font-bold">{r.name}</span>
+                             <div className="flex gap-0.5">{"⭐".repeat(r.rating)}</div>
+                          </div>
+                          <p className="text-[9px] opacity-70">{r.text}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {p.sections.includes("faq") && (
+                  <div className="space-y-3">
+                    <h3 className="text-sm font-bold border-r-4 border-primary pr-3 mt-4">الأسئلة الشائعة</h3>
+                    <div className="space-y-2">
+                      {p.faqItems.slice(0, 2).map((f, i) => (
+                        <div key={i} className="p-3 border border-border/50 rounded-xl">
+                          <p className="text-[10px] font-bold">{f.q}</p>
+                          <p className="text-[9px] opacity-60 mt-1">{f.a}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {p.sections.includes("shipping") && (
+                  <div className="p-4 bg-muted/20 rounded-xl border border-dashed mt-4">
+                    <h3 className="text-[10px] font-bold flex items-center gap-2 mb-2">
+                      <Truck className="w-3 h-3" /> معلومات الشحن
+                    </h3>
+                    <p className="text-[9px] opacity-70">توصيل مجاني لجميع الولايات، الدفع عند الاستلام</p>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -1191,6 +1260,15 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
               {/* ===== CONTENT TAB ===== */}
               {activeDesignTab === "content" && (
                 <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label className="text-xs font-bold opacity-70">اسم المتجر/العلامة (يظهر في الهيدر)</Label>
+                    <Input 
+                      value={editingPage.productName || defaultStoreName} 
+                      onChange={(e) => updatePage("productName", e.target.value)} 
+                      className="rounded-xl h-9 text-sm" 
+                      placeholder={defaultStoreName}
+                    />
+                  </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1.5">
                       <Label className="text-[10px] font-bold opacity-70">السعر (دج)</Label>
@@ -1574,10 +1652,10 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
                 <Button variant="outline" size="sm" onClick={() => setPreviewOpen(true)} className="rounded-xl h-9 text-xs gap-1.5 lg:hidden">
                   <Eye className="w-3.5 h-3.5" /> معاينة
                 </Button>
-                <Button size="sm" className="rounded-xl h-9 text-xs gap-1.5 w-full col-span-2 lg:col-span-1 shadow-sm" onClick={() => {
-                  toast({ title: "💾 تم الحفظ", description: "تم حفظ التغييرات بنجاح" });
+                <Button size="sm" className="rounded-xl h-9 text-xs gap-1.5 w-full col-span-2 lg:col-span-1 shadow-sm bg-emerald-600 hover:bg-emerald-700 text-white" onClick={() => {
+                  saveToDatabase(editingPage);
                 }}>
-                  <Save className="w-3.5 h-3.5" /> حفظ
+                  <Save className="w-3.5 h-3.5" /> حفظ التغييرات
                 </Button>
               </div>
             </div>

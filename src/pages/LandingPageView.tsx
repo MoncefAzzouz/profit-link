@@ -365,7 +365,7 @@ const LandingPageView = () => {
                <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg" style={{ backgroundColor: p.primaryColor }}>
                  <ShoppingCart className="w-5 h-5 text-white" />
                </div>
-               <span className="font-bold text-lg hidden sm:block">{p.productName}</span>
+               <span className="font-bold text-lg hidden sm:block">{p.productName || defaultStoreName}</span>
             </div>
             <a href="#order-form">
               <Button style={{ backgroundColor: p.primaryColor }} className="text-white font-bold rounded-full px-6">
@@ -580,11 +580,87 @@ const LandingPageView = () => {
                 </Button>
                 <p className="text-center text-[10px] opacity-40">بضغطك على الزر فأنت توافق على شروط الخدمة وسياسة الخصوصية</p>
               </form>
+              {/* Additional Sections for Original Template */}
+              {p.sections.includes("video") && (
+                <div className="space-y-4 pt-8" id="video">
+                  <h2 className="text-2xl font-bold border-r-4 border-primary pr-3">فيديو المنتج</h2>
+                  <div className="relative aspect-video rounded-2xl overflow-hidden bg-black shadow-2xl">
+                    {p.videoUrl ? (
+                      <iframe 
+                        className="w-full h-full"
+                        src={p.videoUrl.replace("watch?v=", "embed/")}
+                        title="Product Video"
+                        frameBorder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                      ></iframe>
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-white/20">
+                        <Play className="w-16 h-16" />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {p.sections.includes("reviews") && (
+                <div className="space-y-6 pt-8" id="reviews">
+                  <h2 className="text-2xl font-bold border-r-4 border-primary pr-3">آراء العملاء</h2>
+                  <div className="grid gap-4">
+                    {p.socialProof.map((review, i) => (
+                      <div key={i} className="p-5 bg-card rounded-2xl border shadow-sm space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold" style={{ backgroundColor: p.primaryColor }}>
+                              {review.name[0]}
+                            </div>
+                            <span className="font-bold">{review.name}</span>
+                          </div>
+                          <div className="flex gap-0.5">
+                            {Array.from({ length: review.rating }).map((_, j) => (
+                              <Star key={j} className="w-4 h-4 fill-amber-400 text-amber-400" />
+                            ))}
+                          </div>
+                        </div>
+                        <p className="text-sm leading-relaxed opacity-80">{review.text}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {p.sections.includes("faq") && (
+                <div className="space-y-6 pt-8" id="faq">
+                  <h2 className="text-2xl font-bold border-r-4 border-primary pr-3">الأسئلة الشائعة</h2>
+                  <div className="grid gap-3">
+                    {p.faqItems.map((faq, i) => (
+                      <div key={i} className="p-5 border rounded-2xl bg-card">
+                        <p className="font-bold mb-2">{faq.q}</p>
+                        <p className="text-sm opacity-70 leading-relaxed">{faq.a}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </motion.div>
           </div>
         </div>
       </div>
     );
+  }
+
+  // Handle other templates
+  if (p.template === "bold" || p.template === "minimal" || p.template === "dark") {
+    // These will use the modern layout but with different styling injected via p
+    // For "dark", we force dark mode styles
+    if (p.template === "dark") {
+      p.backgroundColor = "#0f172a";
+      p.primaryColor = p.primaryColor || "#38bdf8";
+    }
+    if (p.template === "bold") {
+      p.borderRadius = 0;
+      p.fontFamily = "cairo";
+    }
   }
 
   return (
@@ -607,7 +683,7 @@ const LandingPageView = () => {
               <ShoppingCart className="w-5 h-5 text-white" />
             </div>
             <div>
-              <span className="text-sm font-bold block">{p.productName}</span>
+              <span className="text-sm font-bold block">{p.productName || defaultStoreName}</span>
               <span className="text-xs" style={{ color: stc }}>شحن مجاني لكل الولايات 🚚</span>
             </div>
           </div>
