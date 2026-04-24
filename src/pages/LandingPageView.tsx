@@ -286,13 +286,17 @@ const LandingPageView = () => {
           address: orderForm.address,
           quantity: quantity,
           totalAmount: finalAmount,
-          commissionAmount: 500, // Placeholder
+          commissionAmount: p.commission || 500,
           shippingFee: currentShipping,
           stopDesk: orderForm.deliveryType === "desk" ? 1 : 0
         })
       });
 
-      if (!response.ok) throw new Error('Failed to create order');
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Order creation failed:', errorData);
+        throw new Error(errorData.error || 'Failed to create order');
+      }
 
       setOrderSubmitted(true);
       toast({ title: "✅ تم تسجيل طلبك بنجاح!", description: "سنتواصل معك قريباً لتأكيد الطلب" });
