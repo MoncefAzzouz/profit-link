@@ -33,6 +33,9 @@ const ProductPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState(false);
 
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [isAffiliate, setIsAffiliate] = useState(false);
+
   useEffect(() => {
     // Fetch product from backend
     const fetchProduct = async () => {
@@ -61,6 +64,17 @@ const ProductPage = () => {
       }
     };
     fetchRates();
+
+    const userStr = localStorage.getItem("affiliate_user");
+    if (userStr) {
+      try {
+        const user = JSON.parse(userStr);
+        setIsAdmin(user.role === "ADMIN" || user.role === "admin");
+        setIsAffiliate(user.role !== "ADMIN" && user.role !== "admin");
+      } catch (e) {
+        console.error("Error parsing user data", e);
+      }
+    }
   }, [productId]);
 
   // Fetch communes when wilaya changes
@@ -181,8 +195,8 @@ const ProductPage = () => {
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-foreground mb-4">المنتج غير موجود</h1>
-          <Link to="/">
-            <Button>العودة للرئيسية</Button>
+          <Link to={(isAdmin || isAffiliate) ? "/products" : "/"}>
+            <Button>{(isAdmin || isAffiliate) ? "العودة للمنتجات" : "العودة للرئيسية"}</Button>
           </Link>
         </div>
       </div>
@@ -287,9 +301,9 @@ const ProductPage = () => {
             <p className="font-semibold">{product.name}</p>
             <p className="text-secondary font-bold text-xl">{totalPrice.toLocaleString()} دج</p>
           </div>
-          <Link to="/">
+          <Link to={(isAdmin || isAffiliate) ? "/products" : "/"}>
             <Button variant="outline" className="w-full">
-              العودة للرئيسية
+              {(isAdmin || isAffiliate) ? "العودة للمنتجات" : "العودة للرئيسية"}
             </Button>
           </Link>
         </motion.div>
@@ -302,9 +316,9 @@ const ProductPage = () => {
       {/* Header */}
       <header className="sticky top-0 z-50 bg-card/80 backdrop-blur-xl border-b border-border">
         <div className="container mx-auto px-4 py-4">
-          <Link to="/" className="flex items-center gap-2 text-primary hover:text-secondary transition-colors">
+          <Link to={(isAdmin || isAffiliate) ? "/products" : "/"} className="flex items-center gap-2 text-primary hover:text-secondary transition-colors">
             <ArrowRight className="w-5 h-5" />
-            <span className="font-semibold">العودة للرئيسية</span>
+            <span className="font-semibold">{(isAdmin || isAffiliate) ? "العودة للمنتجات" : "العودة للرئيسية"}</span>
           </Link>
         </div>
       </header>

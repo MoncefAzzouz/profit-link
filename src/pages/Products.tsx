@@ -6,7 +6,7 @@ import {
   X, Facebook, Instagram, Phone, MessageSquare, Globe, Shield, 
   Info, Truck, ShieldCheck, CreditCard, MessageCircle, Star, 
   Flame, Shirt, Smartphone, Home, Sparkles, LayoutGrid, List,
-  ChevronDown, ArrowRight, Heart, Share2, ZoomIn
+  ChevronDown, ArrowRight, Heart, Share2, ZoomIn, LayoutDashboard
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -62,6 +62,9 @@ const Products = () => {
   const [isQuickViewOpen, setIsQuickViewOpen] = useState(false);
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
 
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [isAffiliate, setIsAffiliate] = useState(false);
+
   const [storeSettings, setStoreSettings] = useState<StoreSettings>(defaultStoreSettings);
   const [products, setProducts] = useState<any[]>([]);
   const [dbCategories, setDbCategories] = useState<any[]>([]);
@@ -115,6 +118,16 @@ const Products = () => {
         if (user && user.id) {
           setAffiliateId(user.id);
         }
+      } catch (e) {
+        console.error("Error parsing user data", e);
+      }
+    
+    const userStr = localStorage.getItem("affiliate_user");
+    if (userStr) {
+      try {
+        const user = JSON.parse(userStr);
+        setIsAdmin(user.role === "ADMIN" || user.role === "admin");
+        setIsAffiliate(user.role !== "ADMIN" && user.role !== "admin");
       } catch (e) {
         console.error("Error parsing user data", e);
       }
@@ -176,6 +189,31 @@ const Products = () => {
         fontFamily: storeSettings.fontFamily + ", sans-serif" 
       } as React.CSSProperties}
     >
+      {/* Admin/Affiliate Quick Back Nav */}
+      {(isAdmin || isAffiliate) && (
+        <div className="bg-card/80 backdrop-blur-md border-b border-border/50 sticky top-0 z-[100] px-4 py-3 flex items-center justify-between shadow-sm">
+           <Link 
+             to={isAdmin ? "/admin" : "/dashboard"}
+             className="flex items-center gap-2 text-sm font-black text-foreground hover:text-primary transition-all group"
+           >
+             <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors">
+               <ArrowRight className="w-4 h-4" />
+             </div>
+             العودة إلى {isAdmin ? "لوحة التحكم (Admin)" : "لوحة التحكم"}
+           </Link>
+           <div className="flex items-center gap-3">
+             <div className="hidden sm:block text-[10px] font-black text-muted-foreground bg-muted/50 border border-border/50 px-3 py-1.5 rounded-full uppercase tracking-tighter">
+               {isAdmin ? "وضع المدير" : "وضع المسوّق"}
+             </div>
+             <Link to={isAdmin ? "/admin" : "/dashboard"}>
+               <Button size="sm" variant="ghost" className="rounded-full w-9 h-9 p-0">
+                 <LayoutDashboard className="w-4 h-4" />
+               </Button>
+             </Link>
+           </div>
+        </div>
+      )}
+
       {/* Top Welcome Bar */}
       {storeSettings.welcomeBarText && (
         <div 

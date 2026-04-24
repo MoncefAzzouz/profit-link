@@ -703,7 +703,7 @@ const Dashboard = () => {
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 p-4 space-y-1 overflow-y-auto scrollbar-hide">
+          <nav className="flex-1 px-3 py-2 space-y-1 overflow-y-auto custom-scrollbar">
             {sidebarItems.map((item) => (
               <button
                 key={item.id}

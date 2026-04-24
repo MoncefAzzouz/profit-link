@@ -44,6 +44,23 @@ const Auth = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    const userStr = localStorage.getItem("affiliate_user");
+    if (token && userStr) {
+      try {
+        const user = JSON.parse(userStr);
+        if (user.role === "ADMIN" || user.role === "admin") {
+          navigate("/admin");
+        } else {
+          navigate("/dashboard");
+        }
+      } catch (e) {
+        console.error("Error parsing user data in Auth", e);
+      }
+    }
+  }, [navigate]);
+
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
