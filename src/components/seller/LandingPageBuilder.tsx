@@ -243,7 +243,9 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewDevice, setPreviewDevice] = useState<"desktop" | "mobile">("desktop");
   const userStr = localStorage.getItem("affiliate_user");
-  const isAdmin = userStr ? JSON.parse(userStr).role?.toUpperCase() === "ADMIN" : false;
+  const affiliateUser = userStr ? JSON.parse(userStr) : null;
+  const isAdmin = affiliateUser?.role?.toUpperCase() === "ADMIN";
+  const defaultStoreName = affiliateUser?.storeName || "متجري";
   const [activeDesignTab, setActiveDesignTab] = useState<"magic" | "content" | "template" | "colors" | "sections" | "advanced">(isAdmin ? "magic" : "content");
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
@@ -710,7 +712,7 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
               <div className="w-8 h-8 rounded-lg flex items-center justify-center shadow-lg" style={{ backgroundColor: p.primaryColor }}>
                 <ShoppingCart className="w-4 h-4 text-white" />
               </div>
-              <span className="text-[10px] font-bold truncate max-w-[150px]">{p.productName}</span>
+              <span className="text-[10px] font-bold truncate max-w-[150px]">{defaultStoreName}</span>
             </div>
             <button className="text-[9px] font-bold px-4 py-1.5 rounded-full text-white shadow-lg" style={{ backgroundColor: p.primaryColor }}>
               اطلب الآن
@@ -755,7 +757,7 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
               <div className="space-y-6">
                 <div dir="rtl">
                   <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-md" style={{ backgroundColor: `${p.primaryColor}15`, color: p.primaryColor }}>{p.category}</span>
-                  <h1 className="text-2xl sm:text-3xl font-black mt-3 leading-tight">{p.productName}</h1>
+                  <h1 className="text-2xl sm:text-3xl font-black mt-3 leading-tight">{p.heroTitle}</h1>
                   <p className="text-xs sm:text-sm mt-3 leading-relaxed opacity-70">{p.heroSubtitle}</p>
                 </div>
 
@@ -817,7 +819,7 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
             <div className="w-7 h-7 rounded-lg flex items-center justify-center shadow-md" style={{ backgroundColor: p.primaryColor }}>
               <ShoppingCart className="w-3.5 h-3.5 text-white" />
             </div>
-            <span className="text-xs font-bold">{p.productName}</span>
+            <span className="text-xs font-bold">{defaultStoreName}</span>
           </div>
           <button className="text-[10px] font-bold px-3 py-1.5 rounded-full text-white shadow-sm" style={{ backgroundColor: p.primaryColor }}>
             {p.ctaText}
@@ -1197,10 +1199,6 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
               {/* ===== CONTENT TAB ===== */}
               {activeDesignTab === "content" && (
                 <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label className="text-xs font-bold opacity-70">اسم المنتج</Label>
-                    <Input value={editingPage.productName} onChange={(e) => updatePage("productName", e.target.value)} className="rounded-xl h-9 text-sm" />
-                  </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1.5">
                       <Label className="text-[10px] font-bold opacity-70">السعر (دج)</Label>
