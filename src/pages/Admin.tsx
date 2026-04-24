@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/select";
 import { mockProducts, Product } from "@/data/mockProducts";
 import { mockAffiliates, mockAdminStats, mockAllOrders, mockSellers, mockWithdrawalRequests, WithdrawalRequest, mockJoinRequests, JoinRequest } from "@/data/mockAdminData";
+import { wilayas } from "@/data/mockAffiliateData";
 import { ShippingRate, shippingRegions } from "@/data/mockShippingData";
 import { LandingSettings, defaultLandingSettings } from "@/data/landingSettings";
 import { useToast } from "@/hooks/use-toast";
@@ -105,6 +106,10 @@ const Admin = () => {
   });
   const [withdrawals, setWithdrawals] = useState<any[]>([]);
   const [isFetchingWithdrawals, setIsFetchingWithdrawals] = useState(false);
+  const [affiliates, setAffiliates] = useState<any[]>([]);
+  const [isFetchingAffiliates, setIsFetchingAffiliates] = useState(false);
+  const [dbOrders, setDbOrders] = useState<any[]>([]);
+  const [isFetchingOrders, setIsFetchingOrders] = useState(false);
 
   // Fetch admin stats from backend
   useEffect(() => {
@@ -150,8 +155,48 @@ const Admin = () => {
     }
   };
 
+  const fetchAffiliates = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    setIsFetchingAffiliates(true);
+    try {
+      const res = await fetch('https://profit-link-3eri.onrender.com/api/admin/affiliates', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setAffiliates(data.data);
+      }
+    } catch (err) {
+      console.error('Failed to fetch affiliates', err);
+    } finally {
+      setIsFetchingAffiliates(false);
+    }
+  };
+
+  const fetchAllOrders = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    setIsFetchingOrders(true);
+    try {
+      const res = await fetch('https://profit-link-3eri.onrender.com/api/orders/all', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setDbOrders(data.data);
+      }
+    } catch (err) {
+      console.error('Failed to fetch all orders', err);
+    } finally {
+      setIsFetchingOrders(false);
+    }
+  };
+
   useEffect(() => {
     fetchWithdrawals();
+    fetchAffiliates();
+    fetchAllOrders();
   }, []);
 
   const updateWithdrawalStatus = async (id: string, status: string) => {
@@ -315,15 +360,28 @@ const Admin = () => {
     { id: "settings" as Tab, label: "الإعدادات", icon: Settings },
   ];
 
+  const getAffiliateLevel = (confirmedCount: number) => {
+    if (confirmedCount >= 500) return "5";
+    if (confirmedCount >= 200) return "4";
+    if (confirmedCount >= 50) return "3";
+    if (confirmedCount >= 10) return "2";
+    return "1";
+  };
+
+  const getWilayaName = (codeOrName: string) => {
+    const code = codeOrName.toString();
+    const wilaya = wilayas.find(w => w.code === code || w.name === codeOrName);
+    return wilaya ? wilaya.name : codeOrName;
+  };
+
   const filteredAffiliates = useMemo(() => {
-    return mockAffiliates.filter((affiliate) => {
-      const matchesSearch = affiliate.name.includes(affiliateSearch) ||
-        affiliate.email.includes(affiliateSearch) ||
-        affiliate.phone.includes(affiliateSearch);
+    return affiliates.filter((affiliate) => {
+      const matchesSearch = affiliate.name.toLowerCase().includes(affiliateSearch.toLowerCase()) ||
+        affiliate.email.toLowerCase().includes(affiliateSearch.toLowerCase());
       const matchesStatus = affiliateStatus === "all" || affiliate.status === affiliateStatus;
       return matchesSearch && matchesStatus;
     });
-  }, [affiliateSearch, affiliateStatus]);
+  }, [affiliates, affiliateSearch, affiliateStatus]);
 
   const filteredSellers = useMemo(() => {
     return mockSellers.filter((seller) => {
@@ -337,14 +395,16 @@ const Admin = () => {
   }, [sellerSearch, sellerStatus]);
 
   const filteredOrders = useMemo(() => {
-    return mockAllOrders.filter((order) => {
-      const matchesSearch = order.productName.includes(orderSearch) ||
-        order.customerName.includes(orderSearch) ||
-        order.affiliateName.includes(orderSearch);
-      const matchesStatus = orderStatus === "all" || order.status === orderStatus;
+    return dbOrders.filter((order) => {
+      const productName = order.product?.name || order.productName || "";
+      const affiliateName = order.affiliate?.name || order.affiliateName || "";
+      const matchesSearch = productName.toLowerCase().includes(orderSearch.toLowerCase()) ||
+        order.customerName.toLowerCase().includes(orderSearch.toLowerCase()) ||
+        affiliateName.toLowerCase().includes(orderSearch.toLowerCase());
+      const matchesStatus = orderStatus === "all" || order.status.toLowerCase() === orderStatus.toLowerCase();
       return matchesSearch && matchesStatus;
     });
-  }, [orderSearch, orderStatus]);
+  }, [dbOrders, orderSearch, orderStatus]);
 
   const filteredWithdrawals = useMemo(() => {
     return withdrawals.filter((req) => {
@@ -903,28 +963,39 @@ const Admin = () => {
                     عرض الكل <ChevronLeft className="w-4 h-4" />
                   </button>
                 </div>
-                <div className="divide-y divide-border">
-                  {mockAllOrders.slice(0, 5).map((order) => {
-                    const status = statusConfig[order.status as keyof typeof statusConfig];
-                    return (
-                      <div key={order.id} className="p-4 flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${status.color}`}>
-                            <status.icon className="w-5 h-5" />
+                  {dbOrders.length === 0 ? (
+                    <div className="p-12 text-center text-muted-foreground">
+                      <ShoppingCart className="w-12 h-12 mx-auto mb-3 opacity-20" />
+                      <p>لا توجد طلبيات حالياً</p>
+                    </div>
+                  ) : (
+                    dbOrders.slice(0, 5).map((order) => {
+                      const status = (statusConfig as any)[order.status.toLowerCase()] || statusConfig.pending;
+                      const productName = order.product?.name || order.productName || "منتج غير معروف";
+                      const affiliateName = order.affiliate?.name || order.affiliateName || "مسوّق غير معروف";
+                      return (
+                        <div key={order.id} className="p-4 flex items-center justify-between hover:bg-muted/30 transition-colors">
+                          <div className="flex items-center gap-4">
+                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${status.color}`}>
+                              <status.icon className="w-5 h-5" />
+                            </div>
+                            <div>
+                              <p className="font-semibold text-foreground text-sm">{productName}</p>
+                              <p className="text-[10px] text-muted-foreground flex items-center gap-2">
+                                <Users className="w-3 h-3" /> {affiliateName} 
+                                <span className="opacity-30">•</span> 
+                                <MapPin className="w-3 h-3" /> {getWilayaName(order.wilaya)}
+                              </p>
+                            </div>
                           </div>
-                          <div>
-                            <p className="font-medium text-foreground">{order.productName}</p>
-                            <p className="text-sm text-muted-foreground">{order.affiliateName} • {order.wilaya}</p>
+                          <div className="text-left">
+                            <p className="font-bold text-foreground text-sm">{order.totalAmount.toLocaleString()} دج</p>
+                            <p className="text-[10px] text-muted-foreground font-mono uppercase">{new Date(order.createdAt).toLocaleDateString('ar-DZ')}</p>
                           </div>
                         </div>
-                        <div className="text-left">
-                          <p className="font-bold text-foreground">{order.amount.toLocaleString()} دج</p>
-                          <p className="text-xs text-muted-foreground">{order.date}</p>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
+                      );
+                    })
+                  )}
               </motion.div>
             </div>
           )}
@@ -973,61 +1044,87 @@ const Admin = () => {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border">
-                      {filteredAffiliates.map((affiliate) => {
-                        const status = affiliateStatusConfig[affiliate.status];
-                        return (
-                          <tr key={affiliate.id} className="hover:bg-muted/50 transition-colors">
-                            <td className="p-4">
-                              <div>
-                                <p className="font-medium text-foreground">{affiliate.name}</p>
-                                <p className="text-sm text-muted-foreground">{affiliate.email}</p>
-                              </div>
-                            </td>
-                            <td className="p-4">
-                              <span className="px-2 py-1 bg-primary/10 text-primary rounded-full text-sm font-medium">
-                                المستوى {affiliate.level}
-                              </span>
-                            </td>
-                            <td className="p-4 text-foreground">
-                              {affiliate.confirmedOrders}/{affiliate.totalOrders}
-                            </td>
-                            <td className="p-4 font-bold text-secondary">
-                              {affiliate.totalEarnings.toLocaleString()} دج
-                            </td>
-                            <td className="p-4">
-                              <div className="flex items-center gap-2">
-                                <div className="w-16 h-2 bg-muted rounded-full overflow-hidden">
-                                  <div
-                                    className={`h-full rounded-full ${affiliate.confirmationRate >= 80 ? "bg-secondary" : affiliate.confirmationRate >= 60 ? "bg-yellow-500" : "bg-destructive"}`}
-                                    style={{ width: `${affiliate.confirmationRate}%` }}
-                                  />
+                      {isFetchingAffiliates ? (
+                        <tr>
+                          <td colSpan={7} className="p-12 text-center">
+                            <div className="flex flex-col items-center gap-3">
+                              <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+                              <p className="text-muted-foreground animate-pulse">جاري جلب المسوّقين...</p>
+                            </div>
+                          </td>
+                        </tr>
+                      ) : filteredAffiliates.length === 0 ? (
+                        <tr>
+                          <td colSpan={7} className="p-12 text-center text-muted-foreground">
+                            <Users className="w-12 h-12 mx-auto mb-3 opacity-20" />
+                            <p>لا يوجد مسوّقون مطابقون للبحث</p>
+                          </td>
+                        </tr>
+                      ) : (
+                        filteredAffiliates.map((affiliate) => {
+                          const status = affiliateStatusConfig[affiliate.status as keyof typeof affiliateStatusConfig] || affiliateStatusConfig.active;
+                          const level = getAffiliateLevel(affiliate.confirmedOrders);
+                          return (
+                            <tr key={affiliate.id} className="hover:bg-muted/50 transition-colors">
+                              <td className="p-4">
+                                <div className="flex items-center gap-3">
+                                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
+                                    {affiliate.name.charAt(0)}
+                                  </div>
+                                  <div>
+                                    <p className="font-bold text-foreground text-sm">{affiliate.name}</p>
+                                    <p className="text-[10px] text-muted-foreground font-mono">{affiliate.email}</p>
+                                  </div>
                                 </div>
-                                <span className="text-sm text-muted-foreground">{affiliate.confirmationRate}%</span>
-                              </div>
-                            </td>
-                            <td className="p-4">
-                              <span className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${status.color}`}>
-                                {status.label}
-                              </span>
-                            </td>
-                            <td className="p-4">
-                              <div className="flex gap-2">
-                                <Button variant="ghost" size="icon" className="h-8 w-8">
-                                  <Eye className="w-4 h-4" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8 text-destructive hover:text-destructive"
-                                  onClick={() => handleSuspendAffiliate(affiliate.id)}
-                                >
-                                  <Ban className="w-4 h-4" />
-                                </Button>
-                              </div>
-                            </td>
-                          </tr>
-                        );
-                      })}
+                              </td>
+                              <td className="p-4">
+                                <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 rounded-lg">
+                                  المستوى {level}
+                                </Badge>
+                              </td>
+                              <td className="p-4 text-sm font-medium">
+                                <span className="text-foreground">{affiliate.confirmedOrders}</span>
+                                <span className="text-muted-foreground mx-1">/</span>
+                                <span className="text-muted-foreground">{affiliate.totalOrders}</span>
+                              </td>
+                              <td className="p-4 font-bold text-secondary text-sm">
+                                {affiliate.earnings.toLocaleString()} دج
+                              </td>
+                              <td className="p-4">
+                                <div className="flex items-center gap-2">
+                                  <div className="w-16 h-1.5 bg-muted rounded-full overflow-hidden">
+                                    <div
+                                      className={`h-full rounded-full ${affiliate.confirmationRate >= 80 ? "bg-secondary" : affiliate.confirmationRate >= 60 ? "bg-yellow-500" : "bg-destructive"}`}
+                                      style={{ width: `${affiliate.confirmationRate}%` }}
+                                    />
+                                  </div>
+                                  <span className="text-[10px] font-bold text-muted-foreground">{affiliate.confirmationRate}%</span>
+                                </div>
+                              </td>
+                              <td className="p-4">
+                                <span className={`inline-flex px-3 py-1 rounded-full text-xs font-bold ${status.color}`}>
+                                  {status.label}
+                                </span>
+                              </td>
+                              <td className="p-4">
+                                <div className="flex gap-1">
+                                  <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-primary/10 hover:text-primary">
+                                    <Eye className="w-4 h-4" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                                    onClick={() => {/* handle Suspend */}}
+                                  >
+                                    <Ban className="w-4 h-4" />
+                                  </Button>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })
+                      )}
                     </tbody>
                   </table>
                 </div>
@@ -1196,47 +1293,68 @@ const Admin = () => {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border">
-                      {filteredOrders.map((order) => {
-                        const status = statusConfig[order.status as keyof typeof statusConfig];
-                        return (
-                          <tr key={order.id} className="hover:bg-muted/50 transition-colors">
-                            <td className="p-4">
-                              <p className="font-medium text-foreground">{order.productName}</p>
-                              <p className="text-sm text-muted-foreground">x{order.quantity}</p>
-                            </td>
-                            <td className="p-4">
-                              <p className="text-foreground">{order.customerName}</p>
-                              <p className="text-sm text-muted-foreground">{order.customerPhone}</p>
-                            </td>
-                            <td className="p-4 text-muted-foreground">{order.affiliateName}</td>
-                            <td className="p-4 text-muted-foreground">{order.wilaya}</td>
-                            <td className="p-4 font-bold text-foreground">{order.amount.toLocaleString()} دج</td>
-                            <td className="p-4">
-                              <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium ${status.color}`}>
-                                <status.icon className="w-4 h-4" />
-                                {status.label}
-                              </span>
-                            </td>
-                            <td className="p-4">
-                              <Select
-                                value={order.status}
-                                onValueChange={(value) => handleUpdateOrderStatus(order.id, value)}
-                              >
-                                <SelectTrigger className="w-[140px] h-8">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="pending">قيد الانتظار</SelectItem>
-                                  <SelectItem value="confirmed">مؤكد</SelectItem>
-                                  <SelectItem value="shipped">قيد التوصيل</SelectItem>
-                                  <SelectItem value="delivered">تم التسليم</SelectItem>
-                                  <SelectItem value="cancelled">ملغي</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </td>
-                          </tr>
-                        );
-                      })}
+                      {isFetchingOrders ? (
+                        <tr>
+                          <td colSpan={7} className="p-12 text-center">
+                            <div className="flex flex-col items-center gap-3">
+                              <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+                              <p className="text-muted-foreground animate-pulse">جاري جلب الطلبيات...</p>
+                            </div>
+                          </td>
+                        </tr>
+                      ) : filteredOrders.length === 0 ? (
+                        <tr>
+                          <td colSpan={7} className="p-12 text-center text-muted-foreground">
+                            <ShoppingCart className="w-12 h-12 mx-auto mb-3 opacity-20" />
+                            <p>لا توجد طلبيات مطابقة للبحث</p>
+                          </td>
+                        </tr>
+                      ) : (
+                        filteredOrders.map((order) => {
+                          const status = (statusConfig as any)[order.status.toLowerCase()] || statusConfig.pending;
+                          const productName = order.product?.name || order.productName || "منتج غير معروف";
+                          const affiliateName = order.affiliate?.name || order.affiliateName || "مسوّق غير معروف";
+                          return (
+                            <tr key={order.id} className="hover:bg-muted/50 transition-colors">
+                              <td className="p-4">
+                                <p className="font-bold text-foreground text-sm">{productName}</p>
+                                <p className="text-[10px] text-muted-foreground font-mono">{order.id.slice(0, 8)}</p>
+                              </td>
+                              <td className="p-4">
+                                <p className="font-medium text-foreground text-sm">{order.customerName}</p>
+                                <p className="text-[10px] text-muted-foreground font-mono">{order.customerPhone}</p>
+                              </td>
+                              <td className="p-4">
+                                <Badge variant="secondary" className="bg-primary/5 text-primary border-none rounded-lg text-[10px]">
+                                  {affiliateName}
+                                </Badge>
+                              </td>
+                              <td className="p-4 text-sm font-medium text-muted-foreground">
+                                {getWilayaName(order.wilaya)}
+                              </td>
+                              <td className="p-4">
+                                <p className="font-bold text-foreground text-sm">{order.totalAmount.toLocaleString()} دج</p>
+                                <p className="text-[10px] text-secondary font-bold">العمولة: {order.commissionAmount.toLocaleString()} دج</p>
+                              </td>
+                              <td className="p-4">
+                                <span className={`inline-flex px-3 py-1 rounded-full text-[10px] font-bold ${status.color}`}>
+                                  {status.label}
+                                </span>
+                              </td>
+                              <td className="p-4 text-left">
+                                <div className="flex gap-2">
+                                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                                    <Eye className="w-4 h-4" />
+                                  </Button>
+                                  <Button variant="ghost" size="icon" className="h-8 w-8 hover:text-secondary">
+                                    <Truck className="w-4 h-4" />
+                                  </Button>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })
+                      )}
                     </tbody>
                   </table>
                 </div>
