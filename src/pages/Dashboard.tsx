@@ -394,6 +394,49 @@ const Dashboard = () => {
     }
   };
 
+  const [isUploading, setIsUploading] = useState(false);
+  const handleImageUpload = async (file: File, type: 'logo' | 'banner') => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    setIsUploading(true);
+    const formData = new FormData();
+    formData.append('image', file);
+
+    try {
+      const response = await fetch('https://profit-link-3eri.onrender.com/api/upload/image', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: formData
+      });
+
+      if (response.ok) {
+        const json = await response.json();
+        if (type === 'logo') {
+          setStoreSettings({ ...storeSettings, storeLogo: json.url });
+        } else {
+          setStoreSettings({ 
+            ...storeSettings, 
+            hero: { ...storeSettings.hero, bannerUrl: json.url } 
+          });
+        }
+        toast({ title: "✅ تم رفع الصورة بنجاح" });
+      } else {
+        const errJson = await response.json();
+        throw new Error(errJson.error || 'Upload failed');
+      }
+    } catch (err: any) {
+      console.error(err);
+      toast({ 
+        variant: "destructive", 
+        title: "❌ فشل رفع الصورة",
+        description: err.message
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   // Calculate delivery fee automatically
   useEffect(() => {
     if (orderFormData.wilaya) {
@@ -2090,14 +2133,31 @@ const Dashboard = () => {
                       <div className="space-y-2">
                         <Label className="text-sm font-bold pr-1">رابط الشعار (Logo URL)</Label>
                         <div className="flex gap-4">
-                          <Input 
-                            value={storeSettings.storeLogo}
-                            onChange={(e) => setStoreSettings({...storeSettings, storeLogo: e.target.value})}
-                            placeholder="ضع رابط صورة الشعار هنا"
-                            className="h-12 rounded-xl bg-muted/30 border-none px-4 flex-1"
-                          />
+                          <div className="flex-1 relative group">
+                            <Input 
+                              value={storeSettings.storeLogo}
+                              onChange={(e) => setStoreSettings({...storeSettings, storeLogo: e.target.value})}
+                              placeholder="ضع رابط الشعار أو ارفعه من جهازك"
+                              className="h-12 rounded-xl bg-muted/30 border-none px-4 flex-1"
+                            />
+                            <div className="absolute left-2 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                              <label className={`p-2 hover:bg-background/80 rounded-lg cursor-pointer transition-all text-primary border border-primary/20 ${isUploading ? "opacity-50 cursor-not-allowed" : ""}`}>
+                                {isUploading ? <Sparkles className="w-5 h-5 animate-spin" /> : <PlusCircle className="w-5 h-5" />}
+                                <input 
+                                  type="file" 
+                                  className="hidden" 
+                                  accept="image/*"
+                                  disabled={isUploading}
+                                  onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (file) handleImageUpload(file, 'logo');
+                                  }}
+                                />
+                              </label>
+                            </div>
+                          </div>
                           {storeSettings.storeLogo && (
-                            <div className="w-12 h-12 rounded-xl overflow-hidden border border-border shrink-0">
+                            <div className="w-12 h-12 rounded-xl overflow-hidden border border-border shrink-0 shadow-sm">
                               <img src={storeSettings.storeLogo} alt="Logo Preview" className="w-full h-full object-cover" />
                             </div>
                           )}
@@ -2165,12 +2225,30 @@ const Dashboard = () => {
                       </div>
                       <div className="space-y-2">
                         <Label className="text-sm font-bold pr-1">رابط الصورة (Banner)</Label>
-                        <Input 
-                          value={storeSettings.hero?.bannerUrl || ""}
-                          onChange={(e) => setStoreSettings({...storeSettings, hero: {...storeSettings.hero, bannerUrl: e.target.value}})}
-                          className="h-11 rounded-xl bg-muted/30 border-none px-4 text-xs font-mono"
-                          dir="ltr"
-                        />
+                        <div className="relative group">
+                          <Input 
+                            value={storeSettings.hero?.bannerUrl || ""}
+                            onChange={(e) => setStoreSettings({...storeSettings, hero: {...storeSettings.hero, bannerUrl: e.target.value}})}
+                            className="h-11 rounded-xl bg-muted/30 border-none px-4 text-xs font-mono"
+                            placeholder="ضع رابط البانر أو ارفعه من جهازك"
+                            dir="ltr"
+                          />
+                          <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                            <label className={`p-2 hover:bg-background/80 rounded-lg cursor-pointer transition-all text-primary border border-primary/20 ${isUploading ? "opacity-50 cursor-not-allowed" : ""}`}>
+                              {isUploading ? <Sparkles className="w-4 h-4 animate-spin" /> : <PlusCircle className="w-4 h-4" />}
+                              <input 
+                                type="file" 
+                                className="hidden" 
+                                accept="image/*"
+                                disabled={isUploading}
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) handleImageUpload(file, 'banner');
+                                }}
+                              />
+                            </label>
+                          </div>
+                        </div>
                         <div className="grid grid-cols-3 gap-2 mt-2">
                            {[
                              { name: "تجميل", url: "https://images.unsplash.com/photo-1596462502278-27bfac4033c8?auto=format&fit=crop&q=80&w=800" },
