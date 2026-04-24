@@ -582,6 +582,10 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
     toast({ title: updated.status === "published" ? "🚀 تم نشر الصفحة" : "📝 تم تحويلها إلى مسودة" });
   };
 
+  const savePage = async (page: LandingPageConfig) => {
+    await saveToDatabase(page);
+  };
+
   const cardAnim = (delay = 0) => ({
     initial: { opacity: 0, y: 24 },
     animate: { opacity: 1, y: 0 },
@@ -1025,6 +1029,9 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
             </div>
             <Button variant="outline" size="sm" onClick={() => viewPage(editingPage)} className="rounded-xl gap-1.5">
               <ExternalLink className="w-4 h-4" /> معاينة
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => savePage(editingPage)} className="rounded-xl gap-1.5 border-primary/20 hover:bg-primary/5 text-primary">
+              <Save className="w-4 h-4" /> حفظ
             </Button>
             <Button size="sm" onClick={() => publishPage(editingPage)} className="rounded-xl gap-1.5 bg-gradient-to-l from-primary to-primary/90 shadow-md">
               {editingPage.status === "published" ? <><Zap className="w-4 h-4" /> منشورة</> : <><Sparkles className="w-4 h-4" /> نشر</>}
