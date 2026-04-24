@@ -18,7 +18,7 @@ const upload = multer({
 });
 
 // POST /api/upload/image (Admin: Upload product image → returns base64 data URL)
-router.post('/image', authenticateToken, requireAdmin, upload.single('image'), async (req: AuthRequest, res: Response): Promise<any> => {
+router.post('/image', authenticateToken, upload.single('image'), async (req: AuthRequest, res: Response): Promise<any> => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No image file provided' });
