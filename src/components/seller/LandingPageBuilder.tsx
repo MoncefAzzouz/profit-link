@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Layout, Palette, Type, Image, Eye, Save, Plus, Trash2,
@@ -248,6 +248,7 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
   const defaultStoreName = affiliateUser?.storeName || "متجري";
   const [activeDesignTab, setActiveDesignTab] = useState<"magic" | "content" | "template" | "colors" | "sections">(isAdmin ? "magic" : "content");
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const lastHandledProductId = useRef<string | null>(null);
 
   // Fetch pages from backend on mount
   useEffect(() => {
@@ -343,9 +344,9 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
     }
   };
 
-  // Handle incoming product edit request
   useEffect(() => {
-    if (initialProductToEdit && !isLoading) {
+    if (initialProductToEdit && !isLoading && lastHandledProductId.current !== initialProductToEdit.id) {
+      lastHandledProductId.current = initialProductToEdit.id;
       // Check if we already have a landing page for this product
       const existingPage = pages.find((p) => p.productId === initialProductToEdit.id);
       
