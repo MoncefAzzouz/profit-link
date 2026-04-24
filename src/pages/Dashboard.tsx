@@ -90,6 +90,14 @@ const statusConfig = {
   cancelled: { label: "ملغي", icon: XCircle, color: "text-destructive bg-destructive/10" }
 };
 
+const getAffiliateLevel = (confirmedCount: number) => {
+  if (confirmedCount >= 500) return { name: "المستوى 5 - أسطورة", next: null, target: 500, prevTarget: 200 };
+  if (confirmedCount >= 200) return { name: "المستوى 4 - محترف", next: "المستوى 5", target: 500, prevTarget: 200 };
+  if (confirmedCount >= 50) return { name: "المستوى 3 - متقدم", next: "المستوى 4", target: 200, prevTarget: 50 };
+  if (confirmedCount >= 10) return { name: "المستوى 2 - نشط", next: "المستوى 3", target: 50, prevTarget: 10 };
+  return { name: "المستوى 1 - مبتدئ", next: "المستوى 2", target: 10, prevTarget: 0 };
+};
+
 const Dashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -852,24 +860,43 @@ const Dashboard = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4 }}
-                className="bg-gradient-to-r from-primary to-navy-800 rounded-2xl p-6 text-primary-foreground"
+                className="bg-gradient-to-r from-primary to-navy-800 rounded-2xl p-6 text-primary-foreground shadow-lg relative overflow-hidden"
               >
-                <div className="flex items-center justify-between mb-4">
+                <div className="absolute top-0 left-0 w-full h-full bg-white/5 pointer-events-none" />
+                <div className="flex items-center justify-between mb-4 relative z-10">
                   <div>
-                    <p className="text-primary-foreground/70">مستواك الحالي</p>
-                    <p className="text-2xl font-bold">{user?.tier || "المستوى 1 - مبتدئ"}</p>
+                    <p className="text-primary-foreground/70 text-sm">مستواك الحالي</p>
+                    <p className="text-2xl font-bold">{getAffiliateLevel(dashboardStats.confirmedOrders).name}</p>
                   </div>
-                  <Trophy className="w-12 h-12 text-accent" />
+                  <div className="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center backdrop-blur-md">
+                    <Trophy className="w-10 h-10 text-accent animate-pulse-glow" />
+                  </div>
                 </div>
-                <div className="bg-white/20 rounded-full h-3 mb-2">
-                  <div
-                    className="bg-accent h-full rounded-full transition-all"
-                    style={{ width: `${((30 - mockAffiliateStats.ordersToNextLevel) / 30) * 100}%` }}
-                  />
-                </div>
-                <p className="text-sm text-primary-foreground/70">
-                  باقي {mockAffiliateStats.ordersToNextLevel} طلبيات للترقية للمستوى التالي
-                </p>
+                
+                {getAffiliateLevel(dashboardStats.confirmedOrders).next && (
+                  <>
+                    <div className="bg-white/10 rounded-full h-3 mb-3 relative z-10 overflow-hidden">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${Math.min(100, (dashboardStats.confirmedOrders / getAffiliateLevel(dashboardStats.confirmedOrders).target) * 100)}%` }}
+                        className="bg-gradient-to-r from-secondary to-accent h-full rounded-full shadow-[0_0_15px_rgba(245,158,11,0.5)]"
+                      />
+                    </div>
+                    <div className="flex justify-between items-center relative z-10">
+                      <p className="text-xs text-primary-foreground/70">
+                        باقي {Math.max(0, getAffiliateLevel(dashboardStats.confirmedOrders).target - dashboardStats.confirmedOrders)} طلبيات مؤكدة للترقية لـ {getAffiliateLevel(dashboardStats.confirmedOrders).next}
+                      </p>
+                      <p className="text-[10px] font-mono text-primary-foreground/50">
+                        {dashboardStats.confirmedOrders} / {getAffiliateLevel(dashboardStats.confirmedOrders).target}
+                      </p>
+                    </div>
+                  </>
+                )}
+                {!getAffiliateLevel(dashboardStats.confirmedOrders).next && (
+                  <p className="text-sm text-accent font-bold mt-2 relative z-10">
+                    تهانينا! لقد وصلت لأعلى مستوى حالياً 🎉
+                  </p>
+                )}
               </motion.div>
               {/* Revenue Evolution Chart from Seller Dashboard */}
               <motion.div
@@ -946,26 +973,37 @@ const Dashboard = () => {
                   </button>
                 </div>
                 <div className="divide-y divide-border">
-                  {mockOrders.slice(0, 5).map((order) => {
-                    const status = statusConfig[order.status];
-                    return (
-                      <div key={order.id} className="p-4 flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${status.color}`}>
-                            <status.icon className="w-5 h-5" />
+                  {orders.length === 0 ? (
+                    <div className="p-8 text-center text-muted-foreground">
+                      <ShoppingCart className="w-12 h-12 mx-auto mb-3 opacity-20" />
+                      <p>لا توجد طلبيات بعد</p>
+                    </div>
+                  ) : (
+                    orders.slice(0, 5).map((order) => {
+                      const status = (statusConfig as any)[order.status] || statusConfig.pending;
+                      return (
+                        <div key={order.id} className="p-4 hover:bg-muted/50 transition-colors flex items-center justify-between">
+                          <div className="flex items-center gap-4">
+                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${status.color}`}>
+                              <status.icon className="w-5 h-5" />
+                            </div>
+                            <div>
+                              <p className="font-semibold text-foreground text-sm">{order.productName}</p>
+                              <div className="flex items-center gap-2 mt-0.5">
+                                <span className="text-[10px] text-muted-foreground">{order.date}</span>
+                                <span className="text-[10px] text-muted-foreground">•</span>
+                                <span className="text-[10px] text-muted-foreground">{order.customerName}</span>
+                              </div>
+                            </div>
                           </div>
-                          <div>
-                            <p className="font-medium text-foreground">{order.productName}</p>
-                            <p className="text-sm text-muted-foreground">{order.customerName} - {getWilayaName(order.wilaya)}</p>
+                          <div className="text-left">
+                            <p className="font-bold text-foreground text-sm">{order.amount.toLocaleString()} دج</p>
+                            <p className="text-[10px] text-secondary">ربحك: {order.commission.toLocaleString()} دج</p>
                           </div>
                         </div>
-                        <div className="text-left">
-                          <p className="font-bold text-secondary">{order.commission.toLocaleString()} دج</p>
-                          <p className="text-xs text-muted-foreground">{order.date}</p>
-                        </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })
+                  )}
                 </div>
               </motion.div>
             </div>
