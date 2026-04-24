@@ -118,14 +118,6 @@ const Products = () => {
         if (user && user.id) {
           setAffiliateId(user.id);
         }
-      } catch (e) {
-        console.error("Error parsing user data", e);
-      }
-    
-    const userStr = localStorage.getItem("affiliate_user");
-    if (userStr) {
-      try {
-        const user = JSON.parse(userStr);
         setIsAdmin(user.role === "ADMIN" || user.role === "admin");
         setIsAffiliate(user.role !== "ADMIN" && user.role !== "admin");
       } catch (e) {

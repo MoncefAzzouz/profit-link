@@ -369,9 +369,10 @@ const Admin = () => {
   };
 
   const getWilayaName = (codeOrName: string) => {
-    const code = codeOrName.toString();
-    const wilaya = wilayas.find(w => w.code === code || w.name === codeOrName);
-    return wilaya ? wilaya.name : codeOrName;
+    if (!codeOrName) return "";
+    const rate = shippingRatesData.find(r => r.code === codeOrName || r.wilaya === codeOrName);
+    if (rate) return rate.wilaya;
+    return codeOrName;
   };
 
   const filteredAffiliates = useMemo(() => {
