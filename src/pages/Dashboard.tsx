@@ -1322,34 +1322,34 @@ const Dashboard = () => {
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-gradient-to-r from-primary via-primary to-navy-800 rounded-3xl p-8 lg:p-12 text-white shadow-2xl relative overflow-hidden"
+                className="bg-gradient-to-r from-primary via-primary to-navy-800 rounded-[2rem] md:rounded-3xl p-6 md:p-10 lg:p-12 text-white shadow-2xl relative overflow-hidden"
               >
-                <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-10">
-                  <div className="text-center md:text-right flex-1">
-                    <h2 className="text-4xl font-black mb-4">متجرك الخاص جاهز! 🚀</h2>
-                    <p className="text-primary-foreground/80 mb-10 max-w-2xl text-xl leading-relaxed">شارك رابط متجرك واكسب عمولة على كل منتج يشتريه الزبائن من خلالك. متجرك يحتوي حالياً على <b>{storeProducts.size}</b> منتجات.</p>
-                    <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-4">
-                      <div className="bg-white/10 backdrop-blur-md px-6 py-5 rounded-2xl border border-white/20 font-mono text-sm break-all flex-1 flex items-center justify-center lg:justify-start text-left" dir="ltr">
+                <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8 md:gap-10">
+                  <div className="text-center md:text-right flex-1 w-full">
+                    <h2 className="text-2xl md:text-4xl font-black mb-3 md:mb-4">متجرك الخاص جاهز! 🚀</h2>
+                    <p className="text-primary-foreground/80 mb-6 md:mb-10 max-w-2xl text-sm md:text-xl leading-relaxed">شارك رابط متجرك واكسب عمولة على كل منتج يشتريه الزبائن من خلالك. متجرك يحتوي حالياً على <b>{storeProducts.size}</b> منتجات.</p>
+                    <div className="flex flex-col xl:flex-row items-stretch xl:items-center gap-4">
+                      <div className="bg-white/10 backdrop-blur-md px-4 md:px-6 py-4 md:py-5 rounded-2xl border border-white/20 font-mono text-xs md:text-sm break-all flex-1 flex items-center justify-center xl:justify-start text-left" dir="ltr">
                         {window.location.origin}/store/{user?.storeName || user?.id || "aff-demo"}
                       </div>
-                      <div className="flex gap-3">
+                      <div className="grid grid-cols-2 xl:flex gap-3">
                         <Button 
                           onClick={() => {
                             const link = `${window.location.origin}/store/${user?.storeName || user?.id || "aff-demo"}`;
                             navigator.clipboard.writeText(link);
                             toast({ title: "تم نسخ رابط المتجر! 🔗" });
                           }}
-                          className="bg-secondary text-secondary-foreground hover:bg-secondary/90 h-16 px-10 rounded-2xl gap-3 shadow-xl shadow-secondary/20 font-black text-lg transition-all hover:scale-105 active:scale-95"
+                          className="bg-secondary text-secondary-foreground hover:bg-secondary/90 h-14 md:h-16 px-4 md:px-10 rounded-2xl gap-2 md:gap-3 shadow-xl shadow-secondary/20 font-black text-sm md:text-lg transition-all hover:scale-105 active:scale-95"
                         >
-                          <Copy className="w-6 h-6" />
+                          <Copy className="w-5 h-5 md:w-6 md:h-6" />
                           نسخ الرابط
                         </Button>
-                        <a href={`/store/${user?.storeName || user?.id || "aff-demo"}`} target="_blank" rel="noopener noreferrer">
+                        <a href={`/store/${user?.storeName || user?.id || "aff-demo"}`} target="_blank" rel="noopener noreferrer" className="w-full">
                           <Button 
                             variant="outline"
-                            className="bg-white/10 border-white/20 hover:bg-white/20 text-white h-16 px-8 rounded-2xl gap-3 backdrop-blur-sm font-bold"
+                            className="bg-white/10 border-white/20 hover:bg-white/20 text-white h-14 md:h-16 px-4 md:px-8 rounded-2xl gap-2 md:gap-3 backdrop-blur-sm font-bold text-sm md:text-base w-full"
                           >
-                            <Eye className="w-6 h-6" />
+                            <Eye className="w-5 h-5 md:w-6 md:h-6" />
                             معاينة
                           </Button>
                         </a>
