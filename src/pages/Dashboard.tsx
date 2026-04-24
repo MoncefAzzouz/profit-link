@@ -1015,9 +1015,6 @@ const Dashboard = () => {
                     أنت الآن في أعلى مستوى متاح! تهانينا 🎉
                   </p>
                 )}
-                    تهانينا! لقد وصلت لأعلى مستوى حالياً 🎉
-                  </p>
-                )}
               </motion.div>
               {/* Revenue Evolution Chart from Seller Dashboard */}
               <motion.div
