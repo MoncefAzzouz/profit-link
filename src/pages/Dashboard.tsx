@@ -363,6 +363,22 @@ const Dashboard = () => {
   // Store Editor State
   const [storeSettings, setStoreSettings] = useState<StoreSettings>(defaultStoreSettings);
 
+  // Shipping filter states
+  const [shippingSearch, setShippingSearch] = useState("");
+  const [shippingPage, setShippingPage] = useState(1);
+  const shippingItemsPerPage = 10;
+
+  const filteredShippingRates = shippingRates.filter(rate => 
+    rate.wilaya.toLowerCase().includes(shippingSearch.toLowerCase()) ||
+    rate.code.includes(shippingSearch)
+  );
+
+  const totalShippingPages = Math.ceil(filteredShippingRates.length / shippingItemsPerPage);
+  const paginatedShippingRates = filteredShippingRates.slice(
+    (shippingPage - 1) * shippingItemsPerPage,
+    shippingPage * shippingItemsPerPage
+  );
+
   const saveStoreSettings = async () => {
     const token = localStorage.getItem("token");
     if (!token) return;
@@ -1973,57 +1989,100 @@ const Dashboard = () => {
                 </div>
               </div>
 
-              {/* Wilaya Pricing Table */}
-              <div className="bg-card rounded-[2.5rem] shadow-sm border border-border/50 overflow-hidden">
-                <div className="p-8 border-b border-border flex items-center justify-between">
+              <div className="bg-card rounded-[2.5rem] shadow-sm border border-border/50 overflow-hidden" dir="rtl">
+                <div className="p-8 border-b border-border flex flex-col sm:flex-row items-center justify-between gap-4">
                   <div>
                     <h3 className="text-2xl font-black text-foreground">قائمة الأسعار حسب الولايات</h3>
                     <p className="text-muted-foreground mt-1 text-sm">تفاصيل تكاليف الشحن ومدة التوصيل لكل ولاية.</p>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <div className="relative">
+                  <div className="flex items-center gap-3 w-full sm:w-64">
+                    <div className="relative w-full">
                       <Search className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                      <Input placeholder="ابحث عن ولاية..." className="pr-10 rounded-xl h-10 w-64 border-border/60" />
+                      <Input 
+                        placeholder="ابحث عن ولاية..." 
+                        value={shippingSearch}
+                        onChange={(e) => {
+                          setShippingSearch(e.target.value);
+                          setShippingPage(1);
+                        }}
+                        className="pr-10 rounded-xl h-10 w-full border-border/60" 
+                      />
                     </div>
                   </div>
                 </div>
                 <div className="overflow-x-auto">
-                  <table className="w-full">
+                  <table className="w-full text-right">
                     <thead>
                       <tr className="bg-muted/50 border-b border-border">
-                        <th className="text-right p-6 font-bold text-foreground">الولاية</th>
-                        <th className="text-right p-6 font-bold text-foreground">التوصيل للمنزل</th>
-                        <th className="text-right p-6 font-bold text-foreground">التوصيل للمكتب</th>
-                        <th className="text-right p-6 font-bold text-foreground">وقت التوصيل</th>
+                        <th className="p-6 font-bold text-foreground">الولاية</th>
+                        <th className="p-6 font-bold text-foreground">التوصيل للمنزل</th>
+                        <th className="p-6 font-bold text-foreground">التوصيل للمكتب</th>
+                        <th className="p-6 font-bold text-foreground text-center">وقت التوصيل</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-border">
-                      {shippingRates.map((rate, idx) => (
-                        <tr key={idx} className="hover:bg-muted/30 transition-colors group">
-                          <td className="p-6">
-                            <span className="font-bold text-foreground text-lg">{rate.wilaya}</span>
-                          </td>
-                          <td className="p-6">
-                            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 text-primary font-black rounded-lg text-sm">
-                              {rate.homePrice} دج
-                            </span>
-                          </td>
-                          <td className="p-6">
-                            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-secondary/10 text-secondary font-black rounded-lg text-sm">
-                              {rate.officePrice} دج
-                            </span>
-                          </td>
-                          <td className="p-6">
-                            <span className="flex items-center gap-2 text-muted-foreground font-medium">
-                              <Clock className="w-4 h-4" />
-                              {rate.deliveryTime}
-                            </span>
+                    <tbody className="divide-y divide-border relative">
+                      {paginatedShippingRates.length > 0 ? (
+                        paginatedShippingRates.map((rate, idx) => (
+                          <tr key={idx} className="hover:bg-muted/30 transition-colors group">
+                            <td className="p-6">
+                              <span className="font-bold text-foreground text-lg">{rate.wilaya}</span>
+                            </td>
+                            <td className="p-6">
+                              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 text-primary font-black rounded-lg text-sm">
+                                {rate.homePrice} دج
+                              </span>
+                            </td>
+                            <td className="p-6">
+                              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-secondary/10 text-secondary font-black rounded-lg text-sm">
+                                {rate.officePrice} دج
+                              </span>
+                            </td>
+                            <td className="p-6 text-center">
+                              <span className="inline-flex items-center gap-2 text-muted-foreground font-medium">
+                                <Clock className="w-4 h-4" />
+                                {rate.deliveryTime}
+                              </span>
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={4} className="p-12 text-center text-muted-foreground font-bold">
+                            لا توجد ولاية تطابق البحث "{shippingSearch}"
                           </td>
                         </tr>
-                      ))}
+                      )}
                     </tbody>
                   </table>
                 </div>
+                
+                {totalShippingPages > 1 && (
+                  <div className="p-6 border-t border-border flex items-center justify-between bg-muted/20">
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={shippingPage === 1}
+                        onClick={() => setShippingPage(prev => Math.max(1, prev - 1))}
+                        className="rounded-xl font-bold"
+                      >
+                        السابق
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={shippingPage === totalShippingPages}
+                        onClick={() => setShippingPage(prev => Math.min(totalShippingPages, prev + 1))}
+                        className="rounded-xl font-bold"
+                      >
+                        التالي
+                      </Button>
+                    </div>
+                    <div className="text-sm font-bold text-muted-foreground">
+                      الصفحة {shippingPage} من {totalShippingPages}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}
