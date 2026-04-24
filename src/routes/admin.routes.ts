@@ -105,4 +105,57 @@ router.patch('/withdrawals/:id', authenticateToken, requireAdmin, async (req: Au
   }
 });
 
+// GET /api/admin/affiliates (List all affiliates with stats)
+router.get('/affiliates', authenticateToken, requireAdmin, async (req: AuthRequest, res: Response): Promise<any> => {
+  try {
+    const affiliates = await prisma.user.findMany({
+      where: { role: 'AFFILIATE' },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        createdAt: true,
+        storeName: true,
+        orders: {
+          select: {
+            status: true,
+            commissionAmount: true
+          }
+        }
+      }
+    });
+
+    const formatted = affiliates.map(a => {
+      const totalOrders = a.orders.length;
+      const confirmedOrders = a.orders.filter(o => 
+        ['CONFIRMED', 'SHIPPED', 'DELIVERED'].includes(o.status)
+      ).length;
+      const earnings = a.orders
+        .filter(o => o.status === 'DELIVERED')
+        .reduce((sum, o) => sum + o.commissionAmount, 0);
+      const confirmationRate = totalOrders > 0 
+        ? Math.round((confirmedOrders / totalOrders) * 100) 
+        : 0;
+
+      return {
+        id: a.id,
+        name: a.name,
+        email: a.email,
+        storeName: a.storeName,
+        createdAt: a.createdAt,
+        totalOrders,
+        confirmedOrders,
+        earnings,
+        confirmationRate,
+        status: 'active' // For now default to active
+      };
+    });
+
+    res.json({ data: formatted });
+  } catch (error) {
+    console.error('Error fetching admin affiliates:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
 export default router;
