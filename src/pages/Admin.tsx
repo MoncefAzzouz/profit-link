@@ -1,12 +1,12 @@
 import { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, Users, Package, ShoppingCart, Wallet,
   Settings, Menu, X, TrendingUp, CheckCircle, XCircle,
   Truck, Clock, Eye, Edit, Ban, Search, Filter, Plus,
   BarChart3, ChevronLeft, AlertTriangle, SlidersHorizontal, Store, UserPlus, Check, MapPin, CreditCard,
-  Video, Star, EyeOff, Trash2, Upload, FileText, Film, Image as ImageIcon, User, LayoutTemplate, Layers
+  Video, Star, EyeOff, Trash2, Upload, FileText, Film, Image as ImageIcon, User, LayoutTemplate, Layers, LogOut
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -69,6 +69,7 @@ const orderDistribution = [
 ];
 
 const Admin = () => {
+  const navigate = useNavigate();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<Tab>("overview");
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -696,6 +697,13 @@ const Admin = () => {
     toast({ title: `تم تحديث حالة الطلبية إلى ${status}` });
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem("affiliate_user");
+    localStorage.removeItem("token");
+    toast({ title: "تم تسجيل الخروج" });
+    navigate("/");
+  };
+
   return (
     <div className="dashboard-page-admin">
       {/* Sidebar */}
@@ -783,6 +791,15 @@ const Admin = () => {
               <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-navy-800 flex items-center justify-center ring-2 ring-emerald-500/20 shadow-md">
                 <span className="text-primary-foreground font-bold text-sm">A</span>
               </div>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={handleLogout}
+                className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-full"
+                title="تسجيل الخروج"
+              >
+                <LogOut className="w-5 h-5" />
+              </Button>
             </div>
           </div>
         </header>
