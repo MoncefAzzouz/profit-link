@@ -27,7 +27,6 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-app.options('*', cors(corsOptions));
 
 // Increased limits for large AI image payloads
 app.use(express.json({ limit: '100mb' }));
