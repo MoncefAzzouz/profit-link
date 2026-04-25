@@ -1642,9 +1642,6 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
           </h2>
           <p className="text-sm text-muted-foreground mt-1">{pages.length} صفحة • {templates.length} قالب ترند متاح</p>
         </div>
-        <Button onClick={createNewPage} className="gap-2 rounded-xl bg-gradient-to-l from-primary to-primary/90 shadow-md hover:shadow-lg transition-all">
-          <Plus className="w-4 h-4" /> صفحة جديدة
-        </Button>
       </motion.div>
 
       {/* Stats */}
@@ -1731,10 +1728,7 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
         <motion.div {...cardAnim()} className="text-center py-16">
           <LayoutTemplate className="w-16 h-16 text-muted-foreground/30 mx-auto mb-4" />
           <p className="text-lg font-semibold text-muted-foreground">لا توجد صفحات هبوط</p>
-          <p className="text-sm text-muted-foreground/70 mt-1">أنشئ أول صفحة لعرض منتجاتك</p>
-          <Button onClick={createNewPage} className="mt-4 gap-2 rounded-xl">
-            <Plus className="w-4 h-4" /> إنشاء صفحة
-          </Button>
+          <p className="text-sm text-muted-foreground/70 mt-1">أضف منتجات إلى متجرك لتظهر هنا تلقائياً</p>
         </motion.div>
       )}
     </div>
