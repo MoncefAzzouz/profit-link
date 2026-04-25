@@ -452,6 +452,7 @@ router.put('/products', authenticateToken, async (req: AuthRequest, res: Respons
     });
 
     const existingConfig = (existing?.config as any) || {};
+    const oldProductIds = (existingConfig.storeProductIds as string[]) || [];
     const updatedConfig = { ...existingConfig, storeProductIds: productIds };
 
     await prisma.storeSettings.upsert({
@@ -464,7 +465,57 @@ router.put('/products', authenticateToken, async (req: AuthRequest, res: Respons
       }
     });
 
-    res.json({ message: 'Store products saved successfully' });
+    // Handle automated landing page creation for NEW products
+    const newProductIds = (productIds as string[]).filter((id: string) => !oldProductIds.includes(id));
+
+    if (newProductIds.length > 0) {
+      const products = await prisma.product.findMany({
+        where: { id: { in: newProductIds } }
+      });
+
+      for (const product of products) {
+        const existingPage = await prisma.landingPage.findFirst({
+          where: { ownerId: affiliateId, productId: product.id }
+        });
+
+        if (!existingPage) {
+          const defaultConfig = {
+            productName: product.name,
+            template: "original",
+            heroTitle: product.name,
+            heroSubtitle: product.description || "أفضل جودة بأفضل سعر في السوق الجزائري",
+            price: product.price,
+            originalPrice: product.originalPrice,
+            category: product.category,
+            heroImage: product.image,
+            galleryImages: Array.isArray(product.images) && product.images.length > 0 ? product.images : [product.image],
+            features: Array.isArray(product.features) && product.features.length > 0 ? product.features : ["جودة عالية مضمونة", "توصيل سريع لكل الولايات", "الدفع عند الاستلام", "ضمان الاستبدال والاسترجاع"],
+            sections: ["hero", "urgency-bar", "features", "gallery", "social-proof", "reviews", "shipping", "cta"],
+            primaryColor: "#10b981",
+            accentColor: "#3b82f6",
+            backgroundColor: "#ffffff",
+            ctaText: "اطلب الآن",
+            ctaStyle: "pill",
+            showReviews: true,
+            showCountdown: false,
+            showGuarantee: true,
+            showFreeShipping: true,
+            fontFamily: "cairo"
+          };
+
+          await prisma.landingPage.create({
+            data: {
+              ownerId: affiliateId,
+              productId: product.id,
+              pageConfig: defaultConfig,
+              status: "draft"
+            }
+          });
+        }
+      }
+    }
+
+    res.json({ message: 'Store products saved and landing pages initialized' });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Internal Server Error' });
