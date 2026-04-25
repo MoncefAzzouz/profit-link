@@ -241,7 +241,7 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
   const [isLoading, setIsLoading] = useState(true);
   const [editingPage, setEditingPage] = useState<LandingPageConfig | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
-  const [previewDevice, setPreviewDevice] = useState<"desktop" | "mobile">("desktop");
+  const [previewDevice, setPreviewDevice] = useState<"desktop" | "mobile">("mobile");
   const userStr = localStorage.getItem("affiliate_user");
   const affiliateUser = userStr ? JSON.parse(userStr) : null;
   const isAdmin = affiliateUser?.role?.toUpperCase() === "ADMIN";
@@ -1103,17 +1103,16 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
           </div>
         </div>
 
-        <div className="flex flex-1 overflow-hidden">
+        <div className="flex flex-col lg:flex-row flex-1 overflow-y-auto lg:overflow-hidden">
           {/* Live Preview */}
-          <div className="hidden lg:flex flex-1 bg-muted/30 items-center justify-center p-6 overflow-y-auto">
-            <div className={`bg-background shadow-2xl rounded-2xl overflow-hidden transition-all duration-500 origin-center ${previewDevice === "mobile" ? "w-[375px] h-[700px]" : "w-full max-w-4xl h-full"
+          <div className="flex flex-1 bg-muted/30 items-center justify-center p-4 lg:p-6 min-h-[600px] lg:min-h-0 order-2 lg:order-1">
+            <div className={`bg-background shadow-2xl rounded-2xl overflow-hidden transition-all duration-500 origin-center ${previewDevice === "mobile" ? "w-[375px] h-[667px]" : "w-full max-w-4xl h-full"
               }`}>
               {renderPreview(previewDevice === "mobile")}
             </div>
           </div>
 
-          {/* Config Panels */}
-          <div className="w-full lg:w-[420px] border-r border-border bg-card flex flex-col shrink-0">
+          <div className="w-full lg:w-[420px] border-b lg:border-b-0 lg:border-l border-border bg-card flex flex-col shrink-0 order-1 lg:order-2">
             {/* Tabs */}
             <div className="p-3 border-b border-border">
               <div className="flex bg-muted rounded-xl p-0.5 gap-0.5">
