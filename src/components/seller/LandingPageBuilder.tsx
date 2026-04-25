@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Layout, Palette, Type, Image, Eye, Save, Plus, Trash2,
+  Layout, Palette, Type, Image, Eye, EyeOff, Edit, Save, Plus, Trash2,
   ChevronDown, ChevronUp, Sparkles, Monitor, Smartphone,
   Copy, Check, ExternalLink, Layers, Paintbrush, Star,
   ShoppingCart, Shield, Truck, Clock, MessageSquare, Zap,
@@ -1105,10 +1105,10 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
               variant={showConfig ? "secondary" : "default"}
               size="sm"
               onClick={() => setShowConfig(!showConfig)}
-              className="lg:hidden rounded-xl gap-1.5"
+              className="rounded-xl gap-1.5"
             >
-              {showConfig ? <Eye className="w-4 h-4" /> : <Edit className="w-4 h-4" />}
-              {showConfig ? "معاينة" : "تعديل"}
+              {showConfig ? <EyeOff className="w-4 h-4" /> : <Edit className="w-4 h-4" />}
+              {showConfig ? "إخفاء الشريط" : "تعديل"}
             </Button>
           </div>
         </div>
@@ -1122,7 +1122,7 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
             </div>
           </div>
 
-          <div className={`w-full lg:w-[420px] border-b lg:border-b-0 lg:border-l border-border bg-card flex flex-col shrink-0 order-1 lg:order-2 ${showConfig ? "flex" : "hidden lg:flex"}`}>
+          <div className={`w-full lg:w-[420px] border-b lg:border-b-0 lg:border-l border-border bg-card flex flex-col shrink-0 order-1 lg:order-2 ${showConfig ? "flex" : "hidden"}`}>
             {/* Tabs */}
             <div className="p-3 border-b border-border">
               <div className="flex bg-muted rounded-xl p-0.5 gap-0.5">
