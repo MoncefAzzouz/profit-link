@@ -146,9 +146,10 @@ const Dashboard = () => {
     return ["الكل", ...dbCategories.filter(c => c.isActive).map(c => c.name)];
   }, [dbCategories]);
 
-  const getWilayaName = (codeOrName: string) => {
+  const getWilayaName = (codeOrName: any) => {
     if (!codeOrName) return "";
-    const rate = shippingRates.find(r => r.code === codeOrName);
+    const normalized = String(codeOrName).padStart(2, '0');
+    const rate = shippingRates.find(r => String(r.code).padStart(2, '0') === normalized);
     return rate ? rate.wilaya : codeOrName;
   };
 
