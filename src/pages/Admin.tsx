@@ -112,6 +112,31 @@ const Admin = () => {
   const [dbOrders, setDbOrders] = useState<any[]>([]);
   const [isFetchingOrders, setIsFetchingOrders] = useState(false);
 
+  // Authentication & Authorization Check
+  useEffect(() => {
+    const userStr = localStorage.getItem("affiliate_user");
+    if (!userStr) {
+      navigate("/auth");
+      return;
+    }
+    try {
+      const user = JSON.parse(userStr);
+      const role = (user.role || "").toUpperCase();
+      if (role !== "ADMIN") {
+        toast({ 
+          variant: "destructive", 
+          title: "غير مصرح", 
+          description: "ليس لديك صلاحية للوصول لصفحة الإدارة" 
+        });
+        navigate("/dashboard");
+      }
+    } catch (e) {
+      localStorage.removeItem("affiliate_user");
+      localStorage.removeItem("token");
+      navigate("/auth");
+    }
+  }, [navigate, toast]);
+
   // Fetch admin stats from backend
   useEffect(() => {
     const token = localStorage.getItem("token");
