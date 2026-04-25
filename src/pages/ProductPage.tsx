@@ -28,8 +28,11 @@ const ProductPage = () => {
     wilaya: "",
     commune: "",
     address: "",
-    deliveryType: "home" as "home" | "office"
+    deliveryType: "home" as "home" | "office",
+    selectedColor: "",
+    selectedSize: ""
   });
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState(false);
 
@@ -208,7 +211,25 @@ const ProductPage = () => {
     if (!formData.name || !formData.phone || !formData.wilaya || !formData.commune || !formData.address) {
       toast({
         title: "خطأ",
-        description: "يرجى ملء جميع الحقول",
+        description: "يرجى ملء جميع الحقول الأساسية",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (product.availableColors?.length > 0 && !formData.selectedColor) {
+      toast({
+        title: "تنبيه",
+        description: "يرجى اختيار اللون المطلوب",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (product.availableSizes?.length > 0 && !formData.selectedSize) {
+      toast({
+        title: "تنبيه",
+        description: "يرجى اختيار المقاس المطلوب",
         variant: "destructive"
       });
       return;
@@ -233,8 +254,11 @@ const ProductPage = () => {
           totalAmount: (product.price * quantity) + currentShippingPrice,
           commissionAmount: product.commission * quantity,
           shippingFee: currentShippingPrice,
-          stopDesk: formData.deliveryType === "office" ? 1 : 0
+          stopDesk: formData.deliveryType === "office" ? 1 : 0,
+          color: formData.selectedColor,
+          size: formData.selectedSize
         })
+
       });
 
       if (!response.ok) throw new Error('Order submission failed');
@@ -440,7 +464,52 @@ const ProductPage = () => {
               </h2>
 
               <div className="space-y-4">
+                {product.availableColors && product.availableColors.length > 0 && (
+                  <div className="space-y-2">
+                    <Label className="font-bold">اختر اللون *</Label>
+                    <div className="flex flex-wrap gap-2">
+                      {product.availableColors.map((color: string) => (
+                        <button
+                          key={color}
+                          type="button"
+                          onClick={() => setFormData({ ...formData, selectedColor: color })}
+                          className={`px-4 py-2 rounded-xl text-sm font-bold border-2 transition-all ${
+                            formData.selectedColor === color 
+                              ? "border-primary bg-primary/5 text-primary" 
+                              : "border-muted bg-muted/30 text-muted-foreground hover:border-muted-foreground/30"
+                          }`}
+                        >
+                          {color}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {product.availableSizes && product.availableSizes.length > 0 && (
+                  <div className="space-y-2">
+                    <Label className="font-bold">اختر المقاس *</Label>
+                    <div className="flex flex-wrap gap-2">
+                      {product.availableSizes.map((size: string) => (
+                        <button
+                          key={size}
+                          type="button"
+                          onClick={() => setFormData({ ...formData, selectedSize: size })}
+                          className={`min-w-[50px] h-10 rounded-xl text-sm font-bold border-2 transition-all ${
+                            formData.selectedSize === size 
+                              ? "border-secondary bg-secondary/5 text-secondary" 
+                              : "border-muted bg-muted/30 text-muted-foreground hover:border-muted-foreground/30"
+                          }`}
+                        >
+                          {size}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 <div>
+
                   <Label htmlFor="name">الاسم الكامل *</Label>
                   <Input
                     id="name"

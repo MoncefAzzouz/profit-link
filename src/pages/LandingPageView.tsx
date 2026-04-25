@@ -75,7 +75,8 @@ const LandingPageView = () => {
   const [page, setPage] = useState<LandingPageConfig | null>(null);
   const [loading, setLoading] = useState(true);
   const [showNotification, setShowNotification] = useState(false);
-  const [orderForm, setOrderForm] = useState({ name: "", phone: "", wilaya: "", commune: "", address: "", deliveryType: "home" as "home" | "desk" });
+  const [orderForm, setOrderForm] = useState({ name: "", phone: "", wilaya: "", commune: "", address: "", deliveryType: "home" as "home" | "desk", selectedColor: "", selectedSize: "" });
+
   const [orderSubmitted, setOrderSubmitted] = useState(false);
   const [countdown, setCountdown] = useState({ hours: 2, minutes: 14, seconds: 35 });
   const [wilayas, setWilayas] = useState<any[]>([]);
@@ -269,6 +270,18 @@ const LandingPageView = () => {
       return;
     }
 
+    // @ts-ignore
+    if (p.availableColors?.length > 0 && !orderForm.selectedColor) {
+      toast({ title: "تنبيه", description: "يرجى اختيار اللون المطلوب", variant: "destructive" });
+      return;
+    }
+
+    // @ts-ignore
+    if (p.availableSizes?.length > 0 && !orderForm.selectedSize) {
+      toast({ title: "تنبيه", description: "يرجى اختيار المقاس المطلوب", variant: "destructive" });
+      return;
+    }
+
     const currentShipping = orderForm.deliveryType === "home" ? shippingRate.home : shippingRate.desk;
     const finalAmount = (p.price * quantity) + currentShipping;
 
@@ -288,8 +301,11 @@ const LandingPageView = () => {
           totalAmount: finalAmount,
           commissionAmount: p.commission || 500,
           shippingFee: currentShipping,
-          stopDesk: orderForm.deliveryType === "desk" ? 1 : 0
+          stopDesk: orderForm.deliveryType === "desk" ? 1 : 0,
+          color: orderForm.selectedColor,
+          size: orderForm.selectedSize
         })
+
       });
 
       if (!response.ok) {
@@ -366,11 +382,16 @@ const LandingPageView = () => {
         <header className="sticky top-0 z-50 bg-card/80 backdrop-blur-xl border-b border-border">
           <div className="container mx-auto px-4 py-4 flex items-center justify-between">
             <div className="flex items-center gap-2">
-               <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg" style={{ backgroundColor: p.primaryColor }}>
-                 <ShoppingCart className="w-5 h-5 text-white" />
+               <div className="w-12 h-12 rounded-xl flex items-center justify-center shadow-lg overflow-hidden bg-white" style={{ backgroundColor: p.logo ? "#fff" : p.primaryColor }}>
+                 {p.logo ? (
+                   <img src={p.logo} alt="Logo" className="w-full h-full object-contain p-1.5" />
+                 ) : (
+                   <ShoppingCart className="w-6 h-6 text-white" />
+                 )}
                </div>
                <span className="font-bold text-lg hidden sm:block">{p.productName || defaultStoreName}</span>
             </div>
+
             <a href="#order-form">
               <Button style={{ backgroundColor: p.primaryColor }} className="text-white font-bold rounded-full px-6">
                 اطلب الآن
@@ -454,7 +475,66 @@ const LandingPageView = () => {
                 </h2>
 
                 <div className="space-y-4">
+                  {/* @ts-ignore */}
+                  {p.availableColors && p.availableColors.length > 0 && (
+                    <div className="space-y-2">
+                      <label className="text-sm font-bold opacity-70">اختر اللون *</label>
+                      <div className="flex flex-wrap gap-2">
+                        {/* @ts-ignore */}
+                        {p.availableColors.map((color: string) => (
+                          <button
+                            key={color}
+                            type="button"
+                            onClick={() => setOrderForm({ ...orderForm, selectedColor: color })}
+                            className={`px-4 py-2 rounded-xl text-sm font-bold border-2 transition-all ${
+                              orderForm.selectedColor === color 
+                                ? "border-primary bg-primary/5 text-primary" 
+                                : "border-muted bg-muted/30 text-muted-foreground hover:border-muted-foreground/30"
+                            }`}
+                            style={{ 
+                              borderColor: orderForm.selectedColor === color ? p.primaryColor : undefined,
+                              color: orderForm.selectedColor === color ? p.primaryColor : undefined,
+                              backgroundColor: orderForm.selectedColor === color ? `${p.primaryColor}10` : undefined,
+                            }}
+                          >
+                            {color}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* @ts-ignore */}
+                  {p.availableSizes && p.availableSizes.length > 0 && (
+                    <div className="space-y-2">
+                      <label className="text-sm font-bold opacity-70">اختر المقاس *</label>
+                      <div className="flex flex-wrap gap-2">
+                        {/* @ts-ignore */}
+                        {p.availableSizes.map((size: string) => (
+                          <button
+                            key={size}
+                            type="button"
+                            onClick={() => setOrderForm({ ...orderForm, selectedSize: size })}
+                            className={`min-w-[50px] h-10 rounded-xl text-sm font-bold border-2 transition-all ${
+                              orderForm.selectedSize === size 
+                                ? "border-secondary bg-secondary/5 text-secondary" 
+                                : "border-muted bg-muted/30 text-muted-foreground hover:border-muted-foreground/30"
+                            }`}
+                            style={{ 
+                              borderColor: orderForm.selectedSize === size ? p.accentColor : undefined,
+                              color: orderForm.selectedSize === size ? p.accentColor : undefined,
+                              backgroundColor: orderForm.selectedSize === size ? `${p.accentColor}10` : undefined,
+                            }}
+                          >
+                            {size}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   <div className="space-y-2">
+
                     <label className="text-sm font-bold opacity-70">الاسم الكامل *</label>
                     <Input 
                       placeholder="أدخل اسمك الكامل" 
@@ -683,14 +763,19 @@ const LandingPageView = () => {
       <div className="sticky top-0 z-50 backdrop-blur-xl border-b" style={{ backgroundColor: isDark(p.backgroundColor) ? "rgba(15,23,42,0.9)" : "rgba(255,255,255,0.9)", borderColor: isDark(p.backgroundColor) ? "#334155" : "#e2e8f0" }}>
         <div className="max-w-5xl mx-auto flex items-center justify-between px-4 sm:px-6 py-3">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg" style={{ backgroundColor: p.primaryColor }}>
-              <ShoppingCart className="w-5 h-5 text-white" />
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center shadow-lg overflow-hidden bg-white" style={{ backgroundColor: p.logo ? "#fff" : p.primaryColor }}>
+              {p.logo ? (
+                <img src={p.logo} alt="Logo" className="w-full h-full object-contain p-1.5" />
+              ) : (
+                <ShoppingCart className="w-6 h-6 text-white" />
+              )}
             </div>
             <div>
               <span className="text-sm font-bold block">{p.productName || defaultStoreName}</span>
               <span className="text-xs" style={{ color: stc }}>شحن مجاني لكل الولايات 🚚</span>
             </div>
           </div>
+
           <a href="#order-form" className="text-xs font-bold px-5 py-2.5 rounded-full text-white shadow-lg transition-transform hover:scale-105" style={{ backgroundColor: p.primaryColor }}>
             {p.ctaText}
           </a>
@@ -1046,7 +1131,68 @@ const LandingPageView = () => {
                   </div>
 
                   <div className="space-y-4">
+                    {/* @ts-ignore */}
+                    {p.availableColors && p.availableColors.length > 0 && (
+                      <div className="space-y-2 text-right">
+                        <label className="text-sm font-bold opacity-70">اختر اللون *</label>
+                        <div className="flex flex-wrap gap-2 justify-start">
+                          {/* @ts-ignore */}
+                          {p.availableColors.map((color: string) => (
+                            <button
+                              key={color}
+                              type="button"
+                              onClick={() => setOrderForm({ ...orderForm, selectedColor: color })}
+                              className={`px-4 py-2 rounded-xl text-sm font-bold border-2 transition-all ${
+                                orderForm.selectedColor === color 
+                                  ? "border-primary bg-primary/5 text-primary" 
+                                  : "border-muted bg-muted/30 text-muted-foreground hover:border-muted-foreground/30"
+                              }`}
+                              style={{ 
+                                borderRadius: `${Math.min(p.borderRadius, 16)}px`,
+                                borderColor: orderForm.selectedColor === color ? p.primaryColor : undefined,
+                                color: orderForm.selectedColor === color ? p.primaryColor : undefined,
+                                backgroundColor: orderForm.selectedColor === color ? `${p.primaryColor}10` : undefined,
+                              }}
+                            >
+                              {color}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* @ts-ignore */}
+                    {p.availableSizes && p.availableSizes.length > 0 && (
+                      <div className="space-y-2 text-right">
+                        <label className="text-sm font-bold opacity-70">اختر المقاس *</label>
+                        <div className="flex flex-wrap gap-2 justify-start">
+                          {/* @ts-ignore */}
+                          {p.availableSizes.map((size: string) => (
+                            <button
+                              key={size}
+                              type="button"
+                              onClick={() => setOrderForm({ ...orderForm, selectedSize: size })}
+                              className={`min-w-[50px] h-10 rounded-xl text-sm font-bold border-2 transition-all ${
+                                orderForm.selectedSize === size 
+                                  ? "border-secondary bg-secondary/5 text-secondary" 
+                                  : "border-muted bg-muted/30 text-muted-foreground hover:border-muted-foreground/30"
+                              }`}
+                              style={{ 
+                                borderRadius: `${Math.min(p.borderRadius, 16)}px`,
+                                borderColor: orderForm.selectedSize === size ? p.accentColor : undefined,
+                                color: orderForm.selectedSize === size ? p.accentColor : undefined,
+                                backgroundColor: orderForm.selectedSize === size ? `${p.accentColor}10` : undefined,
+                              }}
+                            >
+                              {size}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
                     <div className="space-y-2">
+
                       <label className="text-sm font-bold opacity-70">الاسم الكامل *</label>
                       <Input 
                         placeholder="أدخل اسمك الكامل" 

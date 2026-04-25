@@ -73,8 +73,13 @@ interface LandingPageConfig {
   imageStyle: "rounded" | "sharp" | "blob" | "circle";
   pixels?: { facebook?: string; tiktok?: string; snapchat?: string };
   galleryImages: string[];
+  availableColors?: string[];
+  availableSizes?: string[];
+  logo?: string;
   productId?: string;
 }
+
+
 
 const defaultNewPage = (): LandingPageConfig => ({
   id: `lp-${Date.now()}`,
@@ -632,7 +637,34 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
         </h3>
 
         <div className="space-y-4">
+          {p.availableColors && p.availableColors.length > 0 && (
+            <div className="space-y-1.5">
+              <Label className="text-[11px] font-bold opacity-70">اختر اللون *</Label>
+              <div className="flex flex-wrap gap-1.5">
+                {p.availableColors.map(color => (
+                  <div key={color} className="px-3 py-1 rounded-lg border text-[10px] font-bold opacity-50 bg-muted/20">
+                    {color}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {p.availableSizes && p.availableSizes.length > 0 && (
+            <div className="space-y-1.5">
+              <Label className="text-[11px] font-bold opacity-70">اختر المقاس *</Label>
+              <div className="flex flex-wrap gap-1.5">
+                {p.availableSizes.map(size => (
+                  <div key={size} className="min-w-[32px] h-8 rounded-lg border flex items-center justify-center text-[10px] font-bold opacity-50 bg-muted/20">
+                    {size}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="space-y-1.5">
+
             <Label className="text-[11px] font-bold opacity-70">الاسم الكامل *</Label>
             <div className="h-10 rounded-xl border px-3 flex items-center text-xs bg-muted/20" style={{ borderColor: isDark(p.backgroundColor) ? "#334155" : "#e2e8f0" }}>
               أدخل اسمك الكامل
@@ -721,11 +753,16 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
           {/* Header */}
           <div className="sticky top-0 z-10 flex items-center justify-between px-3 h-10 border-b bg-card/80 backdrop-blur-md">
             <div className="flex items-center gap-1.5 overflow-hidden">
-              <div className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: p.primaryColor }}>
-                <ShoppingCart className="w-3 h-3 text-white" />
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 overflow-hidden bg-white" style={{ backgroundColor: p.logo ? "#fff" : p.primaryColor }}>
+                {p.logo ? (
+                  <img src={p.logo} alt="Logo" className="w-full h-full object-contain p-1" />
+                ) : (
+                  <ShoppingCart className="w-4 h-4 text-white" />
+                )}
               </div>
               <span className="text-[10px] font-bold truncate max-w-[150px]">{p.productName || defaultStoreName}</span>
             </div>
+
             <button className="text-[9px] font-bold px-4 py-1.5 rounded-full text-white shadow-lg" style={{ backgroundColor: p.primaryColor }}>
               اطلب الآن
             </button>
@@ -882,11 +919,16 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
         {/* Header */}
         <div className="flex items-center justify-between px-4 sm:px-6 py-3 border-b" style={{ borderColor: isDark(p.backgroundColor) ? "#334155" : "#e2e8f0" }}>
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg flex items-center justify-center shadow-md" style={{ backgroundColor: p.primaryColor }}>
-              <ShoppingCart className="w-3.5 h-3.5 text-white" />
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center shadow-md overflow-hidden bg-white" style={{ backgroundColor: p.logo ? "#fff" : p.primaryColor }}>
+              {p.logo ? (
+                <img src={p.logo} alt="Logo" className="w-full h-full object-contain p-1" />
+              ) : (
+                <ShoppingCart className="w-4 h-4 text-white" />
+              )}
             </div>
-            <span className="text-xs font-bold">{defaultStoreName}</span>
+            <span className="text-xs font-bold">{p.productName || defaultStoreName}</span>
           </div>
+
           <button className="text-[10px] font-bold px-3 py-1.5 rounded-full text-white shadow-sm" style={{ backgroundColor: p.primaryColor }}>
             {p.ctaText}
           </button>
@@ -1300,10 +1342,80 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
                     <Label className="text-xs font-bold opacity-70">العنوان الفرعي</Label>
                     <Textarea value={editingPage.heroSubtitle} onChange={(e) => updatePage("heroSubtitle", e.target.value)} className="rounded-xl text-sm" rows={2} />
                   </div>
-                  <div className="space-y-2">
-                    <Label className="text-xs font-bold opacity-70">رابط الصورة</Label>
-                    <Input value={editingPage.heroImage} onChange={(e) => updatePage("heroImage", e.target.value)} className="rounded-xl h-9 text-sm" dir="ltr" />
+                  <div className="space-y-4 p-4 bg-muted/20 rounded-2xl border border-dashed border-border">
+                    <Label className="text-xs font-bold opacity-70 block mb-2">صورة الواجهة (Banner)</Label>
+                    <div 
+                      className="relative aspect-video rounded-xl bg-background border-2 border-dashed border-primary/20 flex flex-col items-center justify-center cursor-pointer hover:bg-primary/5 transition-all group overflow-hidden"
+                      onClick={() => {
+                        const input = document.createElement('input');
+                        input.type = 'file';
+                        input.accept = 'image/*';
+                        input.onchange = (e: any) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onloadend = () => {
+                              updatePage("heroImage", reader.result as string);
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        };
+                        input.click();
+                      }}
+                    >
+                      {editingPage.heroImage ? (
+                        <>
+                          <img src={editingPage.heroImage} alt="Banner" className="absolute inset-0 w-full h-full object-cover" />
+                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                            <Upload className="w-6 h-6 text-white" />
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="w-6 h-6 text-primary/40 group-hover:text-primary transition-colors mb-2" />
+                          <span className="text-[10px] font-bold text-muted-foreground">اضغط لرفع صورة</span>
+                        </>
+                      )}
+                    </div>
                   </div>
+
+                  <div className="space-y-4 p-4 bg-muted/20 rounded-2xl border border-dashed border-border">
+                    <Label className="text-xs font-bold opacity-70 block mb-2">شعار المتجر (Logo)</Label>
+                    <div 
+                      className="relative w-20 h-20 mx-auto rounded-xl bg-background border-2 border-dashed border-primary/20 flex flex-col items-center justify-center cursor-pointer hover:bg-primary/5 transition-all group overflow-hidden"
+                      onClick={() => {
+                        const input = document.createElement('input');
+                        input.type = 'file';
+                        input.accept = 'image/*';
+                        input.onchange = (e: any) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onloadend = () => {
+                              updatePage("logo", reader.result as string);
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        };
+                        input.click();
+                      }}
+                    >
+                      {editingPage.logo ? (
+                        <>
+                          <img src={editingPage.logo} alt="Logo" className="absolute inset-0 w-full h-full object-contain p-2" />
+                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                            <Upload className="w-4 h-4 text-white" />
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="w-5 h-5 text-primary/40 group-hover:text-primary transition-colors mb-1" />
+                          <span className="text-[9px] font-bold text-muted-foreground">رفع شعار</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+
                   <div className="space-y-2">
                     <Label className="text-xs font-bold opacity-70">نص زر الشراء</Label>
                     <Input value={editingPage.ctaText} onChange={(e) => updatePage("ctaText", e.target.value)} className="rounded-xl h-9 text-sm" />
@@ -1325,19 +1437,9 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
                     />
                   </div>
 
-                  {/* Free Delivery Toggle */}
-                  <div className="flex items-center justify-between p-3 bg-primary/5 rounded-2xl border border-primary/10">
-                    <div className="space-y-0.5">
-                      <Label className="text-xs font-bold">توصيل مجاني</Label>
-                      <p className="text-[10px] text-muted-foreground">تفعيل التوصيل المجاني لكل الولايات</p>
-                    </div>
-                    <Switch
-                      checked={editingPage.showFreeShipping}
-                      onCheckedChange={(checked) => updatePage("showFreeShipping", checked)}
-                    />
-                  </div>
 
                   {/* Features */}
+
                   <div className="space-y-2">
                     <Label className="text-xs font-bold opacity-70">المميزات</Label>
                     {editingPage.features.map((feature, idx) => (

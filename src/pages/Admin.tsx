@@ -281,21 +281,34 @@ const Admin = () => {
     price: 0,
     originalPrice: 0,
     commission: 0,
-    category: "إلكترونيات",
+    category: "",
     stock: 0,
     image: "",
     videoUrl: "",
     isVisible: true,
     isTrend: false,
     isFeatured: false,
-    adMaterials: []
+    adMaterials: [],
+    availableColors: [],
+    availableSizes: []
   });
+
 
   // Category Management States
   const [dbCategories, setDbCategories] = useState<any[]>([]);
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<any | null>(null);
-  const [categoryFormData, setCategoryFormData] = useState<any>({ name: "", icon: "📦", isActive: true });
+  const [categoryFormData, setCategoryFormData] = useState<any>({ 
+    name: "", 
+    icon: "📦", 
+    isActive: true,
+    hasColors: false,
+    hasSizes: false,
+    sizeType: "clothing",
+    availableColors: [],
+    availableSizes: []
+  });
+
 
   // Levels Management States
   const [dbLevels, setDbLevels] = useState<any[]>([]);
@@ -590,15 +603,33 @@ const Admin = () => {
   // Category CRUD Handlers
   const handleOpenAddCategory = () => {
     setEditingCategory(null);
-    setCategoryFormData({ name: "", icon: "📦", isActive: true });
+    setCategoryFormData({ 
+      name: "", 
+      icon: "📦", 
+      isActive: true,
+      hasColors: false,
+      hasSizes: false,
+      sizeType: "clothing",
+      availableColors: [],
+      availableSizes: []
+    });
     setIsCategoryDialogOpen(true);
   };
 
+
   const handleOpenEditCategory = (category: any) => {
     setEditingCategory(category);
-    setCategoryFormData({ ...category });
+    setCategoryFormData({ 
+      ...category,
+      hasColors: category.hasColors || false,
+      hasSizes: category.hasSizes || false,
+      sizeType: category.sizeType || "clothing",
+      availableColors: category.availableColors || [],
+      availableSizes: category.availableSizes || []
+    });
     setIsCategoryDialogOpen(true);
   };
+
 
   const handleSaveCategory = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -671,23 +702,31 @@ const Admin = () => {
       price: 0,
       originalPrice: 0,
       commission: 0,
-      category: "إلكترونيات",
+      category: dbCategories.length > 0 ? dbCategories[0].name : "",
       stock: 0,
       image: "",
       videoUrl: "",
       isVisible: true,
       isTrend: false,
       isFeatured: false,
-      adMaterials: []
+      adMaterials: [],
+      availableColors: [],
+      availableSizes: []
     });
     setIsProductDialogOpen(true);
   };
 
-  const handleOpenEditProduct = (product: Product) => {
+
+  const handleOpenEditProduct = (product: any) => {
     setEditingProduct(product);
-    setProductFormData({ ...product });
+    setProductFormData({ 
+      ...product,
+      availableColors: product.availableColors || [],
+      availableSizes: product.availableSizes || []
+    });
     setIsProductDialogOpen(true);
   };
+
 
   const handleSaveProduct = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -709,8 +748,11 @@ const Admin = () => {
         isVisible: productFormData.isVisible,
         isTrend: productFormData.isTrend,
         isFeatured: productFormData.isFeatured,
-        features: productFormData.features || []
+        features: productFormData.features || [],
+        availableColors: productFormData.availableColors,
+        availableSizes: productFormData.availableSizes
       };
+
 
       const url = editingProduct
         ? `https://profit-link-3eri.onrender.com/api/products/${editingProduct.id}`
@@ -2417,11 +2459,124 @@ const Admin = () => {
                 onCheckedChange={v => setCategoryFormData({...categoryFormData, isActive: v})}
               />
             </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="flex items-center justify-between p-4 bg-muted/30 rounded-xl">
+                <div>
+                  <Label className="font-bold text-sm">يدعم الألوان</Label>
+                </div>
+                <Switch 
+                  checked={categoryFormData.hasColors}
+                  onCheckedChange={v => setCategoryFormData({...categoryFormData, hasColors: v})}
+                />
+              </div>
+              <div className="flex items-center justify-between p-4 bg-muted/30 rounded-xl">
+                <div>
+                  <Label className="font-bold text-sm">يدعم المقاسات</Label>
+                </div>
+                <Switch 
+                  checked={categoryFormData.hasSizes}
+                  onCheckedChange={v => setCategoryFormData({...categoryFormData, hasSizes: v})}
+                />
+              </div>
+            </div>
+
+            {categoryFormData.hasColors && (
+              <div className="space-y-2 p-4 bg-muted/20 rounded-xl">
+                <Label className="font-bold text-sm">الألوان المتاحة لهذا التصنيف</Label>
+                <div className="flex gap-2">
+                  <Input 
+                    placeholder="أضف لون (مثال: أحمر)" 
+                    className="h-10 rounded-lg"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        const val = e.currentTarget.value.trim();
+                        if (val && !categoryFormData.availableColors.includes(val)) {
+                          setCategoryFormData({
+                            ...categoryFormData,
+                            availableColors: [...categoryFormData.availableColors, val]
+                          });
+                          e.currentTarget.value = '';
+                        }
+                      }
+                    }}
+                  />
+                </div>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {categoryFormData.availableColors.map((color: string) => (
+                    <Badge key={color} variant="secondary" className="gap-1 px-3 py-1">
+                      {color}
+                      <X 
+                        className="w-3 h-3 cursor-pointer" 
+                        onClick={() => setCategoryFormData({
+                          ...categoryFormData,
+                          availableColors: categoryFormData.availableColors.filter((c: string) => c !== color)
+                        })} 
+                      />
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {categoryFormData.hasSizes && (
+              <div className="space-y-4 p-4 bg-muted/20 rounded-xl">
+                <div className="space-y-2">
+                  <Label className="font-bold text-sm">نوع المقاسات</Label>
+                  <Select 
+                    value={categoryFormData.sizeType}
+                    onValueChange={(v) => {
+                      setCategoryFormData({
+                        ...categoryFormData,
+                        sizeType: v,
+                        availableSizes: [] // Reset sizes when type changes
+                      });
+                    }}
+                  >
+                    <SelectTrigger className="h-10 rounded-lg">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent dir="rtl">
+                      <SelectItem value="clothing">ملابس (S, M, L...)</SelectItem>
+                      <SelectItem value="shoes">أحذية (36, 37, 38...)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="font-bold text-sm">اختر المقاسات المتاحة</Label>
+                  <div className="flex flex-wrap gap-2">
+                    {(categoryFormData.sizeType === 'clothing' 
+                      ? ['S', 'M', 'L', 'XL', 'XXL', 'XXXL'] 
+                      : ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45']
+                    ).map((size) => (
+                      <Button
+                        key={size}
+                        type="button"
+                        variant={categoryFormData.availableSizes.includes(size) ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => {
+                          const sizes = categoryFormData.availableSizes.includes(size)
+                            ? categoryFormData.availableSizes.filter((s: string) => s !== size)
+                            : [...categoryFormData.availableSizes, size];
+                          setCategoryFormData({ ...categoryFormData, availableSizes: sizes });
+                        }}
+                        className="h-8 min-w-[40px] rounded-lg"
+                      >
+                        {size}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
             
-            <DialogFooter className="pt-4">
+            <DialogFooter className="pt-4 gap-2">
               <Button type="button" variant="ghost" onClick={() => setIsCategoryDialogOpen(false)}>إلغاء</Button>
-              <Button type="submit" className="rounded-xl px-8">حفظ</Button>
+              <Button type="submit" className="rounded-xl px-8 bg-primary hover:bg-primary/90 text-white font-bold">حفظ التصنيف</Button>
             </DialogFooter>
+
           </form>
         </DialogContent>
       </Dialog>
@@ -2566,6 +2721,79 @@ const Admin = () => {
                     />
                   </div>
                 </div>
+
+                {/* Variants Selection */}
+                {(() => {
+                  const selectedCat = dbCategories.find(c => c.name === productFormData.category);
+                  if (!selectedCat) return null;
+                  
+                  return (
+                    <div className="space-y-4">
+                      {selectedCat.hasColors && (
+                        <div className="space-y-2 p-4 bg-primary/5 rounded-2xl border border-primary/10">
+                          <Label className="font-bold text-sm flex items-center gap-2">
+                            <div className="w-2 h-2 rounded-full bg-primary" />
+                            الألوان المتوفرة لهذا المنتج
+                          </Label>
+                          <div className="flex flex-wrap gap-2">
+                            {selectedCat.availableColors?.map((color: string) => (
+                              <Button
+                                key={color}
+                                type="button"
+                                variant={productFormData.availableColors.includes(color) ? "default" : "outline"}
+                                size="sm"
+                                onClick={() => {
+                                  const colors = productFormData.availableColors.includes(color)
+                                    ? productFormData.availableColors.filter((c: string) => c !== color)
+                                    : [...productFormData.availableColors, color];
+                                  setProductFormData({ ...productFormData, availableColors: colors });
+                                }}
+                                className="h-9 rounded-xl px-4"
+                              >
+                                {color}
+                              </Button>
+                            ))}
+                            {(selectedCat.availableColors?.length || 0) === 0 && (
+                              <p className="text-xs text-muted-foreground italic">لم يتم تحديد ألوان في هذا التصنيف</p>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {selectedCat.hasSizes && (
+                        <div className="space-y-2 p-4 bg-secondary/5 rounded-2xl border border-secondary/10">
+                          <Label className="font-bold text-sm flex items-center gap-2">
+                            <div className="w-2 h-2 rounded-full bg-secondary" />
+                            المقاسات المتوفرة لهذا المنتج
+                          </Label>
+                          <div className="flex flex-wrap gap-2">
+                            {selectedCat.availableSizes?.map((size: string) => (
+                              <Button
+                                key={size}
+                                type="button"
+                                variant={productFormData.availableSizes.includes(size) ? "secondary" : "outline"}
+                                size="sm"
+                                onClick={() => {
+                                  const sizes = productFormData.availableSizes.includes(size)
+                                    ? productFormData.availableSizes.filter((s: string) => s !== size)
+                                    : [...productFormData.availableSizes, size];
+                                  setProductFormData({ ...productFormData, availableSizes: sizes });
+                                }}
+                                className="h-9 min-w-[44px] rounded-xl font-bold"
+                              >
+                                {size}
+                              </Button>
+                            ))}
+                            {(selectedCat.availableSizes?.length || 0) === 0 && (
+                              <p className="text-xs text-muted-foreground italic">لم يتم تحديد مقاسات في هذا التصنيف</p>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
+
 
                 <div className="space-y-2">
                   <Label className="font-bold text-sm">وصف المنتج (مميزات)</Label>
