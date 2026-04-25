@@ -128,9 +128,9 @@ const Auth = () => {
         email: data.user.email,
         role: data.user.role,
         tier: data.user.tier,
-        wilaya: formData.wilaya,
-        storeName: formData.storeName,
-        ccp: formData.ccp
+        wilaya: data.user.wilaya || formData.wilaya,
+        storeName: data.user.storeName || formData.storeName,
+        ccp: data.user.ccp || formData.ccp
       }));
 
       toast({

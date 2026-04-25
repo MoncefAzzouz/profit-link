@@ -566,7 +566,8 @@ const Dashboard = () => {
     localStorage.removeItem("affiliate_user");
     localStorage.removeItem("token");
     toast({ title: "تم تسجيل الخروج" });
-    navigate("/");
+    // Force a full page reload to clear all React state and caches
+    window.location.href = "/auth";
   };
 
   const copyAffiliateLink = (productId: string, productName: string) => {
