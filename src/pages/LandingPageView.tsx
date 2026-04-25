@@ -67,7 +67,14 @@ interface LandingPageConfig {
   pixels?: { facebook?: string; tiktok?: string; snapchat?: string };
   productId?: string;
   ownerId?: string;
+  logo?: string;
+  availableColors?: string[];
+  availableSizes?: string[];
+  commission?: number;
 }
+
+const defaultStoreName = "متجري";
+
 
 const LandingPageView = () => {
   const { pageId, productId, affiliateId } = useParams();

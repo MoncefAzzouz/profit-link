@@ -77,7 +77,9 @@ interface LandingPageConfig {
   availableSizes?: string[];
   logo?: string;
   productId?: string;
+  commission?: number;
 }
+
 
 
 
