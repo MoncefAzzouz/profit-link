@@ -591,7 +591,10 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
     transition: { delay, duration: 0.5, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] },
   });
 
-  const isDark = (bg: string) => bg.startsWith("#0") || bg.startsWith("#1") || bg.startsWith("#2") || bg === "#020617";
+  const isDark = (bg: string) => {
+    if (!bg || typeof bg !== 'string') return false;
+    return bg.startsWith("#0") || bg.startsWith("#1") || bg.startsWith("#2") || bg === "#020617";
+  };
 
   const renderPreview = (isMobile: boolean) => {
     const p = editingPage;
@@ -1072,7 +1075,7 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
 
   if (editingPage) {
     return (
-      <div className="flex flex-col h-[calc(100vh-140px)] -m-4 sm:-m-6">
+      <div className="flex flex-col min-h-[500px] lg:h-[calc(100vh-140px)] -m-4 sm:-m-6">
         {/* Editor header */}
         <div className="bg-card border-b border-border p-3 flex items-center justify-between gap-3 shrink-0">
           <div className="flex items-center gap-3">
