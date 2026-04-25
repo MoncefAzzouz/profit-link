@@ -242,6 +242,7 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
   const [editingPage, setEditingPage] = useState<LandingPageConfig | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewDevice, setPreviewDevice] = useState<"desktop" | "mobile">("mobile");
+  const [showConfig, setShowConfig] = useState(true);
   const userStr = localStorage.getItem("affiliate_user");
   const affiliateUser = userStr ? JSON.parse(userStr) : null;
   const isAdmin = affiliateUser?.role?.toUpperCase() === "ADMIN";
@@ -1094,25 +1095,34 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
                 <Smartphone className="w-4 h-4" />
               </button>
             </div>
-            <Button variant="outline" size="sm" onClick={() => viewPage(editingPage)} className="rounded-xl gap-1.5">
+            <Button variant="outline" size="sm" onClick={() => viewPage(editingPage)} className="rounded-xl gap-1.5 hidden sm:flex">
               <ExternalLink className="w-4 h-4" /> معاينة
             </Button>
             <Button size="sm" onClick={() => publishPage(editingPage)} className="rounded-xl gap-1.5 bg-gradient-to-l from-primary to-primary/90 shadow-md">
-              <Zap className="w-4 h-4" /> حفظ ونشر
+              <Zap className="w-4 h-4" /> <span className="hidden sm:inline">حفظ ونشر</span><span className="sm:hidden">نشر</span>
+            </Button>
+            <Button 
+              variant={showConfig ? "secondary" : "default"}
+              size="sm" 
+              onClick={() => setShowConfig(!showConfig)} 
+              className="lg:hidden rounded-xl gap-1.5"
+            >
+              {showConfig ? <Eye className="w-4 h-4" /> : <Edit className="w-4 h-4" />}
+              {showConfig ? "معاينة" : "تعديل"}
             </Button>
           </div>
         </div>
 
-        <div className="flex flex-col lg:flex-row flex-1 overflow-y-auto lg:overflow-hidden">
+        <div className={`flex flex-col lg:flex-row flex-1 ${showConfig ? "overflow-y-auto" : "overflow-hidden"} lg:overflow-hidden`}>
           {/* Live Preview */}
-          <div className="flex flex-1 bg-muted/30 items-center justify-center p-4 lg:p-6 min-h-[600px] lg:min-h-0 order-2 lg:order-1">
+          <div className={`flex-1 bg-muted/30 items-center justify-center p-4 lg:p-6 min-h-[600px] lg:min-h-0 order-2 lg:order-1 ${!showConfig ? "flex" : "hidden lg:flex"}`}>
             <div className={`bg-background shadow-2xl rounded-2xl overflow-hidden transition-all duration-500 origin-center ${previewDevice === "mobile" ? "w-[375px] h-[667px]" : "w-full max-w-4xl h-full"
               }`}>
               {renderPreview(previewDevice === "mobile")}
             </div>
           </div>
 
-          <div className="w-full lg:w-[420px] border-b lg:border-b-0 lg:border-l border-border bg-card flex flex-col shrink-0 order-1 lg:order-2">
+          <div className={`w-full lg:w-[420px] border-b lg:border-b-0 lg:border-l border-border bg-card flex flex-col shrink-0 order-1 lg:order-2 ${showConfig ? "flex" : "hidden lg:flex"}`}>
             {/* Tabs */}
             <div className="p-3 border-b border-border">
               <div className="flex bg-muted rounded-xl p-0.5 gap-0.5">
