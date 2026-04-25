@@ -1102,13 +1102,13 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
               <Zap className="w-4 h-4" /> <span className="hidden sm:inline">حفظ ونشر</span><span className="sm:hidden">نشر</span>
             </Button>
             <Button 
-              variant={showConfig ? "secondary" : "default"}
+              variant={showConfig ? "outline" : "default"}
               size="sm" 
               onClick={() => setShowConfig(!showConfig)} 
-              className="lg:hidden rounded-xl gap-1.5"
+              className="lg:hidden rounded-xl gap-1.5 border-primary"
             >
-              {showConfig ? <Eye className="w-4 h-4" /> : <Edit className="w-4 h-4" />}
-              {showConfig ? "معاينة" : "تعديل"}
+              {showConfig ? <ChevronDown className="w-4 h-4" /> : <LayoutTemplate className="w-4 h-4" />}
+              {showConfig ? "إخفاء الشريط" : "تعديل الصفحة"}
             </Button>
           </div>
         </div>
