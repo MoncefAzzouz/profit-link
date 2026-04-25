@@ -4,7 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, Users, Package, ShoppingCart, Wallet,
   Settings, Menu, X, TrendingUp, CheckCircle, XCircle,
-  Truck, Clock, Eye, Edit, Ban, Search, Filter, Plus,
+  Truck, Clock, Eye, Edit, Ban, Search, Filter, Plus, Trophy, Sparkles,
   BarChart3, ChevronLeft, AlertTriangle, SlidersHorizontal, Store, UserPlus, Check, MapPin, CreditCard,
   Video, Star, EyeOff, Trash2, Upload, FileText, Film, Image as ImageIcon, User, LayoutTemplate, Layers, LogOut
 } from "lucide-react";
@@ -23,6 +23,8 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  SelectGroup,
+  SelectLabel,
 } from "@/components/ui/select";
 import { mockProducts, Product } from "@/data/mockProducts";
 import { mockAffiliates, mockAdminStats, mockAllOrders, mockSellers, mockWithdrawalRequests, WithdrawalRequest, mockJoinRequests, JoinRequest } from "@/data/mockAdminData";
@@ -36,7 +38,7 @@ import {
 } from "recharts";
 import LandingPageBuilder from "@/components/seller/LandingPageBuilder";
 
-type Tab = "overview" | "affiliates" | "join_requests" | "orders" | "products" | "categories" | "analytics" | "withdrawals" | "settings" | "shipping" | "landing_editor" | "landing_pages";
+type Tab = "overview" | "affiliates" | "join_requests" | "orders" | "products" | "categories" | "analytics" | "withdrawals" | "settings" | "shipping" | "landing_editor" | "landing_pages" | "levels";
 
 const statusConfig = {
   pending: { label: "قيد الانتظار", icon: Clock, color: "text-yellow-600 bg-yellow-100" },

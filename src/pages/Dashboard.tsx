@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import {
-  LayoutDashboard, Package, ShoppingCart, Wallet, Trophy, 
+  LayoutDashboard, Package, ShoppingCart, Wallet, Trophy,
   HelpCircle, LogOut, Menu, X, Copy, Check, TrendingUp,
   Clock, CheckCircle, XCircle, Truck, Eye, ChevronLeft,
   Calendar, Filter, Search, SlidersHorizontal, Store, Sparkles,
@@ -95,9 +95,9 @@ const getLevelInfo = (confirmedCount: number, levels: any[]) => {
   if (!levels || levels.length === 0) {
     return { name: "المستوى 1 - مبتدئ", next: "المستوى 2", target: 10, prevTarget: 0, levelNumber: 1, color: "blue" };
   }
-  
+
   const sortedLevels = [...levels].sort((a, b) => b.levelNumber - a.levelNumber);
-  
+
   for (const level of sortedLevels) {
     if (confirmedCount >= level.targetOrders) {
       const nextLevel = levels.find(l => l.levelNumber === level.levelNumber + 1);
@@ -112,14 +112,14 @@ const getLevelInfo = (confirmedCount: number, levels: any[]) => {
       };
     }
   }
-  
+
   // Fallback if no levels match (though level 1 usually starts at 0)
   const level1 = levels.find(l => l.levelNumber === 1) || { name: "المستوى 1", targetOrders: 0 };
   const level2 = levels.find(l => l.levelNumber === 2) || { name: "المستوى 2", targetOrders: 10 };
-  return { 
-    name: level1.name, 
-    next: level2.name, 
-    target: level2.targetOrders, 
+  return {
+    name: level1.name,
+    next: level2.name,
+    target: level2.targetOrders,
     prevTarget: 0,
     levelNumber: 1,
     color: level1.color || "blue"
@@ -247,7 +247,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    
+
     const fetchStoreSettings = async () => {
       try {
         if (!token) return;
@@ -418,7 +418,7 @@ const Dashboard = () => {
   const [shippingPage, setShippingPage] = useState(1);
   const shippingItemsPerPage = 10;
 
-  const filteredShippingRates = shippingRates.filter(rate => 
+  const filteredShippingRates = shippingRates.filter(rate =>
     rate.wilaya.toLowerCase().includes(shippingSearch.toLowerCase()) ||
     rate.code.includes(shippingSearch)
   );
@@ -436,7 +436,7 @@ const Dashboard = () => {
     try {
       const res = await fetch('https://profit-link-3eri.onrender.com/api/store/settings', {
         method: 'PUT',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
@@ -481,9 +481,9 @@ const Dashboard = () => {
         if (type === 'logo') {
           setStoreSettings({ ...storeSettings, storeLogo: json.url });
         } else {
-          setStoreSettings({ 
-            ...storeSettings, 
-            hero: { ...storeSettings.hero, bannerUrl: json.url } 
+          setStoreSettings({
+            ...storeSettings,
+            hero: { ...storeSettings.hero, bannerUrl: json.url }
           });
         }
         toast({ title: "✅ تم رفع الصورة بنجاح" });
@@ -493,8 +493,8 @@ const Dashboard = () => {
       }
     } catch (err: any) {
       console.error(err);
-      toast({ 
-        variant: "destructive", 
+      toast({
+        variant: "destructive",
         title: "❌ فشل رفع الصورة",
         description: err.message
       });
@@ -516,11 +516,11 @@ const Dashboard = () => {
         }
 
         const fee = targetType === "home" ? rate.homePrice : rate.officePrice;
-        setOrderFormData(prev => ({ 
-          ...prev, 
+        setOrderFormData(prev => ({
+          ...prev,
           deliveryType: targetType,
           deliveryFee: fee,
-          stopDesk: targetType === "office" ? 1 : 0 
+          stopDesk: targetType === "office" ? 1 : 0
         }));
       }
     }
@@ -533,12 +533,12 @@ const Dashboard = () => {
         setCommunes([]);
         return;
       }
-      
+
       setLoadingCommunes(true);
       try {
         const wilayaData = shippingRates.find(r => r.code === orderFormData.wilaya);
         const wilayaId = wilayaData?.code || "";
-        
+
         if (wilayaId) {
           const response = await fetch(`https://profit-link-3eri.onrender.com/api/delivery/communes?wilaya_id=${parseInt(wilayaId)}`);
           const res = await response.json();
@@ -592,17 +592,17 @@ const Dashboard = () => {
         method: 'POST'
       });
       const res = await response.json();
-      
+
       if (response.ok) {
-        toast({ 
-          title: "تم إرسال الطلب لشركة الشحن", 
-          description: `رقم التتبع: ${res.tracking}` 
+        toast({
+          title: "تم إرسال الطلب لشركة الشحن",
+          description: `رقم التتبع: ${res.tracking}`
         });
-        
-        setOrders(orders.map(o => o.id === order.id ? { 
-          ...o, 
-          status: "shipped", 
-          trackingNumber: res.tracking 
+
+        setOrders(orders.map(o => o.id === order.id ? {
+          ...o,
+          status: "shipped",
+          trackingNumber: res.tracking
         } as any : o));
       } else {
         throw new Error(res.error || "Failed to push to Ecotrack");
@@ -624,11 +624,11 @@ const Dashboard = () => {
         body: JSON.stringify({ askCollection: true })
       });
       const res = await response.json();
-      
+
       if (response.ok) {
-        toast({ 
-          title: "تم تأكيد الشحن بنجاح! 🚀", 
-          description: "تمت معالجة الطلب في Ecotrack." 
+        toast({
+          title: "تم تأكيد الشحن بنجاح! 🚀",
+          description: "تمت معالجة الطلب في Ecotrack."
         });
         setOrders(orders.map(o => o.id === order.id ? { ...o, status: "shipped" } as any : o));
       } else {
@@ -716,16 +716,16 @@ const Dashboard = () => {
   const filteredOrders = useMemo(() => {
     return orders.filter((order) => {
       // Search filter
-      const matchesSearch = order.productName.toLowerCase().includes(orderSearch.toLowerCase()) || 
-                           order.customerName.toLowerCase().includes(orderSearch.toLowerCase()) ||
-                           order.wilaya.toLowerCase().includes(orderSearch.toLowerCase());
-      
+      const matchesSearch = order.productName.toLowerCase().includes(orderSearch.toLowerCase()) ||
+        order.customerName.toLowerCase().includes(orderSearch.toLowerCase()) ||
+        order.wilaya.toLowerCase().includes(orderSearch.toLowerCase());
+
       // Status filter
       const matchesStatus = orderStatus === "all" || order.status === orderStatus;
-      
+
       // Date filters - for simplicity in this demo, skipping complex date filtering 
       // if the date is already a formatted string from the backend.
-      
+
       return matchesSearch && matchesStatus;
     });
   }, [orders, orderSearch, orderStatus, dateFrom, dateTo]);
@@ -785,9 +785,8 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-muted/30 flex">
       {/* Sidebar */}
-      <aside className={`fixed lg:static inset-y-0 right-0 z-50 w-72 bg-card border-l border-border transform transition-transform duration-300 ${
-        sidebarOpen ? "translate-x-0" : "translate-x-full lg:translate-x-0"
-      }`}>
+      <aside className={`fixed lg:static inset-y-0 right-0 z-50 w-72 bg-card border-l border-border transform transition-transform duration-300 ${sidebarOpen ? "translate-x-0" : "translate-x-full lg:translate-x-0"
+        }`}>
         <div className="flex flex-col h-full">
           {/* Logo */}
           <div className="p-6 border-b border-border shrink-0">
@@ -822,11 +821,10 @@ const Dashboard = () => {
                   setActiveTab(item.id);
                   setSidebarOpen(false);
                 }}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
-                  activeTab === item.id
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeTab === item.id
                     ? "bg-primary text-primary-foreground"
                     : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                }`}
+                  }`}
               >
                 <item.icon className="w-5 h-5" />
                 <span className="font-medium">{item.label}</span>
@@ -869,23 +867,23 @@ const Dashboard = () => {
             <h1 className="text-xl font-bold text-foreground">
               {sidebarItems.find(item => item.id === activeTab)?.label}
             </h1>
-             <div className="flex items-center gap-3">
-               <Link to="/products">
-                 <Button variant="outline" size="sm" className="gap-2 rounded-xl">
-                   <Package className="w-4 h-4" />
-                   <span className="hidden sm:inline">تصفح المنتجات</span>
-                 </Button>
-               </Link>
-               <Button 
-                 variant="ghost" 
-                 size="icon" 
-                 onClick={handleLogout}
-                 className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-full"
-                 title="تسجيل الخروج"
-               >
-                 <LogOut className="w-5 h-5" />
-               </Button>
-             </div>
+            <div className="flex items-center gap-3">
+              <Link to="/products">
+                <Button variant="outline" size="sm" className="gap-2 rounded-xl">
+                  <Package className="w-4 h-4" />
+                  <span className="hidden sm:inline">تصفح المنتجات</span>
+                </Button>
+              </Link>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleLogout}
+                className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-full"
+                title="تسجيل الخروج"
+              >
+                <LogOut className="w-5 h-5" />
+              </Button>
+            </div>
           </div>
         </header>
 
@@ -992,7 +990,7 @@ const Dashboard = () => {
                     <Trophy className="w-10 h-10 text-accent animate-pulse-glow" />
                   </div>
                 </div>
-                
+
                 {currentLevelInfo.next && (
                   <>
                     <div className="bg-white/10 rounded-full h-3 mb-3 relative z-10 overflow-hidden">
@@ -1050,26 +1048,26 @@ const Dashboard = () => {
                         </linearGradient>
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border)/0.5)" />
-                      <XAxis 
-                        dataKey="month" 
+                      <XAxis
+                        dataKey="month"
                         axisLine={false}
                         tickLine={false}
-                        tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }} 
+                        tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
                       />
-                      <YAxis 
+                      <YAxis
                         axisLine={false}
                         tickLine={false}
-                        tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }} 
-                        tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} 
+                        tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
+                        tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`}
                       />
                       <RechartsTooltip content={<CustomTooltip />} />
-                      <Area 
-                        type="monotone" 
-                        dataKey="revenue" 
-                        stroke="hsl(160, 84%, 39%)" 
-                        strokeWidth={3} 
-                        fill="url(#sellerRevenueGradient)" 
-                        name="revenue" 
+                      <Area
+                        type="monotone"
+                        dataKey="revenue"
+                        stroke="hsl(160, 84%, 39%)"
+                        strokeWidth={3}
+                        fill="url(#sellerRevenueGradient)"
+                        name="revenue"
                       />
                     </AreaChart>
                   </ResponsiveContainer>
@@ -1241,7 +1239,7 @@ const Dashboard = () => {
                   const isFavorite = favorites.has(product.id);
                   const isInStore = storeProducts.has(product.id);
                   const profit = product.price - (product.originalPrice / 2); // Assuming 50% commission is calculated this way or use product.commission
-                  
+
                   return (
                     <motion.div
                       key={product.id}
@@ -1257,11 +1255,10 @@ const Dashboard = () => {
                             <Maximize2 className="w-4 h-4" />
                           </Button>
                         </div>
-                        <button 
+                        <button
                           onClick={() => toggleFavorite(product.id)}
-                          className={`absolute top-3 right-3 p-2 rounded-full backdrop-blur-md transition-all ${
-                            isFavorite ? "bg-red-500 text-white" : "bg-white/80 text-muted-foreground hover:bg-white"
-                          }`}
+                          className={`absolute top-3 right-3 p-2 rounded-full backdrop-blur-md transition-all ${isFavorite ? "bg-red-500 text-white" : "bg-white/80 text-muted-foreground hover:bg-white"
+                            }`}
                         >
                           <Heart className={`w-4 h-4 ${isFavorite ? "fill-current" : ""}`} />
                         </button>
@@ -1269,10 +1266,10 @@ const Dashboard = () => {
                           {product.category}
                         </div>
                       </div>
-                      
+
                       <div className="p-4 space-y-3">
                         <h3 className="font-bold text-foreground line-clamp-1">{product.name}</h3>
-                        
+
                         <div className="flex items-center justify-between">
                           <div className="space-y-0.5">
                             <p className="text-[10px] text-muted-foreground line-through">{product.originalPrice.toLocaleString()} دج</p>
@@ -1285,19 +1282,18 @@ const Dashboard = () => {
                         </div>
 
                         <div className="grid grid-cols-2 gap-2 pt-1">
-                          <Button 
+                          <Button
                             onClick={() => openOrderForm(product)}
                             className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2 rounded-xl h-10 text-xs font-bold"
                           >
                             <ShoppingCart className="w-4 h-4" />
                             طلب المنتج
                           </Button>
-                          <Button 
+                          <Button
                             variant="outline"
                             onClick={() => toggleStoreProduct(product.id)}
-                            className={`gap-2 rounded-xl h-10 text-xs font-bold ${
-                              isInStore ? "border-secondary text-secondary bg-secondary/5" : "border-border hover:bg-muted"
-                            }`}
+                            className={`gap-2 rounded-xl h-10 text-xs font-bold ${isInStore ? "border-secondary text-secondary bg-secondary/5" : "border-border hover:bg-muted"
+                              }`}
                           >
                             {isInStore ? <Check className="w-4 h-4" /> : <PlusCircle className="w-4 h-4" />}
                             {isInStore ? "في المتجر" : "إضافة للمتجر"}
@@ -1335,7 +1331,7 @@ const Dashboard = () => {
                         {window.location.origin}/store/{user?.storeName || user?.id || "aff-demo"}
                       </div>
                       <div className="grid grid-cols-2 xl:flex gap-3">
-                        <Button 
+                        <Button
                           onClick={() => {
                             const link = `${window.location.origin}/store/${user?.storeName || user?.id || "aff-demo"}`;
                             navigator.clipboard.writeText(link);
@@ -1347,7 +1343,7 @@ const Dashboard = () => {
                           نسخ الرابط
                         </Button>
                         <a href={`/store/${user?.storeName || user?.id || "aff-demo"}`} target="_blank" rel="noopener noreferrer" className="w-full">
-                          <Button 
+                          <Button
                             variant="outline"
                             className="bg-white/10 border-white/20 hover:bg-white/20 text-white h-14 md:h-16 px-4 md:px-8 rounded-2xl gap-2 md:gap-3 backdrop-blur-sm font-bold text-sm md:text-base w-full"
                           >
@@ -1394,7 +1390,7 @@ const Dashboard = () => {
                       >
                         <div className="aspect-square relative">
                           <img src={product.image} className="w-full h-full object-cover" />
-                          <button 
+                          <button
                             onClick={() => toggleStoreProduct(product.id)}
                             className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full shadow-lg hover:bg-red-600 transition-colors"
                           >
@@ -1407,8 +1403,8 @@ const Dashboard = () => {
                             <span className="text-primary font-bold">{product.price.toLocaleString()} دج</span>
                             <span className="text-xs text-secondary font-bold">ربحك: {product.commission.toLocaleString()} دج</span>
                           </div>
-                          <Button 
-                            variant="outline" 
+                          <Button
+                            variant="outline"
                             className="w-full text-xs font-bold gap-2 hover:bg-primary hover:text-white transition-colors"
                             onClick={() => {
                               setProductToEditLandingPage(product);
@@ -1469,21 +1465,21 @@ const Dashboard = () => {
                             <Maximize2 className="w-4 h-4" />
                           </Button>
                         </div>
-                        <button 
+                        <button
                           onClick={() => toggleFavorite(product.id)}
                           className="absolute top-3 right-3 p-2 rounded-full bg-red-500 text-white shadow-lg"
                         >
                           <Heart className="w-4 h-4 fill-current" />
                         </button>
                       </div>
-                      
+
                       <div className="p-4 space-y-3">
                         <h3 className="font-bold text-foreground line-clamp-1">{product.name}</h3>
                         <div className="flex items-center justify-between">
                           <p className="text-xl font-bold text-primary">{product.price.toLocaleString()} دج</p>
                           <p className="text-xs font-bold text-secondary">الربح: {product.commission.toLocaleString()} دج</p>
                         </div>
-                        <Button 
+                        <Button
                           onClick={() => openOrderForm(product)}
                           className="w-full bg-primary hover:bg-primary/90 text-primary-foreground gap-2 rounded-xl h-10 text-xs font-bold"
                         >
@@ -1651,10 +1647,10 @@ const Dashboard = () => {
                                     <MessageSquare className="w-4 h-4" />
                                   </Button>
                                   {(order.status === "pending" || order.status === "confirmed") && (
-                                    <Button 
-                                      size="sm" 
-                                      className="gap-2 bg-indigo-600 hover:bg-indigo-700 text-white" 
-                                      disabled={isProcessing} 
+                                    <Button
+                                      size="sm"
+                                      className="gap-2 bg-indigo-600 hover:bg-indigo-700 text-white"
+                                      disabled={isProcessing}
                                       onClick={() => handleAndersonShip(order)}
                                     >
                                       {isProcessing ? (
@@ -1666,11 +1662,11 @@ const Dashboard = () => {
                                     </Button>
                                   )}
                                   {order.trackingNumber && order.status !== "delivered" && order.status !== "cancelled" && (
-                                    <Button 
-                                      size="sm" 
+                                    <Button
+                                      size="sm"
                                       variant="hero"
-                                      className="gap-2 h-8 px-3 text-[10px] font-black" 
-                                      disabled={isProcessing} 
+                                      className="gap-2 h-8 px-3 text-[10px] font-black"
+                                      disabled={isProcessing}
                                       onClick={() => handleAndersonExpedite(order)}
                                     >
                                       {isProcessing ? (
@@ -1705,33 +1701,33 @@ const Dashboard = () => {
             <div className="space-y-8">
               <div className="grid md:grid-cols-3 gap-6">
                 {[
-                  { 
-                    label: "الإيرادات الإجمالية", 
-                    value: `${dashboardStats.totalRevenue.toLocaleString()} دج`, 
+                  {
+                    label: "الإيرادات الإجمالية",
+                    value: `${dashboardStats.totalRevenue.toLocaleString()} دج`,
                     color: "text-foreground",
                     sub: "إجمالي المبيعات المحققة",
                     icon: Wallet,
                     bg: "bg-primary/5"
                   },
-                  { 
-                    label: "إجمالي الطلبيات", 
-                    value: dashboardStats.totalOrders.toLocaleString(), 
+                  {
+                    label: "إجمالي الطلبيات",
+                    value: dashboardStats.totalOrders.toLocaleString(),
                     color: "text-accent",
                     sub: "عدد الطلبات المسجلة",
                     icon: Trophy,
                     bg: "bg-accent/5"
                   },
-                  { 
-                    label: "نسبة التأكيد", 
-                    value: `${dashboardStats.confirmationRate}%`, 
+                  {
+                    label: "نسبة التأكيد",
+                    value: `${dashboardStats.confirmationRate}%`,
                     color: "text-secondary",
                     sub: "بناءً على الطلبات الشحن",
                     icon: TrendingUp,
                     bg: "bg-secondary/5"
                   },
                 ].map((stat, i) => (
-                  <motion.div 
-                    key={i} 
+                  <motion.div
+                    key={i}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.1 }}
@@ -1755,7 +1751,7 @@ const Dashboard = () => {
 
               <div className="grid lg:grid-cols-2 gap-8">
                 {/* Monthly Revenue Bar Chart */}
-                <motion.div 
+                <motion.div
                   initial={{ opacity: 0, scale: 0.98 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: 0.3 }}
@@ -1778,26 +1774,26 @@ const Dashboard = () => {
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={sellerEarningsData}>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border)/0.5)" />
-                        <XAxis 
-                          dataKey="month" 
+                        <XAxis
+                          dataKey="month"
                           axisLine={false}
                           tickLine={false}
                           tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12, fontWeight: 500 }}
                           dy={10}
                         />
-                        <YAxis 
+                        <YAxis
                           axisLine={false}
                           tickLine={false}
                           tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }}
                           tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`}
                         />
                         <RechartsTooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--muted)/0.3)', radius: 8 }} />
-                        <Bar 
-                          dataKey="revenue" 
-                          fill="hsl(160, 84%, 39%)" 
-                          radius={[10, 10, 10, 10]} 
+                        <Bar
+                          dataKey="revenue"
+                          fill="hsl(160, 84%, 39%)"
+                          radius={[10, 10, 10, 10]}
                           barSize={32}
-                          name="revenue" 
+                          name="revenue"
                         />
                       </BarChart>
                     </ResponsiveContainer>
@@ -1805,7 +1801,7 @@ const Dashboard = () => {
                 </motion.div>
 
                 {/* Order Distribution Pie Chart */}
-                <motion.div 
+                <motion.div
                   initial={{ opacity: 0, scale: 0.98 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: 0.4 }}
@@ -1815,17 +1811,17 @@ const Dashboard = () => {
                     <h3 className="text-xl font-bold text-foreground">توزيع الحالات</h3>
                     <p className="text-xs text-muted-foreground mt-1 text-right">نسبة الطلبيات حسب حالة التسليم</p>
                   </div>
-                  
+
                   <div className="h-[280px] w-full relative">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
-                        <Pie 
-                          data={orderStatusPieData} 
-                          cx="50%" 
-                          cy="50%" 
-                          innerRadius={70} 
-                          outerRadius={100} 
-                          paddingAngle={8} 
+                        <Pie
+                          data={orderStatusPieData}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={70}
+                          outerRadius={100}
+                          paddingAngle={8}
                           dataKey="value"
                           stroke="none"
                         >
@@ -1833,14 +1829,14 @@ const Dashboard = () => {
                             <Cell key={`cell-${index}`} fill={entry.color} className="outline-none" />
                           ))}
                         </Pie>
-                        <RechartsTooltip 
-                          formatter={(value: any) => [`${value} طلبية`, ""]} 
-                          contentStyle={{ 
-                            backgroundColor: "hsl(var(--card))", 
-                            border: "1px solid hsl(var(--border))", 
+                        <RechartsTooltip
+                          formatter={(value: any) => [`${value} طلبية`, ""]}
+                          contentStyle={{
+                            backgroundColor: "hsl(var(--card))",
+                            border: "1px solid hsl(var(--border))",
                             borderRadius: "16px",
                             boxShadow: "0 10px 15px -3px rgb(0 0 0 / 0.1)"
-                          }} 
+                          }}
                         />
                       </PieChart>
                     </ResponsiveContainer>
@@ -1916,13 +1912,12 @@ const Dashboard = () => {
                               <p className="text-[10px] text-muted-foreground font-mono">{req.accountDetails}</p>
                             </td>
                             <td className="p-4">
-                              <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                                req.status === "pending" ? "bg-amber-100 text-amber-700" :
-                                req.status === "approved" ? "bg-emerald-100 text-emerald-700" :
-                                "bg-red-100 text-red-700"
-                              }`}>
+                              <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold ${req.status === "pending" ? "bg-amber-100 text-amber-700" :
+                                  req.status === "approved" ? "bg-emerald-100 text-emerald-700" :
+                                    "bg-red-100 text-red-700"
+                                }`}>
                                 {req.status === "pending" ? "قيد الانتظار" : req.status === "approved" ? "تم الدفع" : "مرفوض"}
-                                </span>
+                              </span>
                             </td>
                             <td className="p-4 text-xs text-muted-foreground">{new Date(req.createdAt).toLocaleDateString('ar-DZ')}</td>
                           </tr>
@@ -1943,21 +1938,19 @@ const Dashboard = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
-                  className={`bg-card border-2 rounded-[2.5rem] p-8 relative overflow-hidden transition-all shadow-sm ${
-                    currentLevelInfo.levelNumber === tier.levelNumber ? "border-primary shadow-xl shadow-primary/10" : "border-border/50 hover:border-primary/30"
-                  }`}
+                  className={`bg-card border-2 rounded-[2.5rem] p-8 relative overflow-hidden transition-all shadow-sm ${currentLevelInfo.levelNumber === tier.levelNumber ? "border-primary shadow-xl shadow-primary/10" : "border-border/50 hover:border-primary/30"
+                    }`}
                 >
-                  <div className={`w-14 h-14 rounded-2xl mb-6 flex items-center justify-center text-white shadow-lg bg-gradient-to-br ${
-                    tier.color === 'blue' ? 'from-blue-500 to-blue-700' :
-                    tier.color === 'green' ? 'from-green-500 to-green-700' :
-                    tier.color === 'purple' ? 'from-purple-500 to-purple-700' :
-                    tier.color === 'orange' ? 'from-orange-500 to-orange-700' :
-                    tier.color === 'gold' ? 'from-yellow-400 to-yellow-600' :
-                    'from-gray-500 to-gray-700'
-                  }`}>
+                  <div className={`w-14 h-14 rounded-2xl mb-6 flex items-center justify-center text-white shadow-lg bg-gradient-to-br ${tier.color === 'blue' ? 'from-blue-500 to-blue-700' :
+                      tier.color === 'green' ? 'from-green-500 to-green-700' :
+                        tier.color === 'purple' ? 'from-purple-500 to-purple-700' :
+                          tier.color === 'orange' ? 'from-orange-500 to-orange-700' :
+                            tier.color === 'gold' ? 'from-yellow-400 to-yellow-600' :
+                              'from-gray-500 to-gray-700'
+                    }`}>
                     <Trophy className="w-7 h-7" />
                   </div>
-                  
+
                   <div className="space-y-2 relative z-10">
                     <h3 className="text-3xl font-black text-foreground">المستوى {tier.levelNumber}</h3>
                     <p className="text-xl font-bold text-muted-foreground">{tier.name}</p>
@@ -1987,7 +1980,7 @@ const Dashboard = () => {
 
                   {currentLevelInfo.levelNumber < tier.levelNumber && (
                     <div className="mt-6 bg-muted/50 text-muted-foreground rounded-xl px-4 py-2.5 text-sm font-bold flex items-center justify-center gap-2">
-                       قيد التقدم
+                      قيد التقدم
                     </div>
                   )}
 
@@ -2024,7 +2017,7 @@ const Dashboard = () => {
                         <circle cx="120" cy="120" r="4" className="fill-primary" /> {/* Oran */}
                         <circle cx="280" cy="110" r="4" className="fill-primary" /> {/* Constantine */}
                       </svg>
-                      
+
                       <div className="absolute bottom-4 right-4 bg-background/80 backdrop-blur-sm p-4 rounded-2xl border border-border/50 shadow-lg">
                         <div className="flex items-center gap-2 mb-2">
                           <div className="w-3 h-3 rounded-full bg-secondary" />
@@ -2079,14 +2072,14 @@ const Dashboard = () => {
                   <div className="flex items-center gap-3 w-full sm:w-64">
                     <div className="relative w-full">
                       <Search className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                      <Input 
-                        placeholder="ابحث عن ولاية..." 
+                      <Input
+                        placeholder="ابحث عن ولاية..."
                         value={shippingSearch}
                         onChange={(e) => {
                           setShippingSearch(e.target.value);
                           setShippingPage(1);
                         }}
-                        className="pr-10 rounded-xl h-10 w-full border-border/60" 
+                        className="pr-10 rounded-xl h-10 w-full border-border/60"
                       />
                     </div>
                   </div>
@@ -2136,7 +2129,7 @@ const Dashboard = () => {
                     </tbody>
                   </table>
                 </div>
-                
+
                 {totalShippingPages > 1 && (
                   <div className="p-6 border-t border-border flex items-center justify-between bg-muted/20">
                     <div className="flex items-center gap-2">
@@ -2230,7 +2223,7 @@ const Dashboard = () => {
                   <p className="text-muted-foreground mt-1">اجعل متجرك فريداً وجذاباً لزيادة المبيعات</p>
                 </div>
                 <div className="flex gap-3 w-full sm:w-auto">
-                   <Button 
+                  <Button
                     variant="outline"
                     className="flex-1 sm:flex-none h-12 px-6 rounded-2xl gap-2 font-bold"
                     onClick={() => window.open('/products', '_blank')}
@@ -2238,7 +2231,7 @@ const Dashboard = () => {
                     <Eye className="w-5 h-5" />
                     معاينة
                   </Button>
-                  <Button 
+                  <Button
                     onClick={saveStoreSettings}
                     className="flex-1 sm:flex-none bg-primary text-primary-foreground h-12 px-8 rounded-2xl gap-2 font-bold shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all"
                   >
@@ -2262,9 +2255,9 @@ const Dashboard = () => {
                     <div className="space-y-4">
                       <div className="space-y-2">
                         <Label className="text-sm font-bold pr-1">شريط الترحيب (Top Bar)</Label>
-                        <Input 
+                        <Input
                           value={storeSettings.welcomeBarText}
-                          onChange={(e) => setStoreSettings({...storeSettings, welcomeBarText: e.target.value})}
+                          onChange={(e) => setStoreSettings({ ...storeSettings, welcomeBarText: e.target.value })}
                           placeholder="مثال: أهلاً بكم في متجرنا الرسمي..."
                           className="h-12 rounded-xl bg-muted/30 border-none px-4"
                         />
@@ -2280,9 +2273,9 @@ const Dashboard = () => {
                                 <div className="bg-white/20 backdrop-blur-md p-2 rounded-full text-white">
                                   <PlusCircle className="w-6 h-6" />
                                 </div>
-                                <input 
-                                  type="file" 
-                                  className="hidden" 
+                                <input
+                                  type="file"
+                                  className="hidden"
                                   accept="image/*"
                                   disabled={isUploading}
                                   onChange={(e) => {
@@ -2291,8 +2284,8 @@ const Dashboard = () => {
                                   }}
                                 />
                               </label>
-                              <button 
-                                onClick={() => setStoreSettings({...storeSettings, storeLogo: ""})}
+                              <button
+                                onClick={() => setStoreSettings({ ...storeSettings, storeLogo: "" })}
                                 className="absolute top-1 right-1 bg-destructive/80 text-white p-1 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
                               >
                                 <Trash2 className="w-3 h-3" />
@@ -2304,9 +2297,9 @@ const Dashboard = () => {
                                 {isUploading ? <Sparkles className="w-6 h-6 animate-spin" /> : <PlusCircle className="w-6 h-6" />}
                               </div>
                               <span className="text-[10px] font-bold text-muted-foreground group-hover:text-primary">ارفع شعار المتجر</span>
-                              <input 
-                                type="file" 
-                                className="hidden" 
+                              <input
+                                type="file"
+                                className="hidden"
                                 accept="image/*"
                                 disabled={isUploading}
                                 onChange={(e) => {
@@ -2325,9 +2318,9 @@ const Dashboard = () => {
 
                       <div className="space-y-2">
                         <Label className="text-sm font-bold pr-1">اسم المتجر</Label>
-                        <Input 
+                        <Input
                           value={storeSettings.storeName}
-                          onChange={(e) => setStoreSettings({...storeSettings, storeName: e.target.value})}
+                          onChange={(e) => setStoreSettings({ ...storeSettings, storeName: e.target.value })}
                           placeholder="مثال: متجر النخبة"
                           className="h-12 rounded-xl bg-muted/30 border-none px-4"
                         />
@@ -2335,9 +2328,9 @@ const Dashboard = () => {
 
                       <div className="space-y-2">
                         <Label className="text-sm font-bold pr-1">نبذة عن المتجر</Label>
-                        <Textarea 
+                        <Textarea
                           value={storeSettings.storeIntro}
-                          onChange={(e) => setStoreSettings({...storeSettings, storeIntro: e.target.value})}
+                          onChange={(e) => setStoreSettings({ ...storeSettings, storeIntro: e.target.value })}
                           placeholder="اكتب وصفاً قصيراً يظهر تحت اسم المتجر..."
                           className="min-h-[100px] rounded-xl bg-muted/30 border-none p-4"
                         />
@@ -2356,10 +2349,10 @@ const Dashboard = () => {
                       </div>
                       <div className="flex items-center gap-2">
                         <Label className="text-xs text-muted-foreground">تفعيل</Label>
-                        <input 
-                          type="checkbox" 
+                        <input
+                          type="checkbox"
                           checked={storeSettings.hero?.enabled ?? true}
-                          onChange={(e) => setStoreSettings({...storeSettings, hero: {...storeSettings.hero, enabled: e.target.checked}})}
+                          onChange={(e) => setStoreSettings({ ...storeSettings, hero: { ...storeSettings.hero, enabled: e.target.checked } })}
                           className="w-5 h-5 accent-primary cursor-pointer border-border rounded"
                         />
                       </div>
@@ -2368,17 +2361,17 @@ const Dashboard = () => {
                     <div className={`space-y-4 transition-opacity ${(!storeSettings.hero?.enabled) ? "opacity-50 pointer-events-none" : ""}`}>
                       <div className="space-y-2">
                         <Label className="text-sm font-bold pr-1">العنوان الرئيسي</Label>
-                        <Input 
+                        <Input
                           value={storeSettings.hero?.title || ""}
-                          onChange={(e) => setStoreSettings({...storeSettings, hero: {...storeSettings.hero, title: e.target.value}})}
+                          onChange={(e) => setStoreSettings({ ...storeSettings, hero: { ...storeSettings.hero, title: e.target.value } })}
                           className="h-11 rounded-xl bg-muted/30 border-none px-4"
                         />
                       </div>
                       <div className="space-y-2">
                         <Label className="text-sm font-bold pr-1">العنوان الفرعي</Label>
-                        <Input 
+                        <Input
                           value={storeSettings.hero?.subtitle || ""}
-                          onChange={(e) => setStoreSettings({...storeSettings, hero: {...storeSettings.hero, subtitle: e.target.value}})}
+                          onChange={(e) => setStoreSettings({ ...storeSettings, hero: { ...storeSettings.hero, subtitle: e.target.value } })}
                           className="h-11 rounded-xl bg-muted/30 border-none px-4"
                         />
                       </div>
@@ -2393,9 +2386,9 @@ const Dashboard = () => {
                                   {isUploading ? <Sparkles className="w-8 h-8 animate-spin" /> : <PlusCircle className="w-8 h-8" />}
                                 </div>
                                 <span className="font-bold text-sm">تغيير الصورة</span>
-                                <input 
-                                  type="file" 
-                                  className="hidden" 
+                                <input
+                                  type="file"
+                                  className="hidden"
                                   accept="image/*"
                                   disabled={isUploading}
                                   onChange={(e) => {
@@ -2404,8 +2397,8 @@ const Dashboard = () => {
                                   }}
                                 />
                               </label>
-                              <button 
-                                onClick={() => setStoreSettings({...storeSettings, hero: {...storeSettings.hero, bannerUrl: ""}})}
+                              <button
+                                onClick={() => setStoreSettings({ ...storeSettings, hero: { ...storeSettings.hero, bannerUrl: "" } })}
                                 className="absolute top-4 right-4 bg-destructive/90 text-white p-2 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
                               >
                                 <Trash2 className="w-5 h-5" />
@@ -2420,9 +2413,9 @@ const Dashboard = () => {
                                 <p className="text-sm font-bold text-foreground">ارفع صورة الواجهة</p>
                                 <p className="text-[10px] text-muted-foreground mt-1">المقاس الموصى به: 1920x800</p>
                               </div>
-                              <input 
-                                type="file" 
-                                className="hidden" 
+                              <input
+                                type="file"
+                                className="hidden"
                                 accept="image/*"
                                 disabled={isUploading}
                                 onChange={(e) => {
@@ -2434,19 +2427,19 @@ const Dashboard = () => {
                           )}
                         </div>
                         <div className="grid grid-cols-3 gap-2 mt-2">
-                           {[
-                             { name: "تجميل", url: "https://images.unsplash.com/photo-1596462502278-27bfac4033c8?auto=format&fit=crop&q=80&w=800" },
-                             { name: "تقنية", url: "https://images.unsplash.com/photo-1498049794561-7780e7231661?auto=format&fit=crop&q=80&w=800" },
-                             { name: "عام", url: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&q=80&w=800" }
-                           ].map(p => (
-                             <button 
-                               key={p.url}
-                               onClick={() => setStoreSettings({...storeSettings, hero: {...storeSettings.hero, bannerUrl: p.url}})}
-                               className={`text-[10px] py-2 rounded-lg transition-all border ${storeSettings.hero?.bannerUrl === p.url ? "bg-primary text-white border-primary" : "bg-muted hover:bg-primary/10 border-transparent"}`}
-                             >
-                               {p.name}
-                             </button>
-                           ))}
+                          {[
+                            { name: "تجميل", url: "https://images.unsplash.com/photo-1596462502278-27bfac4033c8?auto=format&fit=crop&q=80&w=800" },
+                            { name: "تقنية", url: "https://images.unsplash.com/photo-1498049794561-7780e7231661?auto=format&fit=crop&q=80&w=800" },
+                            { name: "عام", url: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&q=80&w=800" }
+                          ].map(p => (
+                            <button
+                              key={p.url}
+                              onClick={() => setStoreSettings({ ...storeSettings, hero: { ...storeSettings.hero, bannerUrl: p.url } })}
+                              className={`text-[10px] py-2 rounded-lg transition-all border ${storeSettings.hero?.bannerUrl === p.url ? "bg-primary text-white border-primary" : "bg-muted hover:bg-primary/10 border-transparent"}`}
+                            >
+                              {p.name}
+                            </button>
+                          ))}
                         </div>
                       </div>
                     </div>
@@ -2468,9 +2461,9 @@ const Dashboard = () => {
                         { id: "bold", label: "جريء وحيوي", desc: "ألوان قوية", color: "from-primary/20 to-primary/40" },
                         { id: "dark", label: "كلاسيك داكن", desc: "فخامة وأناقة", color: "from-slate-800 to-slate-900" }
                       ].map((tpl) => (
-                        <div 
+                        <div
                           key={tpl.id}
-                          onClick={() => setStoreSettings({...storeSettings, templateId: tpl.id as any})}
+                          onClick={() => setStoreSettings({ ...storeSettings, templateId: tpl.id as any })}
                           className={`
                             relative cursor-pointer p-4 rounded-2xl border-2 transition-all group
                             ${storeSettings.templateId === tpl.id ? "border-primary bg-primary/5" : "border-border hover:border-primary/50 bg-muted/30"}
@@ -2504,9 +2497,9 @@ const Dashboard = () => {
                           <Label className="font-bold">عدد المنتجات في السطر</Label>
                           <p className="text-xs text-muted-foreground">ينطبق على شاشات الحاسوب فقط</p>
                         </div>
-                        <Select 
-                          value={String(storeSettings.gridColumns)} 
-                          onValueChange={(v) => setStoreSettings({...storeSettings, gridColumns: Number(v)})}
+                        <Select
+                          value={String(storeSettings.gridColumns)}
+                          onValueChange={(v) => setStoreSettings({ ...storeSettings, gridColumns: Number(v) })}
                         >
                           <SelectTrigger className="w-24 border-none bg-background rounded-xl h-10">
                             <SelectValue />
@@ -2539,20 +2532,20 @@ const Dashboard = () => {
                           <p className="text-xs text-muted-foreground">سيطبق على الأزرار والأيقونات واللمسات الجمالية</p>
                         </div>
                         <div className="flex items-center gap-3">
-                          <div 
-                            className="w-10 h-10 rounded-full border border-border flex items-center justify-center overflow-hidden" 
+                          <div
+                            className="w-10 h-10 rounded-full border border-border flex items-center justify-center overflow-hidden"
                             style={{ backgroundColor: storeSettings.primaryColor }}
                           >
-                            <Input 
-                              type="color" 
+                            <Input
+                              type="color"
                               value={storeSettings.primaryColor}
-                              onChange={(e) => setStoreSettings({...storeSettings, primaryColor: e.target.value})}
+                              onChange={(e) => setStoreSettings({ ...storeSettings, primaryColor: e.target.value })}
                               className="w-16 h-16 cursor-pointer opacity-0"
                             />
                           </div>
-                          <Input 
+                          <Input
                             value={storeSettings.primaryColor}
-                            onChange={(e) => setStoreSettings({...storeSettings, primaryColor: e.target.value})}
+                            onChange={(e) => setStoreSettings({ ...storeSettings, primaryColor: e.target.value })}
                             className="w-24 h-10 rounded-lg text-xs font-mono text-center"
                           />
                         </div>
@@ -2575,9 +2568,9 @@ const Dashboard = () => {
                           <Label className="font-bold">نوع الخط</Label>
                           <p className="text-xs text-muted-foreground">الخط يؤثر على انطباع الزوار</p>
                         </div>
-                        <Select 
-                          value={storeSettings.fontFamily || "Cairo"} 
-                          onValueChange={(v) => setStoreSettings({...storeSettings, fontFamily: v as any})}
+                        <Select
+                          value={storeSettings.fontFamily || "Cairo"}
+                          onValueChange={(v) => setStoreSettings({ ...storeSettings, fontFamily: v as any })}
                         >
                           <SelectTrigger className="w-32 border-none bg-background rounded-xl h-10">
                             <SelectValue />
@@ -2604,10 +2597,10 @@ const Dashboard = () => {
                     <div className="space-y-4">
                       <div className="space-y-2">
                         <Label className="text-sm font-bold pr-1">Facebook Pixel ID</Label>
-                        <Input 
+                        <Input
                           value={storeSettings.pixels?.facebook || ""}
                           onChange={(e) => setStoreSettings({
-                            ...storeSettings, 
+                            ...storeSettings,
                             pixels: { ...storeSettings.pixels, facebook: e.target.value } as any
                           })}
                           placeholder="123456789012345"
@@ -2617,10 +2610,10 @@ const Dashboard = () => {
                       </div>
                       <div className="space-y-2">
                         <Label className="text-sm font-bold pr-1">TikTok Pixel ID</Label>
-                        <Input 
+                        <Input
                           value={storeSettings.pixels?.tiktok || ""}
                           onChange={(e) => setStoreSettings({
-                            ...storeSettings, 
+                            ...storeSettings,
                             pixels: { ...storeSettings.pixels, tiktok: e.target.value } as any
                           })}
                           placeholder="CDG123456789ABCDEF"
@@ -2647,9 +2640,9 @@ const Dashboard = () => {
                         <Label className="text-sm font-bold pr-1 flex items-center gap-2">
                           <Facebook className="w-4 h-4 text-[#1877F2]" /> فيسبوك
                         </Label>
-                        <Input 
+                        <Input
                           value={storeSettings.socialLinks.facebook}
-                          onChange={(e) => setStoreSettings({...storeSettings, socialLinks: {...storeSettings.socialLinks, facebook: e.target.value}})}
+                          onChange={(e) => setStoreSettings({ ...storeSettings, socialLinks: { ...storeSettings.socialLinks, facebook: e.target.value } })}
                           placeholder="https://facebook.com/your-page"
                           className="h-11 rounded-xl bg-muted/30 border-none px-4"
                         />
@@ -2659,9 +2652,9 @@ const Dashboard = () => {
                         <Label className="text-sm font-bold pr-1 flex items-center gap-2">
                           <Instagram className="w-4 h-4 text-[#E4405F]" /> انستغرام
                         </Label>
-                        <Input 
+                        <Input
                           value={storeSettings.socialLinks.instagram}
-                          onChange={(e) => setStoreSettings({...storeSettings, socialLinks: {...storeSettings.socialLinks, instagram: e.target.value}})}
+                          onChange={(e) => setStoreSettings({ ...storeSettings, socialLinks: { ...storeSettings.socialLinks, instagram: e.target.value } })}
                           placeholder="https://instagram.com/your-profile"
                           className="h-11 rounded-xl bg-muted/30 border-none px-4"
                         />
@@ -2671,9 +2664,9 @@ const Dashboard = () => {
                         <Label className="text-sm font-bold pr-1 flex items-center gap-2">
                           <Phone className="w-4 h-4 text-secondary" /> رقم الهاتف
                         </Label>
-                        <Input 
+                        <Input
                           value={storeSettings.socialLinks.phone}
-                          onChange={(e) => setStoreSettings({...storeSettings, socialLinks: {...storeSettings.socialLinks, phone: e.target.value}})}
+                          onChange={(e) => setStoreSettings({ ...storeSettings, socialLinks: { ...storeSettings.socialLinks, phone: e.target.value } })}
                           placeholder="05xx xx xx xx"
                           className="h-11 rounded-xl bg-muted/30 border-none px-4"
                         />
@@ -2683,22 +2676,22 @@ const Dashboard = () => {
                         <Label className="text-sm font-bold pr-1 flex items-center gap-2">
                           <MessageSquare className="w-4 h-4 text-emerald-500" /> واتساب
                         </Label>
-                        <Input 
+                        <Input
                           value={storeSettings.socialLinks.whatsapp}
-                          onChange={(e) => setStoreSettings({...storeSettings, socialLinks: {...storeSettings.socialLinks, whatsapp: e.target.value}})}
+                          onChange={(e) => setStoreSettings({ ...storeSettings, socialLinks: { ...storeSettings.socialLinks, whatsapp: e.target.value } })}
                           placeholder="رقم الواتساب..."
                           className="h-11 rounded-xl bg-muted/30 border-none px-4"
                         />
                       </div>
                       <Label className="text-sm font-bold flex items-center justify-between p-4 bg-muted/30 rounded-2xl cursor-pointer">
                         <span className="flex items-center gap-2">
-                          <MessageCircle className="w-5 h-5 text-emerald-500" /> 
+                          <MessageCircle className="w-5 h-5 text-emerald-500" />
                           إظهار زر الواتساب العائم للزوار
                         </span>
-                        <input 
-                          type="checkbox" 
+                        <input
+                          type="checkbox"
                           checked={storeSettings.support?.whatsappFloating ?? true}
-                          onChange={(e) => setStoreSettings({...storeSettings, support: {...storeSettings.support, whatsappFloating: e.target.checked}})}
+                          onChange={(e) => setStoreSettings({ ...storeSettings, support: { ...storeSettings.support, whatsappFloating: e.target.checked } })}
                           className="w-5 h-5 accent-emerald-500 cursor-pointer border-border rounded"
                         />
                       </Label>
@@ -2716,10 +2709,10 @@ const Dashboard = () => {
                       </div>
                       <div className="flex items-center gap-2">
                         <Label className="text-xs text-muted-foreground">تفعيل</Label>
-                        <input 
-                          type="checkbox" 
+                        <input
+                          type="checkbox"
                           checked={storeSettings.usp?.enabled ?? true}
-                          onChange={(e) => setStoreSettings({...storeSettings, usp: {...storeSettings.usp, enabled: e.target.checked}})}
+                          onChange={(e) => setStoreSettings({ ...storeSettings, usp: { ...storeSettings.usp, enabled: e.target.checked } })}
                           className="w-5 h-5 accent-primary cursor-pointer border-border rounded"
                         />
                       </div>
@@ -2729,12 +2722,12 @@ const Dashboard = () => {
                       <p className="text-xs text-muted-foreground mb-4">هذه الشعارات تظهر تحت قسم الواجهة الرئيسي وتزيد من ثقة العملاء.</p>
                       {storeSettings.usp?.items.map((item, index) => (
                         <div key={index} className="flex gap-2">
-                          <Select 
-                            value={item.icon} 
+                          <Select
+                            value={item.icon}
                             onValueChange={(v) => {
                               const newItems = [...storeSettings.usp.items];
                               newItems[index].icon = v;
-                              setStoreSettings({...storeSettings, usp: {...storeSettings.usp, items: newItems}});
+                              setStoreSettings({ ...storeSettings, usp: { ...storeSettings.usp, items: newItems } });
                             }}
                           >
                             <SelectTrigger className="w-[120px] bg-muted/30 border-none rounded-xl h-11">
@@ -2748,12 +2741,12 @@ const Dashboard = () => {
                               <SelectItem value="Heart">قلب</SelectItem>
                             </SelectContent>
                           </Select>
-                          <Input 
+                          <Input
                             value={item.text}
                             onChange={(e) => {
                               const newItems = [...storeSettings.usp.items];
                               newItems[index].text = e.target.value;
-                              setStoreSettings({...storeSettings, usp: {...storeSettings.usp, items: newItems}});
+                              setStoreSettings({ ...storeSettings, usp: { ...storeSettings.usp, items: newItems } });
                             }}
                             className="h-11 rounded-xl bg-muted/30 border-none px-4 flex-1"
                           />
@@ -2772,8 +2765,8 @@ const Dashboard = () => {
                         <p className="text-xs opacity-70">شاهد كيف يظهر متجرك للعملاء</p>
                       </div>
                     </div>
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       className="w-full h-12 rounded-2xl border-primary/20 text-primary bg-background hover:bg-primary hover:text-white transition-all gap-2"
                       onClick={() => window.open('/products', '_blank')}
                     >
@@ -2845,9 +2838,9 @@ const Dashboard = () => {
                   const token = localStorage.getItem("token");
                   const res = await fetch('https://profit-link-3eri.onrender.com/api/finance/withdraw', {
                     method: 'POST',
-                    headers: { 
+                    headers: {
                       'Content-Type': 'application/json',
-                      'Authorization': `Bearer ${token}` 
+                      'Authorization': `Bearer ${token}`
                     },
                     body: JSON.stringify({
                       amount: withdrawAmount,
@@ -2857,7 +2850,7 @@ const Dashboard = () => {
                   });
                   const json = await res.json();
                   if (!res.ok) throw new Error(json.error || "Failed to request withdrawal");
-                  
+
                   toast({ title: "تم إرسال طلب السحب بنجاح! ✅" });
                   setWithdrawalDialogOpen(false);
                   setWithdrawAmount("");
@@ -2884,29 +2877,29 @@ const Dashboard = () => {
               {/* Image Gallery Side */}
               <div className="lg:w-1/2 p-6 lg:p-10 bg-muted/30 relative">
                 <div className="aspect-square rounded-3xl overflow-hidden bg-white shadow-inner mb-6 space-y-4">
-                  <motion.img 
+                  <motion.img
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     key={selectedProduct.image}
-                    src={selectedProduct.image} 
-                    alt={selectedProduct.name} 
-                    className="w-full h-full object-cover" 
+                    src={selectedProduct.image}
+                    alt={selectedProduct.name}
+                    className="w-full h-full object-cover"
                   />
                 </div>
                 <div className="grid grid-cols-4 gap-3">
                   {selectedProduct.images.map((img: string, i: number) => (
-                    <button 
-                      key={i} 
-                      onClick={() => setSelectedProduct({...selectedProduct, image: img})}
+                    <button
+                      key={i}
+                      onClick={() => setSelectedProduct({ ...selectedProduct, image: img })}
                       className={`aspect-square rounded-xl overflow-hidden border-2 transition-all ${selectedProduct.image === img ? "border-primary shadow-md" : "border-transparent opacity-60 hover:opacity-100"}`}
                     >
                       <img src={img} className="w-full h-full object-cover" />
                     </button>
                   ))}
                 </div>
-                <Button 
-                  variant="secondary" 
-                  size="sm" 
+                <Button
+                  variant="secondary"
+                  size="sm"
                   className="absolute top-10 left-10 rounded-full gap-2 backdrop-blur-md"
                   onClick={() => {
                     // Logic to download image would go here
@@ -2925,7 +2918,7 @@ const Dashboard = () => {
                     <span className="px-3 py-1 bg-primary/10 text-primary text-xs font-bold rounded-full uppercase tracking-wider">
                       {selectedProduct.category}
                     </span>
-                    <button 
+                    <button
                       onClick={() => toggleFavorite(selectedProduct.id)}
                       className={`p-2.5 rounded-full transition-all ${favorites.has(selectedProduct.id) ? "bg-red-500 text-white" : "bg-muted text-muted-foreground hover:bg-muted/80"}`}
                     >
@@ -2974,7 +2967,7 @@ const Dashboard = () => {
                 </div>
 
                 <div className="mt-auto pt-6 flex gap-4">
-                  <Button 
+                  <Button
                     className="flex-1 h-14 rounded-2xl bg-primary text-primary-foreground font-black text-lg gap-3 shadow-xl shadow-primary/20"
                     onClick={() => {
                       setIsDetailDialogOpen(false);
@@ -2984,12 +2977,12 @@ const Dashboard = () => {
                     <ShoppingCart className="w-6 h-6" />
                     اطلب المنتج الآن
                   </Button>
-                  <Link 
-                    to={`/product/${selectedProduct.id}/${user?.id || "aff-demo"}`} 
+                  <Link
+                    to={`/product/${selectedProduct.id}/${user?.id || "aff-demo"}`}
                     target="_blank"
                     className="flex-1"
                   >
-                    <Button 
+                    <Button
                       variant="outline"
                       className="w-full h-14 rounded-2xl border-2 font-black text-lg gap-3"
                     >
@@ -2997,7 +2990,7 @@ const Dashboard = () => {
                       صفحة المنتج
                     </Button>
                   </Link>
-                  <Button 
+                  <Button
                     variant="outline"
                     className={`h-14 w-14 rounded-2xl border-2 flex items-center justify-center ${storeProducts.has(selectedProduct.id) ? "border-secondary text-secondary bg-secondary/5" : "border-border"}`}
                     onClick={() => toggleStoreProduct(selectedProduct.id)}
@@ -3036,7 +3029,7 @@ const Dashboard = () => {
                     <Label className="flex items-center gap-2 text-sm font-bold ml-1">
                       <User className="w-4 h-4 text-primary" /> الاسم الأول
                     </Label>
-                    <Input 
+                    <Input
                       value={orderFormData.firstName}
                       onChange={(e) => setOrderFormData({ ...orderFormData, firstName: e.target.value })}
                       placeholder="محمد"
@@ -3047,7 +3040,7 @@ const Dashboard = () => {
                     <Label className="flex items-center gap-2 text-sm font-bold ml-1">
                       <User className="w-4 h-4 text-primary" /> اللقب (العائلة)
                     </Label>
-                    <Input 
+                    <Input
                       value={orderFormData.lastName}
                       onChange={(e) => setOrderFormData({ ...orderFormData, lastName: e.target.value })}
                       placeholder="عزوز"
@@ -3061,7 +3054,7 @@ const Dashboard = () => {
                     <Label className="flex items-center gap-2 text-sm font-bold ml-1">
                       <Phone className="w-4 h-4 text-primary" /> رقم الهاتف
                     </Label>
-                    <Input 
+                    <Input
                       value={orderFormData.phone}
                       onChange={(e) => setOrderFormData({ ...orderFormData, phone: e.target.value })}
                       placeholder="0XXXXXXXXX"
@@ -3072,8 +3065,8 @@ const Dashboard = () => {
                     <Label className="flex items-center gap-2 text-sm font-bold ml-1">
                       <MapPin className="w-4 h-4 text-primary" /> الولاية
                     </Label>
-                    <Select 
-                      value={orderFormData.wilaya} 
+                    <Select
+                      value={orderFormData.wilaya}
                       onValueChange={(v) => setOrderFormData({ ...orderFormData, wilaya: v, commune: "" })}
                     >
                       <SelectTrigger className="h-12 rounded-xl">
@@ -3095,13 +3088,13 @@ const Dashboard = () => {
                     <Label className="flex items-center gap-2 text-sm font-bold ml-1">
                       <MapPin className="w-4 h-4 text-primary" /> البلدية
                     </Label>
-                    <Select 
-                      value={orderFormData.commune} 
+                    <Select
+                      value={orderFormData.commune}
                       onValueChange={(v) => {
                         const communeObj = communes.find(c => c.nom === v);
                         const isStopDeskAvailable = communeObj?.has_stop_desk !== 0;
-                        setOrderFormData({ 
-                          ...orderFormData, 
+                        setOrderFormData({
+                          ...orderFormData,
                           commune: v,
                           deliveryType: (!isStopDeskAvailable && orderFormData.deliveryType === "office") ? "home" : orderFormData.deliveryType
                         });
@@ -3124,8 +3117,8 @@ const Dashboard = () => {
                     <Label className="flex items-center gap-2 text-sm font-bold ml-1">
                       <Truck className="w-4 h-4 text-primary" /> نوع التوصيل
                     </Label>
-                    <Select 
-                      value={orderFormData.deliveryType} 
+                    <Select
+                      value={orderFormData.deliveryType}
                       onValueChange={(v: any) => setOrderFormData({ ...orderFormData, deliveryType: v })}
                     >
                       <SelectTrigger className="h-12 rounded-xl">
@@ -3133,9 +3126,9 @@ const Dashboard = () => {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="home" className="text-right" dir="rtl">توصيل للمنزل</SelectItem>
-                        <SelectItem 
-                          value="office" 
-                          className="text-right" 
+                        <SelectItem
+                          value="office"
+                          className="text-right"
                           dir="rtl"
                           disabled={communes.find(c => c.commune_name === orderFormData.commune)?.has_stop_desk === 0}
                         >
@@ -3150,11 +3143,11 @@ const Dashboard = () => {
                   <Label className="flex items-center gap-2 text-sm font-bold ml-1">
                     <MapPin className="w-4 h-4 text-primary" /> العنوان بالتفصيل
                   </Label>
-                  <Input 
-                    placeholder="رقم المنزل، الشارع، البلدية..." 
+                  <Input
+                    placeholder="رقم المنزل، الشارع، البلدية..."
                     className="h-12 rounded-2xl border-border/60"
                     value={orderFormData.address}
-                    onChange={(e) => setOrderFormData({...orderFormData, address: e.target.value})}
+                    onChange={(e) => setOrderFormData({ ...orderFormData, address: e.target.value })}
                   />
                 </div>
 
@@ -3166,10 +3159,10 @@ const Dashboard = () => {
                   <div className="flex justify-between items-center gap-4">
                     <span className="text-muted-foreground text-sm">سعر التوصيل:</span>
                     <div className="w-32">
-                      <Input 
-                        type="number" 
+                      <Input
+                        type="number"
                         value={orderFormData.deliveryFee}
-                        onChange={(e) => setOrderFormData({...orderFormData, deliveryFee: Number(e.target.value)})}
+                        onChange={(e) => setOrderFormData({ ...orderFormData, deliveryFee: Number(e.target.value) })}
                         className="h-10 rounded-xl font-bold text-center bg-background border-none shadow-inner"
                       />
                     </div>
@@ -3184,7 +3177,7 @@ const Dashboard = () => {
                 </div>
 
                 <div className="flex gap-4">
-                  <Button 
+                  <Button
                     className="flex-1 h-16 rounded-[1.5rem] bg-secondary text-secondary-foreground font-black text-xl shadow-xl shadow-secondary/20 hover:scale-[1.02] active:scale-95 transition-all"
                     onClick={async () => {
                       if (!orderFormData.firstName || !orderFormData.lastName || !orderFormData.phone || !orderFormData.address || !orderFormData.wilaya || !orderFormData.commune) {
@@ -3217,7 +3210,7 @@ const Dashboard = () => {
                         toast({ title: "تم تسجيل الطلب بنجاح! 🚀", description: "سيتم تتبع الطلب من قسم طلبياتي." });
                         setIsOrderDialogOpen(false);
                         setOrderFormData({ firstName: "", lastName: "", phone: "", wilaya: "", commune: "", address: "", deliveryType: "home", stopDesk: 0, deliveryFee: 500 });
-                        
+
                         // Refetch orders immediately
                         const currentToken = localStorage.getItem("token");
                         const res = await fetch('https://profit-link-3eri.onrender.com/api/orders/affiliate', {
@@ -3225,19 +3218,19 @@ const Dashboard = () => {
                         });
                         const data = await res.json();
                         if (res.ok) {
-                            setOrders(data.data.map((o: any) => ({
-                                id: o.id,
-                                productName: o.product?.name || "منتج محذوف",
-                                customerName: o.customerName,
-                                customerPhone: o.customerPhone,
-                                wilaya: o.wilaya,
-                                address: o.address,
-                                status: o.status.toLowerCase(),
-                                amount: o.totalAmount, // Final sale price
-                                commission: o.commissionAmount,
-                                date: new Date(o.createdAt).toLocaleDateString('ar-DZ'),
-                                trackingNumber: o.trackingNumber
-                            })));
+                          setOrders(data.data.map((o: any) => ({
+                            id: o.id,
+                            productName: o.product?.name || "منتج محذوف",
+                            customerName: o.customerName,
+                            customerPhone: o.customerPhone,
+                            wilaya: o.wilaya,
+                            address: o.address,
+                            status: o.status.toLowerCase(),
+                            amount: o.totalAmount, // Final sale price
+                            commission: o.commissionAmount,
+                            date: new Date(o.createdAt).toLocaleDateString('ar-DZ'),
+                            trackingNumber: o.trackingNumber
+                          })));
                         }
                       } catch (error) {
                         toast({ title: "فشل تسجيل الطلب", description: "يرجى المحاولة مرة أخرى", variant: "destructive" });
@@ -3246,8 +3239,8 @@ const Dashboard = () => {
                   >
                     تأكيد الطلب نهائياً
                   </Button>
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     className="h-16 px-8 rounded-[1.5rem] border-2"
                     onClick={() => setIsOrderDialogOpen(false)}
                   >
@@ -3262,5 +3255,7 @@ const Dashboard = () => {
     </div>
   );
 };
+
+export default Dashboard;
 
 export default Dashboard;

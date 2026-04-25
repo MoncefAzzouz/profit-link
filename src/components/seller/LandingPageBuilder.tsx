@@ -305,10 +305,10 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
     try {
       // If the ID starts with "lp-", it's a temporary local ID, so we use POST
       const isNew = pageToSave.id.startsWith("lp-");
-      const url = isNew 
+      const url = isNew
         ? "https://profit-link-3eri.onrender.com/api/store/page"
         : `https://profit-link-3eri.onrender.com/api/store/page/${pageToSave.id}`;
-      
+
       const method = isNew ? "POST" : "PUT";
 
       // Prepare config by removing backend metadata
@@ -316,7 +316,7 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
 
       const response = await fetch(url, {
         method,
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${token}`
         },
@@ -350,7 +350,7 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
       lastHandledProductId.current = initialProductToEdit.id;
       // Check if we already have a landing page for this product
       const existingPage = pages.find((p) => p.productId === initialProductToEdit.id);
-      
+
       if (existingPage) {
         setEditingPage(existingPage);
         setActiveDesignTab("content");
@@ -368,8 +368,8 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
           originalPrice: initialProductToEdit.originalPrice,
           category: initialProductToEdit.category,
           heroImage: initialProductToEdit.image,
-          galleryImages: initialProductToEdit.images && initialProductToEdit.images.length > 0 
-            ? initialProductToEdit.images 
+          galleryImages: initialProductToEdit.images && initialProductToEdit.images.length > 0
+            ? initialProductToEdit.images
             : (initialProductToEdit.image ? [initialProductToEdit.image] : []),
           features: initialProductToEdit.features && initialProductToEdit.features.length > 0
             ? initialProductToEdit.features
@@ -378,7 +378,7 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
           sections: ["hero", "urgency-bar", "features", "gallery", "social-proof", "reviews", "shipping", "cta"],
           status: "draft"
         };
-        
+
         const newPages = [newPage, ...pages];
         savePagesLocally(newPages);
         setEditingPage(newPage);
@@ -423,7 +423,7 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
           "features": "1460353581641-37badd45ec65?auto=format&fit=crop&q=80&w=800", // Quality/Modern
           "testimonials": "1484860137485-951bd6ce938c?auto=format&fit=crop&q=80&w=600" // Happy people
         };
-        
+
         // Dynamic search URLs
         const searchBase = "https://source.unsplash.com/featured/?";
         return [
@@ -477,9 +477,9 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
 
   const applyTemplate = (tmplId: string) => {
     if (!editingPage) return;
-    
+
     let updates: Partial<LandingPageConfig> = { template: tmplId };
-    
+
     switch (tmplId) {
       case "original":
         updates = { ...updates, backgroundColor: "#ffffff", primaryColor: "#3b82f6", fontFamily: "cairo", shadowIntensity: "md" };
@@ -591,10 +591,7 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
     transition: { delay, duration: 0.5, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] },
   });
 
-  const isDark = (bg: string) => {
-    if (!bg || typeof bg !== 'string') return false;
-    return bg.startsWith("#0") || bg.startsWith("#1") || bg.startsWith("#2") || bg === "#020617";
-  };
+  const isDark = (bg: string) => bg.startsWith("#0") || bg.startsWith("#1") || bg.startsWith("#2") || bg === "#020617";
 
   const renderPreview = (isMobile: boolean) => {
     const p = editingPage;
@@ -633,7 +630,7 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
         <h3 className="text-xl font-bold flex items-center gap-2">
           <ShoppingCart className="w-6 h-6" style={{ color: p.primaryColor }} /> اطلب الآن
         </h3>
-        
+
         <div className="space-y-4">
           <div className="space-y-1.5">
             <Label className="text-[11px] font-bold opacity-70">الاسم الكامل *</Label>
@@ -641,7 +638,7 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
               أدخل اسمك الكامل
             </div>
           </div>
-          
+
           <div className="space-y-1.5">
             <Label className="text-[11px] font-bold opacity-70">رقم الهاتف *</Label>
             <div className="h-10 rounded-xl border px-3 flex items-center text-xs bg-muted/20" style={{ borderColor: isDark(p.backgroundColor) ? "#334155" : "#e2e8f0" }}>
@@ -723,12 +720,12 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
         <div className="h-full overflow-y-auto scrollbar-hide flex flex-col" style={{ backgroundColor: p.backgroundColor, fontFamily: p.fontFamily, color: tc }}>
           {/* Header */}
           <div className="sticky top-0 z-10 flex items-center justify-between px-3 h-10 border-b bg-card/80 backdrop-blur-md">
-              <div className="flex items-center gap-1.5 overflow-hidden">
-                <div className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: p.primaryColor }}>
-                  <ShoppingCart className="w-3 h-3 text-white" />
-                </div>
-                <span className="text-[10px] font-bold truncate max-w-[150px]">{p.productName || defaultStoreName}</span>
+            <div className="flex items-center gap-1.5 overflow-hidden">
+              <div className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: p.primaryColor }}>
+                <ShoppingCart className="w-3 h-3 text-white" />
               </div>
+              <span className="text-[10px] font-bold truncate max-w-[150px]">{p.productName || defaultStoreName}</span>
+            </div>
             <button className="text-[9px] font-bold px-4 py-1.5 rounded-full text-white shadow-lg" style={{ backgroundColor: p.primaryColor }}>
               اطلب الآن
             </button>
@@ -819,9 +816,9 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
                     <h3 className="text-sm font-bold border-r-4 border-primary pr-3 mt-4">فيديو المنتج</h3>
                     <div className="aspect-video bg-muted rounded-xl flex items-center justify-center overflow-hidden border">
                       {p.videoUrl ? (
-                         <div className="text-[8px] opacity-40">Video: {p.videoUrl}</div>
+                        <div className="text-[8px] opacity-40">Video: {p.videoUrl}</div>
                       ) : (
-                         <Play className="w-6 h-6 opacity-20" />
+                        <Play className="w-6 h-6 opacity-20" />
                       )}
                     </div>
                   </div>
@@ -834,8 +831,8 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
                       {p.socialProof.slice(0, 2).map((r, i) => (
                         <div key={i} className="p-3 bg-muted/20 border border-border/50 rounded-xl">
                           <div className="flex items-center justify-between mb-1">
-                             <span className="text-[10px] font-bold">{r.name}</span>
-                             <div className="flex gap-0.5">{"⭐".repeat(r.rating)}</div>
+                            <span className="text-[10px] font-bold">{r.name}</span>
+                            <div className="flex gap-0.5">{"⭐".repeat(r.rating)}</div>
                           </div>
                           <p className="text-[9px] opacity-70">{r.text}</p>
                         </div>
@@ -1075,7 +1072,7 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
 
   if (editingPage) {
     return (
-      <div className="flex flex-col min-h-[500px] lg:h-[calc(100vh-140px)] -m-4 sm:-m-6">
+      <div className="flex flex-col h-[calc(100vh-140px)] -m-4 sm:-m-6">
         {/* Editor header */}
         <div className="bg-card border-b border-border p-3 flex items-center justify-between gap-3 shrink-0">
           <div className="flex items-center gap-3">
@@ -1104,14 +1101,14 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
             <Button size="sm" onClick={() => publishPage(editingPage)} className="rounded-xl gap-1.5 bg-gradient-to-l from-primary to-primary/90 shadow-md">
               <Zap className="w-4 h-4" /> <span className="hidden sm:inline">حفظ ونشر</span><span className="sm:hidden">نشر</span>
             </Button>
-            <Button 
-              variant={showConfig ? "outline" : "default"}
-              size="sm" 
-              onClick={() => setShowConfig(!showConfig)} 
-              className="lg:hidden rounded-xl gap-1.5 border-primary"
+            <Button
+              variant={showConfig ? "secondary" : "default"}
+              size="sm"
+              onClick={() => setShowConfig(!showConfig)}
+              className="lg:hidden rounded-xl gap-1.5"
             >
-              {showConfig ? <ChevronDown className="w-4 h-4" /> : <LayoutTemplate className="w-4 h-4" />}
-              {showConfig ? "إخفاء الشريط" : "تعديل الصفحة"}
+              {showConfig ? <Eye className="w-4 h-4" /> : <Edit className="w-4 h-4" />}
+              {showConfig ? "معاينة" : "تعديل"}
             </Button>
           </div>
         </div>
@@ -1248,19 +1245,19 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
                         <div className="flex items-center gap-3">
                           <Check className={`w-5 h-5 transition-colors ${aiProgressStep > 1 ? "text-primary" : "text-muted/30"}`} />
                           <p className={`font-bold transition-all ${aiProgressStep === 2 ? "text-foreground text-lg scale-105" : aiProgressStep > 2 ? "text-muted-foreground text-sm" : "text-muted"}`}>
-                             كتابة محتوى بيعي مقنع...
+                            كتابة محتوى بيعي مقنع...
                           </p>
                         </div>
                         <div className="flex items-center gap-3">
                           <Check className={`w-5 h-5 transition-colors ${aiProgressStep > 2 ? "text-primary" : "text-muted/30"}`} />
                           <p className={`font-bold transition-all ${aiProgressStep === 3 ? "text-foreground text-lg scale-105" : aiProgressStep > 3 ? "text-muted-foreground text-sm" : "text-muted"}`}>
-                             توليد واختيار صور احترافية للمنتج...
+                            توليد واختيار صور احترافية للمنتج...
                           </p>
                         </div>
                         <div className="flex items-center gap-4">
                           <Check className={`w-5 h-5 transition-colors ${aiProgressStep > 3 ? "text-primary" : "text-muted/30"}`} />
                           <p className={`font-bold transition-all ${aiProgressStep === 4 ? "text-foreground text-lg scale-105" : aiProgressStep > 4 ? "text-muted-foreground text-sm" : "text-muted"}`}>
-                             تنسيق الألوان وبناء الهوية البصرية...
+                            تنسيق الألوان وبناء الهوية البصرية...
                           </p>
                         </div>
                       </div>
@@ -1274,10 +1271,10 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <Label className="text-xs font-bold opacity-70">اسم المتجر/العلامة (يظهر في الهيدر)</Label>
-                    <Input 
-                      value={editingPage.productName || defaultStoreName} 
-                      onChange={(e) => updatePage("productName", e.target.value)} 
-                      className="rounded-xl h-9 text-sm" 
+                    <Input
+                      value={editingPage.productName || defaultStoreName}
+                      onChange={(e) => updatePage("productName", e.target.value)}
+                      className="rounded-xl h-9 text-sm"
                       placeholder={defaultStoreName}
                     />
                   </div>
@@ -1322,9 +1319,9 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
                       <Label className="text-xs font-bold">توصيل مجاني</Label>
                       <p className="text-[10px] text-muted-foreground">تفعيل التوصيل المجاني لكل الولايات</p>
                     </div>
-                    <Switch 
-                      checked={editingPage.showFreeShipping} 
-                      onCheckedChange={(checked) => updatePage("showFreeShipping", checked)} 
+                    <Switch
+                      checked={editingPage.showFreeShipping}
+                      onCheckedChange={(checked) => updatePage("showFreeShipping", checked)}
                     />
                   </div>
 
@@ -1334,9 +1331,9 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
                       <Label className="text-xs font-bold">توصيل مجاني</Label>
                       <p className="text-[10px] text-muted-foreground">تفعيل التوصيل المجاني لكل الولايات</p>
                     </div>
-                    <Switch 
-                      checked={editingPage.showFreeShipping} 
-                      onCheckedChange={(checked) => updatePage("showFreeShipping", checked)} 
+                    <Switch
+                      checked={editingPage.showFreeShipping}
+                      onCheckedChange={(checked) => updatePage("showFreeShipping", checked)}
                     />
                   </div>
 
