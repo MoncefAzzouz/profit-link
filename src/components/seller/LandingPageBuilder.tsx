@@ -380,9 +380,12 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
             ? initialProductToEdit.features
             : ["جودة عالية مضمونة", "توصيل سريع لكل الولايات", "الدفع عند الاستلام", "ضمان الاستبدال والاسترجاع"],
           videoUrl: initialProductToEdit.videoUrl || "",
+          availableColors: initialProductToEdit.hasColors ? (initialProductToEdit.availableColors || []) : [],
+          availableSizes: initialProductToEdit.hasSizes ? (initialProductToEdit.availableSizes || []) : [],
           sections: ["hero", "urgency-bar", "features", "gallery", "social-proof", "reviews", "shipping", "cta"],
           status: "draft"
         };
+
 
         const newPages = [newPage, ...pages];
         savePagesLocally(newPages);
