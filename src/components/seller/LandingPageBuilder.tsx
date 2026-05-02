@@ -648,7 +648,7 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
             <div className="space-y-1.5">
               <Label className="text-[11px] font-bold opacity-70">اختر اللون *</Label>
               <div className="flex flex-wrap gap-1.5">
-                {p.availableColors.map(color => (
+                {(p.availableColors || []).map(color => (
                   <div key={color} className="px-3 py-1 rounded-lg border text-[10px] font-bold opacity-50 bg-muted/20">
                     {color}
                   </div>
@@ -661,7 +661,7 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
             <div className="space-y-1.5">
               <Label className="text-[11px] font-bold opacity-70">اختر المقاس *</Label>
               <div className="flex flex-wrap gap-1.5">
-                {p.availableSizes.map(size => (
+                {(p.availableSizes || []).map(size => (
                   <div key={size} className="min-w-[32px] h-8 rounded-lg border flex items-center justify-center text-[10px] font-bold opacity-50 bg-muted/20">
                     {size}
                   </div>
@@ -795,7 +795,7 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
                   )}
                 </div>
 
-                {p.sections.includes("features") && (
+                {(p.sections || []).includes("features") && (
                   <div className="grid grid-cols-2 gap-3" dir="rtl">
                     {(p.features || []).slice(0, 4).map((f, i) => (
                       <div key={i} className="flex items-center gap-2 p-3 bg-muted/30 border border-border/50 rounded-xl">
@@ -833,7 +833,7 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
                 </div>
 
                 {/* Trust Badges Grid */}
-                {p.sections.includes("trust-badges") && (
+                {(p.sections || []).includes("trust-badges") && (
                   <div className="grid grid-cols-2 gap-3" dir="rtl">
                     {[
                       { icon: Truck, t: p.showFreeShipping ? "توصيل مجاني" : "توصيل سريع", s: "لكل الولايات" },
@@ -855,7 +855,7 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
                 <OrderForm />
 
                 {/* Additional Sections for Original Template */}
-                {p.sections.includes("video") && (
+                {(p.sections || []).includes("video") && (
                   <div className="space-y-3">
                     <h3 className="text-sm font-bold border-r-4 border-primary pr-3 mt-4">فيديو المنتج</h3>
                     <div className="aspect-video bg-muted rounded-xl flex items-center justify-center overflow-hidden border">
@@ -868,7 +868,7 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
                   </div>
                 )}
 
-                {p.sections.includes("reviews") && (
+                {(p.sections || []).includes("reviews") && (
                   <div className="space-y-3">
                     <h3 className="text-sm font-bold border-r-4 border-primary pr-3 mt-4">آراء العملاء</h3>
                     <div className="space-y-2">
@@ -885,7 +885,7 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
                   </div>
                 )}
 
-                {p.sections.includes("faq") && (
+                {(p.sections || []).includes("faq") && (
                   <div className="space-y-3">
                     <h3 className="text-sm font-bold border-r-4 border-primary pr-3 mt-4">الأسئلة الشائعة</h3>
                     <div className="space-y-2">
@@ -899,7 +899,7 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
                   </div>
                 )}
 
-                {p.sections.includes("shipping") && (
+                {(p.sections || []).includes("shipping") && (
                   <div className="p-4 bg-muted/20 rounded-xl border border-dashed mt-4">
                     <h3 className="text-[10px] font-bold flex items-center gap-2 mb-2">
                       <Truck className="w-3 h-3" /> معلومات الشحن
@@ -917,7 +917,7 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
     return (
       <div className="h-full overflow-y-auto scrollbar-hide" style={{ backgroundColor: p.backgroundColor, fontFamily: p.fontFamily, color: tc }}>
         {/* Urgency Bar */}
-        {p.sections.includes("urgency-bar") && (
+        {(p.sections || []).includes("urgency-bar") && (
           <div className="py-2.5 px-4 text-center text-xs font-bold text-white" style={{ backgroundColor: p.primaryColor }}>
             <span className="animate-pulse">🔥</span> {p.urgencyText} <span className="animate-pulse">🔥</span>
           </div>
@@ -943,7 +943,7 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
 
         <div className="p-4 sm:p-6 space-y-8">
           {/* Hero Section */}
-          {p.sections.includes("hero") && (
+          {(p.sections || []).includes("hero") && (
             <div className={`${!isMobile && p.heroLayout === "split" ? "grid grid-cols-2 gap-8 items-center" : "space-y-6"}`}>
               <div className={`relative overflow-hidden bg-muted shadow-lg ${p.imageStyle === "circle" ? "rounded-full aspect-square max-w-[320px] mx-auto" : p.imageStyle === "blob" ? "rounded-[30%_70%_70%_30%/30%_30%_70%_70%]" : p.imageStyle === "sharp" ? "" : ""}`}
                 style={{ borderRadius: p.imageStyle === "rounded" ? br : undefined, aspectRatio: p.imageStyle === "circle" ? "1" : "4/3" }}>
@@ -984,7 +984,7 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
           )}
 
           {/* Social Proof Numbers */}
-          {p.sections.includes("social-proof") && (
+          {(p.sections || []).includes("social-proof") && (
             <div className="grid grid-cols-3 gap-3 text-center">
               {[
                 { icon: Users, val: "2,340+", label: "مشتري" },
@@ -1001,13 +1001,13 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
           )}
 
           {/* Gallery Section */}
-          {p.sections.includes("gallery") && p.galleryImages && p.galleryImages.length > 0 && (
+          {(p.sections || []).includes("gallery") && p.galleryImages && p.galleryImages.length > 0 && (
             <div className="space-y-4" dir="rtl">
               <h3 className="text-base font-bold flex items-center gap-2">
                 <Camera className="w-5 h-5" style={{ color: p.primaryColor }} /> صور المنتج
               </h3>
               <div className="grid grid-cols-2 gap-3">
-                {p.galleryImages.map((img, i) => (
+                {(p.galleryImages || []).map((img, i) => (
                   <div key={i} className="aspect-square overflow-hidden bg-muted rounded-2xl shadow-sm" style={{ borderRadius: br }}>
                     <img src={img} alt={`Gallery ${i}`} className="w-full h-full object-cover" />
                   </div>
@@ -1017,13 +1017,13 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
           )}
 
           {/* Features */}
-          {p.sections.includes("features") && (
+          {(p.sections || []).includes("features") && (
             <div className="space-y-4" dir="rtl">
               <h3 className="text-base font-bold flex items-center gap-2">
                 <Star className="w-5 h-5" style={{ color: p.primaryColor }} /> لماذا هذا المنتج؟
               </h3>
               <div className="grid grid-cols-2 gap-3">
-                {p.features.map((f, i) => (
+                {(p.features || []).map((f, i) => (
                   <div key={i} className="flex items-center gap-2.5 p-3.5 border rounded-2xl bg-card shadow-sm" style={{ borderColor: isDark(p.backgroundColor) ? "#334155" : "#e2e8f0", borderRadius: br }}>
                     <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: `${p.primaryColor}15` }}>
                       <Check className="w-4 h-4" style={{ color: p.primaryColor }} />
@@ -1036,7 +1036,7 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
           )}
 
           {/* Video */}
-          {p.sections.includes("video") && (
+          {(p.sections || []).includes("video") && (
             <div className="relative aspect-video rounded-2xl overflow-hidden bg-muted flex items-center justify-center shadow-lg" style={{ borderRadius: br }}>
               <div className="w-16 h-16 rounded-full flex items-center justify-center shadow-2xl" style={{ backgroundColor: p.primaryColor }}>
                 <Play className="w-7 h-7 text-white fill-white ml-1" />
@@ -1046,12 +1046,12 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
           )}
 
           {/* Reviews */}
-          {p.sections.includes("reviews") && (
+          {(p.sections || []).includes("reviews") && (
             <div className="space-y-4" dir="rtl">
               <h3 className="text-base font-bold flex items-center gap-2">
                 <MessageSquare className="w-5 h-5" style={{ color: p.primaryColor }} /> آراء العملاء
               </h3>
-              {p.socialProof.map((review, i) => (
+              {(p.socialProof || []).map((review, i) => (
                 <div key={i} className="p-4 border rounded-2xl bg-card shadow-sm space-y-3" style={{ borderColor: isDark(p.backgroundColor) ? "#334155" : "#e2e8f0", borderRadius: br }}>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
@@ -1073,7 +1073,7 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
           )}
 
           {/* Shipping Info */}
-          {p.sections.includes("shipping") && (
+          {(p.sections || []).includes("shipping") && (
             <div className="p-5 rounded-2xl border bg-card shadow-sm space-y-4" dir="rtl" style={{ borderColor: isDark(p.backgroundColor) ? "#334155" : "#e2e8f0", borderRadius: br }}>
               <h3 className="text-base font-bold flex items-center gap-2">
                 <Truck className="w-5 h-5" style={{ color: p.primaryColor }} /> معلومات التوصيل
@@ -1095,12 +1095,12 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
           )}
 
           {/* CTA Form */}
-          {p.sections.includes("cta") && (
+          {(p.sections || []).includes("cta") && (
             <OrderForm />
           )}
 
           {/* Trust Badges Footer */}
-          {p.sections.includes("trust-badges") && (
+          {(p.sections || []).includes("trust-badges") && (
             <div className="grid grid-cols-2 gap-3 pb-8">
               {(p.trustBadges || []).slice(0, 4).map((badge, i) => {
                 const icons = [Shield, Truck, Award, Check];
@@ -1449,7 +1449,7 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
 
                   <div className="space-y-2">
                     <Label className="text-xs font-bold opacity-70">المميزات</Label>
-                    {editingPage.features.map((feature, idx) => (
+                    {(editingPage.features || []).map((feature, idx) => (
                       <div key={idx} className="flex gap-2">
                         <Input value={feature} onChange={(e) => {
                           const nf = [...editingPage.features]; nf[idx] = e.target.value;
@@ -1470,7 +1470,7 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
                   {/* Trust Badges */}
                   <div className="space-y-2">
                     <Label className="text-xs font-bold opacity-70">شارات الثقة</Label>
-                    {editingPage.trustBadges.map((badge, idx) => (
+                    {(editingPage.trustBadges || []).map((badge, idx) => (
                       <div key={idx} className="flex gap-2">
                         <Input value={badge} onChange={(e) => {
                           const nb = [...editingPage.trustBadges]; nb[idx] = e.target.value;
@@ -1491,7 +1491,7 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
                   {/* Reviews */}
                   <div className="space-y-2">
                     <Label className="text-xs font-bold opacity-70">آراء العملاء</Label>
-                    {editingPage.socialProof.map((review, idx) => (
+                    {(editingPage.socialProof || []).map((review, idx) => (
                       <div key={idx} className="p-2 border border-border rounded-xl space-y-1.5">
                         <div className="flex gap-2">
                           <Input value={review.name} onChange={(e) => {
@@ -1527,7 +1527,7 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
                   {/* FAQ */}
                   <div className="space-y-2">
                     <Label className="text-xs font-bold opacity-70">الأسئلة الشائعة</Label>
-                    {editingPage.faqItems.map((faq, idx) => (
+                    {(editingPage.faqItems || []).map((faq, idx) => (
                       <div key={idx} className="p-2 border border-border rounded-xl space-y-1.5">
                         <div className="flex gap-2">
                           <Input value={faq.q} onChange={(e) => {
