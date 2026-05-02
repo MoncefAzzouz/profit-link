@@ -73,10 +73,51 @@ const orderDistribution = [
   { name: "ملغاة", value: 177, color: "hsl(0, 84%, 60%)" },
 ];
 
+const adminTabUrlMap: Record<string, Tab> = {
+  "نظرة-عامة": "overview",
+  "المنتجات": "products",
+  "التصنيفات": "categories",
+  "المسوقين": "affiliates", // Use without shadda to avoid URL encoding issues
+  "طلبات-الانضمام": "join_requests",
+  "الطلبيات": "orders",
+  "طلبات-السحب": "withdrawals",
+  "المستويات": "levels",
+  "التوصيل": "shipping",
+  "تعديل-الواجهة": "landing_editor",
+  "صفحات-الهبوط": "landing_pages",
+  "الإحصائيات": "analytics",
+  "الإعدادات": "settings"
+};
+
+const adminUrlTabMap: Record<Tab, string> = {
+  "overview": "نظرة-عامة",
+  "products": "المنتجات",
+  "categories": "التصنيفات",
+  "affiliates": "المسوقين",
+  "join_requests": "طلبات-الانضمام",
+  "orders": "الطلبيات",
+  "withdrawals": "طلبات-السحب",
+  "levels": "المستويات",
+  "shipping": "التوصيل",
+  "landing_editor": "تعديل-الواجهة",
+  "landing_pages": "صفحات-الهبوط",
+  "analytics": "الإحصائيات",
+  "settings": "الإعدادات"
+};
+
 const Admin = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState<Tab>("overview");
+  
+  const [activeTab, setActiveTab] = useState<Tab>(() => {
+    const pathParts = location.pathname.split('/');
+    const lastPart = pathParts[pathParts.length - 1];
+    if (lastPart && adminTabUrlMap[decodeURIComponent(lastPart)]) {
+      return adminTabUrlMap[decodeURIComponent(lastPart)];
+    }
+    return "overview";
+  });
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [affiliateSearch, setAffiliateSearch] = useState("");
   const [affiliateStatus, setAffiliateStatus] = useState("all");
@@ -116,6 +157,23 @@ const Admin = () => {
   const [isFetchingAffiliates, setIsFetchingAffiliates] = useState(false);
   const [dbOrders, setDbOrders] = useState<any[]>([]);
   const [isFetchingOrders, setIsFetchingOrders] = useState(false);
+
+  // Sync activeTab with URL
+  useEffect(() => {
+    const arabicLabel = adminUrlTabMap[activeTab];
+    if (arabicLabel) {
+      window.history.replaceState(null, "", `/admin/${arabicLabel}`);
+    }
+  }, [activeTab]);
+
+  // Sync URL changes with activeTab (for browser back/forward)
+  useEffect(() => {
+    const pathParts = location.pathname.split('/');
+    const lastPart = pathParts[pathParts.length - 1];
+    if (lastPart && adminTabUrlMap[decodeURIComponent(lastPart)]) {
+      setActiveTab(adminTabUrlMap[decodeURIComponent(lastPart)]);
+    }
+  }, [location.pathname]);
 
   // Authentication & Authorization Check
   useEffect(() => {
@@ -1735,14 +1793,23 @@ const Admin = () => {
                         {product.videoUrl && <Video className="w-4 h-4 text-primary animate-pulse" />}
                       </div>
                       <h3 className="font-bold text-foreground line-clamp-1">{product.name}</h3>
-                      <div className="flex justify-between items-end mt-4">
-                        <div className="space-y-0.5">
-                          <p className="text-xs text-muted-foreground line-through opacity-50">{product.originalPrice.toLocaleString()} دج</p>
-                          <p className="text-xl font-black text-secondary">{product.price.toLocaleString()} دج</p>
+                      <div className="flex flex-col gap-1.5 mt-4 bg-muted/30 p-2.5 rounded-xl border border-border/40">
+                        <div className="flex justify-between items-center">
+                          <span className="text-[10px] text-muted-foreground font-bold">سعر الجملة الحقيقي</span>
+                          <span className="text-xs font-black text-slate-500">{(product.wholesalePrice || 0).toLocaleString()} دج</span>
                         </div>
-                        <div className="text-left">
-                          <p className="text-[10px] text-muted-foreground font-bold">العمولة</p>
-                          <p className="font-bold text-primary">{product.commission.toLocaleString()} دج</p>
+                        <div className="flex justify-between items-center">
+                          <span className="text-[10px] text-muted-foreground font-bold">سعر الجملة للمسوق</span>
+                          <span className="text-xs font-black text-orange-600">{(product.originalPrice || 0).toLocaleString()} دج</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-[10px] text-muted-foreground font-bold">سعر البيع النهائي</span>
+                          <span className="text-sm font-black text-secondary">{(product.price || 0).toLocaleString()} دج</span>
+                        </div>
+                        <div className="h-px bg-border/50 my-0.5"></div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-[10px] text-primary font-bold">عمولة المسوق</span>
+                          <span className="text-sm font-black text-primary">{(product.commission || 0).toLocaleString()} دج</span>
                         </div>
                       </div>
                       <div className="flex gap-2 mt-6">
