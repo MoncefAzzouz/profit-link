@@ -108,7 +108,7 @@ router.get('/all', authenticateToken, requireAdmin, async (req: AuthRequest, res
 // POST /api/products (Admin: Create new product)
 router.post('/', authenticateToken, requireAdmin, async (req: AuthRequest, res: Response): Promise<any> => {
   try {
-    const { name, description, adText, price, originalPrice, commission, category, images, videoUrl, stock, isVisible, isTrend, isFeatured, features } = req.body;
+    const { name, description, adText, price, originalPrice, commission, category, images, videoUrl, stock, isVisible, isTrend, isFeatured, features, wholesalePrice, affiliatePrice } = req.body;
     const image: string | undefined = req.body.image;
 
     if (!name || !price || !commission || !category) {
@@ -131,7 +131,9 @@ router.post('/', authenticateToken, requireAdmin, async (req: AuthRequest, res: 
         isVisible: isVisible !== undefined ? isVisible : true,
         isTrend: isTrend || false,
         isFeatured: isFeatured || false,
-        features: features || []
+        features: features || [],
+        wholesalePrice: parseFloat(wholesalePrice) || 0,
+        affiliatePrice: parseFloat(affiliatePrice) || 0
       }
     });
 
@@ -146,7 +148,7 @@ router.post('/', authenticateToken, requireAdmin, async (req: AuthRequest, res: 
 router.put('/:id', authenticateToken, requireAdmin, async (req: AuthRequest, res: Response): Promise<any> => {
   try {
     const { id } = req.params;
-    const { name, description, adText, price, originalPrice, commission, category, images, videoUrl, stock, isVisible, isTrend, isFeatured, features, status } = req.body;
+    const { name, description, adText, price, originalPrice, commission, category, images, videoUrl, stock, isVisible, isTrend, isFeatured, features, status, wholesalePrice, affiliatePrice } = req.body;
     const image: string | undefined = req.body.image;
 
     const product = await prisma.product.update({
@@ -168,6 +170,8 @@ router.put('/:id', authenticateToken, requireAdmin, async (req: AuthRequest, res
         ...(isFeatured !== undefined && { isFeatured }),
         ...(features !== undefined && { features }),
         ...(status !== undefined && { status }),
+        ...(wholesalePrice !== undefined && { wholesalePrice: parseFloat(wholesalePrice) }),
+        ...(affiliatePrice !== undefined && { affiliatePrice: parseFloat(affiliatePrice) }),
       }
     });
 

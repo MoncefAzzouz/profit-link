@@ -83,6 +83,9 @@ model Product {
   stock          Int      @default(0)
   status         String   @default("active") // active, out_of_stock, disabled
 
+  wholesalePrice Float    @default(0.0) // Real wholesale price
+  affiliatePrice Float    @default(0.0) // Wholesale price for affiliate
+  
   isVisible      Boolean  @default(true)
   isTrend        Boolean  @default(false)
   isFeatured     Boolean  @default(false)
