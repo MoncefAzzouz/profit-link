@@ -38,6 +38,8 @@ import {
   ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell
 } from "recharts";
 import LandingPageBuilder from "@/components/seller/LandingPageBuilder";
+import { API_BASE_URL } from '@/config/api';
+
 
 type Tab = "overview" | "affiliates" | "join_requests" | "orders" | "products" | "categories" | "analytics" | "withdrawals" | "settings" | "shipping" | "landing_editor" | "landing_pages" | "levels";
 
@@ -147,7 +149,7 @@ const Admin = () => {
 
     const fetchAdminStats = async () => {
       try {
-        const res = await fetch('https://profit-link-3eri.onrender.com/api/admin/dashboard', {
+        const res = await fetch('${API_BASE_URL}/admin/dashboard', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (res.ok) {
@@ -170,7 +172,7 @@ const Admin = () => {
     
     setIsFetchingWithdrawals(true);
     try {
-      const res = await fetch('https://profit-link-3eri.onrender.com/api/admin/withdrawals', {
+      const res = await fetch('${API_BASE_URL}/admin/withdrawals', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {
@@ -189,7 +191,7 @@ const Admin = () => {
     if (!token) return;
     setIsFetchingAffiliates(true);
     try {
-      const res = await fetch('https://profit-link-3eri.onrender.com/api/admin/affiliates', {
+      const res = await fetch('${API_BASE_URL}/admin/affiliates', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {
@@ -208,7 +210,7 @@ const Admin = () => {
     if (!token) return;
     setIsFetchingOrders(true);
     try {
-      const res = await fetch('https://profit-link-3eri.onrender.com/api/orders/all', {
+      const res = await fetch('${API_BASE_URL}/orders/all', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {
@@ -233,7 +235,7 @@ const Admin = () => {
     if (!token) return;
 
     try {
-      const res = await fetch(`https://profit-link-3eri.onrender.com/api/admin/withdrawals/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/admin/withdrawals/${id}`, {
         method: 'PATCH',
         headers: { 
           'Content-Type': 'application/json',
@@ -286,10 +288,12 @@ const Admin = () => {
     stock: 0,
     image: "",
     videoUrl: "",
+    wholesalePrice: 0,
+    affiliatePrice: 0,
+    images: [],
     isVisible: true,
     isTrend: false,
     isFeatured: false,
-    adMaterials: [],
     hasColors: false,
     hasSizes: false,
     sizeType: "clothing",
@@ -330,7 +334,7 @@ const Admin = () => {
   // Fetch categories from DB
   const fetchCategories = async () => {
     try {
-      const res = await fetch('https://profit-link-3eri.onrender.com/api/products/categories/all', {
+      const res = await fetch('${API_BASE_URL}/products/categories/all', {
         headers: { 'Authorization': `Bearer ${localStorage.getItem("token")}` }
       });
       if (res.ok) {
@@ -347,7 +351,7 @@ const Admin = () => {
     const token = localStorage.getItem("token");
     if (!token) return;
     try {
-      const res = await fetch('https://profit-link-3eri.onrender.com/api/products/all', {
+      const res = await fetch('${API_BASE_URL}/products/all', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {
@@ -373,7 +377,7 @@ const Admin = () => {
 
   const fetchLevels = async () => {
     try {
-      const res = await fetch('https://profit-link-3eri.onrender.com/api/levels');
+      const res = await fetch('${API_BASE_URL}/levels');
       if (res.ok) {
         const json = await res.json();
         setDbLevels(json.data || []);
@@ -389,8 +393,8 @@ const Admin = () => {
 
     try {
       const url = editingLevel 
-        ? `https://profit-link-3eri.onrender.com/api/levels/${editingLevel.id}`
-        : 'https://profit-link-3eri.onrender.com/api/levels';
+        ? `${API_BASE_URL}/levels/${editingLevel.id}`
+        : '${API_BASE_URL}/levels';
       const method = editingLevel ? 'PUT' : 'POST';
 
       const res = await fetch(url, {
@@ -420,7 +424,7 @@ const Admin = () => {
     if (!token) return;
 
     try {
-      const res = await fetch(`https://profit-link-3eri.onrender.com/api/levels/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/levels/${id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -439,7 +443,7 @@ const Admin = () => {
       const fetchShipping = async () => {
         setIsFetchingShipping(true);
         try {
-          const res = await fetch('https://profit-link-3eri.onrender.com/api/delivery/all-rates');
+          const res = await fetch('${API_BASE_URL}/delivery/all-rates');
           const data = await res.json();
           if (res.ok) {
             setShippingRatesData(data.data);
@@ -637,8 +641,8 @@ const Admin = () => {
     const token = localStorage.getItem("token");
     try {
       const url = editingCategory
-        ? `https://profit-link-3eri.onrender.com/api/products/categories/${editingCategory.id}`
-        : 'https://profit-link-3eri.onrender.com/api/products/categories';
+        ? `${API_BASE_URL}/products/categories/${editingCategory.id}`
+        : `${API_BASE_URL}/products/categories`;
 
       const res = await fetch(url, {
         method: editingCategory ? 'PUT' : 'POST',
@@ -662,7 +666,7 @@ const Admin = () => {
   const handleDeleteCategory = async (id: string) => {
     const token = localStorage.getItem("token");
     try {
-      const res = await fetch(`https://profit-link-3eri.onrender.com/api/products/categories/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/products/categories/${id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -677,7 +681,7 @@ const Admin = () => {
   const handleToggleCategoryStatus = async (id: string, currentStatus: boolean) => {
     const token = localStorage.getItem("token");
     try {
-      const res = await fetch(`https://profit-link-3eri.onrender.com/api/products/categories/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/products/categories/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -745,15 +749,15 @@ const Admin = () => {
       const payload = {
         name: productFormData.name,
         description: productFormData.description,
-        adText: productFormData.adText,
         price: productFormData.price,
         originalPrice: productFormData.originalPrice,
+        wholesalePrice: productFormData.wholesalePrice,
+        affiliatePrice: productFormData.affiliatePrice,
         commission: productFormData.commission,
         category: productFormData.category,
         stock: productFormData.stock,
         image: productFormData.image,
-        images: productFormData.image ? [productFormData.image] : [],
-        videoUrl: productFormData.videoUrl,
+        images: productFormData.images,
         isVisible: productFormData.isVisible,
         isTrend: productFormData.isTrend,
         isFeatured: productFormData.isFeatured,
@@ -768,8 +772,8 @@ const Admin = () => {
 
 
       const url = editingProduct
-        ? `https://profit-link-3eri.onrender.com/api/products/${editingProduct.id}`
-        : 'https://profit-link-3eri.onrender.com/api/products';
+        ? `${API_BASE_URL}/products/${editingProduct.id}`
+        : '${API_BASE_URL}/products';
 
       const res = await fetch(url, {
         method: editingProduct ? 'PUT' : 'POST',
@@ -797,7 +801,7 @@ const Admin = () => {
   const handleDeleteProduct = async (id: string) => {
     const token = localStorage.getItem("token");
     try {
-      const res = await fetch(`https://profit-link-3eri.onrender.com/api/products/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/products/${id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -815,7 +819,7 @@ const Admin = () => {
     if (!product) return;
 
     try {
-      const res = await fetch(`https://profit-link-3eri.onrender.com/api/products/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/products/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -2793,16 +2797,6 @@ const Admin = () => {
                     className="min-h-[100px] rounded-xl bg-muted/30 border-none p-4"
                   />
                 </div>
-
-                <div className="space-y-2">
-                  <Label className="font-bold text-sm text-secondary">النص الإعلاني الجاهز</Label>
-                  <Textarea 
-                    value={productFormData.adText} 
-                    onChange={e => setProductFormData({...productFormData, adText: e.target.value})} 
-                    placeholder="اكتب نصاً جذاباً للمسوّقين لنسخه مباشرة..." 
-                    className="min-h-[120px] rounded-xl bg-secondary/5 border-secondary/20 p-4 font-medium"
-                  />
-                </div>
               </div>
 
               {/* Right Column: Pricing & Media */}
@@ -2813,12 +2807,34 @@ const Admin = () => {
                     </h4>
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label className="text-xs font-bold opacity-70">السعر الأصلي</Label>
+                        <Label className="text-xs font-bold opacity-70">سعر الجملة الحقيقي</Label>
+                        <Input 
+                          type="number"
+                          value={productFormData.wholesalePrice} 
+                          onChange={e => setProductFormData({...productFormData, wholesalePrice: Number(e.target.value)})} 
+                          placeholder="السعر من المورد"
+                          className="h-11 rounded-xl bg-white border-none px-3 font-mono"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-xs font-bold">سعر الجملة للمسوق</Label>
+                        <Input 
+                          type="number"
+                          value={productFormData.affiliatePrice} 
+                          onChange={e => setProductFormData({...productFormData, affiliatePrice: Number(e.target.value)})} 
+                          placeholder="السعر للمسوق"
+                          className="h-11 rounded-xl bg-white border-none px-3 font-mono font-bold text-primary"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label className="text-xs font-bold opacity-70">السعر الأصلي (المشطوب)</Label>
                         <Input 
                           type="number"
                           value={productFormData.originalPrice} 
                           onChange={e => setProductFormData({...productFormData, originalPrice: Number(e.target.value)})} 
-                          placeholder="المشطوب"
+                          placeholder="السعر المشطوب"
                           className="h-11 rounded-xl bg-white border-none px-3 font-mono"
                         />
                       </div>
@@ -2851,18 +2867,8 @@ const Admin = () => {
                             type="number"
                             value={productFormData.commission} 
                             onChange={e => setProductFormData({...productFormData, commission: Number(e.target.value)})} 
-                            placeholder="50% من سعر البيع؟"
                             className="h-14 rounded-xl bg-primary/5 border-primary/20 px-4 font-black text-primary text-2xl text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                           />
-                          <Button 
-                            type="button"
-                            variant="ghost" 
-                            size="sm" 
-                            onClick={() => setProductFormData({...productFormData, commission: (productFormData.price || 0) * 0.5})}
-                            className="absolute left-2 top-1/2 -translate-y-1/2 h-8 text-[10px] font-black hover:bg-primary/10 px-2"
-                          >
-                            حساب 50%
-                          </Button>
                         </div>
                         <Button 
                           type="button"
@@ -2878,120 +2884,70 @@ const Admin = () => {
                  </div>
 
                  <div className="space-y-2">
-                    <Label className="font-bold text-sm">صورة المنتج الرئيسية</Label>
-                    <div className="flex flex-col items-center gap-3">
-                      {productFormData.image && (
-                        <div className="w-full h-32 rounded-xl overflow-hidden bg-muted/30 border border-dashed border-border">
-                          <img src={productFormData.image} alt="Preview" className="w-full h-full object-contain" />
+                    <Label className="font-bold text-sm">صور المنتج (حد أقصى 10 صور)</Label>
+                    <div className="grid grid-cols-3 gap-2">
+                      {productFormData.images && productFormData.images.map((img: string, idx: number) => (
+                        <div key={idx} className="relative group aspect-square rounded-xl overflow-hidden bg-muted/30 border border-border">
+                          <img src={img} alt={`Preview ${idx}`} className="w-full h-full object-cover" />
+                          <button 
+                            type="button"
+                            onClick={() => {
+                              const newImages = productFormData.images.filter((_: any, i: number) => i !== idx);
+                              setProductFormData({ ...productFormData, images: newImages, image: newImages[0] || "" });
+                            }}
+                            className="absolute top-1 right-1 bg-destructive text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
                         </div>
-                      )}
-                      <label className="w-full cursor-pointer">
-                        <div className="flex items-center justify-center gap-2 h-12 rounded-xl bg-muted/30 border border-dashed border-border hover:bg-muted/50 transition-colors px-4">
-                          <Upload className="w-4 h-4 text-muted-foreground" />
-                          <span className="text-sm text-muted-foreground">
-                            {productFormData.image ? "تغيير الصورة" : "اختر صورة المنتج"}
-                          </span>
-                        </div>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          onChange={async (e) => {
-                            const file = e.target.files?.[0];
-                            if (!file) return;
-                            const token = localStorage.getItem("token");
-                            const formData = new FormData();
-                            formData.append("image", file);
-                            try {
-                              const res = await fetch("https://profit-link-3eri.onrender.com/api/upload/image", {
-                                method: "POST",
-                                headers: { "Authorization": `Bearer ${token}` },
-                                body: formData,
-                              });
-                              const json = await res.json();
-                              if (res.ok && json.url) {
-                                setProductFormData({ ...productFormData, image: json.url });
-                                toast({ title: "تم رفع الصورة بنجاح ✅" });
-                              } else {
-                                throw new Error(json.error || "Upload failed");
+                      ))}
+                      
+                      {(!productFormData.images || productFormData.images.length < 10) && (
+                        <label className="aspect-square cursor-pointer flex flex-col items-center justify-center gap-1 rounded-xl bg-muted/30 border-2 border-dashed border-border hover:bg-muted/50 transition-colors">
+                          <Plus className="w-5 h-5 text-muted-foreground" />
+                          <span className="text-[10px] text-muted-foreground font-bold">إضافة</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={async (e) => {
+                              const file = e.target.files?.[0];
+                              if (!file) return;
+                              const token = localStorage.getItem("token");
+                              const formData = new FormData();
+                              formData.append("image", file);
+                              try {
+                                const res = await fetch(`${API_BASE_URL}/upload/image`, {
+                                  method: "POST",
+                                  headers: { "Authorization": `Bearer ${token}` },
+                                  body: formData,
+                                });
+                                const json = await res.json();
+                                if (res.ok && json.url) {
+                                  const newImages = [...(productFormData.images || []), json.url];
+                                  setProductFormData({ 
+                                    ...productFormData, 
+                                    images: newImages,
+                                    image: newImages[0]
+                                  });
+                                  toast({ title: "تم رفع الصورة بنجاح ✅" });
+                                } else {
+                                  throw new Error(json.error || "Upload failed");
+                                }
+                              } catch (err: any) {
+                                toast({ title: "خطأ في رفع الصورة", description: err.message, variant: "destructive" });
                               }
-                            } catch (err: any) {
-                              toast({ title: "خطأ في رفع الصورة", description: err.message, variant: "destructive" });
-                            }
-                          }}
-                        />
-                      </label>
+                            }}
+                          />
+                        </label>
+                      )}
                     </div>
                  </div>
 
-                 <div className="space-y-2">
-                    <Label className="font-bold text-sm">رابط فيديو المراجعة</Label>
-                    <div className="relative">
-                      <Video className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input 
-                        value={productFormData.videoUrl} 
-                        onChange={e => setProductFormData({...productFormData, videoUrl: e.target.value})} 
-                        placeholder="Youtube / Instagram link..." 
-                        className="h-12 pr-12 rounded-xl bg-muted/30 border-none px-4"
-                      />
-                    </div>
-                 </div>
-
-                 <div className="pt-4 border-t border-border">
+                  <div className="pt-4 border-t border-border">
                     <p className="text-xs text-muted-foreground font-medium">ملاحظة: سيتم نشر المنتج فوراً وبشكل مرئي للمسوّقين.</p>
-                 </div>
+                  </div>
               </div>
-            </div>
-
-            {/* Ad Materials Section */}
-            <div className="p-6 rounded-3xl bg-slate-50 border-2 border-dashed border-slate-200 space-y-4">
-               <h4 className="font-black text-sm flex items-center gap-2">
-                 <Upload className="w-4 h-4 text-primary" /> رفع محتوى إعلاني جاهز (صور + نصوص)
-               </h4>
-               <p className="text-[10px] text-muted-foreground font-bold">يمكنك إضافة روابط لصور إضافية أو نصوص إعلانية بديلة ليستخدمها المسوّقون</p>
-               
-               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <Button type="button" variant="outline" className="h-11 rounded-xl border-dashed gap-2" onClick={() => setProductFormData({
-                    ...productFormData, 
-                    adMaterials: [...(productFormData.adMaterials || []), { type: 'image', content: '' }]
-                  })}>
-                    <ImageIcon className="w-4 h-4" /> إضافة رابط صورة
-                  </Button>
-                  <Button type="button" variant="outline" className="h-11 rounded-xl border-dashed gap-2" onClick={() => setProductFormData({
-                    ...productFormData, 
-                    adMaterials: [...(productFormData.adMaterials || []), { type: 'text', content: '' }]
-                  })}>
-                    <FileText className="w-4 h-4" /> إضافة مسودة نص
-                  </Button>
-               </div>
-
-               {productFormData.adMaterials && productFormData.adMaterials.length > 0 && (
-                 <div className="space-y-3 mt-4">
-                   {productFormData.adMaterials.map((mat, i) => (
-                      <div key={i} className="flex gap-2 items-center">
-                         <div className="flex-1 bg-white rounded-xl border border-slate-200 p-1 pr-3 flex items-center gap-3">
-                            {mat.type === 'image' ? <ImageIcon className="w-4 h-4 text-muted-foreground" /> : <FileText className="w-4 h-4 text-muted-foreground" />}
-                            <Input 
-                              value={mat.content} 
-                              onChange={e => {
-                                const newMats = [...productFormData.adMaterials!];
-                                newMats[i].content = e.target.value;
-                                setProductFormData({...productFormData, adMaterials: newMats});
-                              }}
-                              placeholder={mat.type === 'image' ? "رابط الصورة..." : "النص الإعلاني..."}
-                              className="border-none shadow-none h-9 text-xs"
-                            />
-                         </div>
-                         <Button type="button" variant="ghost" size="icon" className="text-destructive h-9 w-9" onClick={() => {
-                            const newMats = productFormData.adMaterials!.filter((_, index) => index !== i);
-                            setProductFormData({...productFormData, adMaterials: newMats});
-                         }}>
-                            <Trash2 className="w-4 h-4" />
-                         </Button>
-                      </div>
-                   ))}
-                 </div>
-               )}
             </div>
 
             <DialogFooter className="pt-6 sm:justify-start gap-3">

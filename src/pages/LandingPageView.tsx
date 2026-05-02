@@ -10,6 +10,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { API_BASE_URL } from '@/config/api';
+
 
 declare global {
   interface Window {
@@ -97,8 +99,8 @@ const LandingPageView = () => {
     const fetchPage = async () => {
       try {
         const url = pageId 
-          ? `https://profit-link-3eri.onrender.com/api/store/pages/${pageId}/public`
-          : `https://profit-link-3eri.onrender.com/api/store/product-page/${productId}/${affiliateId}`;
+          ? `${API_BASE_URL}/store/pages/${pageId}/public`
+          : `${API_BASE_URL}/store/product-page/${productId}/${affiliateId}`;
         
         const res = await fetch(url);
         const json = await res.json();
@@ -136,7 +138,7 @@ const LandingPageView = () => {
   useEffect(() => {
     const fetchWilayas = async () => {
       try {
-        const res = await fetch('https://profit-link-3eri.onrender.com/api/delivery/wilayas');
+        const res = await fetch('${API_BASE_URL}/delivery/wilayas');
         const data = await res.json();
         if (data.data) setWilayas(data.data);
       } catch (err) {
@@ -158,12 +160,12 @@ const LandingPageView = () => {
       setLoadingDelivery(true);
       try {
         // Fetch Communes
-        const cRes = await fetch(`https://profit-link-3eri.onrender.com/api/delivery/communes?wilaya_id=${orderForm.wilaya}`);
+        const cRes = await fetch(`${API_BASE_URL}/delivery/communes?wilaya_id=${orderForm.wilaya}`);
         const cData = await cRes.json();
         if (cData.data) setCommunes(cData.data);
 
         // Fetch Rates
-        const rRes = await fetch(`https://profit-link-3eri.onrender.com/api/delivery/rates?wilaya_id=${orderForm.wilaya}`);
+        const rRes = await fetch(`${API_BASE_URL}/delivery/rates?wilaya_id=${orderForm.wilaya}`);
         const rData = await rRes.json();
         if (rData.data) setShippingRate(rData.data);
       } catch (err) {
@@ -293,7 +295,7 @@ const LandingPageView = () => {
     const finalAmount = (p.price * quantity) + currentShipping;
 
     try {
-      const response = await fetch('https://profit-link-3eri.onrender.com/api/orders', {
+      const response = await fetch('${API_BASE_URL}/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

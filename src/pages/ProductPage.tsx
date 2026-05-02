@@ -9,6 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { wilayas } from "@/data/mockAffiliateData";
 import { useToast } from "@/hooks/use-toast";
 import { ShippingRate } from "@/data/mockShippingData";
+import { API_BASE_URL } from '@/config/api';
+
 
 const ProductPage = () => {
   const { productId, affiliateId } = useParams();
@@ -43,7 +45,7 @@ const ProductPage = () => {
     // Fetch product from backend
     const fetchProduct = async () => {
       try {
-        const res = await fetch('https://profit-link-3eri.onrender.com/api/products');
+        const res = await fetch('${API_BASE_URL}/products');
         const json = await res.json();
         if (res.ok && json.data) {
           const found = json.data.find((p: any) => p.id === productId);
@@ -59,7 +61,7 @@ const ProductPage = () => {
 
     const fetchRates = async () => {
       try {
-        const res = await fetch('https://profit-link-3eri.onrender.com/api/delivery/all-rates');
+        const res = await fetch('${API_BASE_URL}/delivery/all-rates');
         const json = await res.json();
         if (res.ok && json.data) setShippingRates(json.data);
       } catch (err) {
@@ -96,7 +98,7 @@ const ProductPage = () => {
           setLoadingCommunes(false);
           return;
         }
-        const res = await fetch(`https://profit-link-3eri.onrender.com/api/delivery/communes?wilaya_id=${wilayaId}`);
+        const res = await fetch(`${API_BASE_URL}/delivery/communes?wilaya_id=${wilayaId}`);
         const json = await res.json();
         console.log("📦 Communes API Response:", json);
         if (res.ok && json.data && Array.isArray(json.data)) {
@@ -237,7 +239,7 @@ const ProductPage = () => {
 
     setIsSubmitting(true);
     try {
-      const response = await fetch('https://profit-link-3eri.onrender.com/api/orders', {
+      const response = await fetch('${API_BASE_URL}/orders', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

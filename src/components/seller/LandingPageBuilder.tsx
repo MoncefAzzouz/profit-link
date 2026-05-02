@@ -25,6 +25,8 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
+import { API_BASE_URL } from '@/config/api';
+
 
 interface LandingPageConfig {
   id: string;
@@ -265,7 +267,7 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
       if (!token) return;
 
       try {
-        const response = await fetch("https://profit-link-3eri.onrender.com/api/store/pages", {
+        const response = await fetch("${API_BASE_URL}/store/pages", {
           headers: { "Authorization": `Bearer ${token}` }
         });
         const json = await response.json();
@@ -313,8 +315,8 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
       // If the ID starts with "lp-", it's a temporary local ID, so we use POST
       const isNew = pageToSave.id.startsWith("lp-");
       const url = isNew
-        ? "https://profit-link-3eri.onrender.com/api/store/page"
-        : `https://profit-link-3eri.onrender.com/api/store/page/${pageToSave.id}`;
+        ? "${API_BASE_URL}/store/page"
+        : `${API_BASE_URL}/store/page/${pageToSave.id}`;
 
       const method = isNew ? "POST" : "PUT";
 
@@ -410,7 +412,7 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
       // Step 2: Hitting our custom Gemini Route
       setAiProgressStep(2);
 
-      const response = await fetch('https://profit-link-3eri.onrender.com/api/store/generate-ai', {
+      const response = await fetch('${API_BASE_URL}/store/generate-ai', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -547,7 +549,7 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
     }
 
     try {
-      const res = await fetch(`https://profit-link-3eri.onrender.com/api/store/page/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/store/page/${id}`, {
         method: "DELETE",
         headers: { "Authorization": `Bearer ${token}` }
       });

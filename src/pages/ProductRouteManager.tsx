@@ -3,6 +3,8 @@ import { useParams } from "react-router-dom";
 import ProductPage from "./ProductPage";
 import LandingPageView from "./LandingPageView";
 import { motion } from "framer-motion";
+import { API_BASE_URL } from '@/config/api';
+
 
 const ProductRouteManager = () => {
   const { productId, affiliateId } = useParams();
@@ -12,7 +14,7 @@ const ProductRouteManager = () => {
   useEffect(() => {
     const checkLandingPage = async () => {
       try {
-        const res = await fetch(`https://profit-link-3eri.onrender.com/api/store/product-page/${productId}/${affiliateId}`);
+        const res = await fetch(`${API_BASE_URL}/store/product-page/${productId}/${affiliateId}`);
         if (res.ok) {
           const json = await res.json();
           if (json.data) {

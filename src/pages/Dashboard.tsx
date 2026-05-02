@@ -55,6 +55,8 @@ import {
   AreaChart, Area
 } from "recharts";
 import { createAndersonShipment } from "@/services/andersonShipping";
+import { API_BASE_URL } from '@/config/api';
+
 
 type Tab = "overview" | "products" | "my_store" | "my_store_edit" | "favorites" | "landing_pages" | "orders" | "earnings" | "withdrawals" | "levels" | "shipping" | "support";
 
@@ -157,7 +159,7 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchRates = async () => {
       try {
-        const res = await fetch('https://profit-link-3eri.onrender.com/api/delivery/all-rates');
+        const res = await fetch('${API_BASE_URL}/delivery/all-rates');
         const json = await res.json();
         if (res.ok && json.data) {
           setShippingRates(json.data);
@@ -171,7 +173,7 @@ const Dashboard = () => {
     // Fetch products from backend
     const fetchProducts = async () => {
       try {
-        const res = await fetch('https://profit-link-3eri.onrender.com/api/products');
+        const res = await fetch('${API_BASE_URL}/products');
         const json = await res.json();
         if (res.ok && json.data) {
           setProducts(json.data);
@@ -185,7 +187,7 @@ const Dashboard = () => {
     // Fetch categories from backend
     const fetchCategories = async () => {
       try {
-        const res = await fetch('https://profit-link-3eri.onrender.com/api/products/categories');
+        const res = await fetch('${API_BASE_URL}/products/categories');
         const json = await res.json();
         if (res.ok && json.data) {
           setDbCategories(json.data);
@@ -201,7 +203,7 @@ const Dashboard = () => {
       const token = localStorage.getItem("token");
       if (!token) return;
       try {
-        const res = await fetch('https://profit-link-3eri.onrender.com/api/store/products', {
+        const res = await fetch('${API_BASE_URL}/store/products', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (res.ok) {
@@ -221,7 +223,7 @@ const Dashboard = () => {
       const token = localStorage.getItem("token");
       if (!token) return;
       try {
-        const res = await fetch('https://profit-link-3eri.onrender.com/api/store/favorites', {
+        const res = await fetch('${API_BASE_URL}/store/favorites', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (res.ok) {
@@ -251,7 +253,7 @@ const Dashboard = () => {
     const fetchStoreSettings = async () => {
       try {
         if (!token) return;
-        const res = await fetch('https://profit-link-3eri.onrender.com/api/store/settings', {
+        const res = await fetch('${API_BASE_URL}/store/settings', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (res.ok) {
@@ -269,7 +271,7 @@ const Dashboard = () => {
     const fetchWithdrawals = async () => {
       try {
         if (!token) return;
-        const res = await fetch('https://profit-link-3eri.onrender.com/api/finance/withdraw', {
+        const res = await fetch('${API_BASE_URL}/finance/withdraw', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (res.ok) {
@@ -284,7 +286,7 @@ const Dashboard = () => {
     const fetchDashboardStats = async () => {
       try {
         if (!token) return;
-        const res = await fetch('https://profit-link-3eri.onrender.com/api/finance/dashboard', {
+        const res = await fetch('${API_BASE_URL}/finance/dashboard', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (res.ok) {
@@ -304,7 +306,7 @@ const Dashboard = () => {
 
     const fetchOrders = async () => {
       try {
-        const res = await fetch('https://profit-link-3eri.onrender.com/api/orders/affiliate', {
+        const res = await fetch('${API_BASE_URL}/orders/affiliate', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const json = await res.json();
@@ -333,7 +335,7 @@ const Dashboard = () => {
 
     const fetchLevels = async () => {
       try {
-        const res = await fetch('https://profit-link-3eri.onrender.com/api/levels');
+        const res = await fetch('${API_BASE_URL}/levels');
         if (res.ok) {
           const json = await res.json();
           setDbLevels(json.data || []);
@@ -434,7 +436,7 @@ const Dashboard = () => {
     if (!token) return;
 
     try {
-      const res = await fetch('https://profit-link-3eri.onrender.com/api/store/settings', {
+      const res = await fetch('${API_BASE_URL}/store/settings', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -470,7 +472,7 @@ const Dashboard = () => {
     formData.append('image', file);
 
     try {
-      const response = await fetch('https://profit-link-3eri.onrender.com/api/upload/image', {
+      const response = await fetch('${API_BASE_URL}/upload/image', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` },
         body: formData
@@ -540,7 +542,7 @@ const Dashboard = () => {
         const wilayaId = wilayaData?.code || "";
 
         if (wilayaId) {
-          const response = await fetch(`https://profit-link-3eri.onrender.com/api/delivery/communes?wilaya_id=${parseInt(wilayaId)}`);
+          const response = await fetch(`${API_BASE_URL}/delivery/communes?wilaya_id=${parseInt(wilayaId)}`);
           const res = await response.json();
           if (response.ok) {
             setCommunes(res.data || []);
@@ -588,7 +590,7 @@ const Dashboard = () => {
   const handleAndersonShip = async (order: any) => {
     setProcessingOrderId(order.id);
     try {
-      const response = await fetch(`https://profit-link-3eri.onrender.com/api/orders/${order.id}/push-ecotrack`, {
+      const response = await fetch(`${API_BASE_URL}/orders/${order.id}/push-ecotrack`, {
         method: 'POST'
       });
       const res = await response.json();
@@ -618,7 +620,7 @@ const Dashboard = () => {
     if (!order.trackingNumber) return;
     setProcessingOrderId(order.id);
     try {
-      const response = await fetch(`https://profit-link-3eri.onrender.com/api/orders/${order.id}/validate`, {
+      const response = await fetch(`${API_BASE_URL}/orders/${order.id}/validate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ askCollection: true })
@@ -654,7 +656,7 @@ const Dashboard = () => {
     setFavorites(newSet);
 
     try {
-      await fetch('https://profit-link-3eri.onrender.com/api/store/favorites', {
+      await fetch('${API_BASE_URL}/store/favorites', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -681,7 +683,7 @@ const Dashboard = () => {
 
     // Save to backend
     try {
-      await fetch('https://profit-link-3eri.onrender.com/api/store/products', {
+      await fetch('${API_BASE_URL}/store/products', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -2836,7 +2838,7 @@ const Dashboard = () => {
               onClick={async () => {
                 try {
                   const token = localStorage.getItem("token");
-                  const res = await fetch('https://profit-link-3eri.onrender.com/api/finance/withdraw', {
+                  const res = await fetch('${API_BASE_URL}/finance/withdraw', {
                     method: 'POST',
                     headers: {
                       'Content-Type': 'application/json',
@@ -3186,7 +3188,7 @@ const Dashboard = () => {
                       }
 
                       try {
-                        const response = await fetch('https://profit-link-3eri.onrender.com/api/orders', {
+                        const response = await fetch('${API_BASE_URL}/orders', {
                           method: 'POST',
                           headers: { 'Content-Type': 'application/json' },
                           body: JSON.stringify({
@@ -3213,7 +3215,7 @@ const Dashboard = () => {
 
                         // Refetch orders immediately
                         const currentToken = localStorage.getItem("token");
-                        const res = await fetch('https://profit-link-3eri.onrender.com/api/orders/affiliate', {
+                        const res = await fetch('${API_BASE_URL}/orders/affiliate', {
                           headers: { 'Authorization': `Bearer ${currentToken}` }
                         });
                         const data = await res.json();

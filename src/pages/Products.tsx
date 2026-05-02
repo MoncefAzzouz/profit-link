@@ -25,6 +25,8 @@ import {
   SheetTrigger 
 } from "@/components/ui/sheet";
 import {
+import { API_BASE_URL } from '@/config/api';
+
   Dialog,
   DialogContent,
   DialogHeader,
@@ -82,7 +84,7 @@ const Products = () => {
     // Fetch products from backend
     const fetchProducts = async () => {
       try {
-        const res = await fetch('https://profit-link-3eri.onrender.com/api/products');
+        const res = await fetch('${API_BASE_URL}/products');
         const json = await res.json();
         if (res.ok && json.data) {
           setProducts(json.data);
@@ -96,7 +98,7 @@ const Products = () => {
     // Fetch categories from backend
     const fetchCategories = async () => {
       try {
-        const res = await fetch('https://profit-link-3eri.onrender.com/api/products/categories');
+        const res = await fetch('${API_BASE_URL}/products/categories');
         const json = await res.json();
         if (res.ok && json.data) {
           setDbCategories(json.data);

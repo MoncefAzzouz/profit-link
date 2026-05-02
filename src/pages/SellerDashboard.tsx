@@ -30,6 +30,8 @@ import {
   sellerEarningsData, SellerProduct
 } from "@/data/mockSellerData";
 import { createAndersonShipment } from "@/services/andersonShipping";
+import { API_BASE_URL } from '@/config/api';
+
 
 type Tab = "overview" | "products" | "orders" | "earnings" | "withdrawals" | "affiliates" | "landing-pages" | "settings";
 
@@ -112,7 +114,7 @@ const SellerDashboard = () => {
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        const response = await fetch('https://profit-link-3eri.onrender.com/api/orders/all');
+        const response = await fetch('${API_BASE_URL}/orders/all');
         const res = await response.json();
         if (response.ok) {
           const fetchedOrders = res.data.map((o: any) => ({
@@ -184,7 +186,7 @@ const SellerDashboard = () => {
   const handleEcotrackShip = async (order: any) => {
     setProcessingOrderId(order.id);
     try {
-      const response = await fetch(`https://profit-link-3eri.onrender.com/api/orders/${order.id}/push-ecotrack`, {
+      const response = await fetch(`${API_BASE_URL}/orders/${order.id}/push-ecotrack`, {
         method: 'POST',
       });
       const res = await response.json();
@@ -207,7 +209,7 @@ const SellerDashboard = () => {
 
   const handleViewTracking = async (order: any) => {
     try {
-      const response = await fetch(`https://profit-link-3eri.onrender.com/api/orders/${order.id}/tracking`);
+      const response = await fetch(`${API_BASE_URL}/orders/${order.id}/tracking`);
       const res = await response.json();
       if (response.ok) {
         // Here you would typically open a dialog or show the info

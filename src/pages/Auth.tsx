@@ -10,6 +10,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { API_BASE_URL } from '@/config/api';
+
 
 const wilayas = [
   "01 Adrar - أدرار", "02 Chlef - الشلف", "03 Laghouat - الأغواط", "04 Oum El Bouaghi - أم البواقي",
@@ -94,7 +96,7 @@ const Auth = () => {
 
     try {
       const endpoint = isLogin ? '/login' : '/register';
-      const url = `https://profit-link-3eri.onrender.com/api/auth${endpoint}`;
+      const url = `${API_BASE_URL}/auth${endpoint}`;
       
       const payload = isLogin 
         ? { email: formData.email, password: formData.password }
