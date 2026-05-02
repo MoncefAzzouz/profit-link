@@ -570,7 +570,7 @@ const LandingPageView = () => {
                         className="w-full h-12 rounded-xl border bg-transparent px-3 appearance-none focus:ring-2"
                         style={{ outlineColor: p.primaryColor }}
                         value={orderForm.wilaya}
-                        onChange={e => setOrderForm(f => ({ ...f, wilaya: e.target.value, commune: "" }))}
+                        onChange={e => setOrderForm(f => ({ ...f, wilaya: e.target.value, commune: "", deliveryType: "home" }))}
                       >
                         <option value="">اختر الولاية</option>
                         {wilayas.map(w => <option key={w.wilaya_id} value={w.wilaya_id}>{w.wilaya_id} - {w.wilaya_name}</option>)}
@@ -578,18 +578,51 @@ const LandingPageView = () => {
                     </div>
 
                     <div className="space-y-2">
-                      <label className="text-sm font-bold opacity-70">البلدية *</label>
-                      <select 
-                        className="w-full h-12 rounded-xl border bg-transparent px-3 appearance-none focus:ring-2"
-                        style={{ outlineColor: p.primaryColor }}
-                        value={orderForm.commune}
-                        onChange={e => setOrderForm(f => ({ ...f, commune: e.target.value }))}
-                        disabled={!orderForm.wilaya || loadingDelivery}
-                      >
-                        <option value="">اختر البلدية</option>
-                        {communes.map(c => <option key={c.commune_id || c.nom} value={c.nom}>{c.nom}</option>)}
-                      </select>
+                      <label className="text-sm font-bold opacity-70">نوع التوصيل</label>
+                      <div className="grid grid-cols-2 gap-2">
+                        <button 
+                          type="button"
+                          onClick={() => setOrderForm(f => ({ ...f, deliveryType: "home", commune: "" }))}
+                          className={`h-12 rounded-xl border flex items-center justify-center gap-2 transition-all ${orderForm.deliveryType === "home" ? "ring-2 ring-primary border-primary bg-primary/5" : "bg-transparent"}`}
+                          style={{ 
+                            borderColor: orderForm.deliveryType === "home" ? p.primaryColor : undefined,
+                            color: orderForm.deliveryType === "home" ? p.primaryColor : undefined,
+                            backgroundColor: orderForm.deliveryType === "home" ? `${p.primaryColor}10` : undefined,
+                          }}
+                        >
+                          <Truck className="w-4 h-4" /> للمنزل
+                        </button>
+                        <button 
+                          type="button"
+                          onClick={() => setOrderForm(f => ({ ...f, deliveryType: "desk", commune: "" }))}
+                          className={`h-12 rounded-xl border flex items-center justify-center gap-2 transition-all ${orderForm.deliveryType === "desk" ? "ring-2 ring-primary border-primary bg-primary/5" : "bg-transparent"}`}
+                          style={{ 
+                            borderColor: orderForm.deliveryType === "desk" ? p.primaryColor : undefined,
+                            color: orderForm.deliveryType === "desk" ? p.primaryColor : undefined,
+                            backgroundColor: orderForm.deliveryType === "desk" ? `${p.primaryColor}10` : undefined,
+                          }}
+                        >
+                          <MapPin className="w-4 h-4" /> للمكتب
+                        </button>
+                      </div>
                     </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold opacity-70">البلدية *</label>
+                    <select 
+                      className="w-full h-12 rounded-xl border bg-transparent px-3 appearance-none focus:ring-2"
+                      style={{ outlineColor: p.primaryColor }}
+                      value={orderForm.commune}
+                      onChange={e => setOrderForm(f => ({ ...f, commune: e.target.value }))}
+                      disabled={!orderForm.wilaya || loadingDelivery}
+                    >
+                      <option value="">اختر البلدية</option>
+                      {(orderForm.deliveryType === "desk"
+                        ? communes.filter(c => c.has_stop_desk === 1)
+                        : communes
+                      ).map(c => <option key={c.commune_id || c.nom} value={c.nom}>{c.nom}</option>)}
+                    </select>
                   </div>
 
                   <div className="space-y-2">
@@ -600,36 +633,6 @@ const LandingPageView = () => {
                       onChange={e => setOrderForm(f => ({ ...f, address: e.target.value }))}
                       className="h-12 rounded-xl"
                     />
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-sm font-bold opacity-70">نوع التوصيل</label>
-                    <div className="grid grid-cols-2 gap-3">
-                      <button 
-                        type="button"
-                        onClick={() => setOrderForm(f => ({ ...f, deliveryType: "home" }))}
-                        className={`h-12 rounded-xl border flex items-center justify-center gap-2 transition-all ${orderForm.deliveryType === "home" ? "ring-2 ring-primary border-primary bg-primary/5" : "bg-transparent"}`}
-                        style={{ 
-                          borderColor: orderForm.deliveryType === "home" ? p.primaryColor : undefined,
-                          color: orderForm.deliveryType === "home" ? p.primaryColor : undefined,
-                          backgroundColor: orderForm.deliveryType === "home" ? `${p.primaryColor}10` : undefined,
-                        }}
-                      >
-                        <Truck className="w-4 h-4" /> للمنزل
-                      </button>
-                      <button 
-                        type="button"
-                        onClick={() => setOrderForm(f => ({ ...f, deliveryType: "desk" }))}
-                        className={`h-12 rounded-xl border flex items-center justify-center gap-2 transition-all ${orderForm.deliveryType === "desk" ? "ring-2 ring-primary border-primary bg-primary/5" : "bg-transparent"}`}
-                        style={{ 
-                          borderColor: orderForm.deliveryType === "desk" ? p.primaryColor : undefined,
-                          color: orderForm.deliveryType === "desk" ? p.primaryColor : undefined,
-                          backgroundColor: orderForm.deliveryType === "desk" ? `${p.primaryColor}10` : undefined,
-                        }}
-                      >
-                        <MapPin className="w-4 h-4" /> للمكتب
-                      </button>
-                    </div>
                   </div>
 
                   <div className="flex items-center justify-between p-4 bg-muted/50 rounded-xl border border-border/50">
@@ -1236,7 +1239,7 @@ const LandingPageView = () => {
                             outlineColor: p.primaryColor 
                           }}
                           value={orderForm.wilaya}
-                          onChange={e => setOrderForm(f => ({ ...f, wilaya: e.target.value, commune: "" }))}
+                          onChange={e => setOrderForm(f => ({ ...f, wilaya: e.target.value, commune: "", deliveryType: "home" }))}
                         >
                           <option value="">اختر الولاية</option>
                           {wilayas.map(w => <option key={w.wilaya_id} value={w.wilaya_id}>{w.wilaya_id} - {w.wilaya_name}</option>)}
@@ -1244,24 +1247,59 @@ const LandingPageView = () => {
                       </div>
 
                       <div className="space-y-2">
-                        <label className="text-sm font-bold opacity-70">البلدية *</label>
-                        <select 
-                          className="w-full h-12 rounded-xl border bg-transparent px-3 appearance-none focus:ring-2"
-                          style={{ 
-                            borderRadius: `${Math.min(p.borderRadius, 16)}px`, 
-                            borderColor: isDark(p.backgroundColor) ? "#334155" : "#d1d5db", 
-                            backgroundColor: isDark(p.backgroundColor) ? "#1e293b" : "#fff", 
-                            color: tc,
-                            outlineColor: p.primaryColor 
-                          }}
-                          value={orderForm.commune}
-                          onChange={e => setOrderForm(f => ({ ...f, commune: e.target.value }))}
-                          disabled={!orderForm.wilaya || loadingDelivery}
-                        >
-                          <option value="">اختر البلدية</option>
-                          {communes.map(c => <option key={c.commune_id || c.nom} value={c.nom}>{c.nom}</option>)}
-                        </select>
+                        <label className="text-sm font-bold opacity-70">نوع التوصيل</label>
+                        <div className="grid grid-cols-2 gap-2">
+                          <button 
+                            type="button"
+                            onClick={() => setOrderForm(f => ({ ...f, deliveryType: "home", commune: "" }))}
+                            className={`h-12 rounded-xl border flex items-center justify-center gap-2 transition-all ${orderForm.deliveryType === "home" ? "ring-2 ring-primary" : ""}`}
+                            style={{ 
+                              borderRadius: `${Math.min(p.borderRadius, 16)}px`,
+                              borderColor: orderForm.deliveryType === "home" ? p.primaryColor : (isDark(p.backgroundColor) ? "#334155" : "#d1d5db"),
+                              color: orderForm.deliveryType === "home" ? p.primaryColor : tc,
+                              backgroundColor: orderForm.deliveryType === "home" ? `${p.primaryColor}15` : "transparent",
+                            }}
+                          >
+                            <Truck className="w-4 h-4" /> للمنزل
+                          </button>
+                          <button 
+                            type="button"
+                            onClick={() => setOrderForm(f => ({ ...f, deliveryType: "desk", commune: "" }))}
+                            className={`h-12 rounded-xl border flex items-center justify-center gap-2 transition-all ${orderForm.deliveryType === "desk" ? "ring-2 ring-primary" : ""}`}
+                            style={{ 
+                              borderRadius: `${Math.min(p.borderRadius, 16)}px`,
+                              borderColor: orderForm.deliveryType === "desk" ? p.primaryColor : (isDark(p.backgroundColor) ? "#334155" : "#d1d5db"),
+                              color: orderForm.deliveryType === "desk" ? p.primaryColor : tc,
+                              backgroundColor: orderForm.deliveryType === "desk" ? `${p.primaryColor}15` : "transparent",
+                            }}
+                          >
+                            <MapPin className="w-4 h-4" /> للمكتب
+                          </button>
+                        </div>
                       </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-bold opacity-70">البلدية *</label>
+                      <select 
+                        className="w-full h-12 rounded-xl border bg-transparent px-3 appearance-none focus:ring-2"
+                        style={{ 
+                          borderRadius: `${Math.min(p.borderRadius, 16)}px`, 
+                          borderColor: isDark(p.backgroundColor) ? "#334155" : "#d1d5db", 
+                          backgroundColor: isDark(p.backgroundColor) ? "#1e293b" : "#fff", 
+                          color: tc,
+                          outlineColor: p.primaryColor 
+                        }}
+                        value={orderForm.commune}
+                        onChange={e => setOrderForm(f => ({ ...f, commune: e.target.value }))}
+                        disabled={!orderForm.wilaya || loadingDelivery}
+                      >
+                        <option value="">اختر البلدية</option>
+                        {(orderForm.deliveryType === "desk"
+                          ? communes.filter(c => c.has_stop_desk === 1)
+                          : communes
+                        ).map(c => <option key={c.commune_id || c.nom} value={c.nom}>{c.nom}</option>)}
+                      </select>
                     </div>
 
                     <div className="space-y-2">
@@ -1273,38 +1311,6 @@ const LandingPageView = () => {
                         className="h-12 rounded-xl"
                         style={{ borderRadius: `${Math.min(p.borderRadius, 16)}px`, borderColor: isDark(p.backgroundColor) ? "#334155" : "#d1d5db", backgroundColor: isDark(p.backgroundColor) ? "#1e293b" : "#fff", color: tc }}
                       />
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="text-sm font-bold opacity-70">نوع التوصيل</label>
-                      <div className="grid grid-cols-2 gap-3">
-                        <button 
-                          type="button"
-                          onClick={() => setOrderForm(f => ({ ...f, deliveryType: "home" }))}
-                          className={`h-12 rounded-xl border flex items-center justify-center gap-2 transition-all ${orderForm.deliveryType === "home" ? "ring-2 ring-primary" : ""}`}
-                          style={{ 
-                            borderRadius: `${Math.min(p.borderRadius, 16)}px`,
-                            borderColor: orderForm.deliveryType === "home" ? p.primaryColor : (isDark(p.backgroundColor) ? "#334155" : "#d1d5db"),
-                            color: orderForm.deliveryType === "home" ? p.primaryColor : tc,
-                            backgroundColor: orderForm.deliveryType === "home" ? `${p.primaryColor}15` : "transparent",
-                          }}
-                        >
-                          <Truck className="w-4 h-4" /> للمنزل
-                        </button>
-                        <button 
-                          type="button"
-                          onClick={() => setOrderForm(f => ({ ...f, deliveryType: "desk" }))}
-                          className={`h-12 rounded-xl border flex items-center justify-center gap-2 transition-all ${orderForm.deliveryType === "desk" ? "ring-2 ring-primary" : ""}`}
-                          style={{ 
-                            borderRadius: `${Math.min(p.borderRadius, 16)}px`,
-                            borderColor: orderForm.deliveryType === "desk" ? p.primaryColor : (isDark(p.backgroundColor) ? "#334155" : "#d1d5db"),
-                            color: orderForm.deliveryType === "desk" ? p.primaryColor : tc,
-                            backgroundColor: orderForm.deliveryType === "desk" ? `${p.primaryColor}15` : "transparent",
-                          }}
-                        >
-                          <MapPin className="w-4 h-4" /> للمكتب
-                        </button>
-                      </div>
                     </div>
 
                     <div className="flex items-center justify-between p-4 bg-muted/20 rounded-xl border border-border/30">

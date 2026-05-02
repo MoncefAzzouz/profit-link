@@ -566,23 +566,15 @@ const Dashboard = () => {
     if (orderFormData.wilaya) {
       const rate = shippingRates.find(r => r.code === orderFormData.wilaya);
       if (rate) {
-        // Validation: If selected commune doesn't support stop desk, force home
-        let targetType = orderFormData.deliveryType;
-        const selectedCommuneObj = communes.find(c => c.nom === orderFormData.commune);
-        if (selectedCommuneObj && selectedCommuneObj.has_stop_desk === 0 && targetType === "office") {
-          targetType = "home";
-        }
-
-        const fee = targetType === "home" ? rate.homePrice : rate.officePrice;
+        const fee = orderFormData.deliveryType === "home" ? rate.homePrice : rate.officePrice;
         setOrderFormData(prev => ({
           ...prev,
-          deliveryType: targetType,
           deliveryFee: fee,
-          stopDesk: targetType === "office" ? 1 : 0
+          stopDesk: orderFormData.deliveryType === "office" ? 1 : 0
         }));
       }
     }
-  }, [orderFormData.wilaya, orderFormData.deliveryType, orderFormData.commune, communes]);
+  }, [orderFormData.wilaya, orderFormData.deliveryType]);
 
   // Fetch communes when wilaya changes
   useEffect(() => {
@@ -3166,7 +3158,7 @@ const Dashboard = () => {
                     </Label>
                     <Select
                       value={orderFormData.wilaya}
-                      onValueChange={(v) => setOrderFormData({ ...orderFormData, wilaya: v, commune: "" })}
+                      onValueChange={(v) => setOrderFormData({ ...orderFormData, wilaya: v, commune: "", deliveryType: "home" })}
                     >
                       <SelectTrigger className="h-12 rounded-xl">
                         <SelectValue placeholder="اختر الولاية" />
@@ -3185,54 +3177,43 @@ const Dashboard = () => {
                 <div className="grid md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <Label className="flex items-center gap-2 text-sm font-bold ml-1">
+                      <Truck className="w-4 h-4 text-primary" /> نوع التوصيل
+                    </Label>
+                    <Select
+                      value={orderFormData.deliveryType}
+                      onValueChange={(v: any) => setOrderFormData({ ...orderFormData, deliveryType: v, commune: "" })}
+                      disabled={!orderFormData.wilaya}
+                    >
+                      <SelectTrigger className="h-12 rounded-xl">
+                        <SelectValue placeholder="اختر نوع التوصيل" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="home" className="text-right" dir="rtl">توصيل للمنزل</SelectItem>
+                        <SelectItem value="office" className="text-right" dir="rtl">توصيل للمكتب (Stop Desk)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-2 text-sm font-bold ml-1">
                       <MapPin className="w-4 h-4 text-primary" /> البلدية
                     </Label>
                     <Select
                       value={orderFormData.commune}
-                      onValueChange={(v) => {
-                        const communeObj = communes.find(c => c.nom === v);
-                        const isStopDeskAvailable = communeObj?.has_stop_desk !== 0;
-                        setOrderFormData({
-                          ...orderFormData,
-                          commune: v,
-                          deliveryType: (!isStopDeskAvailable && orderFormData.deliveryType === "office") ? "home" : orderFormData.deliveryType
-                        });
-                      }}
+                      onValueChange={(v) => setOrderFormData({ ...orderFormData, commune: v })}
                       disabled={!orderFormData.wilaya || loadingCommunes}
                     >
                       <SelectTrigger className="h-12 rounded-xl">
                         <SelectValue placeholder={loadingCommunes ? "جاري التحميل..." : "اختر البلدية"} />
                       </SelectTrigger>
                       <SelectContent className="max-h-[300px]">
-                        {communes.map((c: any) => (
+                        {(orderFormData.deliveryType === "office"
+                          ? communes.filter((c: any) => c.has_stop_desk === 1)
+                          : communes
+                        ).map((c: any) => (
                           <SelectItem key={c.nom || c.commune_id} value={c.nom || c.commune_name}>
                             {c.nom || c.commune_name}
                           </SelectItem>
                         ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="flex items-center gap-2 text-sm font-bold ml-1">
-                      <Truck className="w-4 h-4 text-primary" /> نوع التوصيل
-                    </Label>
-                    <Select
-                      value={orderFormData.deliveryType}
-                      onValueChange={(v: any) => setOrderFormData({ ...orderFormData, deliveryType: v })}
-                    >
-                      <SelectTrigger className="h-12 rounded-xl">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="home" className="text-right" dir="rtl">توصيل للمنزل</SelectItem>
-                        <SelectItem
-                          value="office"
-                          className="text-right"
-                          dir="rtl"
-                          disabled={communes.find(c => c.commune_name === orderFormData.commune)?.has_stop_desk === 0}
-                        >
-                          توصيل للمكتب (Stop Desk) {!communes.find(c => c.commune_name === orderFormData.commune)?.has_stop_desk && orderFormData.commune && "(غير متوفر)"}
-                        </SelectItem>
                       </SelectContent>
                     </Select>
                   </div>

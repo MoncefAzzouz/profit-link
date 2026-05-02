@@ -538,7 +538,7 @@ const ProductPage = () => {
                   <Label>الولاية *</Label>
                   <Select
                     value={formData.wilaya}
-                    onValueChange={(value) => setFormData({ ...formData, wilaya: value })}
+                    onValueChange={(value) => setFormData({ ...formData, wilaya: value, commune: "", deliveryType: "home" })}
                   >
                     <SelectTrigger className="mt-1.5 h-11 rounded-xl">
                       <SelectValue placeholder="اختر الولاية" />
@@ -556,6 +556,26 @@ const ProductPage = () => {
                 </div>
 
                 <div>
+                  <Label>نوع التوصيل</Label>
+                  <div className="flex bg-muted p-1 rounded-xl h-12 mt-1.5">
+                    <button 
+                      type="button"
+                      onClick={() => setFormData({ ...formData, deliveryType: "home", commune: "" })}
+                      className={`flex-1 flex items-center justify-center rounded-lg text-xs font-bold transition-all ${formData.deliveryType === "home" ? "bg-background text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                    >
+                      للمنزل
+                    </button>
+                    <button 
+                      type="button"
+                      onClick={() => setFormData({ ...formData, deliveryType: "office", commune: "" })}
+                      className={`flex-1 flex items-center justify-center rounded-lg text-xs font-bold transition-all ${formData.deliveryType === "office" ? "bg-background text-secondary shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                    >
+                      للمكتب
+                    </button>
+                  </div>
+                </div>
+
+                <div>
                   <Label htmlFor="commune">البلدية *</Label>
                   <Select
                     value={formData.commune || ""}
@@ -566,8 +586,14 @@ const ProductPage = () => {
                         <SelectValue placeholder={loadingCommunes ? "جاري التحميل..." : "اختر البلدية"} />
                     </SelectTrigger>
                     <SelectContent className="max-h-[300px]">
-                      {communes && communes.length > 0 ? (
-                        communes.map((c: any) => (
+                      {(formData.deliveryType === "office"
+                        ? (communes || []).filter((c: any) => c.has_stop_desk === 1)
+                        : (communes || [])
+                      ).length > 0 ? (
+                        (formData.deliveryType === "office"
+                          ? (communes || []).filter((c: any) => c.has_stop_desk === 1)
+                          : (communes || [])
+                        ).map((c: any) => (
                           <SelectItem key={c.nom || c.commune_id} value={c.nom || c.commune_name}>
                             {c.nom || c.commune_name}
                           </SelectItem>
@@ -590,26 +616,6 @@ const ProductPage = () => {
                     placeholder="البلدية، الحي، الشارع..."
                     className="mt-1.5"
                   />
-                </div>
-
-                <div>
-                  <Label>نوع التوصيل</Label>
-                  <div className="flex bg-muted p-1 rounded-xl h-12 mt-1.5">
-                    <button 
-                      type="button"
-                      onClick={() => setFormData({ ...formData, deliveryType: "home" })}
-                      className={`flex-1 flex items-center justify-center rounded-lg text-xs font-bold transition-all ${formData.deliveryType === "home" ? "bg-background text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
-                    >
-                      للمنزل
-                    </button>
-                    <button 
-                      type="button"
-                      onClick={() => setFormData({ ...formData, deliveryType: "office" })}
-                      className={`flex-1 flex items-center justify-center rounded-lg text-xs font-bold transition-all ${formData.deliveryType === "office" ? "bg-background text-secondary shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
-                    >
-                      للمكتب
-                    </button>
-                  </div>
                 </div>
 
                 <div>
