@@ -1390,11 +1390,16 @@ const Dashboard = () => {
                         animate={{ opacity: 1, scale: 1 }}
                         className="bg-card rounded-2xl overflow-hidden shadow-sm border border-border/50 group"
                       >
-                        <div className="aspect-square relative">
-                          <img src={product.image} className="w-full h-full object-cover" />
+                        <div className="aspect-square relative overflow-hidden">
+                          <img src={product.image} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                          <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 pointer-events-none">
+                            <Button size="icon" variant="secondary" className="rounded-full shadow-lg pointer-events-auto" onClick={() => openProductDetail(product)}>
+                              <Maximize2 className="w-4 h-4" />
+                            </Button>
+                          </div>
                           <button
                             onClick={() => toggleStoreProduct(product.id)}
-                            className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full shadow-lg hover:bg-red-600 transition-colors"
+                            className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full shadow-lg hover:bg-red-600 transition-colors z-10"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -1406,6 +1411,13 @@ const Dashboard = () => {
                             <span className="text-xs text-secondary font-bold">ربحك: {product.commission.toLocaleString()} دج</span>
                           </div>
                           <div className="flex flex-col gap-2">
+                            <Button
+                              onClick={() => openOrderForm(product)}
+                              className="w-full bg-primary hover:bg-primary/90 text-primary-foreground gap-2 rounded-xl h-10 text-xs font-bold"
+                            >
+                              <ShoppingCart className="w-4 h-4" />
+                              طلب المنتج
+                            </Button>
                             <Button
                               variant="outline"
                               className="w-full text-xs font-bold gap-2 hover:bg-primary hover:text-white transition-colors"
