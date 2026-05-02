@@ -632,7 +632,7 @@ const Admin = () => {
         if (productSort === "stock-desc") return b.stock - a.stock;
         return 0;
       });
-  }, [productSearch, productCategory, productPriceRange, productSort, productStockFilter]);
+  }, [productSearch, productCategory, productPriceRange, productSort, productStockFilter, products]);
 
   const filteredJoinRequests = useMemo(() => {
     return joinRequests.filter((req) => {
