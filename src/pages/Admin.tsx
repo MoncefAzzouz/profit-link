@@ -1800,7 +1800,7 @@ const Admin = () => {
                         </div>
                         <div className="flex justify-between items-center">
                           <span className="text-[10px] text-muted-foreground font-bold">سعر الجملة للمسوق</span>
-                          <span className="text-xs font-black text-orange-600">{(product.originalPrice || 0).toLocaleString()} دج</span>
+                          <span className="text-xs font-black text-orange-600">{(product.affiliatePrice || 0).toLocaleString()} دج</span>
                         </div>
                         <div className="flex justify-between items-center">
                           <span className="text-[10px] text-muted-foreground font-bold">سعر البيع النهائي</span>
