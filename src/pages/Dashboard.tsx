@@ -1405,17 +1405,33 @@ const Dashboard = () => {
                             <span className="text-primary font-bold">{product.price.toLocaleString()} دج</span>
                             <span className="text-xs text-secondary font-bold">ربحك: {product.commission.toLocaleString()} دج</span>
                           </div>
-                          <Button
-                            variant="outline"
-                            className="w-full text-xs font-bold gap-2 hover:bg-primary hover:text-white transition-colors"
-                            onClick={() => {
-                              setProductToEditLandingPage(product);
-                              setActiveTab("landing_pages");
-                            }}
-                          >
-                            <LayoutTemplate className="w-4 h-4" />
-                            تعديل صفحة الهبوط
-                          </Button>
+                          <div className="flex flex-col gap-2">
+                            <Button
+                              variant="outline"
+                              className="w-full text-xs font-bold gap-2 hover:bg-primary hover:text-white transition-colors"
+                              onClick={() => {
+                                setProductToEditLandingPage(product);
+                                setActiveTab("landing_pages");
+                              }}
+                            >
+                              <LayoutTemplate className="w-4 h-4" />
+                              تعديل صفحة الهبوط
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              className="w-full text-xs font-bold gap-2 bg-muted/50 hover:bg-muted text-foreground transition-colors"
+                              onClick={() => {
+                                const link = `http://5.196.32.211/product/${product.id}/${user?.id}`;
+                                navigator.clipboard.writeText(link);
+                                setCopiedId(product.id);
+                                toast({ title: "تم نسخ الرابط بنجاح ✅" });
+                                setTimeout(() => setCopiedId(null), 2000);
+                              }}
+                            >
+                              {copiedId === product.id ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+                              {copiedId === product.id ? "تم النسخ" : "نسخ الرابط"}
+                            </Button>
+                          </div>
                         </div>
                       </motion.div>
                     ))}
