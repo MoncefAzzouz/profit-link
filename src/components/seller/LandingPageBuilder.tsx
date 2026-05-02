@@ -267,8 +267,8 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
       if (!token) return;
 
       try {
-        const response = await fetch("${API_BASE_URL}/store/pages", {
-          headers: { "Authorization": `Bearer ${token}` }
+        const response = await fetch(`${API_BASE_URL}/store/pages`, {
+          headers: { 'Authorization': `Bearer ${token}` }
         });
         const json = await response.json();
         if (response.ok && json.data) {
@@ -315,7 +315,7 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
       // If the ID starts with "lp-", it's a temporary local ID, so we use POST
       const isNew = pageToSave.id.startsWith("lp-");
       const url = isNew
-        ? "${API_BASE_URL}/store/page"
+        ? `${API_BASE_URL}/store/page`
         : `${API_BASE_URL}/store/page/${pageToSave.id}`;
 
       const method = isNew ? "POST" : "PUT";
