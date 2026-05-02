@@ -361,7 +361,18 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
       const existingPage = pages.find((p) => p.productId === initialProductToEdit.id);
 
       if (existingPage) {
-        setEditingPage(existingPage);
+        // Sync with the latest product data (in case admin updated prices or images)
+        const updatedPage = {
+          ...existingPage,
+          productName: initialProductToEdit.name || existingPage.productName,
+          price: initialProductToEdit.price || existingPage.price,
+          originalPrice: initialProductToEdit.originalPrice || existingPage.originalPrice,
+          heroImage: initialProductToEdit.image || existingPage.heroImage,
+          galleryImages: initialProductToEdit.images && initialProductToEdit.images.length > 0 
+            ? initialProductToEdit.images 
+            : (initialProductToEdit.image ? [initialProductToEdit.image] : existingPage.galleryImages)
+        };
+        setEditingPage(updatedPage);
         setActiveDesignTab("content");
       } else {
         // Create a new landing page specifically for this product
