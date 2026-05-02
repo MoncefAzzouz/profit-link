@@ -45,7 +45,7 @@ const ProductPage = () => {
     // Fetch product from backend
     const fetchProduct = async () => {
       try {
-        const res = await fetch('${API_BASE_URL}/products');
+        const res = await fetch(`${API_BASE_URL}/products`);
         const json = await res.json();
         if (res.ok && json.data) {
           const found = json.data.find((p: any) => p.id === productId);
@@ -61,7 +61,7 @@ const ProductPage = () => {
 
     const fetchRates = async () => {
       try {
-        const res = await fetch('${API_BASE_URL}/delivery/all-rates');
+        const res = await fetch(`${API_BASE_URL}/delivery/all-rates`);
         const json = await res.json();
         if (res.ok && json.data) setShippingRates(json.data);
       } catch (err) {
@@ -239,7 +239,7 @@ const ProductPage = () => {
 
     setIsSubmitting(true);
     try {
-      const response = await fetch('${API_BASE_URL}/orders', {
+      const response = await fetch(`${API_BASE_URL}/orders`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

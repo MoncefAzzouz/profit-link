@@ -114,7 +114,7 @@ const SellerDashboard = () => {
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        const response = await fetch('${API_BASE_URL}/orders/all');
+        const response = await fetch(`${API_BASE_URL}/orders/all`);
         const res = await response.json();
         if (response.ok) {
           const fetchedOrders = res.data.map((o: any) => ({

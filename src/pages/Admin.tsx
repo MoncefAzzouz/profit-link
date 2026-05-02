@@ -149,7 +149,7 @@ const Admin = () => {
 
     const fetchAdminStats = async () => {
       try {
-        const res = await fetch('${API_BASE_URL}/admin/dashboard', {
+        const res = await fetch(`${API_BASE_URL}/admin/dashboard`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (res.ok) {
@@ -172,7 +172,7 @@ const Admin = () => {
     
     setIsFetchingWithdrawals(true);
     try {
-      const res = await fetch('${API_BASE_URL}/admin/withdrawals', {
+      const res = await fetch(`${API_BASE_URL}/admin/withdrawals`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {
@@ -191,7 +191,7 @@ const Admin = () => {
     if (!token) return;
     setIsFetchingAffiliates(true);
     try {
-      const res = await fetch('${API_BASE_URL}/admin/affiliates', {
+      const res = await fetch(`${API_BASE_URL}/admin/affiliates`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {
@@ -210,7 +210,7 @@ const Admin = () => {
     if (!token) return;
     setIsFetchingOrders(true);
     try {
-      const res = await fetch('${API_BASE_URL}/orders/all', {
+      const res = await fetch(`${API_BASE_URL}/orders/all`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {
@@ -334,7 +334,7 @@ const Admin = () => {
   // Fetch categories from DB
   const fetchCategories = async () => {
     try {
-      const res = await fetch('${API_BASE_URL}/products/categories/all', {
+      const res = await fetch(`${API_BASE_URL}/products/categories/all`, {
         headers: { 'Authorization': `Bearer ${localStorage.getItem("token")}` }
       });
       if (res.ok) {
@@ -351,7 +351,7 @@ const Admin = () => {
     const token = localStorage.getItem("token");
     if (!token) return;
     try {
-      const res = await fetch('${API_BASE_URL}/products/all', {
+      const res = await fetch(`${API_BASE_URL}/products/all`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {
@@ -377,7 +377,7 @@ const Admin = () => {
 
   const fetchLevels = async () => {
     try {
-      const res = await fetch('${API_BASE_URL}/levels');
+      const res = await fetch(`${API_BASE_URL}/levels`);
       if (res.ok) {
         const json = await res.json();
         setDbLevels(json.data || []);
@@ -394,7 +394,7 @@ const Admin = () => {
     try {
       const url = editingLevel 
         ? `${API_BASE_URL}/levels/${editingLevel.id}`
-        : '${API_BASE_URL}/levels';
+        : `${API_BASE_URL}/levels`;
       const method = editingLevel ? 'PUT' : 'POST';
 
       const res = await fetch(url, {
@@ -443,7 +443,7 @@ const Admin = () => {
       const fetchShipping = async () => {
         setIsFetchingShipping(true);
         try {
-          const res = await fetch('${API_BASE_URL}/delivery/all-rates');
+          const res = await fetch(`${API_BASE_URL}/delivery/all-rates`);
           const data = await res.json();
           if (res.ok) {
             setShippingRatesData(data.data);
@@ -773,7 +773,7 @@ const Admin = () => {
 
       const url = editingProduct
         ? `${API_BASE_URL}/products/${editingProduct.id}`
-        : '${API_BASE_URL}/products';
+        : `${API_BASE_URL}/products`;
 
       const res = await fetch(url, {
         method: editingProduct ? 'PUT' : 'POST',

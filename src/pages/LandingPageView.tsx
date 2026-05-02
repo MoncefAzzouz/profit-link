@@ -138,7 +138,7 @@ const LandingPageView = () => {
   useEffect(() => {
     const fetchWilayas = async () => {
       try {
-        const res = await fetch('${API_BASE_URL}/delivery/wilayas');
+        const res = await fetch(`${API_BASE_URL}/delivery/wilayas`);
         const data = await res.json();
         if (data.data) setWilayas(data.data);
       } catch (err) {
@@ -295,7 +295,7 @@ const LandingPageView = () => {
     const finalAmount = (p.price * quantity) + currentShipping;
 
     try {
-      const response = await fetch('${API_BASE_URL}/orders', {
+      const response = await fetch(`${API_BASE_URL}/orders`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

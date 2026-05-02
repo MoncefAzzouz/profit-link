@@ -412,7 +412,7 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
       // Step 2: Hitting our custom Gemini Route
       setAiProgressStep(2);
 
-      const response = await fetch('${API_BASE_URL}/store/generate-ai', {
+      const response = await fetch(`${API_BASE_URL}/store/generate-ai`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
