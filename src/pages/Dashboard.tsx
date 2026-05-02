@@ -1422,7 +1422,24 @@ const Dashboard = () => {
                               className="w-full text-xs font-bold gap-2 bg-muted/50 hover:bg-muted text-foreground transition-colors"
                               onClick={() => {
                                 const link = `http://5.196.32.211/product/${product.id}/${user?.id}`;
-                                navigator.clipboard.writeText(link);
+                                if (navigator.clipboard && window.isSecureContext) {
+                                  navigator.clipboard.writeText(link);
+                                } else {
+                                  // Fallback for HTTP (non-secure) environments
+                                  const textArea = document.createElement("textarea");
+                                  textArea.value = link;
+                                  textArea.style.position = "absolute";
+                                  textArea.style.left = "-999999px";
+                                  document.body.prepend(textArea);
+                                  textArea.select();
+                                  try {
+                                    document.execCommand('copy');
+                                  } catch (error) {
+                                    console.error("Copy failed", error);
+                                  } finally {
+                                    textArea.remove();
+                                  }
+                                }
                                 setCopiedId(product.id);
                                 toast({ title: "تم نسخ الرابط بنجاح ✅" });
                                 setTimeout(() => setCopiedId(null), 2000);
