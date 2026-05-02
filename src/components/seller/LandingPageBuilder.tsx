@@ -797,7 +797,7 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
 
                 {p.sections.includes("features") && (
                   <div className="grid grid-cols-2 gap-3" dir="rtl">
-                    {p.features.slice(0, 4).map((f, i) => (
+                    {(p.features || []).slice(0, 4).map((f, i) => (
                       <div key={i} className="flex items-center gap-2 p-3 bg-muted/30 border border-border/50 rounded-xl">
                         <div className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: `${p.primaryColor}15` }}>
                           <Check className="w-3.5 h-3.5" style={{ color: p.primaryColor }} />
@@ -872,7 +872,7 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
                   <div className="space-y-3">
                     <h3 className="text-sm font-bold border-r-4 border-primary pr-3 mt-4">آراء العملاء</h3>
                     <div className="space-y-2">
-                      {p.socialProof.slice(0, 2).map((r, i) => (
+                      {(p.socialProof || []).slice(0, 2).map((r, i) => (
                         <div key={i} className="p-3 bg-muted/20 border border-border/50 rounded-xl">
                           <div className="flex items-center justify-between mb-1">
                             <span className="text-[10px] font-bold">{r.name}</span>
@@ -889,7 +889,7 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
                   <div className="space-y-3">
                     <h3 className="text-sm font-bold border-r-4 border-primary pr-3 mt-4">الأسئلة الشائعة</h3>
                     <div className="space-y-2">
-                      {p.faqItems.slice(0, 2).map((f, i) => (
+                      {(p.faqItems || []).slice(0, 2).map((f, i) => (
                         <div key={i} className="p-3 border border-border/50 rounded-xl">
                           <p className="text-[10px] font-bold">{f.q}</p>
                           <p className="text-[9px] opacity-60 mt-1">{f.a}</p>
@@ -1102,7 +1102,7 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
           {/* Trust Badges Footer */}
           {p.sections.includes("trust-badges") && (
             <div className="grid grid-cols-2 gap-3 pb-8">
-              {p.trustBadges.slice(0, 4).map((badge, i) => {
+              {(p.trustBadges || []).slice(0, 4).map((badge, i) => {
                 const icons = [Shield, Truck, Award, Check];
                 const Icon = icons[i % icons.length];
                 return (
@@ -1808,7 +1808,7 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
                     <span className="text-secondary font-semibold">{page.conversions} تحويل</span>
                   </div>
                   <div className="flex items-center gap-1.5 flex-wrap">
-                    {page.sections.slice(0, 5).map(s => {
+                    {(page.sections || []).slice(0, 5).map(s => {
                       const sec = availableSections.find(a => a.id === s);
                       return sec ? (
                         <span key={s} className="text-[10px] bg-muted px-2 py-0.5 rounded-lg text-muted-foreground">{sec.name}</span>
