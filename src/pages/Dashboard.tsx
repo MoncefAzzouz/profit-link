@@ -165,9 +165,9 @@ const Dashboard = () => {
   
   const [activeTab, setActiveTab] = useState<Tab>(() => {
     const pathParts = location.pathname.split('/');
-    const lastPart = pathParts[pathParts.length - 1];
-    if (lastPart && tabUrlMap[decodeURIComponent(lastPart)]) {
-      return tabUrlMap[decodeURIComponent(lastPart)];
+    const lastPart = decodeURIComponent(pathParts[pathParts.length - 1] || '').replace(/\s+/g, '-');
+    if (lastPart && tabUrlMap[lastPart]) {
+      return tabUrlMap[lastPart];
     }
     return "overview";
   });
@@ -194,9 +194,9 @@ const Dashboard = () => {
   // Sync URL changes with activeTab (for browser back/forward)
   useEffect(() => {
     const pathParts = location.pathname.split('/');
-    const lastPart = pathParts[pathParts.length - 1];
-    if (lastPart && tabUrlMap[decodeURIComponent(lastPart)]) {
-      setActiveTab(tabUrlMap[decodeURIComponent(lastPart)]);
+    const lastPart = decodeURIComponent(pathParts[pathParts.length - 1] || '').replace(/\s+/g, '-');
+    if (lastPart && tabUrlMap[lastPart]) {
+      setActiveTab(tabUrlMap[lastPart]);
     }
   }, [location.pathname]);
 
@@ -1328,35 +1328,31 @@ const Dashboard = () => {
                       <div className="p-4 space-y-3">
                         <h3 className="font-bold text-foreground line-clamp-1">{product.name}</h3>
 
-                        <div className="flex items-center justify-between">
-                          <div className="space-y-0.5">
-                            <p className="text-[10px] text-muted-foreground line-through">{product.originalPrice.toLocaleString()} دج</p>
-                            <p className="text-lg font-bold text-primary">{product.price.toLocaleString()} دج</p>
+                        <div className="flex flex-col gap-1.5 bg-muted/30 p-2.5 rounded-xl border border-border/40">
+                          <div className="flex justify-between items-center">
+                            <span className="text-[10px] text-muted-foreground font-bold">سعر الجملة</span>
+                            <span className="text-xs font-black text-orange-600">{(product.affiliatePrice || product.originalPrice || 0).toLocaleString()} دج</span>
                           </div>
-                          <div className="text-left">
-                            <p className="text-[10px] text-muted-foreground">ربحك الصافي</p>
-                            <p className="text-lg font-bold text-secondary">{product.commission.toLocaleString()} دج</p>
+                          <div className="flex justify-between items-center">
+                            <span className="text-[10px] text-muted-foreground font-bold">سعر البيع النهائي</span>
+                            <span className="text-sm font-black text-secondary">{(product.price || 0).toLocaleString()} دج</span>
+                          </div>
+                          <div className="h-px bg-border/50 my-0.5"></div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-[10px] text-primary font-bold">عمولة المسوق</span>
+                            <span className="text-sm font-black text-primary">{(product.commission || 0).toLocaleString()} دج</span>
                           </div>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-2 pt-1">
-                          <Button
-                            onClick={() => openOrderForm(product)}
-                            className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2 rounded-xl h-10 text-xs font-bold"
-                          >
-                            <ShoppingCart className="w-4 h-4" />
-                            طلب المنتج
-                          </Button>
-                          <Button
-                            variant="outline"
-                            onClick={() => toggleStoreProduct(product.id)}
-                            className={`gap-2 rounded-xl h-10 text-xs font-bold ${isInStore ? "border-secondary text-secondary bg-secondary/5" : "border-border hover:bg-muted"
-                              }`}
-                          >
-                            {isInStore ? <Check className="w-4 h-4" /> : <PlusCircle className="w-4 h-4" />}
-                            {isInStore ? "في المتجر" : "إضافة للمتجر"}
-                          </Button>
-                        </div>
+                        <Button
+                          variant="outline"
+                          onClick={() => toggleStoreProduct(product.id)}
+                          className={`w-full gap-2 rounded-xl h-10 text-xs font-bold ${isInStore ? "border-secondary text-secondary bg-secondary/5" : "border-border hover:bg-muted"
+                            }`}
+                        >
+                          {isInStore ? <Check className="w-4 h-4" /> : <PlusCircle className="w-4 h-4" />}
+                          {isInStore ? "في المتجر" : "إضافة للمتجر"}
+                        </Button>
                       </div>
                     </motion.div>
                   );

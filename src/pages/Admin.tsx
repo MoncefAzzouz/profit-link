@@ -112,9 +112,9 @@ const Admin = () => {
   
   const [activeTab, setActiveTab] = useState<Tab>(() => {
     const pathParts = location.pathname.split('/');
-    const lastPart = pathParts[pathParts.length - 1];
-    if (lastPart && adminTabUrlMap[decodeURIComponent(lastPart)]) {
-      return adminTabUrlMap[decodeURIComponent(lastPart)];
+    const lastPart = decodeURIComponent(pathParts[pathParts.length - 1] || '').replace(/\s+/g, '-');
+    if (lastPart && adminTabUrlMap[lastPart]) {
+      return adminTabUrlMap[lastPart];
     }
     return "overview";
   });
@@ -169,9 +169,9 @@ const Admin = () => {
   // Sync URL changes with activeTab (for browser back/forward)
   useEffect(() => {
     const pathParts = location.pathname.split('/');
-    const lastPart = pathParts[pathParts.length - 1];
-    if (lastPart && adminTabUrlMap[decodeURIComponent(lastPart)]) {
-      setActiveTab(adminTabUrlMap[decodeURIComponent(lastPart)]);
+    const lastPart = decodeURIComponent(pathParts[pathParts.length - 1] || '').replace(/\s+/g, '-');
+    if (lastPart && adminTabUrlMap[lastPart]) {
+      setActiveTab(adminTabUrlMap[lastPart]);
     }
   }, [location.pathname]);
 
