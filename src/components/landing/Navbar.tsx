@@ -31,10 +31,8 @@ const Navbar = () => {
         animate={{ y: 0 }}
         transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
         className={cn(
-          "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
-          isScrolled
-            ? "bg-white/75 backdrop-blur-xl shadow-soft border-b border-border/60"
-            : "bg-transparent",
+           "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
+           "bg-white/75 backdrop-blur-xl shadow-soft border-b border-border/60",
         )}
       >
         <div className="container mx-auto px-4">
@@ -43,7 +41,7 @@ const Navbar = () => {
               <span
                 className={cn(
                   "text-2xl font-extrabold tracking-tight transition-colors",
-                  isScrolled ? "text-primary" : "text-white drop-shadow-md",
+                  "text-primary",
                 )}
               >
                 Link<span className="gradient-text">DZ</span>
@@ -59,9 +57,7 @@ const Navbar = () => {
                     href={link.href}
                     className={cn(
                       "group flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold transition-colors",
-                      isScrolled
-                        ? "text-muted-foreground hover:text-foreground hover:bg-muted/80"
-                        : "text-white/85 hover:text-white hover:bg-white/10",
+                      "text-muted-foreground hover:text-foreground hover:bg-muted/80",
                     )}
                   >
                     <Icon className="h-4 w-4 opacity-80 group-hover:opacity-100 transition-opacity" aria-hidden />
@@ -73,13 +69,13 @@ const Navbar = () => {
 
             <div className="hidden md:flex items-center gap-2">
               <Link to="/auth">
-                <Button variant={isScrolled ? "ghost" : "glass"} size="sm" className="gap-1.5">
+                <Button variant="ghost" size="sm" className="gap-1.5">
                   <LogIn className="h-4 w-4" />
                   {settings.navbar.loginBtn}
                 </Button>
               </Link>
               <Link to="/auth">
-                <Button variant={isScrolled ? "default" : "hero"} size="sm" className="gap-1.5 shadow-md">
+                <Button variant="default" size="sm" className="gap-1.5 shadow-md">
                   <UserPlus className="h-4 w-4" />
                   {settings.navbar.registerBtn}
                 </Button>
@@ -91,7 +87,7 @@ const Navbar = () => {
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               className={cn(
                 "md:hidden rounded-xl p-2.5 transition-colors",
-                isScrolled ? "text-foreground hover:bg-muted" : "text-white hover:bg-white/10",
+                "text-foreground hover:bg-muted",
               )}
               aria-expanded={isMobileMenuOpen}
               aria-label={isMobileMenuOpen ? "إغلاق القائمة" : "فتح القائمة"}
