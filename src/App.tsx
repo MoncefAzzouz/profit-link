@@ -29,7 +29,7 @@ const App = () => (
           <Route path="/products" element={<Products />} />
           <Route path="/product/:productId/:affiliateId" element={<ProductRouteManager />} />
           <Route path="/auth" element={<Auth />} />
-          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/dashboard/*" element={<Dashboard />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/seller-register" element={<SellerRegister />} />
           <Route path="/seller-dashboard" element={<SellerDashboard />} />

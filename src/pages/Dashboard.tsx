@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import {
   LayoutDashboard, Package, ShoppingCart, Wallet, Trophy,
   HelpCircle, LogOut, Menu, X, Copy, Check, TrendingUp,
@@ -128,10 +128,49 @@ const getLevelInfo = (confirmedCount: number, levels: any[]) => {
   };
 };
 
+const tabUrlMap: Record<string, Tab> = {
+  "نظرة-عامة": "overview",
+  "المنتجات": "products",
+  "متجري": "my_store",
+  "تعديل-متجري": "my_store_edit",
+  "المنتجات-المفضلة": "favorites",
+  "صفحات-الهبوط": "landing_pages",
+  "طلبياتي": "orders",
+  "الأرباح": "earnings",
+  "طلبات-السحب": "withdrawals",
+  "التوصيل": "shipping",
+  "المستويات": "levels",
+  "الدعم": "support"
+};
+
+const urlTabMap: Record<Tab, string> = {
+  "overview": "نظرة-عامة",
+  "products": "المنتجات",
+  "my_store": "متجري",
+  "my_store_edit": "تعديل-متجري",
+  "favorites": "المنتجات-المفضلة",
+  "landing_pages": "صفحات-الهبوط",
+  "orders": "طلبياتي",
+  "earnings": "الأرباح",
+  "withdrawals": "طلبات-السحب",
+  "shipping": "التوصيل",
+  "levels": "المستويات",
+  "support": "الدعم"
+};
+
 const Dashboard = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState<Tab>("overview");
+  
+  const [activeTab, setActiveTab] = useState<Tab>(() => {
+    const pathParts = location.pathname.split('/');
+    const lastPart = pathParts[pathParts.length - 1];
+    if (lastPart && tabUrlMap[decodeURIComponent(lastPart)]) {
+      return tabUrlMap[decodeURIComponent(lastPart)];
+    }
+    return "overview";
+  });
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [user, setUser] = useState<any>(() => {
@@ -143,6 +182,23 @@ const Dashboard = () => {
   const [shippingRates, setShippingRates] = useState<ShippingRate[]>([]);
   const [productToEditLandingPage, setProductToEditLandingPage] = useState<any>(null);
   const [dbCategories, setDbCategories] = useState<any[]>([]);
+
+  // Sync activeTab with URL
+  useEffect(() => {
+    const arabicLabel = urlTabMap[activeTab];
+    if (arabicLabel) {
+      window.history.replaceState(null, "", `/dashboard/${arabicLabel}`);
+    }
+  }, [activeTab]);
+
+  // Sync URL changes with activeTab (for browser back/forward)
+  useEffect(() => {
+    const pathParts = location.pathname.split('/');
+    const lastPart = pathParts[pathParts.length - 1];
+    if (lastPart && tabUrlMap[decodeURIComponent(lastPart)]) {
+      setActiveTab(tabUrlMap[decodeURIComponent(lastPart)]);
+    }
+  }, [location.pathname]);
 
   const activeCategories = useMemo(() => {
     return ["الكل", ...dbCategories.filter(c => c.isActive).map(c => c.name)];
