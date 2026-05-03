@@ -7,7 +7,7 @@ import {
   Settings, Menu, X, TrendingUp, CheckCircle, XCircle,
   Truck, Clock, Eye, Edit, Ban, Search, Filter, Plus, Trophy, Sparkles,
   BarChart3, ChevronLeft, AlertTriangle, SlidersHorizontal, Store, UserPlus, Check, MapPin, CreditCard,
-  Video, Star, EyeOff, Trash2, Upload, FileText, Film, Image as ImageIcon, User, LayoutTemplate, Layers, LogOut
+  Video, Star, EyeOff, Trash2, Upload, FileText, Film, Image as ImageIcon, User, LayoutTemplate, Layers, LogOut, MessageSquare
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -157,6 +157,7 @@ const Admin = () => {
   const [isFetchingAffiliates, setIsFetchingAffiliates] = useState(false);
   const [dbOrders, setDbOrders] = useState<any[]>([]);
   const [isFetchingOrders, setIsFetchingOrders] = useState(false);
+  const [processingOrderId, setProcessingOrderId] = useState<string | null>(null);
 
   // Sync activeTab with URL
   useEffect(() => {
@@ -279,6 +280,68 @@ const Admin = () => {
       console.error('Failed to fetch all orders', err);
     } finally {
       setIsFetchingOrders(false);
+    }
+  };
+
+  const handleWhatsAppConfirm = (order: any) => {
+    const defaultText = `مرحباً ${order.customerName}، نتواصل معك من متجرنا لتأكيد طلبك لمنتج ${order.productName || order.product?.name || "منتج"} بسعر ${order.totalAmount?.toLocaleString() || "0"} دج. هل العنوان ${getWilayaName(order.wilaya)} صحيح؟`;
+    const encodedText = encodeURIComponent(defaultText);
+    window.open(`https://wa.me/213${order.customerPhone || "000000000"}?text=${encodedText}`, "_blank");
+  };
+
+  const handleAndersonShip = async (order: any) => {
+    setProcessingOrderId(order.id);
+    try {
+      const response = await fetch(`${API_BASE_URL}/orders/${order.id}/push-ecotrack`, {
+        method: 'POST'
+      });
+      const res = await response.json();
+
+      if (response.ok) {
+        toast({
+          title: "تم إرسال الطلب لشركة الشحن",
+          description: `رقم التتبع: ${res.tracking}`
+        });
+
+        setDbOrders(dbOrders.map(o => o.id === order.id ? {
+          ...o,
+          status: "SHIPPED",
+          trackingNumber: res.tracking
+        } as any : o));
+      } else {
+        throw new Error(res.error || "Failed to push to Ecotrack");
+      }
+    } catch (err: any) {
+      toast({ title: "خطأ في الإرسال", description: err.message, variant: "destructive" });
+    } finally {
+      setProcessingOrderId(null);
+    }
+  };
+
+  const handleAndersonExpedite = async (order: any) => {
+    if (!order.trackingNumber) return;
+    setProcessingOrderId(order.id);
+    try {
+      const response = await fetch(`${API_BASE_URL}/orders/${order.id}/validate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ askCollection: true })
+      });
+      const res = await response.json();
+
+      if (response.ok) {
+        toast({
+          title: "تم تأكيد الشحن بنجاح! 🚀",
+          description: "تمت معالجة الطلب في Ecotrack."
+        });
+        setDbOrders(dbOrders.map(o => o.id === order.id ? { ...o, status: "SHIPPED" } as any : o));
+      } else {
+        throw new Error(res.error || "Failed to expedite order");
+      }
+    } catch (err: any) {
+      toast({ title: "خطأ في التأكيد", description: err.message, variant: "destructive" });
+    } finally {
+      setProcessingOrderId(null);
     }
   };
 
@@ -1525,7 +1588,7 @@ const Admin = () => {
                         <th className="text-right p-4 font-semibold text-foreground">المنتج</th>
                         <th className="text-right p-4 font-semibold text-foreground">الزبون</th>
                         <th className="text-right p-4 font-semibold text-foreground">المسوّق</th>
-                        <th className="text-right p-4 font-semibold text-foreground">الولاية</th>
+                        <th className="text-right p-4 font-semibold text-foreground">عنوان التوصيل</th>
                         <th className="text-right p-4 font-semibold text-foreground">المبلغ</th>
                         <th className="text-right p-4 font-semibold text-foreground">الحالة</th>
                         <th className="text-right p-4 font-semibold text-foreground">إجراءات</th>
@@ -1568,8 +1631,14 @@ const Admin = () => {
                                   {affiliateName}
                                 </Badge>
                               </td>
-                              <td className="p-4 text-sm font-medium text-muted-foreground">
-                                {getWilayaName(order.wilaya)}
+                              <td className="p-4">
+                                <div className="space-y-1">
+                                  <p className="font-bold text-sm text-foreground">{getWilayaName(order.wilaya)}</p>
+                                  <p className="text-xs text-muted-foreground">{order.commune || "لم يتم تحديد البلدية"}</p>
+                                  <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold mt-1 ${order.stopDesk === 1 ? "bg-amber-100 text-amber-700" : "bg-blue-100 text-blue-700"}`}>
+                                    {order.stopDesk === 1 ? "مكتب (Stop Desk)" : "منزل (Home Delivery)"}
+                                  </span>
+                                </div>
                               </td>
                               <td className="p-4">
                                 <p className="font-bold text-foreground text-sm">{order.totalAmount.toLocaleString()} دج</p>
@@ -1581,13 +1650,41 @@ const Admin = () => {
                                 </span>
                               </td>
                               <td className="p-4 text-left">
-                                <div className="flex gap-2">
-                                  <Button variant="ghost" size="icon" className="h-8 w-8">
-                                    <Eye className="w-4 h-4" />
+                                <div className="flex items-center gap-2">
+                                  <Button size="sm" variant="outline" className="gap-2 text-green-600 border-green-200 hover:bg-green-50" onClick={() => handleWhatsAppConfirm(order)}>
+                                    <MessageSquare className="w-4 h-4" />
                                   </Button>
-                                  <Button variant="ghost" size="icon" className="h-8 w-8 hover:text-secondary">
-                                    <Truck className="w-4 h-4" />
-                                  </Button>
+                                  {(order.status === "PENDING" || order.status === "CONFIRMED" || order.status === "pending" || order.status === "confirmed") && !order.trackingNumber && (
+                                    <Button
+                                      size="sm"
+                                      className="gap-2 bg-indigo-600 hover:bg-indigo-700 text-white"
+                                      disabled={processingOrderId === order.id}
+                                      onClick={() => handleAndersonShip(order)}
+                                    >
+                                      {processingOrderId === order.id ? (
+                                        <motion.span animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }} className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full inline-block" />
+                                      ) : (
+                                        <Truck className="w-4 h-4" />
+                                      )}
+                                      {processingOrderId === order.id ? "" : "شحن"}
+                                    </Button>
+                                  )}
+                                  {order.trackingNumber && (order.status === "SHIPPED" || order.status === "shipped") && (
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      className="gap-2 h-8 px-3 text-xs font-bold border-primary text-primary hover:bg-primary hover:text-white"
+                                      disabled={processingOrderId === order.id}
+                                      onClick={() => handleAndersonExpedite(order)}
+                                    >
+                                      {processingOrderId === order.id ? (
+                                        <motion.span animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }} className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full inline-block" />
+                                      ) : (
+                                        <Check className="w-3 h-3" />
+                                      )}
+                                      {processingOrderId === order.id ? "" : "تأكيد الشحن"}
+                                    </Button>
+                                  )}
                                 </div>
                               </td>
                             </tr>
