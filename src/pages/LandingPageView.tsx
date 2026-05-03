@@ -95,6 +95,7 @@ const LandingPageView = () => {
   const [loadingDelivery, setLoadingDelivery] = useState(false);
   const [faqOpen, setFaqOpen] = useState<number | null>(null);
   const [quantity, setQuantity] = useState(1);
+  const [storeName, setStoreName] = useState<string>(defaultStoreName);
 
   useEffect(() => {
     const fetchPage = async () => {
@@ -117,6 +118,20 @@ const LandingPageView = () => {
             beforeAfterImages: found.beforeAfterImages || { before: "", after: "" }
           };
           setPage(safeFound);
+
+          if (safeFound.ownerId) {
+            try {
+              const storeRes = await fetch(`${API_BASE_URL}/store/public/${safeFound.ownerId}`);
+              if (storeRes.ok) {
+                const storeJson = await storeRes.json();
+                if (storeJson.data?.storeInfo?.storeName) {
+                  setStoreName(storeJson.data.storeInfo.storeName);
+                }
+              }
+            } catch (err) {
+              console.error("Failed to fetch store info", err);
+            }
+          }
         } else {
           // Fallback to localStorage for existing unsaved pages (optional/backward compatibility)
           const stored = localStorage.getItem("landing_pages");
@@ -399,7 +414,7 @@ const LandingPageView = () => {
                    <ShoppingCart className="w-6 h-6 text-white" />
                  )}
                </div>
-               <span className="font-bold text-lg hidden sm:block">{p.productName || defaultStoreName}</span>
+               <span className="font-bold text-lg hidden sm:block">{storeName}</span>
             </div>
 
             <a href="#order-form">
@@ -784,7 +799,7 @@ const LandingPageView = () => {
               )}
             </div>
             <div>
-              <span className="text-sm font-bold block">{p.productName || defaultStoreName}</span>
+              <span className="text-sm font-bold block">{storeName}</span>
               <span className="text-xs" style={{ color: stc }}>شحن مجاني لكل الولايات 🚚</span>
             </div>
           </div>
@@ -1391,7 +1406,7 @@ const LandingPageView = () => {
 
         {/* Footer */}
         <div className="border-t py-8 text-center mt-12" style={{ borderColor: isDark(p.backgroundColor) ? "#334155" : "#e2e8f0" }}>
-          <p className="text-xs opacity-60" style={{ color: tc }}>© {new Date().getFullYear()} {p.productName} — جميع الحقوق محفوظة</p>
+          <p className="text-xs opacity-60" style={{ color: tc }}>© {new Date().getFullYear()} {storeName} — جميع الحقوق محفوظة</p>
           <p className="text-[10px] opacity-40 mt-2">نحن نستخدم ملفات تعريف الارتباط لتحسين تجربتك على موقعنا</p>
         </div>
       </div>

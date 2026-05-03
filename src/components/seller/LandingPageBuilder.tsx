@@ -1329,15 +1329,7 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
               {/* ===== CONTENT TAB ===== */}
               {activeDesignTab === "content" && (
                 <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label className="text-xs font-bold opacity-70">اسم المتجر/العلامة (يظهر في الهيدر)</Label>
-                    <Input
-                      value={editingPage.productName || defaultStoreName}
-                      onChange={(e) => updatePage("productName", e.target.value)}
-                      className="rounded-xl h-9 text-sm"
-                      placeholder={defaultStoreName}
-                    />
-                  </div>
+
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1.5">
                       <Label className="text-[10px] font-bold opacity-70">السعر (دج)</Label>
