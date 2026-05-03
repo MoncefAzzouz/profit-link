@@ -180,6 +180,7 @@ const Dashboard = () => {
   const [orders, setOrders] = useState<any[]>([]);
   const [products, setProducts] = useState<any[]>([]);
   const [shippingRates, setShippingRates] = useState<ShippingRate[]>([]);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [productToEditLandingPage, setProductToEditLandingPage] = useState<any>(null);
   const [dbCategories, setDbCategories] = useState<any[]>([]);
 
@@ -224,7 +225,6 @@ const Dashboard = () => {
         console.error('Failed to fetch shipping rates', err);
       }
     };
-    fetchRates();
 
     // Fetch products from backend
     const fetchProducts = async () => {
@@ -238,7 +238,6 @@ const Dashboard = () => {
         console.error('Failed to fetch products', err);
       }
     };
-    fetchProducts();
 
     // Fetch categories from backend
     const fetchCategories = async () => {
@@ -252,7 +251,6 @@ const Dashboard = () => {
         console.error('Failed to fetch categories', err);
       }
     };
-    fetchCategories();
 
     // Fetch saved store products from backend
     const fetchStoreProducts = async () => {
@@ -293,6 +291,11 @@ const Dashboard = () => {
       }
     };
     fetchFavorites();
+
+    // Wait for essential data before showing page
+    Promise.all([fetchProducts(), fetchCategories(), fetchRates()]).finally(() => {
+      setIsInitialLoading(false);
+    });
   }, []);
   const [loadingOrders, setLoadingOrders] = useState(true);
   const [dashboardStats, setDashboardStats] = useState({
@@ -373,9 +376,11 @@ const Dashboard = () => {
             customerName: o.customerName,
             customerPhone: o.customerPhone,
             wilaya: o.wilaya,
+            commune: o.commune || "",
+            stopDesk: o.stopDesk || 0,
             address: o.address,
             status: o.status.toLowerCase(),
-            amount: o.totalAmount || 0, // Fallback to 0
+            amount: o.totalAmount || 0,
             commission: o.commissionAmount || 0,
             date: new Date(o.createdAt).toLocaleDateString('ar-DZ'),
             trackingNumber: o.trackingNumber
@@ -831,6 +836,17 @@ const Dashboard = () => {
   ];
 
   if (!user) return null;
+
+  if (isInitialLoading) {
+    return (
+      <div className="min-h-screen bg-muted/30 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+          <p className="text-muted-foreground font-medium">جاري التحميل...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-muted/30 flex">
@@ -1708,6 +1724,8 @@ const Dashboard = () => {
                         <th className="text-right p-4 font-semibold text-foreground">المنتج</th>
                         <th className="text-right p-4 font-semibold text-foreground">الزبون</th>
                         <th className="text-right p-4 font-semibold text-foreground">الولاية</th>
+                        <th className="text-right p-4 font-semibold text-foreground">البلدية</th>
+                        <th className="text-right p-4 font-semibold text-foreground">التوصيل</th>
                         <th className="text-right p-4 font-semibold text-foreground">الحالة</th>
                         <th className="text-right p-4 font-semibold text-foreground">العمولة</th>
                         <th className="text-right p-4 font-semibold text-foreground">التاريخ</th>
@@ -1724,6 +1742,12 @@ const Dashboard = () => {
                               <td className="p-4 font-medium text-foreground">{order.productName}</td>
                               <td className="p-4 text-muted-foreground">{order.customerName}</td>
                               <td className="p-4 text-muted-foreground">{getWilayaName(order.wilaya)}</td>
+                              <td className="p-4 text-muted-foreground text-sm">{order.commune || "-"}</td>
+                              <td className="p-4">
+                                <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${order.stopDesk === 1 ? "bg-amber-100 text-amber-700" : "bg-blue-100 text-blue-700"}`}>
+                                  {order.stopDesk === 1 ? "مكتب" : "منزل"}
+                                </span>
+                              </td>
                               <td className="p-4">
                                 <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium ${status.color}`}>
                                   <status.icon className="w-4 h-4" />
@@ -1775,7 +1799,7 @@ const Dashboard = () => {
                         })
                       ) : (
                         <tr>
-                          <td colSpan={6} className="p-8 text-center text-muted-foreground">
+                          <td colSpan={9} className="p-8 text-center text-muted-foreground">
                             لا توجد طلبيات تطابق الفلاتر المحددة
                           </td>
                         </tr>
