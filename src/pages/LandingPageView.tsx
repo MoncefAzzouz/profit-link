@@ -5,7 +5,7 @@ import {
   ShoppingCart, Star, Users, ThumbsUp, Shield, Truck, Clock,
   Award, Check, Play, Image, Gift, MessageSquare, Timer, Package,
   ChevronDown, Phone, MapPin, User, AlertTriangle, Heart, Flame,
-  ArrowRight, Sparkles, X
+  ArrowRight, Sparkles, X, Camera
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -886,6 +886,25 @@ const LandingPageView = () => {
                     <Check className="w-5 h-5" style={{ color: p.primaryColor }} />
                   </div>
                   <span className="text-sm font-bold">{f}</span>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+
+        {/* Gallery Section */}
+        {p.sections.includes("gallery") && p.galleryImages && p.galleryImages.length > 0 && (
+          <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}
+            className="px-4 sm:px-6 pb-8">
+            <h2 className="text-2xl font-black text-center mb-6 flex items-center justify-center gap-2">
+              <Camera className="w-6 h-6" style={{ color: p.primaryColor }} /> صور إضافية
+            </h2>
+            <div className="grid grid-cols-2 gap-3 max-w-2xl mx-auto">
+              {(p.galleryImages || []).map((img, i) => (
+                <motion.div key={i} initial={{ opacity: 0, scale: 0.9 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
+                  className={`aspect-square overflow-hidden bg-muted border ${shadowMap[p.shadowIntensity]}`}
+                  style={{ borderColor: isDark(p.backgroundColor) ? "#334155" : "#e2e8f0", borderRadius: br }}>
+                  <img src={img} alt={`Gallery ${i}`} className="w-full h-full object-cover hover:scale-110 transition-transform duration-500" />
                 </motion.div>
               ))}
             </div>
