@@ -422,7 +422,8 @@ const Admin = () => {
     hasSizes: false,
     sizeType: "clothing",
     availableColors: [],
-    availableSizes: []
+    availableSizes: [],
+    showFreeShipping: false
   });
 
 
@@ -2977,6 +2978,19 @@ const Admin = () => {
                       id="hasSizes"
                       checked={productFormData.hasSizes}
                       onCheckedChange={v => setProductFormData({...productFormData, hasSizes: v})}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between p-4 bg-emerald-500/5 rounded-2xl border border-emerald-500/10 col-span-2">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                        <Truck className="w-4 h-4 text-emerald-600" />
+                      </div>
+                      <Label className="font-bold text-sm cursor-pointer" htmlFor="showFreeShipping">توصيل مجاني (Free Delivery)</Label>
+                    </div>
+                    <Switch 
+                      id="showFreeShipping"
+                      checked={productFormData.showFreeShipping}
+                      onCheckedChange={v => setProductFormData({...productFormData, showFreeShipping: v})}
                     />
                   </div>
                 </div>

@@ -405,6 +405,7 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
           videoUrl: initialProductToEdit.videoUrl || "",
           availableColors: initialProductToEdit.hasColors ? (initialProductToEdit.availableColors || []) : [],
           availableSizes: initialProductToEdit.hasSizes ? (initialProductToEdit.availableSizes || []) : [],
+          showFreeShipping: initialProductToEdit.showFreeShipping || false,
           sections: ["hero", "urgency-bar", "features", "gallery", "social-proof", "reviews", "shipping", "cta"],
           status: "draft"
         };
