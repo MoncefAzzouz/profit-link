@@ -22,6 +22,13 @@ declare global {
   }
 }
 
+export interface BundlePack {
+  id: string;
+  name: string;
+  image: string;
+  price: number;
+}
+
 interface LandingPageConfig {
   id: string;
   productName: string;
@@ -74,6 +81,7 @@ interface LandingPageConfig {
   availableSizes?: string[];
   commission?: number;
   galleryImages?: string[];
+  bundles?: BundlePack[];
 }
 
 const defaultStoreName = "متجري";
@@ -96,6 +104,7 @@ const LandingPageView = () => {
   const [faqOpen, setFaqOpen] = useState<number | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [storeName, setStoreName] = useState<string>(defaultStoreName);
+  const [selectedBundleId, setSelectedBundleId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchPage = async () => {
@@ -307,8 +316,10 @@ const LandingPageView = () => {
       return;
     }
 
+    const selectedBundle = p.bundles?.find(b => b.id === selectedBundleId);
+    const activePrice = selectedBundle ? selectedBundle.price : p.price;
     const currentShipping = orderForm.deliveryType === "home" ? shippingRate.home : shippingRate.desk;
-    const finalAmount = (p.price * quantity) + currentShipping;
+    const finalAmount = (activePrice * quantity) + currentShipping;
 
     try {
       const response = await fetch(`${API_BASE_URL}/orders`, {
@@ -328,7 +339,7 @@ const LandingPageView = () => {
           shippingFee: currentShipping,
           stopDesk: orderForm.deliveryType === "desk" ? 1 : 0,
           color: orderForm.selectedColor,
-          size: orderForm.selectedSize
+          size: selectedBundle ? (orderForm.selectedSize ? `${orderForm.selectedSize} - ${selectedBundle.name}` : selectedBundle.name) : orderForm.selectedSize
         })
 
       });
@@ -396,8 +407,10 @@ const LandingPageView = () => {
 
   if (p.template === "original") {
     const currentShipping = orderForm.deliveryType === "home" ? shippingRate.home : shippingRate.desk;
-    const totalPrice = (p.price * quantity) + currentShipping;
-    const savings = (p.originalPrice - p.price) * quantity;
+    const selectedBundle = p.bundles?.find(b => b.id === selectedBundleId);
+    const activePrice = selectedBundle ? selectedBundle.price : p.price;
+    const totalPrice = (activePrice * quantity) + currentShipping;
+    const savings = (p.originalPrice - activePrice) * quantity;
 
     return (
       <div className="min-h-screen" style={{ backgroundColor: p.backgroundColor, fontFamily: p.fontFamily, color: tc }} dir="rtl">
@@ -651,6 +664,49 @@ const LandingPageView = () => {
                     />
                   </div>
 
+                  {p.sections.includes("bundle") && p.bundles && p.bundles.length > 0 && (
+                    <div className="space-y-3 pt-2 text-right">
+                      <label className="text-sm font-bold opacity-70">عروض الحزم (اختياري)</label>
+                      <div className="grid grid-cols-1 gap-3">
+                        <button
+                          type="button"
+                          onClick={() => setSelectedBundleId(null)}
+                          className={`flex items-center justify-between p-3 rounded-xl border-2 transition-all ${
+                            selectedBundleId === null 
+                              ? "border-primary bg-primary/5 ring-1 ring-primary/20" 
+                              : "border-muted bg-muted/20 hover:border-muted-foreground/30"
+                          }`}
+                        >
+                          <span className="font-bold text-sm">المنتج الأساسي (قطعة واحدة)</span>
+                          <span className="font-black" style={{ color: p.primaryColor }}>{p.price.toLocaleString()} دج</span>
+                        </button>
+                        
+                        {p.bundles.map((bundle) => (
+                          <button
+                            key={bundle.id}
+                            type="button"
+                            onClick={() => setSelectedBundleId(bundle.id)}
+                            className={`flex items-center gap-3 p-3 rounded-xl border-2 transition-all ${
+                              selectedBundleId === bundle.id 
+                                ? "border-primary bg-primary/5 ring-1 ring-primary/20" 
+                                : "border-muted bg-muted/20 hover:border-muted-foreground/30"
+                            }`}
+                          >
+                            {bundle.image && (
+                              <img src={bundle.image} alt={bundle.name} className="w-12 h-12 rounded-lg object-cover border" />
+                            )}
+                            <div className="flex-1 text-right">
+                              <p className="font-bold text-sm">{bundle.name}</p>
+                            </div>
+                            <div className="text-left shrink-0">
+                              <span className="font-black text-lg block" style={{ color: p.primaryColor }}>{bundle.price.toLocaleString()} دج</span>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   <div className="flex items-center justify-between p-4 bg-muted/50 rounded-xl border border-border/50">
                     <span className="font-bold">الكمية</span>
                     <div className="flex items-center gap-4">
@@ -664,7 +720,7 @@ const LandingPageView = () => {
                 <div className="bg-muted/30 rounded-2xl p-6 space-y-3 mt-6">
                    <div className="flex justify-between text-sm">
                      <span className="opacity-60">السعر</span>
-                     <span className="font-bold">{(p.price * quantity).toLocaleString()} دج</span>
+                     <span className="font-bold">{(activePrice * quantity).toLocaleString()} دج</span>
                    </div>
                    {savings > 0 && (
                      <div className="flex justify-between text-sm text-green-600 font-bold">
@@ -1232,6 +1288,49 @@ const LandingPageView = () => {
                               }}
                             >
                               {size}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {p.sections.includes("bundle") && p.bundles && p.bundles.length > 0 && (
+                      <div className="space-y-3 pt-2 text-right">
+                        <label className="text-sm font-bold opacity-70">عروض الحزم (اختياري)</label>
+                        <div className="grid grid-cols-1 gap-3">
+                          <button
+                            type="button"
+                            onClick={() => setSelectedBundleId(null)}
+                            className={`flex items-center justify-between p-3 rounded-xl border-2 transition-all ${
+                              selectedBundleId === null 
+                                ? "border-primary bg-primary/5 ring-1 ring-primary/20" 
+                                : "border-muted bg-muted/20 hover:border-muted-foreground/30"
+                            }`}
+                          >
+                            <span className="font-bold text-sm">المنتج الأساسي (قطعة واحدة)</span>
+                            <span className="font-black" style={{ color: p.primaryColor }}>{p.price.toLocaleString()} دج</span>
+                          </button>
+                          
+                          {p.bundles.map((bundle) => (
+                            <button
+                              key={bundle.id}
+                              type="button"
+                              onClick={() => setSelectedBundleId(bundle.id)}
+                              className={`flex items-center gap-3 p-3 rounded-xl border-2 transition-all ${
+                                selectedBundleId === bundle.id 
+                                  ? "border-primary bg-primary/5 ring-1 ring-primary/20" 
+                                  : "border-muted bg-muted/20 hover:border-muted-foreground/30"
+                              }`}
+                            >
+                              {bundle.image && (
+                                <img src={bundle.image} alt={bundle.name} className="w-12 h-12 rounded-lg object-cover border" />
+                              )}
+                              <div className="flex-1 text-right">
+                                <p className="font-bold text-sm">{bundle.name}</p>
+                              </div>
+                              <div className="text-left shrink-0">
+                                <span className="font-black text-lg block" style={{ color: p.primaryColor }}>{bundle.price.toLocaleString()} دج</span>
+                              </div>
                             </button>
                           ))}
                         </div>

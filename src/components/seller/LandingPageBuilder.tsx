@@ -28,6 +28,13 @@ import { useToast } from "@/hooks/use-toast";
 import { API_BASE_URL } from '@/config/api';
 
 
+export interface BundlePack {
+  id: string;
+  name: string;
+  image: string;
+  price: number;
+}
+
 interface LandingPageConfig {
   id: string;
   productName: string;
@@ -80,6 +87,7 @@ interface LandingPageConfig {
   logo?: string;
   productId?: string;
   commission?: number;
+  bundles?: BundlePack[];
 }
 
 
@@ -1741,24 +1749,191 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
                   {availableSections.map((section) => {
                     const isActive = editingPage.sections.includes(section.id);
                     return (
-                      <button
-                        key={section.id}
-                        onClick={() => toggleSection(section.id)}
-                        disabled={section.required}
-                        className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-all text-right ${isActive ? "border-primary bg-primary/5" : "border-border/50 hover:border-border"
-                          } ${section.required ? "opacity-60 cursor-not-allowed" : ""}`}
-                      >
-                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${isActive ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}>
-                          <section.icon className="w-4 h-4" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs font-bold">{section.name}</p>
-                          <p className="text-[9px] text-muted-foreground truncate">{section.desc}</p>
-                        </div>
-                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${isActive ? "bg-primary border-primary text-white" : "border-border"}`}>
-                          {isActive && <Check className="w-3 h-3" />}
-                        </div>
-                      </button>
+                    return (
+                      <div key={section.id} className="space-y-2">
+                        <button
+                          onClick={() => toggleSection(section.id)}
+                          disabled={section.required}
+                          className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-all text-right ${isActive ? "border-primary bg-primary/5" : "border-border/50 hover:border-border"
+                            } ${section.required ? "opacity-60 cursor-not-allowed" : ""}`}
+                        >
+                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${isActive ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}>
+                            <section.icon className="w-4 h-4" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-bold">{section.name}</p>
+                            <p className="text-[9px] text-muted-foreground truncate">{section.desc}</p>
+                          </div>
+                          <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${isActive ? "bg-primary border-primary text-white" : "border-border"}`}>
+                            {isActive && <Check className="w-3 h-3" />}
+                          </div>
+                        </button>
+
+                        {isActive && section.id === "video" && (
+                          <div className="p-3 border rounded-xl bg-muted/20 space-y-2 mt-2">
+                            <Label className="text-[10px] font-bold">رابط الفيديو (يوتيوب، فيميو، إلخ)</Label>
+                            <Input
+                              value={editingPage.videoUrl || ""}
+                              onChange={(e) => updatePage("videoUrl", e.target.value)}
+                              placeholder="https://..."
+                              className="h-8 text-xs rounded-xl"
+                              dir="ltr"
+                            />
+                          </div>
+                        )}
+
+                        {isActive && section.id === "before-after" && (
+                          <div className="p-3 border rounded-xl bg-muted/20 space-y-3 mt-2 grid grid-cols-2 gap-3">
+                            <div className="space-y-1">
+                              <Label className="text-[10px] font-bold">صورة (قبل)</Label>
+                              <div
+                                className="relative aspect-square rounded-xl bg-background border-2 border-dashed border-primary/20 flex flex-col items-center justify-center cursor-pointer hover:bg-primary/5 transition-all overflow-hidden group"
+                                onClick={() => {
+                                  const input = document.createElement('input');
+                                  input.type = 'file';
+                                  input.accept = 'image/*';
+                                  input.onchange = (e: any) => {
+                                    const file = e.target.files?.[0];
+                                    if (file) {
+                                      const reader = new FileReader();
+                                      reader.onloadend = () => {
+                                        updatePage("beforeAfterImages", { ...editingPage.beforeAfterImages, before: reader.result as string });
+                                      };
+                                      reader.readAsDataURL(file);
+                                    }
+                                  };
+                                  input.click();
+                                }}
+                              >
+                                {editingPage.beforeAfterImages?.before ? (
+                                  <img src={editingPage.beforeAfterImages.before} className="w-full h-full object-cover" />
+                                ) : (
+                                  <Upload className="w-4 h-4 text-primary/40 group-hover:text-primary transition-colors" />
+                                )}
+                              </div>
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-[10px] font-bold">صورة (بعد)</Label>
+                              <div
+                                className="relative aspect-square rounded-xl bg-background border-2 border-dashed border-primary/20 flex flex-col items-center justify-center cursor-pointer hover:bg-primary/5 transition-all overflow-hidden group"
+                                onClick={() => {
+                                  const input = document.createElement('input');
+                                  input.type = 'file';
+                                  input.accept = 'image/*';
+                                  input.onchange = (e: any) => {
+                                    const file = e.target.files?.[0];
+                                    if (file) {
+                                      const reader = new FileReader();
+                                      reader.onloadend = () => {
+                                        updatePage("beforeAfterImages", { ...editingPage.beforeAfterImages, after: reader.result as string });
+                                      };
+                                      reader.readAsDataURL(file);
+                                    }
+                                  };
+                                  input.click();
+                                }}
+                              >
+                                {editingPage.beforeAfterImages?.after ? (
+                                  <img src={editingPage.beforeAfterImages.after} className="w-full h-full object-cover" />
+                                ) : (
+                                  <Upload className="w-4 h-4 text-primary/40 group-hover:text-primary transition-colors" />
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {isActive && section.id === "bundle" && (
+                          <div className="p-3 border rounded-xl bg-muted/20 space-y-3 mt-2">
+                            {(editingPage.bundles || []).map((bundle, idx) => (
+                              <div key={bundle.id || idx} className="p-2 border rounded-lg bg-background space-y-2 relative group">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="absolute top-1 left-1 h-6 w-6 text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                                  onClick={() => {
+                                    const newBundles = [...editingPage.bundles!];
+                                    newBundles.splice(idx, 1);
+                                    updatePage("bundles", newBundles);
+                                  }}
+                                >
+                                  <X className="w-3 h-3" />
+                                </Button>
+                                <div className="grid grid-cols-[3rem_1fr] gap-2 items-center">
+                                  <div
+                                    className="w-12 h-12 rounded-md bg-muted border-2 border-dashed border-primary/20 flex items-center justify-center cursor-pointer hover:bg-primary/5 transition-all overflow-hidden"
+                                    onClick={() => {
+                                      const input = document.createElement('input');
+                                      input.type = 'file';
+                                      input.accept = 'image/*';
+                                      input.onchange = (e: any) => {
+                                        const file = e.target.files?.[0];
+                                        if (file) {
+                                          const reader = new FileReader();
+                                          reader.onloadend = () => {
+                                            const newBundles = [...editingPage.bundles!];
+                                            newBundles[idx].image = reader.result as string;
+                                            updatePage("bundles", newBundles);
+                                          };
+                                          reader.readAsDataURL(file);
+                                        }
+                                      };
+                                      input.click();
+                                    }}
+                                  >
+                                    {bundle.image ? (
+                                      <img src={bundle.image} className="w-full h-full object-cover" />
+                                    ) : (
+                                      <Upload className="w-3 h-3 text-primary/40" />
+                                    )}
+                                  </div>
+                                  <div className="space-y-1.5">
+                                    <Input
+                                      value={bundle.name}
+                                      onChange={(e) => {
+                                        const newBundles = [...editingPage.bundles!];
+                                        newBundles[idx].name = e.target.value;
+                                        updatePage("bundles", newBundles);
+                                      }}
+                                      placeholder="اسم الحزمة (مثال: قطعتين)"
+                                      className="h-6 text-[10px] rounded"
+                                    />
+                                    <div className="flex items-center gap-2">
+                                      <Label className="text-[9px] shrink-0">السعر (دج):</Label>
+                                      <Input
+                                        type="number"
+                                        value={bundle.price}
+                                        onChange={(e) => {
+                                          const newBundles = [...editingPage.bundles!];
+                                          newBundles[idx].price = parseInt(e.target.value) || 0;
+                                          updatePage("bundles", newBundles);
+                                        }}
+                                        className="h-6 text-[10px] rounded"
+                                      />
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="w-full rounded-xl border-dashed h-8 text-xs gap-1"
+                              onClick={() => {
+                                const newBundle: BundlePack = {
+                                  id: `bundle-${Date.now()}`,
+                                  name: `حزمة ${(editingPage.bundles?.length || 0) + 1}`,
+                                  image: "",
+                                  price: editingPage.price * ((editingPage.bundles?.length || 0) + 1)
+                                };
+                                updatePage("bundles", [...(editingPage.bundles || []), newBundle]);
+                              }}
+                            >
+                              <Plus className="w-3 h-3" /> إضافة حزمة
+                            </Button>
+                          </div>
+                        )}
+                      </div>
                     );
                   })}
                 </div>
