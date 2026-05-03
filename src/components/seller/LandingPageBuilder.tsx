@@ -1749,7 +1749,6 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
                   {availableSections.map((section) => {
                     const isActive = editingPage.sections.includes(section.id);
                     return (
-                    return (
                       <div key={section.id} className="space-y-2">
                         <button
                           onClick={() => toggleSection(section.id)}
