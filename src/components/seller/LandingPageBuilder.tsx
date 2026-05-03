@@ -1345,12 +1345,12 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
                     </div>
                     <div className="space-y-1.5">
                       <Label className="text-[10px] font-bold opacity-70">السعر الأصلي</Label>
-                      <Input type="number" value={editingPage.originalPrice} onChange={(e) => updatePage("originalPrice", parseInt(e.target.value) || 0)} className="rounded-xl h-8 text-xs" />
+                      <Input type="number" disabled={!isAdmin} value={editingPage.originalPrice} onChange={(e) => updatePage("originalPrice", parseInt(e.target.value) || 0)} className="rounded-xl h-8 text-xs" />
                     </div>
                   </div>
                   <div className="space-y-2">
                     <Label className="text-xs font-bold opacity-70">التصنيف</Label>
-                    <Input value={editingPage.category} onChange={(e) => updatePage("category", e.target.value)} className="rounded-xl h-9 text-sm" />
+                    <Input disabled={!isAdmin} value={editingPage.category} onChange={(e) => updatePage("category", e.target.value)} className="rounded-xl h-9 text-sm" />
                   </div>
                   <div className="space-y-2">
                     <Label className="text-xs font-bold opacity-70">العنوان الرئيسي</Label>

@@ -728,53 +728,7 @@ const FilterContent = ({
         </div>
       </div>
 
-      {/* Quick Toggles */}
-      <div className="space-y-4">
-        <h4 className="font-bold text-foreground text-lg">فرز سريع</h4>
-        <div className="space-y-3">
-          <button 
-            onClick={() => setShowOnlyTrending(!showOnlyTrending)}
-            className={cn(
-              "w-full flex items-center justify-between p-4 rounded-2xl border-2 transition-all",
-              showOnlyTrending ? "border-orange-500 bg-orange-500/5" : "border-border hover:border-border/80"
-            )}
-          >
-            <div className="flex items-center gap-3">
-              <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", showOnlyTrending ? "bg-orange-500 text-white" : "bg-muted text-orange-500")}>
-                <Flame className="w-5 h-5" />
-              </div>
-              <span className="font-bold text-sm lowercase">Trending</span>
-            </div>
-            <div className={cn("w-10 h-5 rounded-full relative transition-colors", showOnlyTrending ? "bg-orange-500" : "bg-muted")}>
-              <motion.div 
-                animate={{ x: showOnlyTrending ? -20 : 0 }}
-                className="absolute right-1 top-1 w-3 h-3 rounded-full bg-white shadow-sm"
-              />
-            </div>
-          </button>
 
-          <button 
-            onClick={() => setShowOnlyFeatured(!showOnlyFeatured)}
-            className={cn(
-              "w-full flex items-center justify-between p-4 rounded-2xl border-2 transition-all",
-              showOnlyFeatured ? "border-yellow-500 bg-yellow-500/5" : "border-border hover:border-border/80"
-            )}
-          >
-            <div className="flex items-center gap-3">
-              <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", showOnlyFeatured ? "bg-yellow-500 text-white" : "bg-muted text-yellow-500")}>
-                <Star className="w-5 h-5" />
-              </div>
-              <span className="font-bold text-sm lowercase">Featured</span>
-            </div>
-            <div className={cn("w-10 h-5 rounded-full relative transition-colors", showOnlyFeatured ? "bg-yellow-500" : "bg-muted")}>
-              <motion.div 
-                animate={{ x: showOnlyFeatured ? -20 : 0 }}
-                className="absolute right-1 top-1 w-3 h-3 rounded-full bg-white shadow-sm"
-              />
-            </div>
-          </button>
-        </div>
-      </div>
 
       {/* Stock Status */}
       <div className="space-y-4">
