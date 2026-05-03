@@ -73,6 +73,7 @@ interface LandingPageConfig {
   availableColors?: string[];
   availableSizes?: string[];
   commission?: number;
+  galleryImages?: string[];
 }
 
 const defaultStoreName = "متجري";
