@@ -1723,9 +1723,7 @@ const Dashboard = () => {
                       <tr>
                         <th className="text-right p-4 font-semibold text-foreground">المنتج</th>
                         <th className="text-right p-4 font-semibold text-foreground">الزبون</th>
-                        <th className="text-right p-4 font-semibold text-foreground">الولاية</th>
-                        <th className="text-right p-4 font-semibold text-foreground">البلدية</th>
-                        <th className="text-right p-4 font-semibold text-foreground">التوصيل</th>
+                        <th className="text-right p-4 font-semibold text-foreground">عنوان التوصيل</th>
                         <th className="text-right p-4 font-semibold text-foreground">الحالة</th>
                         <th className="text-right p-4 font-semibold text-foreground">العمولة</th>
                         <th className="text-right p-4 font-semibold text-foreground">التاريخ</th>
@@ -1741,12 +1739,14 @@ const Dashboard = () => {
                             <tr key={order.id} className="hover:bg-muted/50 transition-colors">
                               <td className="p-4 font-medium text-foreground">{order.productName}</td>
                               <td className="p-4 text-muted-foreground">{order.customerName}</td>
-                              <td className="p-4 text-muted-foreground">{getWilayaName(order.wilaya)}</td>
-                              <td className="p-4 text-muted-foreground text-sm">{order.commune || "-"}</td>
                               <td className="p-4">
-                                <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${order.stopDesk === 1 ? "bg-amber-100 text-amber-700" : "bg-blue-100 text-blue-700"}`}>
-                                  {order.stopDesk === 1 ? "مكتب" : "منزل"}
-                                </span>
+                                <div className="space-y-1">
+                                  <p className="font-bold text-sm text-foreground">{getWilayaName(order.wilaya)}</p>
+                                  <p className="text-xs text-muted-foreground">{order.commune || "لم يتم تحديد البلدية"}</p>
+                                  <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold mt-1 ${order.stopDesk === 1 ? "bg-amber-100 text-amber-700" : "bg-blue-100 text-blue-700"}`}>
+                                    {order.stopDesk === 1 ? "مكتب (Stop Desk)" : "منزل (Home Delivery)"}
+                                  </span>
+                                </div>
                               </td>
                               <td className="p-4">
                                 <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium ${status.color}`}>
@@ -1799,7 +1799,7 @@ const Dashboard = () => {
                         })
                       ) : (
                         <tr>
-                          <td colSpan={9} className="p-8 text-center text-muted-foreground">
+                          <td colSpan={7} className="p-8 text-center text-muted-foreground">
                             لا توجد طلبيات تطابق الفلاتر المحددة
                           </td>
                         </tr>
