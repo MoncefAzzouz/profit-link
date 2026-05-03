@@ -1737,7 +1737,7 @@ const Dashboard = () => {
                                   <Button size="sm" variant="outline" className="gap-2 text-green-600 border-green-200 hover:bg-green-50" onClick={() => handleWhatsAppConfirm(order)}>
                                     <MessageSquare className="w-4 h-4" />
                                   </Button>
-                                  {(order.status === "pending" || order.status === "confirmed") && (
+                                  {(order.status === "pending" || order.status === "confirmed") && !order.trackingNumber && (
                                     <Button
                                       size="sm"
                                       className="gap-2 bg-indigo-600 hover:bg-indigo-700 text-white"
@@ -1752,16 +1752,16 @@ const Dashboard = () => {
                                       {isProcessing ? "" : "شحن"}
                                     </Button>
                                   )}
-                                  {order.trackingNumber && order.status !== "delivered" && order.status !== "cancelled" && (
+                                  {order.trackingNumber && order.status === "shipped" && (
                                     <Button
                                       size="sm"
-                                      variant="hero"
-                                      className="gap-2 h-8 px-3 text-[10px] font-black"
+                                      variant="outline"
+                                      className="gap-2 h-8 px-3 text-xs font-bold border-primary text-primary hover:bg-primary hover:text-white"
                                       disabled={isProcessing}
                                       onClick={() => handleAndersonExpedite(order)}
                                     >
                                       {isProcessing ? (
-                                        <motion.span animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }} className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full inline-block" />
+                                        <motion.span animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }} className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full inline-block" />
                                       ) : (
                                         <Check className="w-3 h-3" />
                                       )}
