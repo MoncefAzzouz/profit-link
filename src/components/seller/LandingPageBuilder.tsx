@@ -1183,8 +1183,8 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
 
         <div className={`flex flex-col lg:flex-row flex-1 ${showConfig ? "overflow-y-auto" : "overflow-hidden"} lg:overflow-hidden`}>
           {/* Live Preview */}
-          <div className={`flex-1 bg-muted/30 items-center justify-center p-4 lg:p-6 min-h-[600px] lg:min-h-0 order-2 lg:order-1 ${!showConfig ? "flex" : "hidden lg:flex"}`}>
-            <div className={`bg-background shadow-2xl rounded-2xl overflow-hidden transition-all duration-500 origin-center ${previewDevice === "mobile" ? "w-[375px] h-[667px]" : "w-full max-w-4xl h-full"
+          <div className={`flex-1 bg-muted/30 flex items-center justify-center p-4 lg:p-8 min-h-[600px] lg:min-h-0 order-2 lg:order-1 overflow-y-auto scrollbar-hide ${!showConfig ? "flex" : "hidden lg:flex"}`}>
+            <div className={`bg-background shadow-2xl rounded-[2.5rem] border-[8px] border-card overflow-hidden transition-all duration-500 origin-center ${previewDevice === "mobile" ? "w-[375px] h-[750px] max-h-[95%]" : "w-full max-w-5xl h-[95%]"
               }`}>
               {renderPreview(previewDevice === "mobile")}
             </div>
@@ -2002,7 +2002,7 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
         <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
           <DialogContent className="max-w-[420px] p-0 overflow-hidden border-none rounded-3xl" dir="rtl">
             <DialogHeader className="sr-only"><DialogTitle>معاينة</DialogTitle></DialogHeader>
-            <div className="h-[80vh] w-full">
+            <div className="h-[90vh] max-h-[90vh] w-full overflow-y-auto">
               {renderPreview(true)}
             </div>
           </DialogContent>
