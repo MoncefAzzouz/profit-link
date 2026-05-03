@@ -754,14 +754,23 @@ const LandingPageView = () => {
                   <h2 className="text-2xl font-bold border-r-4 border-primary pr-3">فيديو المنتج</h2>
                   <div className="relative aspect-video rounded-2xl overflow-hidden bg-black shadow-2xl">
                     {p.videoUrl ? (
-                      <iframe 
-                        className="w-full h-full"
-                        src={p.videoUrl.replace("watch?v=", "embed/")}
-                        title="Product Video"
-                        frameBorder="0"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowFullScreen
-                      ></iframe>
+                      p.videoUrl.includes("youtube.com") || p.videoUrl.includes("youtu.be") || p.videoUrl.includes("vimeo.com") ? (
+                        <iframe 
+                          className="w-full h-full"
+                          src={p.videoUrl.includes("youtube.com") ? p.videoUrl.replace("watch?v=", "embed/") : p.videoUrl}
+                          title="Product Video"
+                          frameBorder="0"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                        ></iframe>
+                      ) : (
+                        <video 
+                          src={p.videoUrl} 
+                          className="w-full h-full object-cover" 
+                          controls 
+                          playsInline
+                        />
+                      )
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-white/20">
                         <Play className="w-16 h-16" />
@@ -990,7 +999,11 @@ const LandingPageView = () => {
             <div className={`relative aspect-video rounded-2xl overflow-hidden bg-muted flex items-center justify-center max-w-3xl mx-auto ${shadowMap[p.shadowIntensity]}`}
               style={{ borderRadius: br }}>
               {p.videoUrl ? (
-                <iframe src={p.videoUrl} className="w-full h-full" allowFullScreen />
+                p.videoUrl.includes("youtube.com") || p.videoUrl.includes("youtu.be") || p.videoUrl.includes("vimeo.com") ? (
+                  <iframe src={p.videoUrl} className="w-full h-full" allowFullScreen />
+                ) : (
+                  <video src={p.videoUrl} className="w-full h-full object-cover" controls playsInline />
+                )
               ) : (
                 <>
                   <div className="w-20 h-20 rounded-full flex items-center justify-center shadow-2xl cursor-pointer transition-transform hover:scale-110" style={{ backgroundColor: p.primaryColor }}>

@@ -1770,14 +1770,50 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
 
                         {isActive && section.id === "video" && (
                           <div className="p-3 border rounded-xl bg-muted/20 space-y-2 mt-2">
-                            <Label className="text-[10px] font-bold">رابط الفيديو (يوتيوب، فيميو، إلخ)</Label>
-                            <Input
-                              value={editingPage.videoUrl || ""}
-                              onChange={(e) => updatePage("videoUrl", e.target.value)}
-                              placeholder="https://..."
-                              className="h-8 text-xs rounded-xl"
-                              dir="ltr"
-                            />
+                            <Label className="text-[10px] font-bold">فيديو المنتج (تحميل ملف)</Label>
+                            <div
+                              className="relative aspect-video rounded-xl bg-background border-2 border-dashed border-primary/20 flex flex-col items-center justify-center cursor-pointer hover:bg-primary/5 transition-all overflow-hidden group"
+                              onClick={() => {
+                                const input = document.createElement('input');
+                                input.type = 'file';
+                                input.accept = 'video/*';
+                                input.onchange = (e: any) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) {
+                                    const reader = new FileReader();
+                                    reader.onloadend = () => {
+                                      updatePage("videoUrl", reader.result as string);
+                                    };
+                                    reader.readAsDataURL(file);
+                                  }
+                                };
+                                input.click();
+                              }}
+                            >
+                              {editingPage.videoUrl ? (
+                                <video src={editingPage.videoUrl} className="w-full h-full object-cover" />
+                              ) : (
+                                <div className="flex flex-col items-center gap-2">
+                                  <Upload className="w-5 h-5 text-primary/40 group-hover:text-primary transition-colors" />
+                                  <span className="text-[10px] text-muted-foreground">اضغط لرفع فيديو</span>
+                                </div>
+                              )}
+                              {editingPage.videoUrl && (
+                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                  <Upload className="w-6 h-6 text-white" />
+                                </div>
+                              )}
+                            </div>
+                            {editingPage.videoUrl && (
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="w-full h-7 text-[10px] text-destructive hover:bg-destructive/5"
+                                onClick={() => updatePage("videoUrl", "")}
+                              >
+                                حذف الفيديو
+                              </Button>
+                            )}
                           </div>
                         )}
 
