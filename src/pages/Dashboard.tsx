@@ -1341,9 +1341,14 @@ const Dashboard = () => {
                             <span className="text-[10px] text-muted-foreground font-bold">سعر الجملة</span>
                             <span className="text-xs font-black text-orange-600">{(product.affiliatePrice || product.originalPrice || 0).toLocaleString()} دج</span>
                           </div>
-                          <div className="flex justify-between items-center">
-                            <span className="text-[10px] text-muted-foreground font-bold">سعر البيع النهائي</span>
-                            <span className="text-sm font-black text-secondary">{(product.price || 0).toLocaleString()} دج</span>
+                          <div className="space-y-1">
+                            <div className="flex justify-between items-center">
+                              <span className="text-[10px] text-muted-foreground font-bold">سعر البيع النهائي</span>
+                              <span className="text-sm font-black text-secondary">{(product.price || 0).toLocaleString()} دج</span>
+                            </div>
+                            <p className="text-[9px] text-destructive font-bold leading-tight">
+                              * إذا رفعت السعر عن هذا، فإن كل الأرباح الإضافية هي لك ولن تتحصل المنصة على أي فائدة منها
+                            </p>
                           </div>
                           <div className="h-px bg-border/50 my-0.5"></div>
                           <div className="flex justify-between items-center">
@@ -3052,9 +3057,14 @@ const Dashboard = () => {
                 </div>
 
                 <div className="grid grid-cols-2 gap-6">
-                  <div className="bg-muted/50 p-4 rounded-2xl">
-                    <p className="text-xs text-muted-foreground mb-1">سعر البيع النهائي</p>
-                    <p className="text-2xl font-black text-primary">{selectedProduct.price.toLocaleString()} دج</p>
+                  <div className="bg-muted/50 p-4 rounded-2xl flex flex-col justify-between">
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-1">سعر البيع النهائي</p>
+                      <p className="text-2xl font-black text-primary">{selectedProduct.price.toLocaleString()} دج</p>
+                    </div>
+                    <p className="text-[10px] text-destructive font-bold mt-2 leading-tight">
+                      * إذا رفعت السعر عن هذا، فإن كل الأرباح الإضافية هي لك ولن تتحصل المنصة على أي فائدة منها
+                    </p>
                   </div>
                   <div className="bg-secondary/10 p-4 rounded-2xl border border-secondary/20">
                     <p className="text-xs text-muted-foreground mb-1">عمولتك الصافية</p>
