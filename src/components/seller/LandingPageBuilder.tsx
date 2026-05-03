@@ -1398,6 +1398,55 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
                   </div>
 
                   <div className="space-y-4 p-4 bg-muted/20 rounded-2xl border border-dashed border-border">
+                    <Label className="text-xs font-bold opacity-70 block mb-2">صور المعرض (Gallery)</Label>
+                    <div className="grid grid-cols-3 gap-2">
+                      {(editingPage.galleryImages || []).map((img, idx) => (
+                        <div key={idx} className="relative aspect-square rounded-xl bg-background border border-border group overflow-hidden">
+                          <img src={img} alt={`Gallery ${idx}`} className="w-full h-full object-cover" />
+                          <button
+                            className="absolute top-1 right-1 w-6 h-6 bg-black/50 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive"
+                            onClick={() => {
+                              const newGallery = [...editingPage.galleryImages];
+                              newGallery.splice(idx, 1);
+                              updatePage("galleryImages", newGallery);
+                            }}
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        </div>
+                      ))}
+                      <div 
+                        className="relative aspect-square rounded-xl bg-background border-2 border-dashed border-primary/20 flex flex-col items-center justify-center cursor-pointer hover:bg-primary/5 transition-all group"
+                        onClick={() => {
+                          const input = document.createElement('input');
+                          input.type = 'file';
+                          input.accept = 'image/*';
+                          input.multiple = true;
+                          input.onchange = (e: any) => {
+                            const files = Array.from(e.target.files) as File[];
+                            if (files.length > 0) {
+                              const readers = files.map(file => {
+                                return new Promise<string>((resolve) => {
+                                  const reader = new FileReader();
+                                  reader.onloadend = () => resolve(reader.result as string);
+                                  reader.readAsDataURL(file);
+                                });
+                              });
+                              Promise.all(readers).then(results => {
+                                updatePage("galleryImages", [...(editingPage.galleryImages || []), ...results]);
+                              });
+                            }
+                          };
+                          input.click();
+                        }}
+                      >
+                        <Upload className="w-5 h-5 text-primary/40 group-hover:text-primary transition-colors mb-1" />
+                        <span className="text-[9px] font-bold text-muted-foreground text-center">اضف<br/>صورة</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4 p-4 bg-muted/20 rounded-2xl border border-dashed border-border">
                     <Label className="text-xs font-bold opacity-70 block mb-2">شعار المتجر (Logo)</Label>
                     <div 
                       className="relative w-20 h-20 mx-auto rounded-xl bg-background border-2 border-dashed border-primary/20 flex flex-col items-center justify-center cursor-pointer hover:bg-primary/5 transition-all group overflow-hidden"
