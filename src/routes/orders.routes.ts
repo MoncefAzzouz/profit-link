@@ -79,43 +79,10 @@ router.post('/', async (req: Request, res: Response) => {
 
     console.log(`✅ Order created successfully: ${order.id}`);
 
-    // AUTO-PUSH TO ECOTRACK
-    let trackingTicket = null;
-    try {
-      const ecotrackData = {
-        reference: order.id,
-        nom_client: customerName,
-        telephone: customerPhone,
-        adresse: address || "",
-        code_wilaya: parseInt(String(wilaya)), // Force integer
-        commune: commune,
-        montant: Math.round(parseFloat(String(totalAmount))), // Force number
-        produit: String(product.name),
-        quantite: parseInt(String(quantity || 1)),
-        stop_desk: parseInt(String(stopDesk || 0)),
-        type: 1 
-      };
-
-      const ecotrackRes = await EcotrackService.createOrder(ecotrackData);
-      if (ecotrackRes && ecotrackRes.success && ecotrackRes.tracking) {
-        trackingTicket = ecotrackRes.tracking;
-        await prisma.order.update({
-          where: { id: order.id },
-          data: { 
-            trackingNumber: trackingTicket,
-            status: 'SHIPPED'
-          }
-        });
-      }
-    } catch (ecotrackErr) {
-      console.error('⚠️ Auto-push to Ecotrack failed:', ecotrackErr);
-      // We don't fail the whole request because the order is already in our DB
-    }
-
     res.status(201).json({ 
       message: 'Order submitted successfully', 
       data: order,
-      tracking: trackingTicket
+      tracking: null
     });
   } catch (error) {
     console.error('❌ POST /api/orders error:', error);
