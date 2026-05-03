@@ -3045,7 +3045,7 @@ const Dashboard = () => {
                       النص الإعلاني الجاهز
                     </h4>
                     <Button variant="outline" size="sm" className="h-8 gap-1.5 rounded-lg text-xs" onClick={() => {
-                      navigator.clipboard.writeText(selectedProduct.adText);
+                      navigator.clipboard.writeText(selectedProduct.description || '');
                       toast({ title: "تم نسخ النص الإعلاني ✨" });
                     }}>
                       <Copy className="w-3.5 h-3.5" />
@@ -3053,7 +3053,7 @@ const Dashboard = () => {
                     </Button>
                   </div>
                   <div className="bg-muted/50 p-5 rounded-2xl border border-border/50 text-sm leading-relaxed text-muted-foreground italic">
-                    {selectedProduct.adText || "لا يوجد نص إعلاني متوفر حالياً لهذا المنتج."}
+                    {selectedProduct.description || "لا يوجد وصف متوفر حالياً لهذا المنتج."}
                   </div>
                 </div>
 
@@ -3081,13 +3081,6 @@ const Dashboard = () => {
                       صفحة المنتج
                     </Button>
                   </Link>
-                  <Button
-                    variant="outline"
-                    className={`h-14 w-14 rounded-2xl border-2 flex items-center justify-center ${storeProducts.has(selectedProduct.id) ? "border-secondary text-secondary bg-secondary/5" : "border-border"}`}
-                    onClick={() => toggleStoreProduct(selectedProduct.id)}
-                  >
-                    <PackagePlus className="w-7 h-7" />
-                  </Button>
                 </div>
               </div>
             </div>
