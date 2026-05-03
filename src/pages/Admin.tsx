@@ -41,7 +41,7 @@ import LandingPageBuilder from "@/components/seller/LandingPageBuilder";
 import { API_BASE_URL } from '@/config/api';
 
 
-type Tab = "overview" | "affiliates" | "join_requests" | "orders" | "products" | "categories" | "analytics" | "withdrawals" | "settings" | "shipping" | "landing_editor" | "landing_pages" | "levels";
+type Tab = "overview" | "affiliates" | "join_requests" | "orders" | "products" | "categories" | "analytics" | "withdrawals" | "settings" | "shipping" | "landing_editor" | "landing_pages" | "levels" | "affiliate_profile";
 
 const statusConfig = {
   pending: { label: "قيد الانتظار", icon: Clock, color: "text-yellow-600 bg-yellow-100" },
@@ -86,7 +86,8 @@ const adminTabUrlMap: Record<string, Tab> = {
   "تعديل-الواجهة": "landing_editor",
   "صفحات-الهبوط": "landing_pages",
   "الإحصائيات": "analytics",
-  "الإعدادات": "settings"
+  "الإعدادات": "settings",
+  "بروفايل-المسوق": "affiliate_profile"
 };
 
 const adminUrlTabMap: Record<Tab, string> = {
@@ -102,7 +103,8 @@ const adminUrlTabMap: Record<Tab, string> = {
   "landing_editor": "تعديل-الواجهة",
   "landing_pages": "صفحات-الهبوط",
   "analytics": "الإحصائيات",
-  "settings": "الإعدادات"
+  "settings": "الإعدادات",
+  "affiliate_profile": "بروفايل-المسوق"
 };
 
 const Admin = () => {
@@ -158,6 +160,7 @@ const Admin = () => {
   const [dbOrders, setDbOrders] = useState<any[]>([]);
   const [isFetchingOrders, setIsFetchingOrders] = useState(false);
   const [processingOrderId, setProcessingOrderId] = useState<string | null>(null);
+  const [selectedAffiliateId, setSelectedAffiliateId] = useState<string | null>(null);
 
   // Sync activeTab with URL
   useEffect(() => {
@@ -1410,7 +1413,15 @@ const Admin = () => {
                               </td>
                               <td className="p-4">
                                 <div className="flex gap-1">
-                                  <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-primary/10 hover:text-primary">
+                                  <Button 
+                                    variant="ghost" 
+                                    size="icon" 
+                                    className="h-8 w-8 hover:bg-primary/10 hover:text-primary"
+                                    onClick={() => {
+                                      setSelectedAffiliateId(affiliate.id);
+                                      setActiveTab("affiliate_profile");
+                                    }}
+                                  >
                                     <Eye className="w-4 h-4" />
                                   </Button>
                                   <Button
@@ -1435,8 +1446,145 @@ const Admin = () => {
           )}
 
 
+          {/* Affiliate Profile Tab */}
+          {activeTab === "affiliate_profile" && selectedAffiliateId && (() => {
+            const affiliate = affiliates.find(a => a.id === selectedAffiliateId);
+            if (!affiliate) return <p className="text-center p-8 text-muted-foreground">جاري تحميل المسوّق...</p>;
+            const affiliateOrders = dbOrders.filter(o => o.affiliateId === selectedAffiliateId);
+            
+            return (
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <Button variant="outline" size="icon" onClick={() => { setActiveTab("affiliates"); setSelectedAffiliateId(null); }}>
+                      <ChevronLeft className="w-5 h-5" />
+                    </Button>
+                    <div>
+                      <h2 className="text-2xl font-bold">{affiliate.name}</h2>
+                      <p className="text-muted-foreground text-sm">{affiliate.email} • {affiliate.storeName}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="text-left bg-muted p-3 rounded-xl">
+                      <p className="text-xs text-muted-foreground">الطلبيات المؤكدة</p>
+                      <p className="font-bold">{affiliate.confirmedOrders} من {affiliate.totalOrders}</p>
+                    </div>
+                    <div className="text-left bg-primary/10 p-3 rounded-xl text-primary">
+                      <p className="text-xs opacity-80">إجمالي الأرباح</p>
+                      <p className="font-bold">{affiliate.earnings.toLocaleString()} دج</p>
+                    </div>
+                  </div>
+                </div>
 
-          {/* Join Requests Tab */}
+                <div className="dash-card overflow-hidden">
+                  <div className="p-4 border-b border-border bg-muted/30">
+                    <h3 className="font-bold text-lg flex items-center gap-2">
+                      <ShoppingCart className="w-5 h-5 text-primary" />
+                      طلبيات المسوّق
+                    </h3>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead className="bg-slate-100/95 dark:bg-slate-800/60 border-b border-border/50">
+                        <tr>
+                          <th className="text-right p-4 font-semibold text-foreground">المنتج</th>
+                          <th className="text-right p-4 font-semibold text-foreground">الزبون</th>
+                          <th className="text-right p-4 font-semibold text-foreground">عنوان التوصيل</th>
+                          <th className="text-right p-4 font-semibold text-foreground">المبلغ</th>
+                          <th className="text-right p-4 font-semibold text-foreground">الحالة</th>
+                          <th className="text-right p-4 font-semibold text-foreground">إجراءات</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-border">
+                        {isFetchingOrders ? (
+                          <tr>
+                            <td colSpan={6} className="p-8 text-center animate-pulse text-muted-foreground">جاري جلب الطلبيات...</td>
+                          </tr>
+                        ) : affiliateOrders.length === 0 ? (
+                          <tr>
+                            <td colSpan={6} className="p-8 text-center text-muted-foreground">لا توجد طلبيات لهذا المسوّق بعد.</td>
+                          </tr>
+                        ) : (
+                          affiliateOrders.map(order => {
+                            const status = (statusConfig as any)[order.status.toLowerCase()] || statusConfig.pending;
+                            const productName = order.product?.name || order.productName || "منتج غير معروف";
+                            return (
+                              <tr key={order.id} className="hover:bg-muted/50 transition-colors">
+                                <td className="p-4">
+                                  <p className="font-bold text-foreground text-sm">{productName}</p>
+                                  <p className="text-[10px] text-muted-foreground font-mono">{order.id.slice(0, 8)}</p>
+                                </td>
+                                <td className="p-4">
+                                  <p className="font-medium text-foreground text-sm">{order.customerName}</p>
+                                  <p className="text-[10px] text-muted-foreground font-mono">{order.customerPhone}</p>
+                                </td>
+                                <td className="p-4">
+                                  <div className="space-y-1">
+                                    <p className="font-bold text-sm text-foreground">{getWilayaName(order.wilaya)}</p>
+                                    <p className="text-xs text-muted-foreground">{order.commune || "لم يتم تحديد البلدية"}</p>
+                                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold mt-1 ${order.stopDesk === 1 ? "bg-amber-100 text-amber-700" : "bg-blue-100 text-blue-700"}`}>
+                                      {order.stopDesk === 1 ? "مكتب" : "منزل"}
+                                    </span>
+                                  </div>
+                                </td>
+                                <td className="p-4">
+                                  <p className="font-bold text-foreground text-sm">{order.totalAmount.toLocaleString()} دج</p>
+                                  <p className="text-[10px] text-secondary font-bold">العمولة: {order.commissionAmount.toLocaleString()} دج</p>
+                                </td>
+                                <td className="p-4">
+                                  <span className={`inline-flex px-3 py-1 rounded-full text-[10px] font-bold ${status.color}`}>
+                                    {status.label}
+                                  </span>
+                                </td>
+                                <td className="p-4 text-left">
+                                  <div className="flex items-center gap-2">
+                                    <Button size="sm" variant="outline" className="gap-2 text-green-600 border-green-200 hover:bg-green-50" onClick={() => handleWhatsAppConfirm(order)}>
+                                      <MessageSquare className="w-4 h-4" />
+                                    </Button>
+                                    {(order.status === "PENDING" || order.status === "CONFIRMED" || order.status === "pending" || order.status === "confirmed") && !order.trackingNumber && (
+                                      <Button
+                                        size="sm"
+                                        className="gap-2 bg-indigo-600 hover:bg-indigo-700 text-white"
+                                        disabled={processingOrderId === order.id}
+                                        onClick={() => handleAndersonShip(order)}
+                                      >
+                                        {processingOrderId === order.id ? (
+                                          <motion.span animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }} className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full inline-block" />
+                                        ) : (
+                                          <Truck className="w-4 h-4" />
+                                        )}
+                                        {processingOrderId === order.id ? "" : "شحن"}
+                                      </Button>
+                                    )}
+                                    {order.trackingNumber && (order.status === "SHIPPED" || order.status === "shipped") && (
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="gap-2 h-8 px-3 text-xs font-bold border-primary text-primary hover:bg-primary hover:text-white"
+                                        disabled={processingOrderId === order.id}
+                                        onClick={() => handleAndersonExpedite(order)}
+                                      >
+                                        {processingOrderId === order.id ? (
+                                          <motion.span animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }} className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full inline-block" />
+                                        ) : (
+                                          <Check className="w-3 h-3" />
+                                        )}
+                                        {processingOrderId === order.id ? "" : "تأكيد الشحن"}
+                                      </Button>
+                                    )}
+                                  </div>
+                                </td>
+                              </tr>
+                            );
+                          })
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}          {/* Join Requests Tab */}
           {activeTab === "join_requests" && (
             <div className="space-y-6">
               {/* Filters */}
