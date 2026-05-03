@@ -615,11 +615,20 @@ const Admin = () => {
     return "1";
   };
 
-  const getWilayaName = (codeOrName: string) => {
+  const getWilayaName = (codeOrName: any) => {
     if (!codeOrName) return "";
-    const rate = shippingRatesData.find(r => r.code === codeOrName || r.wilaya === codeOrName);
-    if (rate) return rate.wilaya;
-    return codeOrName;
+    
+    if (shippingRatesData && shippingRatesData.length > 0) {
+      const rate = shippingRatesData.find(r => String(r.code) === String(codeOrName) || String(r.wilaya) === String(codeOrName));
+      if (rate) return rate.wilaya;
+    }
+    
+    const normalizedCode = parseInt(String(codeOrName), 10);
+    if (!isNaN(normalizedCode) && normalizedCode >= 1 && normalizedCode <= wilayas.length) {
+      return wilayas[normalizedCode - 1];
+    }
+    
+    return String(codeOrName);
   };
 
   const filteredAffiliates = useMemo(() => {
