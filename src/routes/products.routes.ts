@@ -108,7 +108,7 @@ router.get('/all', authenticateToken, requireAdmin, async (req: AuthRequest, res
 // POST /api/products (Admin: Create new product)
 router.post('/', authenticateToken, requireAdmin, async (req: AuthRequest, res: Response): Promise<any> => {
   try {
-    const { name, description, adText, price, originalPrice, commission, category, images, videoUrl, stock, isVisible, isTrend, isFeatured, features, wholesalePrice, affiliatePrice } = req.body;
+    const { name, description, adText, price, originalPrice, commission, category, images, videoUrl, stock, isVisible, isTrend, isFeatured, features, wholesalePrice, affiliatePrice, hasColors, availableColors, hasSizes, availableSizes, showFreeShipping } = req.body;
     const image: string | undefined = req.body.image;
 
     if (!name || !price || !commission || !category) {
@@ -133,7 +133,12 @@ router.post('/', authenticateToken, requireAdmin, async (req: AuthRequest, res: 
         isFeatured: isFeatured || false,
         features: features || [],
         wholesalePrice: parseFloat(wholesalePrice) || 0,
-        affiliatePrice: parseFloat(affiliatePrice) || 0
+        affiliatePrice: parseFloat(affiliatePrice) || 0,
+        hasColors: hasColors || false,
+        availableColors: availableColors || [],
+        hasSizes: hasSizes || false,
+        availableSizes: availableSizes || [],
+        showFreeShipping: showFreeShipping || false
       }
     });
 
@@ -148,7 +153,7 @@ router.post('/', authenticateToken, requireAdmin, async (req: AuthRequest, res: 
 router.put('/:id', authenticateToken, requireAdmin, async (req: AuthRequest, res: Response): Promise<any> => {
   try {
     const { id } = req.params;
-    const { name, description, adText, price, originalPrice, commission, category, images, videoUrl, stock, isVisible, isTrend, isFeatured, features, status, wholesalePrice, affiliatePrice } = req.body;
+    const { name, description, adText, price, originalPrice, commission, category, images, videoUrl, stock, isVisible, isTrend, isFeatured, features, status, wholesalePrice, affiliatePrice, hasColors, availableColors, hasSizes, availableSizes, showFreeShipping } = req.body;
     const image: string | undefined = req.body.image;
 
     const product = await prisma.product.update({
@@ -172,8 +177,31 @@ router.put('/:id', authenticateToken, requireAdmin, async (req: AuthRequest, res
         ...(status !== undefined && { status }),
         ...(wholesalePrice !== undefined && { wholesalePrice: parseFloat(wholesalePrice) }),
         ...(affiliatePrice !== undefined && { affiliatePrice: parseFloat(affiliatePrice) }),
+        ...(hasColors !== undefined && { hasColors }),
+        ...(availableColors !== undefined && { availableColors }),
+        ...(hasSizes !== undefined && { hasSizes }),
+        ...(availableSizes !== undefined && { availableSizes }),
+        ...(showFreeShipping !== undefined && { showFreeShipping }),
       }
     });
+
+    // Sync colors/sizes to ALL existing landing pages for this product
+    if (availableColors !== undefined || availableSizes !== undefined || showFreeShipping !== undefined) {
+      const landingPages = await prisma.landingPage.findMany({ where: { productId: id as string } });
+      for (const lp of landingPages) {
+        const config = lp.pageConfig as any;
+        const updatedConfig = {
+          ...config,
+          ...(availableColors !== undefined && { availableColors: hasColors ? availableColors : [] }),
+          ...(availableSizes !== undefined && { availableSizes: hasSizes ? availableSizes : [] }),
+          ...(showFreeShipping !== undefined && { showFreeShipping }),
+        };
+        await prisma.landingPage.update({
+          where: { id: lp.id },
+          data: { pageConfig: updatedConfig }
+        });
+      }
+    }
 
     res.json({ message: 'Product updated successfully', data: product });
   } catch (error) {

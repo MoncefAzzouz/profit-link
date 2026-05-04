@@ -90,6 +90,13 @@ model Product {
   isTrend        Boolean  @default(false)
   isFeatured     Boolean  @default(false)
   features       String[] // Product features list
+
+  // Variant options
+  hasColors        Boolean  @default(false)
+  availableColors  String[]
+  hasSizes         Boolean  @default(false)
+  availableSizes   String[]
+  showFreeShipping Boolean  @default(false)
   
   orders         Order[]
   landingPages   LandingPage[]

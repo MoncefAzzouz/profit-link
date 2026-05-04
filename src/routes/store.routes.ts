@@ -535,8 +535,10 @@ router.put('/products', authenticateToken, async (req: AuthRequest, res: Respons
             showReviews: true,
             showCountdown: false,
             showGuarantee: true,
-            showFreeShipping: true,
-            fontFamily: "cairo"
+            showFreeShipping: product.showFreeShipping || false,
+            fontFamily: "cairo",
+            availableColors: product.hasColors ? product.availableColors : [],
+            availableSizes: product.hasSizes ? product.availableSizes : []
           };
 
           await prisma.landingPage.create({
