@@ -212,8 +212,8 @@ const ProductPage = () => {
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-foreground mb-4">المنتج غير موجود</h1>
-          <Link to={(isAdmin || isAffiliate) ? "/products" : (storeName ? `/store/${storeName}` : "/")}>
-            <Button>{(isAdmin || isAffiliate) ? "العودة للمنتجات" : (storeName ? `العودة لمتجر ${storeName}` : "العودة للرئيسية")}</Button>
+          <Link to={storeName ? `/store/${storeName}` : ((isAdmin || isAffiliate) ? "/products" : "/")}>
+            <Button>{storeName ? `العودة لمتجر ${storeName}` : ((isAdmin || isAffiliate) ? "العودة للمنتجات" : "العودة للرئيسية")}</Button>
           </Link>
         </div>
       </div>
@@ -339,9 +339,9 @@ const ProductPage = () => {
             <p className="font-semibold">{product.name}</p>
             <p className="text-secondary font-bold text-xl">{totalPrice.toLocaleString()} دج</p>
           </div>
-          <Link to={(isAdmin || isAffiliate) ? "/products" : (storeName ? `/store/${storeName}` : "/")}>
+          <Link to={storeName ? `/store/${storeName}` : ((isAdmin || isAffiliate) ? "/products" : "/")}>
             <Button variant="outline" className="w-full">
-              {(isAdmin || isAffiliate) ? "العودة للمنتجات" : (storeName ? `العودة لمتجر ${storeName}` : "العودة للرئيسية")}
+              {storeName ? `العودة لمتجر ${storeName}` : ((isAdmin || isAffiliate) ? "العودة للمنتجات" : "العودة للرئيسية")}
             </Button>
           </Link>
         </motion.div>
@@ -354,9 +354,9 @@ const ProductPage = () => {
       {/* Header */}
       <header className="sticky top-0 z-50 bg-card/80 backdrop-blur-xl border-b border-border">
         <div className="container mx-auto px-4 py-4">
-          <Link to={(isAdmin || isAffiliate) ? "/products" : (storeName ? `/store/${storeName}` : "/")} className="flex items-center gap-2 text-primary hover:text-secondary transition-colors">
+          <Link to={storeName ? `/store/${storeName}` : ((isAdmin || isAffiliate) ? "/products" : "/")} className="flex items-center gap-2 text-primary hover:text-secondary transition-colors">
             <ArrowRight className="w-5 h-5" />
-            <span className="font-semibold">{(isAdmin || isAffiliate) ? "العودة للمنتجات" : (storeName ? `العودة لمتجر ${storeName}` : "العودة للرئيسية")}</span>
+            <span className="font-semibold">{storeName ? `العودة لمتجر ${storeName}` : ((isAdmin || isAffiliate) ? "العودة للمنتجات" : "العودة للرئيسية")}</span>
           </Link>
         </div>
       </header>
