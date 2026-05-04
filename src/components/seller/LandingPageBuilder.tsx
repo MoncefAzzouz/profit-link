@@ -270,6 +270,53 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
   const [activeDesignTab, setActiveDesignTab] = useState<"magic" | "content" | "template" | "colors" | "sections">(isAdmin ? "magic" : "content");
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const lastHandledProductId = useRef<string | null>(null);
+  const [isFetchingDetails, setIsFetchingDetails] = useState<string | null>(null);
+
+  const handleEdit = async (page: LandingPageConfig) => {
+    // If it's a local new page (lp- prefix), just set it
+    if (page.id.startsWith("lp-")) {
+      setEditingPage(page);
+      return;
+    }
+
+    // If it's already "complete" (has heroTitle, which only exists in full config), edit it
+    if (page.heroTitle) {
+      setEditingPage(page);
+      return;
+    }
+
+    // Otherwise, fetch full details from backend
+    setIsFetchingDetails(page.id);
+    const token = localStorage.getItem("token");
+    try {
+      const res = await fetch(`${API_BASE_URL}/store/pages/${page.id}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const json = await res.json();
+      if (res.ok && json.data) {
+        const fullPage = {
+          ...json.data.pageConfig,
+          id: json.data.id,
+          productId: json.data.productId,
+          ownerId: json.data.ownerId,
+          ownerName: json.data.owner?.name || json.data.owner?.storeName || "",
+          status: json.data.status,
+          views: json.data.views,
+          conversions: json.data.conversions
+        };
+        // Update the list and set as editing
+        setPages(pages.map(p => p.id === page.id ? fullPage : p));
+        setEditingPage(fullPage);
+      } else {
+        throw new Error("Failed to fetch full data");
+      }
+    } catch (err) {
+      console.error("Failed to fetch full page details", err);
+      toast({ variant: "destructive", title: "فشل تحميل تفاصيل الصفحة" });
+    } finally {
+      setIsFetchingDetails(null);
+    }
+  };
 
   // Fetch pages from backend on mount
   useEffect(() => {
@@ -2195,8 +2242,19 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
                     )}
                   </div>
                   <div className="flex gap-2 pt-2 border-t border-border">
-                    <Button variant="outline" size="sm" onClick={() => setEditingPage(page)} className="flex-1 rounded-xl gap-1.5">
-                      <Paintbrush className="w-3.5 h-3.5" /> تخصيص
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => handleEdit(page)} 
+                      disabled={isFetchingDetails === page.id}
+                      className="flex-1 rounded-xl gap-1.5"
+                    >
+                      {isFetchingDetails === page.id ? (
+                        <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }} className="w-3.5 h-3.5 border-2 border-primary/30 border-t-primary rounded-full" />
+                      ) : (
+                        <Paintbrush className="w-3.5 h-3.5" />
+                      )}
+                      تخصيص
                     </Button>
                     <Button variant="outline" size="sm" onClick={() => viewPage(page)} className="rounded-xl gap-1.5">
                       <ExternalLink className="w-3.5 h-3.5" />
