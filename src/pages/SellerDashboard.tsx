@@ -9,7 +9,7 @@ import {
   Image, DollarSign, Layers, Tag, Save, X, Search,
   MoreVertical, ArrowUpRight, Sparkles, Store, LayoutTemplate, MessageSquare
 } from "lucide-react";
-const LandingPageBuilder = lazy(() => import("@/components/seller/LandingPageBuilder"));
+import LandingPageBuilder from "@/components/seller/LandingPageBuilder";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -639,9 +639,9 @@ const SellerDashboard = () => {
 
           {/* ===== LANDING PAGES ===== */}
           {activeTab === "landing-pages" && (
-            <Suspense fallback={<div className="p-10 text-center"><div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>جاري تحميل باني صفحات الهبوط...</div>}>
+            <div className="space-y-6">
               <LandingPageBuilder />
-            </Suspense>
+            </div>
           )}
 
           {/* ===== ORDERS ===== */}

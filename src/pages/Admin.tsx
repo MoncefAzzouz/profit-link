@@ -37,7 +37,7 @@ import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell
 } from "recharts";
-const LandingPageBuilder = lazy(() => import("@/components/seller/LandingPageBuilder"));
+import LandingPageBuilder from "@/components/seller/LandingPageBuilder";
 import { API_BASE_URL } from '@/config/api';
 
 
@@ -2589,12 +2589,9 @@ const Admin = () => {
             </div>
           )}
 
-          {/* Landing pages Tab */}
           {activeTab === "landing_pages" && (
             <div className="space-y-6">
-              <Suspense fallback={<div className="p-10 text-center"><div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>جاري تحميل باني صفحات الهبوط...</div>}>
-                <LandingPageBuilder initialProductToEdit={productToEditLandingPage} />
-              </Suspense>
+              <LandingPageBuilder initialProductToEdit={productToEditLandingPage} />
             </div>
           )}
 

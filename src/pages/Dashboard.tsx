@@ -48,7 +48,7 @@ import { ShippingRate, shippingRegions } from "@/data/mockShippingData";
 import { mockWithdrawalRequests } from "@/data/mockAdminData";
 import { mockSellerStats, sellerEarningsData } from "@/data/mockSellerData";
 import { StoreSettings, defaultStoreSettings } from "@/data/storeSettings";
-const LandingPageBuilder = lazy(() => import("@/components/seller/LandingPageBuilder"));
+import LandingPageBuilder from "@/components/seller/LandingPageBuilder";
 import {
   BarChart, Bar, PieChart, Pie, Cell, ResponsiveContainer,
   XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip,
