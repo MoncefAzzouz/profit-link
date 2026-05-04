@@ -274,14 +274,40 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
 
   const handleEdit = async (page: LandingPageConfig) => {
     // If it's a local new page (lp- prefix), just set it
-    if (page.id.startsWith("lp-")) {
-      setEditingPage(page);
+    if (page?.id?.startsWith("lp-")) {
+      // Hydrate local page with defaults so no array is ever undefined
+      const hydratedLocal: LandingPageConfig = {
+        ...defaultNewPage(),
+        ...page,
+        sections: Array.isArray(page.sections) ? page.sections : ["hero", "features", "cta"],
+        features: Array.isArray(page.features) ? page.features : [],
+        socialProof: Array.isArray(page.socialProof) ? page.socialProof : [],
+        faqItems: Array.isArray(page.faqItems) ? page.faqItems : [],
+        trustBadges: Array.isArray(page.trustBadges) ? page.trustBadges : [],
+        galleryImages: Array.isArray(page.galleryImages) ? page.galleryImages : [],
+        availableColors: Array.isArray(page.availableColors) ? page.availableColors : [],
+        availableSizes: Array.isArray(page.availableSizes) ? page.availableSizes : [],
+      };
+      setEditingPage(hydratedLocal);
       return;
     }
 
     // If it's already "complete" (has heroTitle, which only exists in full config), edit it
     if (page.heroTitle) {
-      setEditingPage(page);
+      // Still hydrate to ensure all arrays exist
+      const hydratedPage: LandingPageConfig = {
+        ...defaultNewPage(),
+        ...page,
+        sections: Array.isArray(page.sections) ? page.sections : ["hero", "features", "cta"],
+        features: Array.isArray(page.features) ? page.features : [],
+        socialProof: Array.isArray(page.socialProof) ? page.socialProof : [],
+        faqItems: Array.isArray(page.faqItems) ? page.faqItems : [],
+        trustBadges: Array.isArray(page.trustBadges) ? page.trustBadges : [],
+        galleryImages: Array.isArray(page.galleryImages) ? page.galleryImages : [],
+        availableColors: Array.isArray(page.availableColors) ? page.availableColors : [],
+        availableSizes: Array.isArray(page.availableSizes) ? page.availableSizes : [],
+      };
+      setEditingPage(hydratedPage);
       return;
     }
 
@@ -294,15 +320,26 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
       });
       const json = await res.json();
       if (res.ok && json.data) {
-        const fullPage = {
-          ...json.data.pageConfig,
+        const raw = json.data.pageConfig || json.data;
+        // Hydrate: merge server data on top of defaults to guarantee all array fields exist
+        const fullPage: LandingPageConfig = {
+          ...defaultNewPage(),
+          ...raw,
           id: json.data.id,
           productId: json.data.productId,
           ownerId: json.data.ownerId,
           ownerName: json.data.owner?.name || json.data.owner?.storeName || "",
           status: json.data.status,
           views: json.data.views,
-          conversions: json.data.conversions
+          conversions: json.data.conversions,
+          sections: Array.isArray(raw.sections) ? raw.sections : ["hero", "features", "cta"],
+          features: Array.isArray(raw.features) ? raw.features : [],
+          socialProof: Array.isArray(raw.socialProof) ? raw.socialProof : [],
+          faqItems: Array.isArray(raw.faqItems) ? raw.faqItems : [],
+          trustBadges: Array.isArray(raw.trustBadges) ? raw.trustBadges : [],
+          galleryImages: Array.isArray(raw.galleryImages) ? raw.galleryImages : [],
+          availableColors: Array.isArray(raw.availableColors) ? raw.availableColors : [],
+          availableSizes: Array.isArray(raw.availableSizes) ? raw.availableSizes : [],
         };
         // Update the list and set as editing
         setPages(pages.map(p => p.id === page.id ? fullPage : p));
@@ -674,7 +711,7 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
     transition: { delay, duration: 0.5, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] },
   });
 
-  const isDark = (bg: string) => bg.startsWith("#0") || bg.startsWith("#1") || bg.startsWith("#2") || bg === "#020617";
+  const isDark = (bg: string | undefined) => !!(bg?.startsWith("#0") || bg?.startsWith("#1") || bg?.startsWith("#2") || bg === "#020617");
 
   const renderPreview = (isMobile: boolean) => {
     const p = editingPage;
