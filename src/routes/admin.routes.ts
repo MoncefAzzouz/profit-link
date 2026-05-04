@@ -8,15 +8,20 @@ const prisma = new PrismaClient();
 // GET /api/admin/dashboard (Admin overview statistics)
 router.get('/dashboard', authenticateToken, requireAdmin, async (req: AuthRequest, res: Response): Promise<any> => {
   try {
-    // Total revenue (sum of all order amounts)
-    const allOrders = await prisma.order.findMany();
-    const totalRevenue = allOrders.reduce((sum, o) => sum + o.totalAmount, 0);
-    const totalOrders = allOrders.length;
+    // Total revenue (sum of all order amounts) and count
+    const agg = await prisma.order.aggregate({
+      _sum: { totalAmount: true },
+      _count: { id: true }
+    });
+    const totalRevenue = agg._sum.totalAmount || 0;
+    const totalOrders = agg._count.id;
 
     // Confirmation rate
-    const confirmedOrders = allOrders.filter(o =>
-      ['CONFIRMED', 'SHIPPED', 'DELIVERED'].includes(o.status)
-    ).length;
+    const confirmedOrders = await prisma.order.count({
+      where: {
+        status: { in: ['CONFIRMED', 'SHIPPED', 'DELIVERED'] }
+      }
+    });
     const confirmationRate = totalOrders > 0
       ? Math.round((confirmedOrders / totalOrders) * 100)
       : 0;
@@ -33,7 +38,11 @@ router.get('/dashboard', authenticateToken, requireAdmin, async (req: AuthReques
     // Orders this month
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const ordersThisMonth = allOrders.filter(o => new Date(o.createdAt) >= startOfMonth).length;
+    const ordersThisMonth = await prisma.order.count({
+      where: {
+        createdAt: { gte: startOfMonth }
+      }
+    });
 
     res.json({
       totalRevenue,

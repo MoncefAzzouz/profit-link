@@ -188,7 +188,8 @@ router.put('/:id', authenticateToken, requireAdmin, async (req: AuthRequest, res
     // Sync colors/sizes to ALL existing landing pages for this product
     if (availableColors !== undefined || availableSizes !== undefined || showFreeShipping !== undefined) {
       const landingPages = await prisma.landingPage.findMany({ where: { productId: id as string } });
-      for (const lp of landingPages) {
+      
+      const updatePromises = landingPages.map(lp => {
         const config = lp.pageConfig as any;
         const updatedConfig = {
           ...config,
@@ -196,11 +197,13 @@ router.put('/:id', authenticateToken, requireAdmin, async (req: AuthRequest, res
           ...(availableSizes !== undefined && { availableSizes: hasSizes ? availableSizes : [] }),
           ...(showFreeShipping !== undefined && { showFreeShipping }),
         };
-        await prisma.landingPage.update({
+        return prisma.landingPage.update({
           where: { id: lp.id },
           data: { pageConfig: updatedConfig }
         });
-      }
+      });
+      
+      await Promise.all(updatePromises);
     }
 
     res.json({ message: 'Product updated successfully', data: product });
