@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, lazy, Suspense } from "react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { Link, useNavigate, useLocation } from "react-router-dom";
@@ -48,7 +48,7 @@ import { ShippingRate, shippingRegions } from "@/data/mockShippingData";
 import { mockWithdrawalRequests } from "@/data/mockAdminData";
 import { mockSellerStats, sellerEarningsData } from "@/data/mockSellerData";
 import { StoreSettings, defaultStoreSettings } from "@/data/storeSettings";
-import LandingPageBuilder from "@/components/seller/LandingPageBuilder";
+const LandingPageBuilder = lazy(() => import("@/components/seller/LandingPageBuilder"));
 import {
   BarChart, Bar, PieChart, Pie, Cell, ResponsiveContainer,
   XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip,

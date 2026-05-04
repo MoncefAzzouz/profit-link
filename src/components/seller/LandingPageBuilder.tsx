@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useDeferredValue } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Layout, Palette, Type, Image, Eye, EyeOff, Edit, Save, Plus, Trash2,
@@ -260,6 +260,7 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
   const [pages, setPages] = useState<LandingPageConfig[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [editingPage, setEditingPage] = useState<LandingPageConfig | null>(null);
+  const deferredEditingPage = useDeferredValue(editingPage);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewDevice, setPreviewDevice] = useState<"desktop" | "mobile">("mobile");
   const [showConfig, setShowConfig] = useState(true);
@@ -714,7 +715,7 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
   const isDark = (bg: string | undefined) => !!(bg?.startsWith("#0") || bg?.startsWith("#1") || bg?.startsWith("#2") || bg === "#020617");
 
   const renderPreview = (isMobile: boolean) => {
-    const p = editingPage;
+    const p = deferredEditingPage;
     if (!p) return null;
 
     const tc = isDark(p.backgroundColor) ? "#ffffff" : "#0f172a";
@@ -1226,6 +1227,13 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
       </div>
     );
   };
+  const previewContentDesktopOrMobile = useMemo(() => {
+    return renderPreview(previewDevice === "mobile");
+  }, [deferredEditingPage, previewDevice]);
+
+  const previewContentFullscreen = useMemo(() => {
+    return renderPreview(true);
+  }, [deferredEditingPage]);
 
   if (editingPage) {
     return (
@@ -1275,7 +1283,7 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
           <div className={`flex-1 bg-muted/30 flex items-center justify-center p-4 lg:p-8 min-h-[600px] lg:min-h-0 order-2 lg:order-1 overflow-y-auto scrollbar-hide ${!showConfig ? "flex" : "hidden lg:flex"}`}>
             <div className={`bg-background shadow-2xl rounded-[2.5rem] border-[8px] border-card overflow-hidden transition-all duration-500 origin-center ${previewDevice === "mobile" ? "w-[375px] h-[750px] max-h-[95%]" : "w-full max-w-5xl h-[95%]"
               }`}>
-              {renderPreview(previewDevice === "mobile")}
+              {previewContentDesktopOrMobile}
             </div>
           </div>
 
@@ -2183,7 +2191,7 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
           <DialogContent className="max-w-[420px] p-0 overflow-hidden border-none rounded-3xl" dir="rtl">
             <DialogHeader className="sr-only"><DialogTitle>معاينة</DialogTitle></DialogHeader>
             <div className="h-[90vh] max-h-[90vh] w-full overflow-y-auto">
-              {renderPreview(true)}
+              {previewContentFullscreen}
             </div>
           </DialogContent>
         </Dialog>
