@@ -222,12 +222,65 @@ router.get('/pages', authenticateToken, async (req: AuthRequest, res: Response) 
     const ownerId = req.user?.userId;
     if (!ownerId) return res.status(401).json({ error: 'Unauthorized' });
 
-    const pages = await prisma.landingPage.findMany({
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 20;
+    const skip = (page - 1) * limit;
+
+    const [pages, total] = await Promise.all([
+      prisma.landingPage.findMany({
+        where: { ownerId },
+        orderBy: { updatedAt: 'desc' },
+        skip,
+        take: limit,
+        select: {
+          id: true,
+          productId: true,
+          status: true,
+          views: true,
+          conversions: true,
+          createdAt: true,
+          updatedAt: true,
+          // Extract specific metadata from pageConfig if possible, 
+          // or just rely on the frontend to fetch full config when editing.
+          // For now, we return a version WITHOUT the heavy pageConfig
+        }
+      }),
+      prisma.landingPage.count({ where: { ownerId } })
+    ]);
+
+    // We still need some basic info for the list cards. 
+    // Since we can't easily extract from JSON in Prisma findMany, 
+    // we'll fetch a "light" version of the config or include product info.
+    const pagesWithProduct = await prisma.landingPage.findMany({
       where: { ownerId },
-      orderBy: { updatedAt: 'desc' }
+      orderBy: { updatedAt: 'desc' },
+      skip,
+      take: limit,
+      include: {
+        product: { select: { name: true } }
+      }
     });
 
-    res.json({ data: pages });
+    // Strip out the massive pageConfig if requested or if it's too large
+    const summaryPages = pagesWithProduct.map(p => {
+      const config = p.pageConfig as any;
+      return {
+        id: p.id,
+        productId: p.productId,
+        status: p.status,
+        views: p.views,
+        conversions: p.conversions,
+        updatedAt: p.updatedAt,
+        productName: config?.productName || p.product?.name || "بدون اسم",
+        template: config?.template || "modern",
+        sections: config?.sections || [],
+      };
+    });
+
+    res.json({ 
+      data: summaryPages,
+      pagination: { total, page, limit, pages: Math.ceil(total / limit) }
+    });
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch landing pages' });
   }
@@ -245,17 +298,74 @@ router.get('/pages/all', authenticateToken, async (req: AuthRequest, res: Respon
       return res.status(403).json({ error: 'Admin access required' });
     }
 
-    const pages = await prisma.landingPage.findMany({
-      orderBy: { updatedAt: 'desc' },
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 20;
+    const skip = (page - 1) * limit;
+
+    const [pages, total] = await Promise.all([
+      prisma.landingPage.findMany({
+        orderBy: { updatedAt: 'desc' },
+        skip,
+        take: limit,
+        include: {
+          owner: { select: { id: true, name: true, storeName: true } },
+          product: { select: { name: true } }
+        }
+      }),
+      prisma.landingPage.count()
+    ]);
+
+    const summaryPages = pages.map(p => {
+      const config = p.pageConfig as any;
+      return {
+        id: p.id,
+        productId: p.productId,
+        status: p.status,
+        views: p.views,
+        conversions: p.conversions,
+        updatedAt: p.updatedAt,
+        ownerName: p.owner?.name || p.owner?.storeName || "",
+        productName: config?.productName || p.product?.name || "بدون اسم",
+        template: config?.template || "modern",
+        sections: config?.sections || [],
+      };
+    });
+
+    res.json({ 
+      data: summaryPages,
+      pagination: { total, page, limit, pages: Math.ceil(total / limit) }
+    });
+  } catch (error) {
+    console.error('Admin fetch all pages error:', error);
+    res.status(500).json({ error: 'Failed to fetch landing pages' });
+  }
+});
+
+// GET /api/store/pages/:id (Fetch FULL landing page for editing)
+router.get('/pages/:id', authenticateToken, async (req: AuthRequest, res: Response): Promise<any> => {
+  try {
+    const { id } = req.params;
+    const userId = req.user?.userId;
+
+    const page = await prisma.landingPage.findUnique({
+      where: { id },
       include: {
         owner: { select: { id: true, name: true, storeName: true } }
       }
     });
 
-    res.json({ data: pages });
+    if (!page) return res.status(404).json({ error: 'Page not found' });
+
+    // Verify ownership or admin
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    const isAdmin = user?.role.toUpperCase() === 'ADMIN';
+    if (!isAdmin && page.ownerId !== userId) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
+    res.json({ data: page });
   } catch (error) {
-    console.error('Admin fetch all pages error:', error);
-    res.status(500).json({ error: 'Failed to fetch landing pages' });
+    res.status(500).json({ error: 'Failed to fetch page details' });
   }
 });
 
