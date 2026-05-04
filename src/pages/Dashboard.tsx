@@ -383,7 +383,9 @@ const Dashboard = () => {
             amount: o.totalAmount || 0,
             commission: o.commissionAmount || 0,
             date: new Date(o.createdAt).toLocaleDateString('ar-DZ'),
-            trackingNumber: o.trackingNumber
+            trackingNumber: o.trackingNumber,
+            color: o.selectedColor,
+            size: o.selectedSize
           }));
           setOrders(fetchedOrders);
         }
@@ -1763,7 +1765,10 @@ const Dashboard = () => {
                                   )}
                                 </div>
                               </td>
-                              <td className="p-4 text-muted-foreground">{order.customerName}</td>
+                              <td className="p-4">
+                                <p className="font-bold text-foreground">{order.customerName}</p>
+                                <p className="text-xs text-muted-foreground">{order.customerPhone}</p>
+                              </td>
                               <td className="p-4">
                                 <div className="space-y-1">
                                   <p className="font-bold text-sm text-foreground">{getWilayaName(order.wilaya)}</p>
