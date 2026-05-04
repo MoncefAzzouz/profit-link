@@ -41,6 +41,7 @@ const ProductPage = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isAffiliate, setIsAffiliate] = useState(false);
   const [storeName, setStoreName] = useState<string | null>(null);
+  const [storeIdentifier, setStoreIdentifier] = useState<string | null>(null);
 
   useEffect(() => {
     // Fetch product from backend
@@ -86,8 +87,9 @@ const ProductPage = () => {
       fetch(`${API_BASE_URL}/store/public/${affiliateId}`)
         .then(res => res.json())
         .then(json => {
-          if (json.data?.storeInfo?.storeName) {
+          if (json.data?.storeInfo) {
             setStoreName(json.data.storeInfo.storeName);
+            setStoreIdentifier(json.data.storeInfo.identifier || affiliateId);
           }
         })
         .catch(err => console.error("Failed to fetch store info", err));
@@ -339,7 +341,7 @@ const ProductPage = () => {
             <p className="font-semibold">{product.name}</p>
             <p className="text-secondary font-bold text-xl">{totalPrice.toLocaleString()} دج</p>
           </div>
-          <Link to={storeName ? `/store/${storeName}` : ((isAdmin || isAffiliate) ? "/products" : "/")}>
+          <Link to={storeIdentifier ? `/store/${storeIdentifier}` : ((isAdmin || isAffiliate) ? "/products" : "/")}>
             <Button variant="outline" className="w-full">
               {storeName ? `العودة لمتجر ${storeName}` : ((isAdmin || isAffiliate) ? "العودة للمنتجات" : "العودة للرئيسية")}
             </Button>
@@ -354,7 +356,7 @@ const ProductPage = () => {
       {/* Header */}
       <header className="sticky top-0 z-50 bg-card/80 backdrop-blur-xl border-b border-border">
         <div className="container mx-auto px-4 py-4">
-          <Link to={storeName ? `/store/${storeName}` : ((isAdmin || isAffiliate) ? "/products" : "/")} className="flex items-center gap-2 text-primary hover:text-secondary transition-colors">
+          <Link to={storeIdentifier ? `/store/${storeIdentifier}` : ((isAdmin || isAffiliate) ? "/products" : "/")} className="flex items-center gap-2 text-primary hover:text-secondary transition-colors">
             <ArrowRight className="w-5 h-5" />
             <span className="font-semibold">{storeName ? `العودة لمتجر ${storeName}` : ((isAdmin || isAffiliate) ? "العودة للمنتجات" : "العودة للرئيسية")}</span>
           </Link>
