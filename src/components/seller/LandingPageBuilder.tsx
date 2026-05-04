@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useDeferredValue } from "react";
+import { useState, useEffect, useRef, useDeferredValue, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Layout, Palette, Type, Image, Eye, EyeOff, Edit, Save, Plus, Trash2,

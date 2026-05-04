@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, lazy, Suspense } from "react";
+import { useState, useEffect, useMemo, lazy, Suspense, startTransition } from "react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { Link, useNavigate, useLocation } from "react-router-dom";
@@ -197,7 +197,9 @@ const Dashboard = () => {
     const pathParts = location.pathname.split('/');
     const lastPart = decodeURIComponent(pathParts[pathParts.length - 1] || '').replace(/\s+/g, '-');
     if (lastPart && tabUrlMap[lastPart]) {
-      setActiveTab(tabUrlMap[lastPart]);
+      startTransition(() => {
+        setActiveTab(tabUrlMap[lastPart]);
+      });
     }
   }, [location.pathname]);
 
@@ -886,7 +888,9 @@ const Dashboard = () => {
               <button
                 key={item.id}
                 onClick={() => {
-                  setActiveTab(item.id);
+                  startTransition(() => {
+                    setActiveTab(item.id);
+                  });
                   setSidebarOpen(false);
                 }}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeTab === item.id
@@ -1151,7 +1155,7 @@ const Dashboard = () => {
                 <div className="p-6 border-b border-border flex items-center justify-between">
                   <h2 className="text-lg font-bold text-foreground">آخر الطلبيات</h2>
                   <button
-                    onClick={() => setActiveTab("orders")}
+                    onClick={() => startTransition(() => setActiveTab("orders"))}
                     className="text-secondary text-sm font-medium flex items-center gap-1 hover:underline"
                   >
                     عرض الكل
@@ -1492,7 +1496,9 @@ const Dashboard = () => {
                               className="w-full text-xs font-bold gap-2 hover:bg-primary hover:text-white transition-colors"
                               onClick={() => {
                                 setProductToEditLandingPage(product);
-                                setActiveTab("landing_pages");
+                                startTransition(() => {
+                                  setActiveTab("landing_pages");
+                                });
                               }}
                             >
                               <LayoutTemplate className="w-4 h-4" />
@@ -1543,7 +1549,7 @@ const Dashboard = () => {
                     <p className="text-muted-foreground max-w-md mx-auto mb-8">
                       ابدأ بتصفح المنتجات وأضف ما تراه مناسباً لجمهورك لتبدأ في جني الأرباح.
                     </p>
-                    <Button onClick={() => setActiveTab("products")} className="rounded-2xl h-12 px-8 font-bold">
+                    <Button onClick={() => startTransition(() => setActiveTab("products"))} className="rounded-2xl h-12 px-8 font-bold">
                       تصفح المنتجات الآن
                     </Button>
                   </div>
@@ -1615,7 +1621,7 @@ const Dashboard = () => {
                   <p className="text-muted-foreground max-w-md mx-auto mb-8">
                     لم تقم بإضافة أي منتجات للمفضلة بعد. ابحث عن المنتجات التي تعجبك واضغط على أيقونة القلب.
                   </p>
-                  <Button onClick={() => setActiveTab("products")} variant="outline" className="rounded-2xl h-12 px-8 font-bold">
+                  <Button onClick={() => startTransition(() => setActiveTab("products"))} variant="outline" className="rounded-2xl h-12 px-8 font-bold">
                     الذهاب للمتجر
                   </Button>
                 </div>

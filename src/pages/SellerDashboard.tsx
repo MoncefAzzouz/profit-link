@@ -1,4 +1,4 @@
-import { useState, useEffect, lazy, Suspense } from "react";
+import { useState, useEffect, lazy, Suspense, startTransition } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import {
@@ -342,7 +342,7 @@ const SellerDashboard = () => {
               <button
                 key={item.id}
                 type="button"
-                onClick={() => { setActiveTab(item.id); setSidebarOpen(false); }}
+                onClick={() => { startTransition(() => { setActiveTab(item.id); }); setSidebarOpen(false); }}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm transition-all duration-200 ${
                   activeTab === item.id
                     ? "bg-emerald-500/25 text-white shadow-lg shadow-black/20 ring-1 ring-emerald-400/40"
@@ -448,7 +448,7 @@ const SellerDashboard = () => {
               <motion.div {...cardAnim(0.4)} className="dash-card">
                 <div className="p-6 border-b border-border flex items-center justify-between">
                   <h2 className="text-lg font-bold text-foreground">آخر الطلبيات</h2>
-                  <button onClick={() => setActiveTab("orders")} className="text-secondary text-sm font-medium flex items-center gap-1 hover:underline">
+                  <button onClick={() => startTransition(() => setActiveTab("orders"))} className="text-secondary text-sm font-medium flex items-center gap-1 hover:underline">
                     عرض الكل <ChevronLeft className="w-4 h-4" />
                   </button>
                 </div>

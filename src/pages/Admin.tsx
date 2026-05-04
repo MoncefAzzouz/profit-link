@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, lazy, Suspense } from "react";
+import { useState, useEffect, useMemo, lazy, Suspense, startTransition } from "react";
 import { motion } from "framer-motion";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import {
@@ -175,7 +175,9 @@ const Admin = () => {
     const pathParts = location.pathname.split('/');
     const lastPart = decodeURIComponent(pathParts[pathParts.length - 1] || '').replace(/\s+/g, '-');
     if (lastPart && adminTabUrlMap[lastPart]) {
-      setActiveTab(adminTabUrlMap[lastPart]);
+      startTransition(() => {
+        setActiveTab(adminTabUrlMap[lastPart]);
+      });
     }
   }, [location.pathname]);
 
@@ -1032,7 +1034,9 @@ const Admin = () => {
               <button
                 key={item.id}
                 onClick={() => {
-                  setActiveTab(item.id);
+                  startTransition(() => {
+                    setActiveTab(item.id);
+                  });
                   setSidebarOpen(false);
                 }}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm transition-all duration-200 ${activeTab === item.id
@@ -1278,7 +1282,7 @@ const Admin = () => {
               >
                 <div className="p-6 border-b border-border flex items-center justify-between">
                   <h2 className="text-lg font-bold text-foreground">آخر الطلبيات</h2>
-                  <button onClick={() => setActiveTab("orders")} className="text-secondary text-sm font-medium flex items-center gap-1 hover:underline">
+                  <button onClick={() => startTransition(() => setActiveTab("orders"))} className="text-secondary text-sm font-medium flex items-center gap-1 hover:underline">
                     عرض الكل <ChevronLeft className="w-4 h-4" />
                   </button>
                 </div>
@@ -1433,7 +1437,9 @@ const Admin = () => {
                                     className="h-8 w-8 hover:bg-primary/10 hover:text-primary"
                                     onClick={() => {
                                       setSelectedAffiliateId(affiliate.id);
-                                      setActiveTab("affiliate_profile");
+                                      startTransition(() => {
+                                        setActiveTab("affiliate_profile");
+                                      });
                                     }}
                                   >
                                     <Eye className="w-4 h-4" />
@@ -1470,7 +1476,7 @@ const Admin = () => {
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
-                    <Button variant="outline" size="icon" onClick={() => { setActiveTab("affiliates"); setSelectedAffiliateId(null); }}>
+                    <Button variant="outline" size="icon" onClick={() => startTransition(() => { setActiveTab("affiliates"); setSelectedAffiliateId(null); })}>
                       <ChevronLeft className="w-5 h-5" />
                     </Button>
                     <div>
@@ -2088,7 +2094,9 @@ const Admin = () => {
                       <div className="flex gap-2 mt-6">
                         <Button variant="default" className="flex-1 gap-2 rounded-xl h-10 font-bold text-[10px] bg-secondary hover:bg-secondary/90 text-white" onClick={() => {
                           setProductToEditLandingPage(product);
-                          setActiveTab("landing_pages");
+                          startTransition(() => {
+                            setActiveTab("landing_pages");
+                          });
                         }}>
                           <LayoutTemplate className="w-3.5 h-3.5" />
                           صفحة الهبوط
