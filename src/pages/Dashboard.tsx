@@ -384,8 +384,8 @@ const Dashboard = () => {
             commission: o.commissionAmount || 0,
             date: new Date(o.createdAt).toLocaleDateString('ar-DZ'),
             trackingNumber: o.trackingNumber,
-            color: o.selectedColor,
-            size: o.selectedSize
+            selectedColor: o.selectedColor,
+            selectedSize: o.selectedSize
           }));
           setOrders(fetchedOrders);
         }
