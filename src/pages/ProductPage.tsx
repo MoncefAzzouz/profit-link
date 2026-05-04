@@ -40,6 +40,7 @@ const ProductPage = () => {
 
   const [isAdmin, setIsAdmin] = useState(false);
   const [isAffiliate, setIsAffiliate] = useState(false);
+  const [storeName, setStoreName] = useState<string | null>(null);
 
   useEffect(() => {
     // Fetch product from backend
@@ -80,7 +81,18 @@ const ProductPage = () => {
         console.error("Error parsing user data", e);
       }
     }
-  }, [productId]);
+
+    if (affiliateId) {
+      fetch(`${API_BASE_URL}/store/public/${affiliateId}`)
+        .then(res => res.json())
+        .then(json => {
+          if (json.data?.storeInfo?.storeName) {
+            setStoreName(json.data.storeInfo.storeName);
+          }
+        })
+        .catch(err => console.error("Failed to fetch store info", err));
+    }
+  }, [productId, affiliateId]);
 
   // Fetch communes when wilaya changes
   useEffect(() => {
@@ -200,8 +212,8 @@ const ProductPage = () => {
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-foreground mb-4">المنتج غير موجود</h1>
-          <Link to={(isAdmin || isAffiliate) ? "/products" : "/"}>
-            <Button>{(isAdmin || isAffiliate) ? "العودة للمنتجات" : "العودة للرئيسية"}</Button>
+          <Link to={(isAdmin || isAffiliate) ? "/products" : (storeName ? `/store/${storeName}` : "/")}>
+            <Button>{(isAdmin || isAffiliate) ? "العودة للمنتجات" : (storeName ? `العودة لمتجر ${storeName}` : "العودة للرئيسية")}</Button>
           </Link>
         </div>
       </div>
@@ -327,9 +339,9 @@ const ProductPage = () => {
             <p className="font-semibold">{product.name}</p>
             <p className="text-secondary font-bold text-xl">{totalPrice.toLocaleString()} دج</p>
           </div>
-          <Link to={(isAdmin || isAffiliate) ? "/products" : "/"}>
+          <Link to={(isAdmin || isAffiliate) ? "/products" : (storeName ? `/store/${storeName}` : "/")}>
             <Button variant="outline" className="w-full">
-              {(isAdmin || isAffiliate) ? "العودة للمنتجات" : "العودة للرئيسية"}
+              {(isAdmin || isAffiliate) ? "العودة للمنتجات" : (storeName ? `العودة لمتجر ${storeName}` : "العودة للرئيسية")}
             </Button>
           </Link>
         </motion.div>
@@ -342,9 +354,9 @@ const ProductPage = () => {
       {/* Header */}
       <header className="sticky top-0 z-50 bg-card/80 backdrop-blur-xl border-b border-border">
         <div className="container mx-auto px-4 py-4">
-          <Link to={(isAdmin || isAffiliate) ? "/products" : "/"} className="flex items-center gap-2 text-primary hover:text-secondary transition-colors">
+          <Link to={(isAdmin || isAffiliate) ? "/products" : (storeName ? `/store/${storeName}` : "/")} className="flex items-center gap-2 text-primary hover:text-secondary transition-colors">
             <ArrowRight className="w-5 h-5" />
-            <span className="font-semibold">{(isAdmin || isAffiliate) ? "العودة للمنتجات" : "العودة للرئيسية"}</span>
+            <span className="font-semibold">{(isAdmin || isAffiliate) ? "العودة للمنتجات" : (storeName ? `العودة لمتجر ${storeName}` : "العودة للرئيسية")}</span>
           </Link>
         </div>
       </header>
