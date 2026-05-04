@@ -349,7 +349,7 @@ router.get('/pages/:id', authenticateToken, async (req: AuthRequest, res: Respon
     const userId = req.user?.userId;
 
     const page = await prisma.landingPage.findUnique({
-      where: { id },
+      where: { id: String(id) },
       include: {
         owner: { select: { id: true, name: true, storeName: true } }
       }
