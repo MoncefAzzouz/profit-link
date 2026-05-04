@@ -184,11 +184,10 @@ const Dashboard = () => {
   const [productToEditLandingPage, setProductToEditLandingPage] = useState<any>(null);
   const [dbCategories, setDbCategories] = useState<any[]>([]);
 
-  // Sync activeTab with URL
   useEffect(() => {
     const arabicLabel = urlTabMap[activeTab];
     if (arabicLabel) {
-      window.history.replaceState(null, "", `/dashboard/${arabicLabel}`);
+      navigate(`/dashboard/${arabicLabel}`, { replace: true });
     }
   }, [activeTab]);
 

@@ -304,7 +304,7 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
   }, []);
 
   const handleEdit = async (page: any) => {
-    if (page.id.startsWith("lp-")) {
+    if (page?.id?.startsWith("lp-")) {
       setEditingPage(page);
       return;
     }
@@ -345,8 +345,7 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
     }
 
     try {
-      // If the ID starts with "lp-", it's a temporary local ID, so we use POST
-      const isNew = pageToSave.id.startsWith("lp-");
+      const isNew = pageToSave?.id?.startsWith("lp-");
       const url = isNew
         ? `${API_BASE_URL}/store/page`
         : `${API_BASE_URL}/store/page/${pageToSave.id}`;
@@ -388,48 +387,53 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
   };
 
   useEffect(() => {
-    if (initialProductToEdit && !isLoading && lastHandledProductId.current !== initialProductToEdit.id) {
-      lastHandledProductId.current = initialProductToEdit.id;
-      // Check if we already have a landing page for this product
-      const existingPage = (pages || []).find((p) => p.productId === initialProductToEdit.id);
-      if (existingPage) {
-        handleEdit(existingPage);
-        setActiveDesignTab("content");
-      } else {
-        // Create a new landing page specifically for this product
-        const newPage: LandingPageConfig = {
-          ...defaultNewPage(),
-          id: `lp-${Date.now()}`,
-          productId: initialProductToEdit.id,
-          productName: initialProductToEdit.name,
-          template: "original", // Default to the original/classic design as requested
-          heroTitle: initialProductToEdit.name,
-          heroSubtitle: initialProductToEdit.description || "أفضل جودة بأفضل سعر في السوق الجزائري",
-          price: initialProductToEdit.price,
-          originalPrice: initialProductToEdit.originalPrice,
-          category: initialProductToEdit.category,
-          heroImage: initialProductToEdit.image,
-          galleryImages: initialProductToEdit.images && initialProductToEdit.images.length > 0
-            ? initialProductToEdit.images
-            : (initialProductToEdit.image ? [initialProductToEdit.image] : []),
-          features: initialProductToEdit.features && initialProductToEdit.features.length > 0
-            ? initialProductToEdit.features
-            : ["جودة عالية مضمونة", "توصيل سريع لكل الولايات", "الدفع عند الاستلام", "ضمان الاستبدال والاسترجاع"],
-          videoUrl: initialProductToEdit.videoUrl || "",
-          availableColors: initialProductToEdit.hasColors ? (initialProductToEdit.availableColors || []) : [],
-          availableSizes: initialProductToEdit.hasSizes ? (initialProductToEdit.availableSizes || []) : [],
-          showFreeShipping: initialProductToEdit.showFreeShipping || false,
-          sections: ["hero", "urgency-bar", "features", "gallery", "social-proof", "reviews", "shipping", "cta"],
-          status: "draft"
-        };
+    const handleInitialProduct = async () => {
+      if (initialProductToEdit && !isLoading && lastHandledProductId.current !== initialProductToEdit.id) {
+        lastHandledProductId.current = initialProductToEdit.id;
+        
+        // Check if we already have a landing page for this product in the fetched list
+        const existingPage = (pages || []).find((p) => p.productId === initialProductToEdit.id);
+        
+        if (existingPage) {
+          // If it exists, use handleEdit to fetch full details from server
+          await handleEdit(existingPage);
+          setActiveDesignTab("content");
+        } else {
+          // Create a new landing page specifically for this product
+          const newPage: LandingPageConfig = {
+            ...defaultNewPage(),
+            id: `lp-${Date.now()}`,
+            productId: initialProductToEdit.id,
+            productName: initialProductToEdit.name,
+            template: "original",
+            heroTitle: initialProductToEdit.name,
+            heroSubtitle: initialProductToEdit.description || "أفضل جودة بأفضل سعر في السوق الجزائري",
+            price: initialProductToEdit.price,
+            originalPrice: initialProductToEdit.originalPrice,
+            category: initialProductToEdit.category,
+            heroImage: initialProductToEdit.image,
+            galleryImages: initialProductToEdit.images && initialProductToEdit.images.length > 0
+              ? initialProductToEdit.images
+              : (initialProductToEdit.image ? [initialProductToEdit.image] : []),
+            features: initialProductToEdit.features && initialProductToEdit.features.length > 0
+              ? initialProductToEdit.features
+              : ["جودة عالية مضمونة", "توصيل سريع لكل الولايات", "الدفع عند الاستلام", "ضمان الاستبدال والاسترجاع"],
+            videoUrl: initialProductToEdit.videoUrl || "",
+            availableColors: initialProductToEdit.hasColors ? (initialProductToEdit.availableColors || []) : [],
+            availableSizes: initialProductToEdit.hasSizes ? (initialProductToEdit.availableSizes || []) : [],
+            showFreeShipping: initialProductToEdit.showFreeShipping || false,
+            sections: ["hero", "urgency-bar", "features", "gallery", "social-proof", "reviews", "shipping", "cta"],
+            status: "draft"
+          };
 
-
-        const newPages = [newPage, ...pages];
-        savePagesLocally(newPages);
-        setEditingPage(newPage);
-        setActiveDesignTab("content");
+          setEditingPage(newPage);
+          setPages(prev => [newPage, ...prev]);
+          setActiveDesignTab("content");
+        }
       }
-    }
+    };
+
+    handleInitialProduct();
   }, [initialProductToEdit, isLoading, pages]);
 
   const handleSimulatedAiGeneration = async () => {
@@ -489,7 +493,7 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
 
       setEditingPage(aiGeneratedPage);
       const newPages = pages.map(p => p.id === aiGeneratedPage.id ? aiGeneratedPage : p);
-      savePagesLocally(newPages);
+
 
       setIsAiGenerating(false);
       setAiProgressStep(0);
@@ -507,7 +511,7 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
 
   const createNewPage = () => {
     const newPage = defaultNewPage();
-    savePagesLocally([newPage, ...pages]);
+
     setEditingPage(newPage);
     toast({ title: "🎨 تم الإنشاء", description: "صفحة هبوط جديدة جاهزة للتخصيص" });
   };
@@ -517,7 +521,7 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
     const updated = { ...editingPage, [field]: value };
     setEditingPage(updated);
     const newPages = pages.map(p => p.id === updated.id ? updated : p);
-    savePagesLocally(newPages);
+
   };
 
   const applyTemplate = (tmplId: string) => {
@@ -558,7 +562,7 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
     const updated = { ...editingPage, ...updates };
     setEditingPage(updated as LandingPageConfig);
     const newPages = pages.map(p => p.id === updated.id ? (updated as LandingPageConfig) : p);
-    savePagesLocally(newPages);
+
   };
 
   const toggleSection = (sectionId: string) => {
@@ -572,8 +576,9 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
   };
 
   const deletePage = async (id: string) => {
+    if (!id) return;
     const token = localStorage.getItem("token");
-    if (id.startsWith("lp-")) {
+    if (id?.startsWith("lp-")) {
       // Only local, just filter it
       setPages(pages.filter(p => p.id !== id));
       if (editingPage?.id === id) setEditingPage(null);
@@ -597,6 +602,7 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
   };
 
   const getProductUrl = (page: LandingPageConfig) => {
+    if (!page?.id) return "";
     const userStr = localStorage.getItem("affiliate_user");
     const user = userStr ? JSON.parse(userStr) : null;
     if (page.productId && user?.id) {
@@ -625,7 +631,7 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
     };
     const newPages = pages.map(p => p.id === updated.id ? updated : p);
     setPages(newPages);
-    savePagesLocally(newPages);
+
     if (editingPage?.id === updated.id) setEditingPage(updated);
     await saveToDatabase(updated);
   };
@@ -636,7 +642,7 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
     transition: { delay, duration: 0.5, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] },
   });
 
-  const isDark = (bg: string) => bg.startsWith("#0") || bg.startsWith("#1") || bg.startsWith("#2") || bg === "#020617";
+  const isDark = (bg: string) => bg?.startsWith("#0") || bg?.startsWith("#1") || bg?.startsWith("#2") || bg === "#020617";
 
   const renderPreview = (isMobile: boolean) => {
     const p = editingPage;
