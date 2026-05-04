@@ -285,16 +285,10 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
         });
         const json = await response.json();
         if (response.ok && json.data) {
-          // Map backend landing pages to frontend config structure
+          // Backend now returns a summary (no heavy pageConfig) for the list
           const mappedPages = json.data.map((p: any) => ({
-            ...p.pageConfig,
-            id: p.id,
-            productId: p.productId,
-            ownerId: p.ownerId,
-            ownerName: p.owner?.name || p.owner?.storeName || "",
-            status: p.status,
-            views: p.views,
-            conversions: p.conversions
+            ...p, // Contains id, productName, template, status, views, conversions, sections, ownerName
+            // Note: pageConfig is missing here, will be fetched when editing
           }));
           setPages(mappedPages);
         }
