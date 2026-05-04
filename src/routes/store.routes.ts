@@ -111,7 +111,8 @@ router.get('/public/:storeName', async (req: Request, res: Response): Promise<an
       data: {
         storeInfo: {
           id: affiliate.id,
-          storeName: affiliate.storeSettings?.storeName || affiliate.storeName,
+          identifier: affiliate.storeName, // The unique slug (e.g. "dsad")
+          storeName: affiliate.storeSettings?.storeName || affiliate.storeName, // Display Name
           storeLogo: affiliate.storeSettings?.logoUrl,
           primaryColor: affiliate.storeSettings?.primaryColor || '#000000',
           fontFamily: affiliate.storeSettings?.fontFamily || 'Cairo',
