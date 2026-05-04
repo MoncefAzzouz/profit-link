@@ -372,9 +372,8 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
       lastHandledProductId.current = initialProductToEdit.id;
       // Check if we already have a landing page for this product
       const existingPage = pages.find((p) => p.productId === initialProductToEdit.id);
-
       if (existingPage) {
-        // Sync with the latest product data (in case admin updated prices or images)
+        // Sync with the latest product data (in case admin updated prices, images, or variants)
         const updatedPage = {
           ...existingPage,
           productName: initialProductToEdit.name || existingPage.productName,
@@ -383,7 +382,11 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
           heroImage: initialProductToEdit.image || existingPage.heroImage,
           galleryImages: initialProductToEdit.images && initialProductToEdit.images.length > 0 
             ? initialProductToEdit.images 
-            : (initialProductToEdit.image ? [initialProductToEdit.image] : existingPage.galleryImages)
+            : (initialProductToEdit.image ? [initialProductToEdit.image] : existingPage.galleryImages),
+          // Sync variants
+          availableColors: initialProductToEdit.hasColors ? (initialProductToEdit.availableColors || []) : [],
+          availableSizes: initialProductToEdit.hasSizes ? (initialProductToEdit.availableSizes || []) : [],
+          showFreeShipping: initialProductToEdit.showFreeShipping !== undefined ? initialProductToEdit.showFreeShipping : existingPage.showFreeShipping
         };
         setEditingPage(updatedPage);
         setActiveDesignTab("content");
