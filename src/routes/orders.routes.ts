@@ -12,7 +12,7 @@ router.post('/', async (req: Request, res: Response) => {
     const { 
       productId, affiliateId, customerName, customerPhone, 
       wilaya, address, quantity, totalAmount, commissionAmount,
-      commune, shippingFee, stopDesk
+      commune, shippingFee, stopDesk, selectedColor, selectedSize
     } = req.body;
 
     const missing = [];
@@ -73,7 +73,9 @@ router.post('/', async (req: Request, res: Response) => {
         commissionAmount: parseFloat(String(commissionAmount || product.commission || 0)),
         commune: commune || "",
         shippingFee: parseFloat(String(shippingFee || 0)),
-        stopDesk: parseInt(String(stopDesk || 0))
+        stopDesk: parseInt(String(stopDesk || 0)),
+        selectedColor: selectedColor || null,
+        selectedSize: selectedSize || null
       }
     });
 

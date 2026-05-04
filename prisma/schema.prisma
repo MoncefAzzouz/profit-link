@@ -128,6 +128,10 @@ model Order {
   shippingFee      Float       @default(0.0)
   stopDesk         Int         @default(0) // 0 for home, 1 for desk
   
+  // Variants selected by customer
+  selectedColor    String?
+  selectedSize     String?
+  
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 }
