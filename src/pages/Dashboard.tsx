@@ -1744,7 +1744,25 @@ const Dashboard = () => {
                           const isProcessing = processingOrderId === order.id;
                           return (
                             <tr key={order.id} className="hover:bg-muted/50 transition-colors">
-                              <td className="p-4 font-medium text-foreground">{order.productName}</td>
+                              <td className="p-4 font-medium text-foreground">
+                                <div className="space-y-1">
+                                  <p className="font-bold">{order.productName}</p>
+                                  {(order.color || order.size) && (
+                                    <div className="flex flex-wrap gap-1 mt-1">
+                                      {order.color && (
+                                        <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-primary/10 text-primary border border-primary/20">
+                                          اللون: {order.color}
+                                        </span>
+                                      )}
+                                      {order.size && (
+                                        <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-secondary/10 text-secondary border border-secondary/20">
+                                          المقاس: {order.size}
+                                        </span>
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
+                              </td>
                               <td className="p-4 text-muted-foreground">{order.customerName}</td>
                               <td className="p-4">
                                 <div className="space-y-1">

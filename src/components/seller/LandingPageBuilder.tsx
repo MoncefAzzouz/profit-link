@@ -24,6 +24,7 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { API_BASE_URL } from '@/config/api';
 
@@ -1610,6 +1611,97 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
                       onClick={() => updatePage("faqItems", [...editingPage.faqItems, { q: "سؤال جديد؟", a: "الإجابة هنا" }])}>
                       <Plus className="w-3 h-3" /> إضافة سؤال
                     </Button>
+                  </div>
+
+                  {/* Variants (Colors/Sizes) */}
+                  <div className="space-y-4 pt-4 border-t border-border">
+                    <h4 className="text-xs font-black flex items-center gap-2">
+                      <Palette className="w-4 h-4 text-primary" /> خيارات المنتج (الألوان والمقاسات)
+                    </h4>
+                    
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-bold opacity-60">الألوان المتاحة</Label>
+                      <div className="flex gap-2">
+                        <Input 
+                          placeholder="أضف لون..." 
+                          className="rounded-xl h-9 text-xs" 
+                          id="new-color-input"
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              const val = e.currentTarget.value.trim();
+                              if (val) {
+                                updatePage("availableColors", [...(editingPage.availableColors || []), val]);
+                                e.currentTarget.value = "";
+                              }
+                            }
+                          }}
+                        />
+                        <Button 
+                          size="sm" 
+                          variant="secondary" 
+                          className="h-9 px-3 rounded-xl text-[10px] font-bold"
+                          onClick={() => {
+                            const input = document.getElementById("new-color-input") as HTMLInputElement;
+                            if (input?.value.trim()) {
+                              updatePage("availableColors", [...(editingPage.availableColors || []), input.value.trim()]);
+                              input.value = "";
+                            }
+                          }}
+                        >
+                          إضافة
+                        </Button>
+                      </div>
+                      <div className="flex flex-wrap gap-1.5 mt-2">
+                        {(editingPage.availableColors || []).map((color, idx) => (
+                          <Badge key={idx} variant="secondary" className="gap-1 px-2 py-1 rounded-lg text-[10px] font-bold">
+                            {color}
+                            <X className="w-3 h-3 cursor-pointer" onClick={() => updatePage("availableColors", editingPage.availableColors!.filter((_, i) => i !== idx))} />
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-bold opacity-60">المقاسات المتاحة</Label>
+                      <div className="flex gap-2">
+                        <Input 
+                          placeholder="أضف مقاس..." 
+                          className="rounded-xl h-9 text-xs" 
+                          id="new-size-input"
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              const val = e.currentTarget.value.trim();
+                              if (val) {
+                                updatePage("availableSizes", [...(editingPage.availableSizes || []), val]);
+                                e.currentTarget.value = "";
+                              }
+                            }
+                          }}
+                        />
+                        <Button 
+                          size="sm" 
+                          variant="secondary" 
+                          className="h-9 px-3 rounded-xl text-[10px] font-bold"
+                          onClick={() => {
+                            const input = document.getElementById("new-size-input") as HTMLInputElement;
+                            if (input?.value.trim()) {
+                              updatePage("availableSizes", [...(editingPage.availableSizes || []), input.value.trim()]);
+                              input.value = "";
+                            }
+                          }}
+                        >
+                          إضافة
+                        </Button>
+                      </div>
+                      <div className="flex flex-wrap gap-1.5 mt-2">
+                        {(editingPage.availableSizes || []).map((size, idx) => (
+                          <Badge key={idx} variant="secondary" className="gap-1 px-2 py-1 rounded-lg text-[10px] font-bold">
+                            {size}
+                            <X className="w-3 h-3 cursor-pointer" onClick={() => updatePage("availableSizes", editingPage.availableSizes!.filter((_, i) => i !== idx))} />
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}

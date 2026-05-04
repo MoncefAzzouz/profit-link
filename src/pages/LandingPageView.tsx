@@ -124,7 +124,9 @@ const LandingPageView = () => {
             socialProof: found.socialProof || [],
             faqItems: found.faqItems || [],
             trustBadges: found.trustBadges || [],
-            beforeAfterImages: found.beforeAfterImages || { before: "", after: "" }
+            beforeAfterImages: found.beforeAfterImages || { before: "", after: "" },
+            availableColors: found.availableColors || [],
+            availableSizes: found.availableSizes || []
           };
           setPage(safeFound);
 
