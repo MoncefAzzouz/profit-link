@@ -276,7 +276,9 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
       if (!token) return;
 
       try {
-        const response = await fetch(`${API_BASE_URL}/store/pages`, {
+        // Admin sees ALL pages, affiliates see only their own
+        const endpoint = isAdmin ? `${API_BASE_URL}/store/pages/all` : `${API_BASE_URL}/store/pages`;
+        const response = await fetch(endpoint, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const json = await response.json();
@@ -286,6 +288,8 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
             ...p.pageConfig,
             id: p.id,
             productId: p.productId,
+            ownerId: p.ownerId,
+            ownerName: p.owner?.name || p.owner?.storeName || "",
             status: p.status,
             views: p.views,
             conversions: p.conversions
@@ -2104,6 +2108,19 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
     );
   }
 
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-32 space-y-4">
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+          className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full"
+        />
+        <p className="text-muted-foreground font-bold animate-pulse">جاري تحميل صفحات الهبوط...</p>
+      </div>
+    );
+  }
+
   // ==================== LIST VIEW ====================
   return (
     <div className="space-y-6">
@@ -2145,7 +2162,12 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
                   <div className="absolute inset-0 bg-black/10" />
                   <div className="relative z-10">
                     <p className="text-white font-bold text-lg">{page.productName}</p>
-                    <p className="text-white/80 text-sm">{tmpl?.name || "قالب"} • {tmpl?.icon}</p>
+                    <p className="text-white/80 text-sm">
+                      {tmpl?.name || "قالب"} • {tmpl?.icon}
+                      {isAdmin && (page as any).ownerName && (
+                        <span className="mr-2 text-white/60">• {(page as any).ownerName}</span>
+                      )}
+                    </p>
                   </div>
                   <div className="absolute top-3 left-3 flex gap-1.5">
                     {tmpl?.tag && (
