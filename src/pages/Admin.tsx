@@ -428,6 +428,9 @@ const Admin = () => {
 
 
 
+  const [newColorInput, setNewColorInput] = useState("");
+  const [newSizeInput, setNewSizeInput] = useState("");
+
   // Category Management States
   const [dbCategories, setDbCategories] = useState<any[]>([]);
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
@@ -3002,22 +3005,40 @@ const Admin = () => {
                     </Label>
                     <div className="flex gap-2">
                       <Input 
-                        placeholder="أضف لون (اضغط Enter)" 
+                        placeholder="أضف لون" 
+                        value={newColorInput}
+                        onChange={(e) => setNewColorInput(e.target.value)}
                         className="h-11 rounded-xl bg-white border-primary/10 px-4"
                         onKeyDown={(e) => {
                           if (e.key === 'Enter') {
                             e.preventDefault();
-                            const val = e.currentTarget.value.trim();
+                            const val = newColorInput.trim();
                             if (val && !productFormData.availableColors.includes(val)) {
                               setProductFormData({
                                 ...productFormData,
                                 availableColors: [...productFormData.availableColors, val]
                               });
-                              e.currentTarget.value = '';
+                              setNewColorInput("");
                             }
                           }
                         }}
                       />
+                      <Button 
+                        type="button"
+                        onClick={() => {
+                          const val = newColorInput.trim();
+                          if (val && !productFormData.availableColors.includes(val)) {
+                            setProductFormData({
+                              ...productFormData,
+                              availableColors: [...productFormData.availableColors, val]
+                            });
+                            setNewColorInput("");
+                          }
+                        }}
+                        className="h-11 rounded-xl px-4 bg-primary hover:bg-primary/90"
+                      >
+                        إضافة
+                      </Button>
                     </div>
                     <div className="flex flex-wrap gap-2">
                       {productFormData.availableColors.map((color: string) => (
@@ -3062,23 +3083,43 @@ const Admin = () => {
 
                     {productFormData.sizeType === "custom" ? (
                       <div className="space-y-3">
-                        <Input 
-                          placeholder="أضف مقاس مخصص (اضغط Enter)" 
-                          className="h-11 rounded-xl bg-white border-secondary/10 px-4"
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                              e.preventDefault();
-                              const val = e.currentTarget.value.trim();
+                        <div className="flex gap-2">
+                          <Input 
+                            placeholder="أضف مقاس مخصص" 
+                            value={newSizeInput}
+                            onChange={(e) => setNewSizeInput(e.target.value)}
+                            className="h-11 rounded-xl bg-white border-secondary/10 px-4"
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault();
+                                const val = newSizeInput.trim();
+                                if (val && !productFormData.availableSizes.includes(val)) {
+                                  setProductFormData({
+                                    ...productFormData,
+                                    availableSizes: [...productFormData.availableSizes, val]
+                                  });
+                                  setNewSizeInput("");
+                                }
+                              }
+                            }}
+                          />
+                          <Button 
+                            type="button"
+                            onClick={() => {
+                              const val = newSizeInput.trim();
                               if (val && !productFormData.availableSizes.includes(val)) {
                                 setProductFormData({
                                   ...productFormData,
                                   availableSizes: [...productFormData.availableSizes, val]
                                 });
-                                e.currentTarget.value = '';
+                                setNewSizeInput("");
                               }
-                            }
-                          }}
-                        />
+                            }}
+                            className="h-11 rounded-xl px-4 bg-secondary hover:bg-secondary/90"
+                          >
+                            إضافة
+                          </Button>
+                        </div>
                         <div className="flex flex-wrap gap-2">
                           {productFormData.availableSizes.map((size: string) => (
                             <Badge key={size} variant="secondary" className="gap-2 px-4 py-2 rounded-xl bg-white border-secondary/10 text-secondary font-bold shadow-sm">
