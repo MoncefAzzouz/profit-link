@@ -242,7 +242,7 @@ const LandingPageBuilder = () => {
                 <Button variant="ghost" size="icon" className="h-6 w-6 rounded-md"><Plus className="w-3 h-3" /></Button>
               </div>
               <div className="space-y-2">
-                {activePage.sections.map((s, idx) => {
+                {(activePage?.sections || []).map((s, idx) => {
                   const section = availableSections.find(a => a.id === s);
                   return (
                     <div key={idx} className="flex items-center gap-3 p-3 bg-muted/50 rounded-xl border border-border/50 group hover:border-primary/30 transition-all cursor-move">
@@ -335,10 +335,10 @@ const LandingPageBuilder = () => {
           ))
         ) : (
           [
-            { label: "إجمالي الزيارات", value: pages.reduce((s, p) => s + p.views, 0).toLocaleString(), icon: Eye },
-            { label: "التحويلات", value: pages.reduce((s, p) => s + p.conversions, 0).toLocaleString(), icon: ShoppingCart },
-            { label: "معدل التحويل", value: `${pages.reduce((s, p) => s + p.views, 0) > 0 ? ((pages.reduce((s, p) => s + p.conversions, 0) / pages.reduce((s, p) => s + p.views, 0)) * 100).toFixed(1) : 0}%`, icon: Zap },
-            { label: "نشط حالياً", value: pages.filter(p => p.status === 'published').length.toString(), icon: Rocket }
+            { label: "إجمالي الزيارات", value: (pages || []).reduce((s, p) => s + (p.views || 0), 0).toLocaleString(), icon: Eye },
+            { label: "التحويلات", value: (pages || []).reduce((s, p) => s + (p.conversions || 0), 0).toLocaleString(), icon: ShoppingCart },
+            { label: "معدل التحويل", value: `${(pages || []).reduce((s, p) => s + (p.views || 0), 0) > 0 ? (((pages || []).reduce((s, p) => s + (p.conversions || 0), 0) / (pages || []).reduce((s, p) => s + (p.views || 0), 0)) * 100).toFixed(1) : 0}%`, icon: Zap },
+            { label: "نشط حالياً", value: (pages || []).filter(p => p.status === 'published').length.toString(), icon: Rocket }
           ].map((stat, i) => (
             <motion.div key={i} {...cardAnim(i * 0.1)} className="bg-card p-5 rounded-[2rem] border border-border/50">
               <stat.icon className="w-5 h-5 text-muted-foreground mb-2" />
@@ -364,7 +364,7 @@ const LandingPageBuilder = () => {
               </div>
             ))
           ) : (
-            pages.map((page, i) => {
+            (pages || []).map((page, i) => {
               const tmpl = templates.find(t => t.id === page.template);
               return (
                 <motion.div key={page.id} layout
@@ -403,8 +403,8 @@ const LandingPageBuilder = () => {
                           <span key={s} className="text-[10px] bg-muted px-2 py-0.5 rounded-lg text-muted-foreground">{sec.name}</span>
                         ) : null;
                       })}
-                      {page.sections?.length > 5 && (
-                        <span className="text-[10px] text-muted-foreground">+{page.sections.length - 5}</span>
+                      {(page.sections || []).length > 5 && (
+                        <span className="text-[10px] text-muted-foreground">+{(page.sections || []).length - 5}</span>
                       )}
                     </div>
                     <div className="flex gap-2 pt-2 border-t border-border">
