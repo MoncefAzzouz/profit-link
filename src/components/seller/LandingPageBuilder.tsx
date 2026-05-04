@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Layout, Palette, Type, Image, Eye, EyeOff, Edit, Save, Plus, Trash2,
@@ -270,7 +270,6 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
   const [activeDesignTab, setActiveDesignTab] = useState<"magic" | "content" | "template" | "colors" | "sections">(isAdmin ? "magic" : "content");
   const [isFetchingDetails, setIsFetchingDetails] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
-  const lastHandledProductId = useRef<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
   // Fetch pages from backend on mount
@@ -423,55 +422,56 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
     }
   };
 
+  // When a specific product is passed for editing, open its landing page automatically.
+  // This runs once after the pages list has finished loading (isLoading goes false).
   useEffect(() => {
-    const handleInitialProduct = async () => {
-      if (initialProductToEdit && !isLoading && lastHandledProductId.current !== initialProductToEdit.id) {
-        lastHandledProductId.current = initialProductToEdit.id;
-        
-        // Check if we already have a landing page for this product in the fetched list
-        const existingPage = (pages || []).find((p) => p.productId === initialProductToEdit.id);
-        
-        if (existingPage) {
-          // If it exists, use handleEdit to fetch full details from server
-          await handleEdit(existingPage);
-          setActiveDesignTab("content");
-        } else {
-          // Create a new landing page specifically for this product
-          const newPage: LandingPageConfig = {
-            ...defaultNewPage(),
-            id: `lp-${Date.now()}`,
-            productId: initialProductToEdit.id,
-            productName: initialProductToEdit.name,
-            template: "original",
-            heroTitle: initialProductToEdit.name,
-            heroSubtitle: initialProductToEdit.description || "أفضل جودة بأفضل سعر في السوق الجزائري",
-            price: initialProductToEdit.price,
-            originalPrice: initialProductToEdit.originalPrice,
-            category: initialProductToEdit.category,
-            heroImage: initialProductToEdit.image,
-            galleryImages: initialProductToEdit.images && initialProductToEdit.images.length > 0
-              ? initialProductToEdit.images
-              : (initialProductToEdit.image ? [initialProductToEdit.image] : []),
-            features: initialProductToEdit.features && initialProductToEdit.features.length > 0
-              ? initialProductToEdit.features
-              : ["جودة عالية مضمونة", "توصيل سريع لكل الولايات", "الدفع عند الاستلام", "ضمان الاستبدال والاسترجاع"],
-            videoUrl: initialProductToEdit.videoUrl || "",
-            availableColors: initialProductToEdit.hasColors ? (initialProductToEdit.availableColors || []) : [],
-            availableSizes: initialProductToEdit.hasSizes ? (initialProductToEdit.availableSizes || []) : [],
-            showFreeShipping: initialProductToEdit.showFreeShipping || false,
-            sections: ["hero", "urgency-bar", "features", "gallery", "social-proof", "reviews", "shipping", "cta"],
-            status: "draft"
-          };
+    if (!initialProductToEdit || isLoading) return;
 
-          setEditingPage(newPage);
-          setPages(prev => [newPage, ...prev]);
-          setActiveDesignTab("content");
-        }
+    const handleInitialProduct = async () => {
+      // Look for an existing landing page for this product
+      const existingPage = (pages || []).find((p) => p.productId === initialProductToEdit.id);
+
+      if (existingPage) {
+        // Fetch full details from server and open in editor
+        await handleEdit(existingPage);
+        setActiveDesignTab("content");
+      } else {
+        // No existing page found – create a new one pre-filled with product data
+        const newPage: LandingPageConfig = {
+          ...defaultNewPage(),
+          id: `lp-${Date.now()}`,
+          productId: initialProductToEdit.id,
+          productName: initialProductToEdit.name || "",
+          template: "original",
+          heroTitle: initialProductToEdit.name || "",
+          heroSubtitle: initialProductToEdit.description || "أفضل جودة بأفضل سعر في السوق الجزائري",
+          price: initialProductToEdit.price || 0,
+          originalPrice: initialProductToEdit.originalPrice || initialProductToEdit.price || 0,
+          category: initialProductToEdit.category || "",
+          heroImage: initialProductToEdit.image || "",
+          galleryImages: Array.isArray(initialProductToEdit.images) && initialProductToEdit.images.length > 0
+            ? initialProductToEdit.images
+            : (initialProductToEdit.image ? [initialProductToEdit.image] : []),
+          features: Array.isArray(initialProductToEdit.features) && initialProductToEdit.features.length > 0
+            ? initialProductToEdit.features
+            : ["جودة عالية مضمونة", "توصيل سريع لكل الولايات", "الدفع عند الاستلام", "ضمان الاستبدال والاسترجاع"],
+          videoUrl: initialProductToEdit.videoUrl || "",
+          availableColors: initialProductToEdit.hasColors ? (initialProductToEdit.availableColors || []) : [],
+          availableSizes: initialProductToEdit.hasSizes ? (initialProductToEdit.availableSizes || []) : [],
+          showFreeShipping: initialProductToEdit.showFreeShipping || false,
+          sections: ["hero", "urgency-bar", "features", "gallery", "social-proof", "reviews", "shipping", "cta"],
+          status: "draft"
+        };
+
+        setEditingPage(newPage);
+        setPages(prev => [newPage, ...prev]);
+        setActiveDesignTab("content");
       }
     };
 
     handleInitialProduct();
-  }, [initialProductToEdit, isLoading, pages]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoading]); // Run only once after initial load completes (key prop remounts on new product)
 
   const handleSimulatedAiGeneration = async () => {
     if (!editingPage) return;

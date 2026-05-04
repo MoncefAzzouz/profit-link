@@ -1625,7 +1625,7 @@ const Dashboard = () => {
           {/* Landing Pages Tab */}
           {activeTab === "landing_pages" && (
             <div className="space-y-6">
-              <LandingPageBuilder initialProductToEdit={productToEditLandingPage} />
+              <LandingPageBuilder key={productToEditLandingPage?.id ?? 'no-product'} initialProductToEdit={productToEditLandingPage} />
             </div>
           )}
 
