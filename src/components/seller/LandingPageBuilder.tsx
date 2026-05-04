@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Layout, Palette, Type, Image, Eye, EyeOff, Edit, Save, Plus, Trash2,
@@ -268,9 +268,55 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
   const isAdmin = affiliateUser?.role?.toUpperCase() === "ADMIN";
   const defaultStoreName = affiliateUser?.storeName || "متجري";
   const [activeDesignTab, setActiveDesignTab] = useState<"magic" | "content" | "template" | "colors" | "sections">(isAdmin ? "magic" : "content");
-  const [isFetchingDetails, setIsFetchingDetails] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
-  const [isSaving, setIsSaving] = useState(false);
+  const lastHandledProductId = useRef<string | null>(null);
+  const [isFetchingDetails, setIsFetchingDetails] = useState<string | null>(null);
+
+  const handleEdit = async (page: LandingPageConfig) => {
+    // If it's a local new page (lp- prefix), just set it
+    if (page.id.startsWith("lp-")) {
+      setEditingPage(page);
+      return;
+    }
+
+    // If it's already "complete" (has heroTitle, which only exists in full config), edit it
+    if (page.heroTitle) {
+      setEditingPage(page);
+      return;
+    }
+
+    // Otherwise, fetch full details from backend
+    setIsFetchingDetails(page.id);
+    const token = localStorage.getItem("token");
+    try {
+      const res = await fetch(`${API_BASE_URL}/store/pages/${page.id}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const json = await res.json();
+      if (res.ok && json.data) {
+        const fullPage = {
+          ...json.data.pageConfig,
+          id: json.data.id,
+          productId: json.data.productId,
+          ownerId: json.data.ownerId,
+          ownerName: json.data.owner?.name || json.data.owner?.storeName || "",
+          status: json.data.status,
+          views: json.data.views,
+          conversions: json.data.conversions
+        };
+        // Update the list and set as editing
+        setPages(pages.map(p => p.id === page.id ? fullPage : p));
+        setEditingPage(fullPage);
+      } else {
+        throw new Error("Failed to fetch full data");
+      }
+    } catch (err) {
+      console.error("Failed to fetch full page details", err);
+      toast({ variant: "destructive", title: "فشل تحميل تفاصيل الصفحة" });
+    } finally {
+      setIsFetchingDetails(null);
+    }
+  };
 
   // Fetch pages from backend on mount
   useEffect(() => {
@@ -287,14 +333,11 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
         const json = await response.json();
         if (response.ok && json.data) {
           // Backend now returns a summary (no heavy pageConfig) for the list
-          const mappedPages = (json.data || []).map((p: any) => {
-            if (!p || !p.id) return null;
-            return {
-              ...p,
-              sections: p.sections || []
-            };
-          }).filter(Boolean);
-          setPages(mappedPages as LandingPageConfig[]);
+          const mappedPages = json.data.map((p: any) => ({
+            ...p, // Contains id, productName, template, status, views, conversions, sections, ownerName
+            // Note: pageConfig is missing here, will be fetched when editing
+          }));
+          setPages(mappedPages);
         }
       } catch (err) {
         console.error("Failed to fetch pages:", err);
@@ -305,55 +348,6 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
 
     fetchPages();
   }, []);
-
-  const handleEdit = async (page: any) => {
-    if (page?.id?.startsWith("lp-")) {
-      // Ensure local pages also have all defaults hydrated
-      const hydratedPage = { ...defaultNewPage(), ...page };
-      hydratedPage.sections = Array.isArray(hydratedPage.sections) ? hydratedPage.sections : ["hero", "features", "cta"];
-      hydratedPage.features = Array.isArray(hydratedPage.features) ? hydratedPage.features : [];
-      hydratedPage.socialProof = Array.isArray(hydratedPage.socialProof) ? hydratedPage.socialProof : [];
-      hydratedPage.faqItems = Array.isArray(hydratedPage.faqItems) ? hydratedPage.faqItems : [];
-      hydratedPage.trustBadges = Array.isArray(hydratedPage.trustBadges) ? hydratedPage.trustBadges : [];
-      hydratedPage.galleryImages = Array.isArray(hydratedPage.galleryImages) ? hydratedPage.galleryImages : [];
-      hydratedPage.availableColors = Array.isArray(hydratedPage.availableColors) ? hydratedPage.availableColors : [];
-      hydratedPage.availableSizes = Array.isArray(hydratedPage.availableSizes) ? hydratedPage.availableSizes : [];
-      setEditingPage(hydratedPage as LandingPageConfig);
-      return;
-    }
-
-    setIsFetchingDetails(page.id);
-    const token = localStorage.getItem("token");
-    try {
-      const res = await fetch(`${API_BASE_URL}/store/page/${page.id}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      const json = await res.json();
-      if (res.ok && json.data) {
-        // Hydrate: merge server data on top of defaults to guarantee all array fields exist
-        const serverData = json.data;
-        const hydratedPage: LandingPageConfig = {
-          ...defaultNewPage(),
-          ...serverData,
-          sections: Array.isArray(serverData.sections) ? serverData.sections : ["hero", "features", "cta"],
-          features: Array.isArray(serverData.features) ? serverData.features : [],
-          socialProof: Array.isArray(serverData.socialProof) ? serverData.socialProof : [],
-          faqItems: Array.isArray(serverData.faqItems) ? serverData.faqItems : [],
-          trustBadges: Array.isArray(serverData.trustBadges) ? serverData.trustBadges : [],
-          galleryImages: Array.isArray(serverData.galleryImages) ? serverData.galleryImages : [],
-          availableColors: Array.isArray(serverData.availableColors) ? serverData.availableColors : [],
-          availableSizes: Array.isArray(serverData.availableSizes) ? serverData.availableSizes : [],
-        };
-        setEditingPage(hydratedPage);
-      } else {
-        toast({ variant: "destructive", title: "خطأ", description: "لم يتم العثور على بيانات الصفحة" });
-      }
-    } catch (err) {
-      toast({ variant: "destructive", title: "خطأ", description: "تعذر تحميل تفاصيل الصفحة" });
-    } finally {
-      setIsFetchingDetails(null);
-    }
-  };
 
   // AI Magic State
   const [isAiGenerating, setIsAiGenerating] = useState(false);
@@ -367,19 +361,15 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
   };
 
   const saveToDatabase = async (pageToSave: LandingPageConfig) => {
-    if (!pageToSave || !pageToSave.id) {
-      toast({ variant: "destructive", title: "خطأ", description: "بيانات الصفحة غير مكتملة" });
-      return;
-    }
     const token = localStorage.getItem("token");
     if (!token) {
       toast({ variant: "destructive", title: "غير مصرح", description: "يرجى تسجيل الدخول أولاً" });
       return;
     }
 
-    setIsSaving(true);
     try {
-      const isNew = (pageToSave.id || "").startsWith("lp-");
+      // If the ID starts with "lp-", it's a temporary local ID, so we use POST
+      const isNew = pageToSave.id.startsWith("lp-");
       const url = isNew
         ? `${API_BASE_URL}/store/page`
         : `${API_BASE_URL}/store/page/${pageToSave.id}`;
@@ -417,42 +407,50 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
     } catch (err) {
       console.error("Save error:", err);
       toast({ variant: "destructive", title: "خطأ في الحفظ", description: "تعذر حفظ البيانات في السيرفر" });
-    } finally {
-      setIsSaving(false);
     }
   };
 
-  // When a specific product is passed for editing, open its landing page automatically.
-  // This runs once after the pages list has finished loading (isLoading goes false).
   useEffect(() => {
-    if (!initialProductToEdit || isLoading) return;
-
-    const handleInitialProduct = async () => {
-      // Look for an existing landing page for this product
-      const existingPage = (pages || []).find((p) => p.productId === initialProductToEdit.id);
-
+    if (initialProductToEdit && !isLoading && lastHandledProductId.current !== initialProductToEdit.id) {
+      lastHandledProductId.current = initialProductToEdit.id;
+      // Check if we already have a landing page for this product
+      const existingPage = pages.find((p) => p.productId === initialProductToEdit.id);
       if (existingPage) {
-        // Fetch full details from server and open in editor
-        await handleEdit(existingPage);
+        // Sync with the latest product data (in case admin updated prices, images, or variants)
+        const updatedPage = {
+          ...existingPage,
+          productName: initialProductToEdit.name || existingPage.productName,
+          price: initialProductToEdit.price || existingPage.price,
+          originalPrice: initialProductToEdit.originalPrice || existingPage.originalPrice,
+          heroImage: initialProductToEdit.image || existingPage.heroImage,
+          galleryImages: initialProductToEdit.images && initialProductToEdit.images.length > 0 
+            ? initialProductToEdit.images 
+            : (initialProductToEdit.image ? [initialProductToEdit.image] : existingPage.galleryImages),
+          // Sync variants
+          availableColors: initialProductToEdit.hasColors ? (initialProductToEdit.availableColors || []) : [],
+          availableSizes: initialProductToEdit.hasSizes ? (initialProductToEdit.availableSizes || []) : [],
+          showFreeShipping: initialProductToEdit.showFreeShipping !== undefined ? initialProductToEdit.showFreeShipping : existingPage.showFreeShipping
+        };
+        setEditingPage(updatedPage);
         setActiveDesignTab("content");
       } else {
-        // No existing page found – create a new one pre-filled with product data
+        // Create a new landing page specifically for this product
         const newPage: LandingPageConfig = {
           ...defaultNewPage(),
           id: `lp-${Date.now()}`,
           productId: initialProductToEdit.id,
-          productName: initialProductToEdit.name || "",
-          template: "original",
-          heroTitle: initialProductToEdit.name || "",
+          productName: initialProductToEdit.name,
+          template: "original", // Default to the original/classic design as requested
+          heroTitle: initialProductToEdit.name,
           heroSubtitle: initialProductToEdit.description || "أفضل جودة بأفضل سعر في السوق الجزائري",
-          price: initialProductToEdit.price || 0,
-          originalPrice: initialProductToEdit.originalPrice || initialProductToEdit.price || 0,
-          category: initialProductToEdit.category || "",
-          heroImage: initialProductToEdit.image || "",
-          galleryImages: Array.isArray(initialProductToEdit.images) && initialProductToEdit.images.length > 0
+          price: initialProductToEdit.price,
+          originalPrice: initialProductToEdit.originalPrice,
+          category: initialProductToEdit.category,
+          heroImage: initialProductToEdit.image,
+          galleryImages: initialProductToEdit.images && initialProductToEdit.images.length > 0
             ? initialProductToEdit.images
             : (initialProductToEdit.image ? [initialProductToEdit.image] : []),
-          features: Array.isArray(initialProductToEdit.features) && initialProductToEdit.features.length > 0
+          features: initialProductToEdit.features && initialProductToEdit.features.length > 0
             ? initialProductToEdit.features
             : ["جودة عالية مضمونة", "توصيل سريع لكل الولايات", "الدفع عند الاستلام", "ضمان الاستبدال والاسترجاع"],
           videoUrl: initialProductToEdit.videoUrl || "",
@@ -463,15 +461,14 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
           status: "draft"
         };
 
+
+        const newPages = [newPage, ...pages];
+        savePagesLocally(newPages);
         setEditingPage(newPage);
-        setPages(prev => [newPage, ...prev]);
         setActiveDesignTab("content");
       }
-    };
-
-    handleInitialProduct();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isLoading]); // Run only once after initial load completes (key prop remounts on new product)
+    }
+  }, [initialProductToEdit, isLoading, pages]);
 
   const handleSimulatedAiGeneration = async () => {
     if (!editingPage) return;
@@ -530,7 +527,7 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
 
       setEditingPage(aiGeneratedPage);
       const newPages = pages.map(p => p.id === aiGeneratedPage.id ? aiGeneratedPage : p);
-
+      savePagesLocally(newPages);
 
       setIsAiGenerating(false);
       setAiProgressStep(0);
@@ -548,7 +545,7 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
 
   const createNewPage = () => {
     const newPage = defaultNewPage();
-
+    savePagesLocally([newPage, ...pages]);
     setEditingPage(newPage);
     toast({ title: "🎨 تم الإنشاء", description: "صفحة هبوط جديدة جاهزة للتخصيص" });
   };
@@ -558,7 +555,7 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
     const updated = { ...editingPage, [field]: value };
     setEditingPage(updated);
     const newPages = pages.map(p => p.id === updated.id ? updated : p);
-
+    savePagesLocally(newPages);
   };
 
   const applyTemplate = (tmplId: string) => {
@@ -599,57 +596,45 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
     const updated = { ...editingPage, ...updates };
     setEditingPage(updated as LandingPageConfig);
     const newPages = pages.map(p => p.id === updated.id ? (updated as LandingPageConfig) : p);
-
+    savePagesLocally(newPages);
   };
 
   const toggleSection = (sectionId: string) => {
     if (!editingPage) return;
     const section = availableSections.find(s => s.id === sectionId);
     if (section?.required) return;
-    const sections = (editingPage?.sections || []).includes(sectionId)
-      ? editingPage!.sections.filter(s => s !== sectionId)
-      : [...(editingPage?.sections || []), sectionId];
+    const sections = editingPage.sections.includes(sectionId)
+      ? editingPage.sections.filter(s => s !== sectionId)
+      : [...editingPage.sections, sectionId];
     updatePage("sections", sections);
   };
 
   const deletePage = async (id: string) => {
-    if (!id) return;
-    
-    if (window.confirm("هل أنت متأكد من حذف هذه الصفحة؟")) {
-      const token = localStorage.getItem("token");
-      
-      if ((id || "").startsWith("lp-")) {
-        // Only local, just filter it
+    const token = localStorage.getItem("token");
+    if (id.startsWith("lp-")) {
+      // Only local, just filter it
+      setPages(pages.filter(p => p.id !== id));
+      if (editingPage?.id === id) setEditingPage(null);
+      toast({ title: "🗑️ تم الحذف" });
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/store/page/${id}`, {
+        method: "DELETE",
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      if (res.ok) {
         setPages(pages.filter(p => p.id !== id));
         if (editingPage?.id === id) setEditingPage(null);
-        toast({ title: "🗑️ تم الحذف" });
-        return;
+        toast({ title: "🗑️ تم الحذف من قاعدة البيانات" });
       }
-
-      setIsSaving(true);
-      try {
-        const res = await fetch(`${API_BASE_URL}/store/page/${id}`, {
-          method: "DELETE",
-          headers: { "Authorization": `Bearer ${token}` }
-        });
-        if (res.ok) {
-          setPages(pages.filter(p => p.id !== id));
-          if (editingPage?.id === id) setEditingPage(null);
-          toast({ title: "🗑️ تم الحذف من قاعدة البيانات" });
-        } else {
-          const data = await res.json();
-          throw new Error(data.message || "فشل الحذف");
-        }
-      } catch (err: any) {
-        toast({ variant: "destructive", title: "فشل الحذف", description: err.message });
-      } finally {
-        setIsSaving(false);
-      }
+    } catch (err) {
+      toast({ variant: "destructive", title: "فشل الحذف" });
     }
   };
 
   const getProductUrl = (page: LandingPageConfig) => {
-    if (!page?.id) return "";
     const userStr = localStorage.getItem("affiliate_user");
     const user = userStr ? JSON.parse(userStr) : null;
     if (page.productId && user?.id) {
@@ -678,7 +663,7 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
     };
     const newPages = pages.map(p => p.id === updated.id ? updated : p);
     setPages(newPages);
-
+    savePagesLocally(newPages);
     if (editingPage?.id === updated.id) setEditingPage(updated);
     await saveToDatabase(updated);
   };
@@ -689,7 +674,7 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
     transition: { delay, duration: 0.5, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] },
   });
 
-  const isDark = (bg: string | undefined) => !!(bg?.startsWith("#0") || bg?.startsWith("#1") || bg?.startsWith("#2") || bg === "#020617");
+  const isDark = (bg: string) => bg.startsWith("#0") || bg.startsWith("#1") || bg.startsWith("#2") || bg === "#020617";
 
   const renderPreview = (isMobile: boolean) => {
     const p = editingPage;
@@ -1905,7 +1890,7 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
                 <div className="space-y-2">
                   <p className="text-xs text-muted-foreground mb-3">فعّل أو عطّل الأقسام حسب حاجتك</p>
                   {availableSections.map((section) => {
-                    const isActive = (editingPage?.sections || []).includes(section.id);
+                    const isActive = editingPage.sections.includes(section.id);
                     return (
                       <div key={section.id} className="space-y-2">
                         <button
@@ -2171,14 +2156,13 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
 
   if (isLoading) {
     return (
-      <div className="space-y-6">
-        <div className="h-16 w-1/3 bg-muted animate-pulse rounded-2xl" />
-        <div className="grid grid-cols-3 gap-4">
-          {[1, 2, 3].map(i => <div key={i} className="h-24 bg-muted animate-pulse rounded-2xl" />)}
-        </div>
-        <div className="grid md:grid-cols-2 gap-6">
-          {[1, 2, 3, 4].map(i => <div key={i} className="h-64 bg-muted animate-pulse rounded-2xl" />)}
-        </div>
+      <div className="flex flex-col items-center justify-center py-32 space-y-4">
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+          className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full"
+        />
+        <p className="text-muted-foreground font-bold animate-pulse">جاري تحميل صفحات الهبوط...</p>
       </div>
     );
   }
@@ -2192,18 +2176,18 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
             <LayoutTemplate className="w-6 h-6 text-primary" />
             صفحات الهبوط
           </h2>
-          <p className="text-sm text-muted-foreground mt-1">{(pages || []).length} صفحة • {templates.length} قالب ترند متاح</p>
+          <p className="text-sm text-muted-foreground mt-1">{pages.length} صفحة • {templates.length} قالب ترند متاح</p>
         </div>
       </motion.div>
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4">
         {[
-          { label: "إجمالي الزيارات", value: (pages || []).reduce((s, p) => s + (p.views || 0), 0).toLocaleString(), icon: Eye },
-          { label: "التحويلات", value: (pages || []).reduce((s, p) => s + (p.conversions || 0), 0).toLocaleString(), icon: ShoppingCart },
-          { label: "معدل التحويل", value: `${(pages || []).reduce((s, p) => s + (p.views || 0), 0) > 0 ? (((pages || []).reduce((s, p) => s + (p.conversions || 0), 0) / (pages || []).reduce((s, p) => s + (p.views || 0), 0)) * 100).toFixed(1) : 0}%`, icon: Zap },
+          { label: "إجمالي الزيارات", value: pages.reduce((s, p) => s + p.views, 0).toLocaleString(), icon: Eye },
+          { label: "التحويلات", value: pages.reduce((s, p) => s + p.conversions, 0).toLocaleString(), icon: ShoppingCart },
+          { label: "معدل التحويل", value: `${pages.reduce((s, p) => s + p.views, 0) > 0 ? ((pages.reduce((s, p) => s + p.conversions, 0) / pages.reduce((s, p) => s + p.views, 0)) * 100).toFixed(1) : 0}%`, icon: Zap },
         ].map((stat, i) => (
-          <motion.div key={i} {...cardAnim(i * 0.05)} className="bg-card border rounded-2xl p-4 shadow-sm">
+          <motion.div key={i} {...cardAnim(i * 0.06)} className="dash-card-interactive p-4">
             <stat.icon className="w-5 h-5 text-muted-foreground mb-2" />
             <p className="text-2xl font-bold text-foreground">{stat.value}</p>
             <p className="text-xs text-muted-foreground">{stat.label}</p>
@@ -2214,12 +2198,12 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
       {/* Page cards */}
       <div className="grid md:grid-cols-2 gap-6">
         <AnimatePresence mode="popLayout">
-          {(pages || []).map((page, i) => {
+          {pages.map((page, i) => {
             const tmpl = templates.find(t => t.id === page.template);
             return (
               <motion.div key={page.id} layout
-                initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
-                transition={{ delay: i * 0.04 }} className="bg-card border rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-all group">
+                initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }}
+                transition={{ delay: i * 0.05 }} className="dash-card-interactive overflow-hidden group">
                 <div className={`h-32 bg-gradient-to-br ${tmpl?.preview || "from-primary to-primary/80"} p-5 flex items-end relative`}>
                   <div className="absolute inset-0 bg-black/10" />
                   <div className="relative z-10">
@@ -2243,8 +2227,8 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
                 </div>
                 <div className="p-5 space-y-4">
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">{(page.views || 0).toLocaleString()} زيارة</span>
-                    <span className="text-secondary font-semibold">{(page.conversions || 0)} تحويل</span>
+                    <span className="text-muted-foreground">{page.views.toLocaleString()} زيارة</span>
+                    <span className="text-secondary font-semibold">{page.conversions} تحويل</span>
                   </div>
                   <div className="flex items-center gap-1.5 flex-wrap">
                     {(page.sections || []).slice(0, 5).map(s => {
@@ -2253,26 +2237,33 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
                         <span key={s} className="text-[10px] bg-muted px-2 py-0.5 rounded-lg text-muted-foreground">{sec.name}</span>
                       ) : null;
                     })}
-                    {(page.sections || []).length > 5 && (
-                      <span className="text-[10px] text-muted-foreground">+{(page.sections || []).length - 5}</span>
+                    {page.sections.length > 5 && (
+                      <span className="text-[10px] text-muted-foreground">+{page.sections.length - 5}</span>
                     )}
                   </div>
                   <div className="flex gap-2 pt-2 border-t border-border">
-                    <Button variant="outline" size="sm" onClick={() => handleEdit(page)} disabled={isFetchingDetails === page.id} className="flex-1 rounded-xl gap-1.5">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => handleEdit(page)} 
+                      disabled={isFetchingDetails === page.id}
+                      className="flex-1 rounded-xl gap-1.5"
+                    >
                       {isFetchingDetails === page.id ? (
-                        <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: "linear" }}>
-                          <Zap className="w-3.5 h-3.5" />
-                        </motion.div>
+                        <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }} className="w-3.5 h-3.5 border-2 border-primary/30 border-t-primary rounded-full" />
                       ) : (
                         <Paintbrush className="w-3.5 h-3.5" />
                       )}
                       تخصيص
                     </Button>
-                    <Button variant="outline" size="sm" onClick={() => window.open(getProductUrl(page), "_blank")} className="rounded-xl gap-1.5">
+                    <Button variant="outline" size="sm" onClick={() => viewPage(page)} className="rounded-xl gap-1.5">
                       <ExternalLink className="w-3.5 h-3.5" />
                     </Button>
                     <Button variant="outline" size="sm" onClick={() => copyLink(page)} className="rounded-xl gap-1.5">
                       {copiedId === page.id ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => publishPage(page)} className="rounded-xl">
+                      {page.status === "published" ? <Eye className="w-3.5 h-3.5" /> : <Zap className="w-3.5 h-3.5" />}
                     </Button>
                     <Button variant="outline" size="sm" onClick={() => deletePage(page.id)} className="rounded-xl text-destructive hover:bg-destructive/10">
                       <Trash2 className="w-3.5 h-3.5" />
@@ -2285,9 +2276,9 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
         </AnimatePresence>
       </div>
 
-      {(pages || []).length === 0 && (
-        <motion.div {...cardAnim()} className="text-center py-20 border-2 border-dashed rounded-3xl">
-          <LayoutTemplate className="w-16 h-16 text-muted-foreground/20 mx-auto mb-4" />
+      {pages.length === 0 && (
+        <motion.div {...cardAnim()} className="text-center py-16">
+          <LayoutTemplate className="w-16 h-16 text-muted-foreground/30 mx-auto mb-4" />
           <p className="text-lg font-semibold text-muted-foreground">لا توجد صفحات هبوط</p>
           <p className="text-sm text-muted-foreground/70 mt-1">أضف منتجات إلى متجرك لتظهر هنا تلقائياً</p>
         </motion.div>

@@ -184,10 +184,11 @@ const Dashboard = () => {
   const [productToEditLandingPage, setProductToEditLandingPage] = useState<any>(null);
   const [dbCategories, setDbCategories] = useState<any[]>([]);
 
+  // Sync activeTab with URL
   useEffect(() => {
     const arabicLabel = urlTabMap[activeTab];
     if (arabicLabel) {
-      navigate(`/dashboard/${arabicLabel}`, { replace: true });
+      window.history.replaceState(null, "", `/dashboard/${arabicLabel}`);
     }
   }, [activeTab]);
 
@@ -1625,7 +1626,7 @@ const Dashboard = () => {
           {/* Landing Pages Tab */}
           {activeTab === "landing_pages" && (
             <div className="space-y-6">
-              <LandingPageBuilder key={productToEditLandingPage?.id ?? 'no-product'} initialProductToEdit={productToEditLandingPage} />
+              <LandingPageBuilder initialProductToEdit={productToEditLandingPage} />
             </div>
           )}
 
