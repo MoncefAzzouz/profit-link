@@ -903,6 +903,7 @@ const Admin = () => {
         sizeType: productFormData.sizeType,
         availableColors: productFormData.hasColors ? productFormData.availableColors : [],
         availableSizes: productFormData.hasSizes ? productFormData.availableSizes : [],
+        showFreeShipping: productFormData.showFreeShipping,
         features: productFormData.features || []
       };
 
@@ -3014,10 +3015,10 @@ const Admin = () => {
                             e.preventDefault();
                             const val = newColorInput.trim();
                             if (val && !productFormData.availableColors.includes(val)) {
-                              setProductFormData({
-                                ...productFormData,
-                                availableColors: [...productFormData.availableColors, val]
-                              });
+                                setProductFormData((prev: any) => ({
+                                  ...prev,
+                                  availableColors: [...prev.availableColors, val]
+                                }));
                               setNewColorInput("");
                             }
                           }
@@ -3028,10 +3029,10 @@ const Admin = () => {
                         onClick={() => {
                           const val = newColorInput.trim();
                           if (val && !productFormData.availableColors.includes(val)) {
-                            setProductFormData({
-                              ...productFormData,
-                              availableColors: [...productFormData.availableColors, val]
-                            });
+                                setProductFormData((prev: any) => ({
+                                  ...prev,
+                                  availableColors: [...prev.availableColors, val]
+                                }));
                             setNewColorInput("");
                           }
                         }}
@@ -3094,10 +3095,10 @@ const Admin = () => {
                                 e.preventDefault();
                                 const val = newSizeInput.trim();
                                 if (val && !productFormData.availableSizes.includes(val)) {
-                                  setProductFormData({
-                                    ...productFormData,
-                                    availableSizes: [...productFormData.availableSizes, val]
-                                  });
+                                  setProductFormData((prev: any) => ({
+                                    ...prev,
+                                    availableSizes: [...prev.availableSizes, val]
+                                  }));
                                   setNewSizeInput("");
                                 }
                               }
@@ -3108,10 +3109,10 @@ const Admin = () => {
                             onClick={() => {
                               const val = newSizeInput.trim();
                               if (val && !productFormData.availableSizes.includes(val)) {
-                                setProductFormData({
-                                  ...productFormData,
-                                  availableSizes: [...productFormData.availableSizes, val]
-                                });
+                                setProductFormData((prev: any) => ({
+                                  ...prev,
+                                  availableSizes: [...prev.availableSizes, val]
+                                }));
                                 setNewSizeInput("");
                               }
                             }}
