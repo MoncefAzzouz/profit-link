@@ -269,8 +269,8 @@ const ProductPage = () => {
           commissionAmount: product.commission * quantity,
           shippingFee: currentShippingPrice,
           stopDesk: formData.deliveryType === "office" ? 1 : 0,
-          color: formData.selectedColor,
-          size: formData.selectedSize
+          selectedColor: formData.selectedColor,
+          selectedSize: formData.selectedSize
         })
 
       });
