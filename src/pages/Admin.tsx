@@ -1783,6 +1783,20 @@ const Admin = () => {
                               <td className="p-4">
                                 <p className="font-bold text-foreground text-sm">{productName}</p>
                                 <p className="text-[10px] text-muted-foreground font-mono">{order.id.slice(0, 8)}</p>
+                                {(order.selectedColor || order.selectedSize) && (
+                                  <div className="flex flex-wrap gap-1 mt-1">
+                                    {order.selectedColor && (
+                                      <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-primary/10 text-primary border border-primary/20">
+                                        اللون: {order.selectedColor}
+                                      </span>
+                                    )}
+                                    {order.selectedSize && (
+                                      <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-secondary/10 text-secondary border border-secondary/20">
+                                        المقاس: {order.selectedSize}
+                                      </span>
+                                    )}
+                                  </div>
+                                )}
                               </td>
                               <td className="p-4">
                                 <p className="font-medium text-foreground text-sm">{order.customerName}</p>

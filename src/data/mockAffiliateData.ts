@@ -3,11 +3,16 @@ export interface Order {
   productId: string;
   productName: string;
   customerName: string;
+  customerPhone: string;
   wilaya: string;
   status: 'pending' | 'confirmed' | 'shipped' | 'delivered' | 'cancelled';
   amount: number;
   commission: number;
   date: string;
+  selectedColor?: string;
+  selectedSize?: string;
+  stopDesk?: number;
+  commune?: string;
 }
 
 export interface AffiliateStats {

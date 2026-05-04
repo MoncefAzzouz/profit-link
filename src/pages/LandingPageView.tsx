@@ -340,8 +340,8 @@ const LandingPageView = () => {
           commissionAmount: p.commission || 500,
           shippingFee: currentShipping,
           stopDesk: orderForm.deliveryType === "desk" ? 1 : 0,
-          color: orderForm.selectedColor,
-          size: selectedBundle ? (orderForm.selectedSize ? `${orderForm.selectedSize} - ${selectedBundle.name}` : selectedBundle.name) : orderForm.selectedSize
+          selectedColor: orderForm.selectedColor,
+          selectedSize: selectedBundle ? (orderForm.selectedSize ? `${orderForm.selectedSize} - ${selectedBundle.name}` : selectedBundle.name) : orderForm.selectedSize
         })
 
       });
