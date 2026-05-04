@@ -145,7 +145,9 @@ const defaultNewPage = (): LandingPageConfig => ({
   ctaAnimation: "pulse",
   imageStyle: "rounded",
   pixels: { facebook: "", tiktok: "", snapchat: "" },
-  galleryImages: []
+  galleryImages: [],
+  availableColors: [],
+  availableSizes: []
 });
 
 const templates = [

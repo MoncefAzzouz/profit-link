@@ -1749,16 +1749,16 @@ const Dashboard = () => {
                               <td className="p-4 font-medium text-foreground">
                                 <div className="space-y-1">
                                   <p className="font-bold">{order.productName}</p>
-                                  {(order.color || order.size) && (
+                                  {(order.selectedColor || order.selectedSize) && (
                                     <div className="flex flex-wrap gap-1 mt-1">
-                                      {order.color && (
+                                      {order.selectedColor && (
                                         <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-primary/10 text-primary border border-primary/20">
-                                          اللون: {order.color}
+                                          اللون: {order.selectedColor}
                                         </span>
                                       )}
-                                      {order.size && (
+                                      {order.selectedSize && (
                                         <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-secondary/10 text-secondary border border-secondary/20">
-                                          المقاس: {order.size}
+                                          المقاس: {order.selectedSize}
                                         </span>
                                       )}
                                     </div>
