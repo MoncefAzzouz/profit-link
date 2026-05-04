@@ -274,20 +274,22 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
   const [isFetchingDetails, setIsFetchingDetails] = useState<string | null>(null);
 
   const handleEdit = async (page: LandingPageConfig) => {
+    const def = defaultNewPage();
+
     // If it's a local new page (lp- prefix), just set it
     if (page?.id?.startsWith("lp-")) {
       // Hydrate local page with defaults so no array is ever undefined
       const hydratedLocal: LandingPageConfig = {
-        ...defaultNewPage(),
+        ...def,
         ...page,
-        sections: Array.isArray(page.sections) ? page.sections : ["hero", "features", "cta"],
-        features: Array.isArray(page.features) ? page.features : [],
-        socialProof: Array.isArray(page.socialProof) ? page.socialProof : [],
-        faqItems: Array.isArray(page.faqItems) ? page.faqItems : [],
-        trustBadges: Array.isArray(page.trustBadges) ? page.trustBadges : [],
-        galleryImages: Array.isArray(page.galleryImages) ? page.galleryImages : [],
-        availableColors: Array.isArray(page.availableColors) ? page.availableColors : [],
-        availableSizes: Array.isArray(page.availableSizes) ? page.availableSizes : [],
+        sections: Array.isArray(page.sections) ? page.sections : def.sections,
+        features: Array.isArray(page.features) ? page.features : def.features,
+        socialProof: Array.isArray(page.socialProof) ? page.socialProof : def.socialProof,
+        faqItems: Array.isArray(page.faqItems) ? page.faqItems : def.faqItems,
+        trustBadges: Array.isArray(page.trustBadges) ? page.trustBadges : def.trustBadges,
+        galleryImages: Array.isArray(page.galleryImages) ? page.galleryImages : def.galleryImages,
+        availableColors: Array.isArray(page.availableColors) ? page.availableColors : def.availableColors,
+        availableSizes: Array.isArray(page.availableSizes) ? page.availableSizes : def.availableSizes,
       };
       setEditingPage(hydratedLocal);
       return;
@@ -297,16 +299,16 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
     if (page.heroTitle) {
       // Still hydrate to ensure all arrays exist
       const hydratedPage: LandingPageConfig = {
-        ...defaultNewPage(),
+        ...def,
         ...page,
-        sections: Array.isArray(page.sections) ? page.sections : ["hero", "features", "cta"],
-        features: Array.isArray(page.features) ? page.features : [],
-        socialProof: Array.isArray(page.socialProof) ? page.socialProof : [],
-        faqItems: Array.isArray(page.faqItems) ? page.faqItems : [],
-        trustBadges: Array.isArray(page.trustBadges) ? page.trustBadges : [],
-        galleryImages: Array.isArray(page.galleryImages) ? page.galleryImages : [],
-        availableColors: Array.isArray(page.availableColors) ? page.availableColors : [],
-        availableSizes: Array.isArray(page.availableSizes) ? page.availableSizes : [],
+        sections: Array.isArray(page.sections) ? page.sections : def.sections,
+        features: Array.isArray(page.features) ? page.features : def.features,
+        socialProof: Array.isArray(page.socialProof) ? page.socialProof : def.socialProof,
+        faqItems: Array.isArray(page.faqItems) ? page.faqItems : def.faqItems,
+        trustBadges: Array.isArray(page.trustBadges) ? page.trustBadges : def.trustBadges,
+        galleryImages: Array.isArray(page.galleryImages) ? page.galleryImages : def.galleryImages,
+        availableColors: Array.isArray(page.availableColors) ? page.availableColors : def.availableColors,
+        availableSizes: Array.isArray(page.availableSizes) ? page.availableSizes : def.availableSizes,
       };
       setEditingPage(hydratedPage);
       return;
@@ -324,7 +326,7 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
         const raw = json.data.pageConfig || json.data;
         // Hydrate: merge server data on top of defaults to guarantee all array fields exist
         const fullPage: LandingPageConfig = {
-          ...defaultNewPage(),
+          ...def,
           ...raw,
           id: json.data.id,
           productId: json.data.productId,
@@ -333,14 +335,14 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
           status: json.data.status,
           views: json.data.views,
           conversions: json.data.conversions,
-          sections: Array.isArray(raw.sections) ? raw.sections : ["hero", "features", "cta"],
-          features: Array.isArray(raw.features) ? raw.features : [],
-          socialProof: Array.isArray(raw.socialProof) ? raw.socialProof : [],
-          faqItems: Array.isArray(raw.faqItems) ? raw.faqItems : [],
-          trustBadges: Array.isArray(raw.trustBadges) ? raw.trustBadges : [],
-          galleryImages: Array.isArray(raw.galleryImages) ? raw.galleryImages : [],
-          availableColors: Array.isArray(raw.availableColors) ? raw.availableColors : [],
-          availableSizes: Array.isArray(raw.availableSizes) ? raw.availableSizes : [],
+          sections: Array.isArray(raw.sections) ? raw.sections : def.sections,
+          features: Array.isArray(raw.features) ? raw.features : def.features,
+          socialProof: Array.isArray(raw.socialProof) ? raw.socialProof : def.socialProof,
+          faqItems: Array.isArray(raw.faqItems) ? raw.faqItems : def.faqItems,
+          trustBadges: Array.isArray(raw.trustBadges) ? raw.trustBadges : def.trustBadges,
+          galleryImages: Array.isArray(raw.galleryImages) ? raw.galleryImages : def.galleryImages,
+          availableColors: Array.isArray(raw.availableColors) ? raw.availableColors : def.availableColors,
+          availableSizes: Array.isArray(raw.availableSizes) ? raw.availableSizes : def.availableSizes,
         };
         // Update the list and set as editing
         setPages(pages.map(p => p.id === page.id ? fullPage : p));
