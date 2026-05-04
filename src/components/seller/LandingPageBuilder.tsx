@@ -1,265 +1,83 @@
-import { useState, useEffect, useRef, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  Layout, Palette, Type, Image, Eye, EyeOff, Edit, Save, Plus, Trash2,
-  ChevronDown, ChevronUp, Sparkles, Monitor, Smartphone,
-  Copy, Check, ExternalLink, Layers, Paintbrush, Star,
-  ShoppingCart, Shield, Truck, Clock, MessageSquare, Zap,
-  GripVertical, Settings2, LayoutTemplate, ArrowRight, Phone, X,
-  Play, Gift, Users, Award, Heart, TrendingUp, Timer, Flame,
-  Camera, Video, BarChart3, Globe, Mail, Instagram, Facebook,
-  Youtube, Megaphone, Target, Bolt, Crown, Gem, Rocket,
-  Package, BadgePercent, Percent, AlertTriangle, ThumbsUp,
-  MousePointerClick, Ratio, ToggleLeft, Hash, AlignCenter, AlignLeft, Upload,
-  Search, Filter
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
-import { Slider } from "@/components/ui/slider";
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
-} from "@/components/ui/dialog";
-import { Badge } from "@/components/ui/badge";
-import { useToast } from "@/hooks/use-toast";
+import React, { useState, useEffect, useMemo } from 'react';
+import { 
+  Plus, Search, Filter, MoreVertical, Edit2, 
+  Trash2, ExternalLink, Copy, Check, Eye, 
+  Zap, ShoppingCart, LayoutTemplate, Palette, 
+  Settings, Image as ImageIcon, Type, MousePointer2,
+  Share2, Save, X, ArrowLeft, ArrowRight,
+  Monitor, Smartphone, Tablet, Paintbrush, PlusCircle, Sparkles,
+  BarChart3, Clock, Target, Rocket
+} from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useToast } from '@/hooks/use-toast';
 import { API_BASE_URL } from '@/config/api';
 
-export interface BundlePack {
-  id: string;
-  name: string;
-  image: string;
-  price: number;
-}
-
-interface LandingPageConfig {
+interface LandingPage {
   id: string;
   productId: string;
   productName: string;
-  template: string;
-  heroTitle: string;
-  heroSubtitle: string;
-  heroImage: string;
-  primaryColor: string;
-  accentColor: string;
-  ctaText: string;
-  ctaStyle: "rounded" | "square" | "pill";
-  showReviews: boolean;
-  showCountdown: boolean;
-  showGuarantee: boolean;
-  showFreeShipping: boolean;
-  sections: string[];
-  customCss: string;
-  fontFamily: string;
-  backgroundColor: string;
-  status: "draft" | "published";
+  template: 'modern' | 'minimal' | 'bold' | 'dark';
+  status: 'draft' | 'published';
   views: number;
   conversions: number;
-  price: number;
-  originalPrice: number;
-  category: string;
-  features: string[];
-  // New fields
-  heroLayout: "centered" | "split" | "fullscreen" | "video-bg";
-  animationStyle: "none" | "fade" | "slide" | "bounce" | "zoom";
-  headerStyle: "transparent" | "solid" | "gradient" | "floating";
-  socialProof: { name: string; text: string; rating: number }[];
-  faqItems: { q: string; a: string }[];
-  urgencyText: string;
-  videoUrl: string;
-  beforeAfterImages: { before: string; after: string };
-  trustBadges: string[];
-  countdownDate: string;
-  showStickyBar: boolean;
-  showFloatingCta: boolean;
-  showSocialProofPopup: boolean;
-  borderRadius: number;
-  shadowIntensity: "none" | "sm" | "md" | "lg" | "xl";
-  gradientDirection: "to-r" | "to-l" | "to-b" | "to-t" | "to-br" | "to-bl";
-  ctaAnimation: "none" | "pulse" | "bounce" | "shake" | "glow";
-  imageStyle: "rounded" | "sharp" | "blob" | "circle";
-  pixels?: { facebook?: string; tiktok?: string; snapchat?: string };
-  galleryImages: string[];
-  availableColors?: string[];
-  availableSizes?: string[];
-  logo?: string;
-  commission?: number;
-  bundles?: BundlePack[];
+  sections: string[];
+  pageConfig?: any;
 }
 
-const defaultNewPage = (): LandingPageConfig => ({
-  id: `lp-${Date.now()}`,
-  productId: "",
-  productName: "منتج جديد",
-  template: "modern",
-  heroTitle: "عنوان رئيسي جذاب",
-  heroSubtitle: "وصف قصير يشرح قيمة المنتج",
-  heroImage: "",
-  primaryColor: "#10b981",
-  accentColor: "#3b82f6",
-  ctaText: "اطلب الآن",
-  ctaStyle: "pill",
-  showReviews: true,
-  showCountdown: false,
-  showGuarantee: true,
-  showFreeShipping: true,
-  sections: ["hero", "features", "reviews", "cta"],
-  customCss: "",
-  fontFamily: "cairo",
-  backgroundColor: "#ffffff",
-  status: "draft",
-  views: 0,
-  conversions: 0,
-  price: 1500,
-  originalPrice: 3000,
-  category: "منتجات",
-  features: ["ميزة 1", "ميزة 2", "ميزة 3"],
-  heroLayout: "split",
-  animationStyle: "fade",
-  headerStyle: "floating",
-  socialProof: [
-    { name: "أحمد م.", text: "منتج رائع جداً، أنصح به!", rating: 5 },
-    { name: "سارة ك.", text: "جودة ممتازة وتوصيل سريع", rating: 5 },
-  ],
-  faqItems: [
-    { q: "هل التوصيل مجاني؟", a: "نعم، التوصيل مجاني لجميع الولايات" },
-    { q: "ما هي مدة التوصيل؟", a: "من 2 إلى 5 أيام عمل" },
-  ],
-  urgencyText: "⏰ العرض ينتهي قريباً! تبقى عدد محدود",
-  videoUrl: "",
-  beforeAfterImages: { before: "", after: "" },
-  trustBadges: ["دفع عند الاستلام", "ضمان 30 يوم", "توصيل سريع", "منتج أصلي"],
-  countdownDate: "",
-  showStickyBar: true,
-  showFloatingCta: false,
-  showSocialProofPopup: true,
-  borderRadius: 16,
-  shadowIntensity: "md",
-  gradientDirection: "to-br",
-  ctaAnimation: "pulse",
-  imageStyle: "rounded",
-  pixels: { facebook: "", tiktok: "", snapchat: "" },
-  galleryImages: [],
-  availableColors: [],
-  availableSizes: []
-});
-
 const templates = [
-  { id: "original", name: "الأصلي", icon: "💎", desc: "تصميم واجهة المتجر الكلاسيكي", preview: "from-blue-600 to-indigo-800", tag: "الأساسي" },
-  { id: "modern", name: "عصري", icon: "✨", desc: "تصميم نظيف وأنيق", preview: "from-violet-600 to-indigo-700", tag: "شائع" },
-  { id: "bold", name: "جريء", icon: "🔥", desc: "ألوان قوية وملفتة", preview: "from-orange-500 to-red-600", tag: "" },
-  { id: "minimal", name: "بسيط", icon: "🎯", desc: "مساحة بيضاء واسعة", preview: "from-slate-100 to-gray-200", tag: "" },
-  { id: "dark", name: "داكن", icon: "🌙", desc: "خلفية داكنة فاخرة", preview: "from-slate-900 to-gray-900", tag: "ترند" },
-  { id: "gradient", name: "متدرج", icon: "🌈", desc: "تدرجات لونية جذابة", preview: "from-emerald-400 to-cyan-500", tag: "" },
-  { id: "classic", name: "COD كلاسيكي", icon: "📦", desc: "تصميم COD تقليدي", preview: "from-amber-500 to-yellow-600", tag: "" },
-  { id: "luxury", name: "فاخر", icon: "👑", desc: "تصميم ذهبي فاخر", preview: "from-amber-600 via-yellow-500 to-amber-700", tag: "جديد" },
-  { id: "neon", name: "نيون", icon: "💜", desc: "ألوان نيون متوهجة", preview: "from-purple-600 via-pink-500 to-red-500", tag: "ترند" },
-  { id: "tiktok", name: "تيك توك", icon: "🎵", desc: "مستوقى من TikTok Shop", preview: "from-gray-900 via-pink-600 to-cyan-400", tag: "🔥 ترند" },
-  { id: "instagram", name: "انستغرام", icon: "📸", desc: "ستايل انستغرام شوب", preview: "from-purple-500 via-pink-500 to-orange-400", tag: "ترند" },
-  { id: "whatsapp", name: "واتساب", icon: "💬", desc: "للبيع عبر واتساب", preview: "from-green-500 to-green-700", tag: "شائع" },
-  { id: "flash-sale", name: "تخفيضات", icon: "⚡", desc: "عروض محدودة الوقت", preview: "from-red-600 via-red-500 to-orange-500", tag: "مبيعات" },
-  { id: "video-first", name: "فيديو أولاً", icon: "🎬", desc: "فيديو كخلفية رئيسية", preview: "from-slate-800 via-slate-700 to-slate-900", tag: "جديد" },
-  { id: "testimonial", name: "شهادات", icon: "⭐", desc: "يركز على آراء العملاء", preview: "from-sky-500 to-blue-600", tag: "" },
-  { id: "comparison", name: "مقارنة", icon: "⚖️", desc: "قبل وبعد", preview: "from-teal-500 to-emerald-600", tag: "ترند" },
-  { id: "countdown", name: "عد تنازلي", icon: "⏳", desc: "عروض بوقت محدد", preview: "from-rose-600 to-pink-700", tag: "مبيعات" },
+  { id: 'modern', name: 'مودرن جلاس', icon: '✨', preview: 'from-blue-500/20 to-purple-500/20', tag: 'الأكثر مبيعاً' },
+  { id: 'minimal', name: 'بسيط وأنيق', icon: '☁️', preview: 'from-gray-100 to-gray-200' },
+  { id: 'bold', name: 'جريء وحيوي', icon: '🔥', preview: 'from-primary/20 to-primary/40', tag: 'جديد' },
+  { id: 'dark', name: 'كلاسيك داكن', icon: '🌙', preview: 'from-slate-800 to-slate-900' },
 ];
 
 const availableSections = [
-  { id: "hero", name: "البطل الرئيسي", icon: Layout, required: true, desc: "القسم الأول الذي يراه الزائر" },
-  { id: "urgency-bar", name: "شريط الاستعجال", icon: AlertTriangle, desc: "شريط علوي لخلق حالة استعجال" },
-  { id: "features", name: "المميزات", icon: Star, desc: "قائمة مميزات المنتج" },
-  { id: "video", name: "فيديو المنتج", icon: Play, desc: "عرض فيديو توضيحي" },
-  { id: "gallery", name: "معرض الصور", icon: Camera, desc: "صور متعددة للمنتج" },
-  { id: "before-after", name: "قبل وبعد", icon: Ratio, desc: "مقارنة قبل وبعد الاستخدام" },
-  { id: "social-proof", name: "إثبات اجتماعي", icon: Users, desc: "عدد المشترين والتقييمات" },
-  { id: "reviews", name: "آراء العملاء", icon: MessageSquare, desc: "تقييمات ومراجعات" },
-  { id: "trust-badges", name: "شارات الثقة", icon: Shield, desc: "شارات الأمان والضمان" },
-  { id: "countdown", name: "عداد تنازلي", icon: Timer, desc: "مؤقت لنهاية العرض" },
-  { id: "guarantee", name: "ضمان واسترجاع", icon: Award, desc: "سياسة الضمان والإرجاع" },
-  { id: "shipping", name: "معلومات التوصيل", icon: Truck, desc: "تفاصيل الشحن والتوصيل" },
-  { id: "bundle", name: "عرض الحزمة", icon: Package, desc: "اشترِ أكثر وفّر أكثر" },
-  { id: "faq", name: "أسئلة شائعة", icon: MessageSquare, desc: "إجابات على الأسئلة المتكررة" },
-  { id: "sticky-cta", name: "زر شراء ثابت", icon: MousePointerClick, desc: "زر شراء يظهر عند التمرير" },
-  { id: "notification-popup", name: "إشعار شراء", icon: Megaphone, desc: "إشعارات شراء وهمية" },
-  { id: "cta", name: "دعوة للشراء", icon: ShoppingCart, required: true, desc: "نموذج الطلب" },
+  { id: 'hero', name: 'القسم الرئيسي', icon: <Rocket className="w-4 h-4" /> },
+  { id: 'benefits', name: 'مميزات المنتج', icon: <Check className="w-4 h-4" /> },
+  { id: 'gallery', name: 'معرض الصور', icon: <ImageIcon className="w-4 h-4" /> },
+  { id: 'video', name: 'فيديو المنتج', icon: <Eye className="w-4 h-4" /> },
+  { id: 'testimonials', name: 'آراء العملاء', icon: <Target className="w-4 h-4" /> },
+  { id: 'faq', name: 'الأسئلة الشائعة', icon: <Settings className="w-4 h-4" /> },
+  { id: 'offer', name: 'العرض الخاص', icon: <Zap className="w-4 h-4" /> },
+  { id: 'order', name: 'نموذج الطلب', icon: <ShoppingCart className="w-4 h-4" /> },
 ];
 
-const colorPresets = [
-  { name: "أخضر", value: "#10b981" },
-  { name: "أزرق", value: "#3b82f6" },
-  { name: "بنفسجي", value: "#8b5cf6" },
-  { name: "أحمر", value: "#ef4444" },
-  { name: "برتقالي", value: "#f97316" },
-  { name: "وردي", value: "#ec4899" },
-  { name: "ذهبي", value: "#eab308" },
-  { name: "سماوي", value: "#06b6d4" },
-  { name: "نيلي", value: "#6366f1" },
-  { name: "زمردي", value: "#059669" },
-  { name: "أرجواني", value: "#a855f7" },
-  { name: "كورالي", value: "#fb7185" },
-];
-
-const bgPresets = [
-  { name: "أبيض", value: "#ffffff" },
-  { name: "رمادي فاتح", value: "#f8fafc" },
-  { name: "كريمي", value: "#fffbeb" },
-  { name: "أزرق فاتح", value: "#eff6ff" },
-  { name: "داكن", value: "#0f172a" },
-  { name: "نيلي داكن", value: "#1e1b4b" },
-  { name: "أسود", value: "#020617" },
-  { name: "رمادي داكن", value: "#1e293b" },
-];
-
-const fontOptions = [
-  { value: "cairo", label: "Cairo" },
-  { value: "tajawal", label: "Tajawal" },
-  { value: "almarai", label: "Almarai" },
-  { value: "changa", label: "Changa" },
-  { value: "ibm-plex", label: "IBM Plex Arabic" },
-  { value: "noto-kufi", label: "Noto Kufi" },
-  { value: "readex-pro", label: "Readex Pro" },
-];
-
-const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: any }) => {
+const LandingPageBuilder = () => {
   const { toast } = useToast();
-  const [pages, setPages] = useState<LandingPageConfig[]>([]);
+  const [pages, setPages] = useState<LandingPage[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isFetchingDetails, setIsFetchingDetails] = useState<string | null>(null);
-  const [editingPage, setEditingPage] = useState<LandingPageConfig | null>(null);
-  const [previewOpen, setPreviewOpen] = useState(false);
-  const [previewDevice, setPreviewDevice] = useState<"desktop" | "mobile">("mobile");
-  const [showConfig, setShowConfig] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  
-  const userStr = localStorage.getItem("affiliate_user");
-  const affiliateUser = userStr ? JSON.parse(userStr) : null;
-  const isAdmin = affiliateUser?.role?.toUpperCase() === "ADMIN";
-  const defaultStoreName = affiliateUser?.storeName || "متجري";
-  const [activeDesignTab, setActiveDesignTab] = useState<"magic" | "content" | "template" | "colors" | "sections">(isAdmin ? "magic" : "content");
+  const [filterTemplate, setFilterTemplate] = useState("all");
+  const [activePage, setActivePage] = useState<LandingPage | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
-  const lastHandledProductId = useRef<string | null>(null);
+  const [user, setUser] = useState<any>(() => {
+    const stored = localStorage.getItem("affiliate_user");
+    return stored ? JSON.parse(stored) : null;
+  });
+  const isAdmin = user?.role?.toUpperCase() === "ADMIN";
 
-  // Fetch pages on mount
   const fetchPages = async () => {
     setIsLoading(true);
     const token = localStorage.getItem("token");
     if (!token) return;
 
     try {
-      const endpoint = isAdmin ? `${API_BASE_URL}/store/pages/all` : `${API_BASE_URL}/store/pages`;
-      const response = await fetch(endpoint, {
+      // Use the 'all' endpoint for admins or 'mine' for affiliates
+      const endpoint = isAdmin ? '/store/pages/all' : '/store/pages';
+      const res = await fetch(`${API_BASE_URL}${endpoint}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
-      const json = await response.json();
-      if (response.ok && json.data) {
+      const json = await res.json();
+      if (res.ok) {
         setPages(json.data || []);
       }
     } catch (err) {
-      console.error("Failed to fetch pages:", err);
+      console.error('Failed to fetch pages', err);
     } finally {
       setIsLoading(false);
     }
@@ -269,411 +87,212 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
     fetchPages();
   }, []);
 
-  const handleEdit = async (page: LandingPageConfig) => {
-    if (!page.id.startsWith("lp-")) {
-      setIsFetchingDetails(page.id);
-      const token = localStorage.getItem("token");
-      try {
-        const res = await fetch(`${API_BASE_URL}/store/pages/${page.id}`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const json = await res.json();
-        if (res.ok && json.data) {
-          setEditingPage(json.data);
-        } else {
-          toast({ title: "خطأ", description: "فشل تحميل تفاصيل الصفحة", variant: "destructive" });
-        }
-      } catch (err) {
-        toast({ title: "خطأ", description: "حدث خطأ في الاتصال بالسيرفر", variant: "destructive" });
-      } finally {
-        setIsFetchingDetails(null);
-      }
-    } else {
-      setEditingPage(page);
-    }
-  };
-
-  // AI Magic State
-  const [isAiGenerating, setIsAiGenerating] = useState(false);
-  const [aiProgressStep, setAiProgressStep] = useState(0);
-  const [uploadedAiImage, setUploadedAiImage] = useState<string | null>(null);
-  const [aiContextInput, setAiContextInput] = useState("");
-
-  const saveToDatabase = async (pageToSave: LandingPageConfig) => {
+  const handleEdit = async (page: LandingPage) => {
+    setIsFetchingDetails(page.id);
     const token = localStorage.getItem("token");
-    if (!token) return;
-
+    
     try {
-      const isNew = pageToSave.id.startsWith("lp-");
-      const url = isNew ? `${API_BASE_URL}/store/page` : `${API_BASE_URL}/store/page/${pageToSave.id}`;
-      const method = isNew ? "POST" : "PUT";
-
-      const { id, productId, status, views, conversions, ...configData } = pageToSave;
-
-      const response = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-        body: JSON.stringify({ productId, configData, status })
+      // Fetch the FULL configuration for this specific page
+      const res = await fetch(`${API_BASE_URL}/store/pages/${page.id}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
       });
-
-      const json = await response.json();
-      if (response.ok) {
-        if (isNew && json.data) {
-          const updated = { ...pageToSave, id: json.data.id };
-          setPages(prev => prev.map(p => p.id === pageToSave.id ? updated : p));
-          setEditingPage(updated);
-        }
-        toast({ title: "💾 تم الحفظ بنجاح" });
-      }
-    } catch (err) {
-      toast({ variant: "destructive", title: "خطأ في الحفظ" });
-    }
-  };
-
-  useEffect(() => {
-    if (initialProductToEdit && !isLoading && lastHandledProductId.current !== initialProductToEdit.id) {
-      lastHandledProductId.current = initialProductToEdit.id;
-      const existingPage = (pages || []).find((p) => p.productId === initialProductToEdit.id);
-      if (existingPage) {
-        handleEdit(existingPage);
+      const json = await res.json();
+      
+      if (res.ok && json.data) {
+        setActivePage(json.data);
+        setIsEditing(true);
       } else {
-        const newPage: LandingPageConfig = {
-          ...defaultNewPage(),
-          id: `lp-${Date.now()}`,
-          productId: initialProductToEdit.id,
-          productName: initialProductToEdit.name,
-          template: "original",
-          heroTitle: initialProductToEdit.name,
-          heroSubtitle: initialProductToEdit.description || "أفضل جودة بأفضل سعر في السوق الجزائري",
-          price: initialProductToEdit.price,
-          originalPrice: initialProductToEdit.originalPrice,
-          category: initialProductToEdit.category,
-          heroImage: initialProductToEdit.image,
-          galleryImages: initialProductToEdit.images && initialProductToEdit.images.length > 0 ? initialProductToEdit.images : (initialProductToEdit.image ? [initialProductToEdit.image] : []),
-          features: initialProductToEdit.features && initialProductToEdit.features.length > 0 ? initialProductToEdit.features : ["جودة عالية مضمونة", "توصيل سريع", "الدفع عند الاستلام"],
-          videoUrl: initialProductToEdit.videoUrl || "",
-          availableColors: initialProductToEdit.hasColors ? initialProductToEdit.availableColors : [],
-          availableSizes: initialProductToEdit.hasSizes ? initialProductToEdit.availableSizes : [],
-          showFreeShipping: !!initialProductToEdit.showFreeShipping,
-          sections: ["hero", "urgency-bar", "features", "gallery", "social-proof", "reviews", "shipping", "cta"],
-          status: "draft"
-        };
-        setPages([newPage, ...pages]);
-        setEditingPage(newPage);
-        setActiveDesignTab("content");
+        toast({
+          title: "خطأ",
+          description: "فشل في تحميل تفاصيل الصفحة",
+          variant: "destructive"
+        });
       }
-    }
-  }, [initialProductToEdit, isLoading, pages]);
-
-  const handleSimulatedAiGeneration = async () => {
-    if (!editingPage || !uploadedAiImage) return;
-    setIsAiGenerating(true);
-    setAiProgressStep(1);
-    try {
-      setAiProgressStep(2);
-      const res = await fetch(`${API_BASE_URL}/store/generate-ai`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ imageBase64: uploadedAiImage, contextText: aiContextInput })
-      });
-      if (!res.ok) throw new Error('AI failed');
-      const { config } = await res.json();
-      setAiProgressStep(3);
-      const aiGeneratedPage: LandingPageConfig = {
-        ...editingPage,
-        ...config,
-        heroImage: uploadedAiImage,
-        sections: config.suggestedSections || ["hero", "urgency-bar", "features", "gallery", "social-proof", "faq", "cta"]
-      };
-      setEditingPage(aiGeneratedPage);
-      setPages(pages.map(p => p.id === editingPage.id ? aiGeneratedPage : p));
-      setIsAiGenerating(false);
-      setAiProgressStep(0);
-      setUploadedAiImage(null);
-      setActiveDesignTab("content");
-      toast({ title: "✨ سحر الـ AI مكتمل!" });
     } catch (err) {
-      setIsAiGenerating(false);
-      toast({ title: "خطأ", description: "فشل الذكاء الاصطناعي", variant: "destructive" });
+      console.error('Failed to fetch page details', err);
+      toast({
+        title: "خطأ",
+        description: "حدث خطأ أثناء تحميل البيانات",
+        variant: "destructive"
+      });
+    } finally {
+      setIsFetchingDetails(null);
     }
   };
 
-  const updatePage = (field: keyof LandingPageConfig, value: any) => {
-    if (!editingPage) return;
-    const updated = { ...editingPage, [field]: value };
-    setEditingPage(updated);
-    setPages(pages.map(p => p.id === updated.id ? updated : p));
+  const copyLink = (page: LandingPage) => {
+    const affiliateId = user?.id || "demo";
+    const url = `${window.location.origin}/product/${page.productId}/${affiliateId}`;
+    navigator.clipboard.writeText(url);
+    setCopiedId(page.id);
+    setTimeout(() => setCopiedId(null), 2000);
+    toast({
+      title: "تم النسخ",
+      description: "تم نسخ رابط صفحة الهبوط",
+    });
   };
 
-  const applyTemplate = (tmplId: string) => {
-    if (!editingPage) return;
-    let updates: Partial<LandingPageConfig> = { template: tmplId };
-    switch (tmplId) {
-      case "original": updates = { ...updates, backgroundColor: "#ffffff", primaryColor: "#3b82f6", fontFamily: "cairo" }; break;
-      case "modern": updates = { ...updates, backgroundColor: "#f8fafc", primaryColor: "#8b5cf6", fontFamily: "tajawal" }; break;
-      case "bold": updates = { ...updates, backgroundColor: "#fffbeb", primaryColor: "#f97316", fontFamily: "almarai" }; break;
-      case "minimal": updates = { ...updates, backgroundColor: "#ffffff", primaryColor: "#0f172a", fontFamily: "ibm-plex" }; break;
-      case "dark": updates = { ...updates, backgroundColor: "#020617", primaryColor: "#10b981", fontFamily: "cairo" }; break;
-    }
-    const updated = { ...editingPage, ...updates };
-    setEditingPage(updated as LandingPageConfig);
-    setPages(pages.map(p => p.id === updated.id ? (updated as LandingPageConfig) : p));
-  };
-
-  const toggleSection = (sectionId: string) => {
-    if (!editingPage) return;
-    const section = availableSections.find(s => s.id === sectionId);
-    if (section?.required) return;
-    const sections = editingPage.sections.includes(sectionId)
-      ? editingPage.sections.filter(s => s !== sectionId)
-      : [...editingPage.sections, sectionId];
-    updatePage("sections", sections);
+  const viewPage = (page: LandingPage) => {
+    const affiliateId = user?.id || "demo";
+    window.open(`/product/${page.productId}/${affiliateId}`, '_blank');
   };
 
   const deletePage = async (id: string) => {
-    if (!confirm("هل أنت متأكد؟")) return;
+    if (!confirm("هل أنت متأكد من حذف هذه الصفحة؟")) return;
+
     const token = localStorage.getItem("token");
-    if (id.startsWith("lp-")) {
-      setPages(pages.filter(p => p.id !== id));
-      if (editingPage?.id === id) setEditingPage(null);
-      return;
-    }
     try {
-      const res = await fetch(`${API_BASE_URL}/store/page/${id}`, {
-        method: "DELETE",
-        headers: { "Authorization": `Bearer ${token}` }
+      const res = await fetch(`${API_BASE_URL}/store/pages/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {
         setPages(pages.filter(p => p.id !== id));
-        if (editingPage?.id === id) setEditingPage(null);
-        toast({ title: "🗑️ تم الحذف" });
+        toast({ title: "تم الحذف بنجاح" });
       }
     } catch (err) {
-      toast({ variant: "destructive", title: "فشل الحذف" });
+      toast({ title: "خطأ في الحذف", variant: "destructive" });
     }
   };
 
-  const getProductUrl = (page: LandingPageConfig) => {
-    if (page.productId && affiliateUser?.id) {
-      return `${window.location.origin}/product/${page.productId}/${affiliateUser.id}`;
+  const publishPage = async (page: LandingPage) => {
+    const newStatus = page.status === 'published' ? 'draft' : 'published';
+    const token = localStorage.getItem("token");
+    try {
+      const res = await fetch(`${API_BASE_URL}/store/pages/${page.id}/status`, {
+        method: 'PATCH',
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ status: newStatus })
+      });
+      if (res.ok) {
+        setPages(pages.map(p => p.id === page.id ? { ...p, status: newStatus } : p));
+        toast({ 
+          title: newStatus === 'published' ? "تم النشر" : "تم الإلغاء",
+          description: newStatus === 'published' ? "الصفحة الآن متاحة للجمهور" : "تم تحويل الصفحة إلى مسودة"
+        });
+      }
+    } catch (err) {
+      toast({ title: "خطأ", variant: "destructive" });
     }
-    return `${window.location.origin}/lp/${page.id}`;
-  };
-
-  const copyLink = (page: LandingPageConfig) => {
-    navigator.clipboard.writeText(getProductUrl(page));
-    setCopiedId(page.id);
-    setTimeout(() => setCopiedId(null), 2000);
-    toast({ title: "✅ تم النسخ" });
-  };
-
-  const viewPage = (page: LandingPageConfig) => {
-    window.open(getProductUrl(page), "_blank");
-  };
-
-  const publishPage = async (page: LandingPageConfig) => {
-    const updated: LandingPageConfig = { ...page, status: "published" };
-    setPages(pages.map(p => p.id === updated.id ? updated : p));
-    if (editingPage?.id === updated.id) setEditingPage(updated);
-    await saveToDatabase(updated);
   };
 
   const cardAnim = (delay = 0) => ({
-    initial: { opacity: 0, y: 24 },
+    initial: { opacity: 0, y: 20 },
     animate: { opacity: 1, y: 0 },
-    transition: { delay, duration: 0.5, ease: "easeOut" }
-  } as const);
+    transition: { delay, duration: 0.4, ease: "easeOut" as const }
+  });
 
-  const isDark = (bg: string) => bg.startsWith("#0") || bg.startsWith("#1") || bg.startsWith("#2") || bg === "#020617";
-
-  const renderPreview = (isMobile: boolean) => {
-    const p = editingPage;
-    if (!p) return null;
-    const tc = isDark(p.backgroundColor) ? "#ffffff" : "#0f172a";
-    const stc = isDark(p.backgroundColor) ? "#94a3b8" : "#64748b";
-    const br = `${p.borderRadius}px`;
-    const discountPercent = p.originalPrice > p.price ? Math.round((1 - p.price / p.originalPrice) * 100) : 0;
-
-    const shadowMap = { none: "shadow-none", sm: "shadow-sm", md: "shadow-md", lg: "shadow-lg", xl: "shadow-xl" };
-
-    const OrderForm = () => (
-      <div className="bg-card border-2 rounded-2xl p-6 shadow-xl space-y-6" dir="rtl" style={{ borderColor: p.primaryColor, borderRadius: br }}>
-        <h3 className="text-xl font-bold flex items-center gap-2">
-          <ShoppingCart className="w-6 h-6" style={{ color: p.primaryColor }} /> اطلب الآن
-        </h3>
-        <div className="space-y-4">
-          <div className="space-y-1.5"><Label className="text-[11px] font-bold opacity-70">الاسم الكامل *</Label><div className="h-10 rounded-xl border px-3 flex items-center text-xs bg-muted/20">أدخل اسمك الكامل</div></div>
-          <div className="space-y-1.5"><Label className="text-[11px] font-bold opacity-70">رقم الهاتف *</Label><div className="h-10 rounded-xl border px-3 flex items-center text-xs bg-muted/20">07XXXXXXXX</div></div>
-          <button className={`w-full py-4 text-sm font-black text-white shadow-xl ${p.ctaAnimation === "pulse" ? "animate-pulse" : ""}`} style={{ backgroundColor: p.primaryColor, borderRadius: br }}>{p.ctaText} — {p.price.toLocaleString()} دج</button>
-        </div>
-      </div>
-    );
-
-    if (p.template === "original") {
-      return (
-        <div className="h-full overflow-y-auto scrollbar-hide flex flex-col" style={{ backgroundColor: p.backgroundColor, fontFamily: p.fontFamily, color: tc }}>
-          <div className="sticky top-0 z-10 flex items-center justify-between px-3 h-10 border-b bg-card/80 backdrop-blur-md">
-            <div className="flex items-center gap-1.5 truncate">
-               <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-white border">
-                {p.logo ? <img src={p.logo} alt="L" className="w-full h-full object-contain p-1" /> : <ShoppingCart className="w-4 h-4" style={{ color: p.primaryColor }} />}
-               </div>
-               <span className="text-[10px] font-bold">{p.productName}</span>
-            </div>
-            <button className="text-[9px] font-bold px-4 py-1.5 rounded-full text-white" style={{ backgroundColor: p.primaryColor }}>اطلب الآن</button>
-          </div>
-          <div className="p-4 space-y-8">
-             <div className={`relative aspect-square overflow-hidden bg-muted ${shadowMap[p.shadowIntensity]}`} style={{ borderRadius: br }}>
-                {p.heroImage && <img src={p.heroImage} alt="" className="w-full h-full object-cover" />}
-                {discountPercent > 0 && <div className="absolute top-4 left-4 bg-destructive text-white px-3 py-1.5 rounded-full text-[10px] font-black">خصم {discountPercent}%</div>}
-             </div>
-             <div dir="rtl">
-                <h1 className="text-2xl font-black">{p.heroTitle}</h1>
-                <p className="text-xs mt-2 opacity-70">{p.heroSubtitle}</p>
-                <div className="mt-4 flex items-center gap-4">
-                  <span className="text-3xl font-black" style={{ color: p.primaryColor }}>{p.price.toLocaleString()} دج</span>
-                  {p.originalPrice > p.price && <span className="line-through opacity-40">{p.originalPrice.toLocaleString()} دج</span>}
-                </div>
-             </div>
-             <OrderForm />
-          </div>
-        </div>
-      );
-    }
-
+  if (isEditing && activePage) {
     return (
-      <div className="h-full overflow-y-auto scrollbar-hide" style={{ backgroundColor: p.backgroundColor, fontFamily: p.fontFamily, color: tc }}>
-        {(p.sections || []).includes("urgency-bar") && <div className="py-2.5 px-4 text-center text-xs font-bold text-white" style={{ backgroundColor: p.primaryColor }}>{p.urgencyText}</div>}
-        <div className="p-6 space-y-8" dir="rtl">
-          <div className="text-center space-y-4">
-             <h1 className="text-3xl font-black leading-tight">{p.heroTitle}</h1>
-             <div className="relative aspect-[4/3] rounded-3xl overflow-hidden shadow-xl" style={{ borderRadius: br }}>
-                {p.heroImage && <img src={p.heroImage} alt="" className="w-full h-full object-cover" />}
-             </div>
-             <p className="text-sm opacity-70">{p.heroSubtitle}</p>
-             <div className="p-4 rounded-3xl bg-muted/20 border-2" style={{ borderColor: `${p.primaryColor}20` }}>
-                <span className="text-4xl font-black" style={{ color: p.primaryColor }}>{p.price.toLocaleString()} دج</span>
-             </div>
-          </div>
-          {(p.sections || []).includes("cta") && <OrderForm />}
-        </div>
-      </div>
-    );
-  };
-
-  if (editingPage) {
-    return (
-      <div className="flex flex-col h-[calc(100vh-140px)] -m-4 sm:-m-6">
-        <div className="bg-card border-b border-border p-3 flex items-center justify-between shrink-0">
-          <div className="flex items-center gap-3">
-            <Button variant="outline" size="sm" onClick={() => setEditingPage(null)} className="rounded-xl"><ArrowRight className="w-4 h-4 ml-2" /> رجوع</Button>
-            <h2 className="text-sm font-bold truncate max-w-[150px]">{editingPage.productName}</h2>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={() => setShowConfig(!showConfig)} className="rounded-xl">
-              {showConfig ? <EyeOff className="w-4 h-4" /> : <Edit className="w-4 h-4" />}
+      <div className="fixed inset-0 z-[60] bg-background flex flex-col overflow-hidden">
+        {/* Header */}
+        <div className="h-16 border-b border-border bg-card/80 backdrop-blur-md px-6 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" size="icon" onClick={() => setIsEditing(false)} className="rounded-xl">
+              <ArrowRight className="w-5 h-5" />
             </Button>
-            <Button size="sm" onClick={() => publishPage(editingPage)} className="rounded-xl bg-primary shadow-lg"><Save className="w-4 h-4 ml-2" /> حفظ</Button>
+            <div>
+              <h2 className="font-bold text-lg">{activePage.productName}</h2>
+              <p className="text-xs text-muted-foreground">تعديل صفحة الهبوط</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="flex bg-muted p-1 rounded-xl mr-4">
+              <Button variant="ghost" size="icon" className="w-8 h-8 rounded-lg"><Monitor className="w-4 h-4" /></Button>
+              <Button variant="ghost" size="icon" className="w-8 h-8 rounded-lg text-muted-foreground"><Tablet className="w-4 h-4" /></Button>
+              <Button variant="ghost" size="icon" className="w-8 h-8 rounded-lg text-muted-foreground"><Smartphone className="w-4 h-4" /></Button>
+            </div>
+            <Button variant="outline" className="rounded-xl gap-2">
+              <Eye className="w-4 h-4" />
+              معاينة
+            </Button>
+            <Button className="rounded-xl gap-2 bg-primary hover:bg-primary/90 px-6">
+              <Save className="w-4 h-4" />
+              حفظ التغييرات
+            </Button>
           </div>
         </div>
 
-        <div className="flex flex-1 overflow-hidden">
-          <div className={`flex-1 bg-muted/20 overflow-y-auto p-4 flex justify-center items-start ${!showConfig ? "block" : "hidden lg:flex"}`}>
-             <div className={`bg-background shadow-2xl rounded-[3rem] border-8 border-card overflow-hidden transition-all duration-500 ${previewDevice === "mobile" ? "w-[375px] h-[750px]" : "w-full max-w-5xl h-[95%]"}`}>
-                {renderPreview(previewDevice === "mobile")}
-             </div>
+        {/* Builder Content */}
+        <div className="flex-1 flex overflow-hidden">
+          {/* Sidebar */}
+          <div className="w-80 border-l border-border bg-card overflow-y-auto p-6 space-y-8">
+            <div className="space-y-4">
+              <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">القالب المختار</Label>
+              <div className="grid grid-cols-2 gap-2">
+                {templates.map(t => (
+                  <button
+                    key={t.id}
+                    onClick={() => setActivePage({ ...activePage, template: t.id as any })}
+                    className={`p-3 rounded-xl border-2 transition-all text-right ${activePage.template === t.id ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"}`}
+                  >
+                    <span className="text-lg block mb-1">{t.icon}</span>
+                    <span className="text-xs font-bold block">{t.name}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">أقسام الصفحة</Label>
+                <Button variant="ghost" size="icon" className="h-6 w-6 rounded-md"><Plus className="w-3 h-3" /></Button>
+              </div>
+              <div className="space-y-2">
+                {activePage.sections.map((s, idx) => {
+                  const section = availableSections.find(a => a.id === s);
+                  return (
+                    <div key={idx} className="flex items-center gap-3 p-3 bg-muted/50 rounded-xl border border-border/50 group hover:border-primary/30 transition-all cursor-move">
+                      <div className="w-8 h-8 rounded-lg bg-card flex items-center justify-center text-primary">
+                        {section?.icon || <LayoutTemplate className="w-4 h-4" />}
+                      </div>
+                      <span className="text-sm font-medium flex-1">{section?.name || s}</span>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 rounded-lg">
+                        <Settings className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </div>
 
-          {showConfig && (
-            <div className="w-full lg:w-[400px] border-r bg-card flex flex-col shrink-0">
-               <div className="p-3 border-b flex gap-1 overflow-x-auto scrollbar-hide">
-                  {([
-                    { id: "magic", label: "AI", icon: Sparkles },
-                    { id: "content", label: "محتوى", icon: Type },
-                    { id: "template", label: "قوالب", icon: LayoutTemplate },
-                    { id: "colors", label: "ألوان", icon: Palette },
-                    { id: "sections", label: "أقسام", icon: Layers },
-                  ] as const).map(tab => (
-                    <button key={tab.id} onClick={() => setActiveDesignTab(tab.id)} className={`flex-1 py-2 rounded-xl text-[10px] font-bold border transition-all ${activeDesignTab === tab.id ? "bg-primary text-white border-primary" : "bg-muted/30 border-transparent hover:border-border"}`}>
-                       <tab.icon className="w-3.5 h-3.5 mx-auto mb-1" /> {tab.label}
-                    </button>
+          {/* Preview Area */}
+          <div className="flex-1 bg-muted/30 p-8 overflow-y-auto scrollbar-hide">
+            <div className={`max-w-4xl mx-auto bg-card min-h-[1200px] rounded-[3rem] shadow-2xl border border-border overflow-hidden`}>
+              {/* Mock Landing Page Preview */}
+              <div className={`h-96 bg-gradient-to-br ${templates.find(t => t.id === activePage.template)?.preview} flex flex-col items-center justify-center text-center p-12`}>
+                <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-5xl font-black mb-6">
+                  {activePage.productName}
+                </motion.h1>
+                <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }} className="text-xl text-muted-foreground max-w-2xl">
+                  هذا مثال لصفحة الهبوط الخاصة بمنتجك. يمكنك تخصيص كل قسم لزيادة المبيعات والتحويلات.
+                </motion.p>
+                <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.4 }} className="mt-10">
+                  <Button size="lg" className="rounded-full px-12 py-7 text-xl font-bold h-auto shadow-xl hover:scale-105 transition-transform">
+                    اطلب الآن
+                  </Button>
+                </motion.div>
+              </div>
+              
+              <div className="p-12 space-y-24">
+                <div className="grid grid-cols-3 gap-8">
+                  {[1, 2, 3].map(i => (
+                    <div key={i} className="space-y-4">
+                      <div className="w-16 h-16 rounded-3xl bg-primary/10 flex items-center justify-center text-primary">
+                        <Check className="w-8 h-8" />
+                      </div>
+                      <h3 className="text-xl font-bold">ميزة قوية {i}</h3>
+                      <p className="text-muted-foreground">وصف مختصر يشرح قيمة هذه الميزة للعميل وكيف ستحل مشكلته.</p>
+                    </div>
                   ))}
-               </div>
-               <div className="flex-1 overflow-y-auto p-4 space-y-6">
-                  {activeDesignTab === "magic" && (
-                    <div className="space-y-6">
-                       <div className="p-6 bg-gradient-to-br from-primary/10 to-purple-500/10 rounded-3xl border border-primary/20 text-center">
-                          <Sparkles className="w-10 h-10 text-primary mx-auto mb-4" />
-                          <h3 className="text-sm font-black mb-1">بناء بذكاء اصطناعي</h3>
-                          <p className="text-[10px] opacity-60">ارفع صورة وسنقوم بكتابة كل شيء لك</p>
-                       </div>
-                       <div className="space-y-4">
-                          <div className="border-2 border-dashed rounded-3xl p-8 text-center cursor-pointer hover:bg-muted/30 transition-all" onClick={() => {
-                            const input = document.createElement('input'); input.type = 'file'; input.accept = 'image/*';
-                            input.onchange = (e: any) => {
-                              const file = e.target.files[0];
-                              if (file) { const r = new FileReader(); r.onloadend = () => setUploadedAiImage(r.result as string); r.readAsDataURL(file); }
-                            };
-                            input.click();
-                          }}>
-                             {uploadedAiImage ? <img src={uploadedAiImage} className="w-full h-32 object-cover rounded-xl" /> : <Upload className="w-8 h-8 opacity-20 mx-auto" />}
-                             <p className="text-xs font-bold mt-2">ارفع صورة المنتج</p>
-                          </div>
-                          <Button onClick={handleSimulatedAiGeneration} disabled={isAiGenerating || !uploadedAiImage} className="w-full h-12 rounded-2xl bg-gradient-to-r from-primary to-purple-600">
-                             {isAiGenerating ? "جاري التوليد..." : "توليد بلمسة سحرية"}
-                          </Button>
-                       </div>
-                    </div>
-                  )}
-                  {activeDesignTab === "content" && (
-                    <div className="space-y-4">
-                       <div className="space-y-2"><Label className="text-xs font-bold">اسم المنتج</Label><Input value={editingPage.productName} onChange={e => updatePage("productName", e.target.value)} className="rounded-xl" /></div>
-                       <div className="space-y-2"><Label className="text-xs font-bold">العنوان الرئيسي</Label><Input value={editingPage.heroTitle} onChange={e => updatePage("heroTitle", e.target.value)} className="rounded-xl" /></div>
-                       <div className="space-y-2"><Label className="text-xs font-bold">الوصف</Label><Textarea value={editingPage.heroSubtitle} onChange={e => updatePage("heroSubtitle", e.target.value)} className="rounded-xl" /></div>
-                       <div className="grid grid-cols-2 gap-3">
-                          <div className="space-y-2"><Label className="text-xs font-bold">السعر</Label><Input type="number" value={editingPage.price} onChange={e => updatePage("price", parseInt(e.target.value))} className="rounded-xl" /></div>
-                          <div className="space-y-2"><Label className="text-xs font-bold">السعر الأصلي</Label><Input type="number" value={editingPage.originalPrice} onChange={e => updatePage("originalPrice", parseInt(e.target.value))} className="rounded-xl" /></div>
-                       </div>
-                    </div>
-                  )}
-                  {activeDesignTab === "template" && (
-                    <div className="grid grid-cols-2 gap-3">
-                       {templates.map(t => (
-                         <button key={t.id} onClick={() => applyTemplate(t.id)} className={`p-4 rounded-2xl border-2 transition-all ${editingPage.template === t.id ? "border-primary bg-primary/5 shadow-md" : "border-border/50 hover:border-border"}`}>
-                            <div className={`w-full h-12 rounded-lg bg-gradient-to-br ${t.preview} mb-2`} />
-                            <p className="text-[10px] font-bold">{t.name}</p>
-                         </button>
-                       ))}
-                    </div>
-                  )}
-                  {activeDesignTab === "colors" && (
-                    <div className="space-y-6">
-                       <div className="space-y-2">
-                          <Label className="text-xs font-bold">اللون الأساسي</Label>
-                          <div className="flex flex-wrap gap-2">
-                             {colorPresets.map(c => <button key={c.value} onClick={() => updatePage("primaryColor", c.value)} className="w-8 h-8 rounded-lg" style={{ backgroundColor: c.value }} />)}
-                          </div>
-                       </div>
-                       <div className="space-y-2">
-                          <Label className="text-xs font-bold">حجم الحواف ({editingPage.borderRadius}px)</Label>
-                          <Slider value={[editingPage.borderRadius]} onValueChange={([v]) => updatePage("borderRadius", v)} max={32} />
-                       </div>
-                    </div>
-                  )}
-                  {activeDesignTab === "sections" && (
-                    <div className="space-y-2">
-                       {availableSections.map(s => (
-                         <div key={s.id} onClick={() => toggleSection(s.id)} className={`flex items-center gap-3 p-3 rounded-2xl border cursor-pointer ${editingPage.sections.includes(s.id) ? "border-primary bg-primary/5" : "opacity-60"}`}>
-                            <s.icon className="w-4 h-4" /> <span className="text-[10px] font-bold">{s.name}</span>
-                         </div>
-                       ))}
-                    </div>
-                  )}
-               </div>
-               <div className="p-4 border-t bg-muted/20">
-                  <Button onClick={() => saveToDatabase(editingPage)} className="w-full h-12 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black">حفظ التغييرات</Button>
-               </div>
+                </div>
+              </div>
             </div>
-          )}
+          </div>
         </div>
       </div>
     );
@@ -681,6 +300,7 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
 
   return (
     <div className="p-1 lg:p-4 space-y-8">
+      {/* Header */}
       <motion.div {...cardAnim()} className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-black text-foreground mb-1">صفحات الهبوط</h1>
@@ -689,19 +309,36 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
         <div className="flex items-center gap-3">
           <div className="relative group">
             <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
-            <Input placeholder="بحث..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pr-10 h-12 w-[280px] bg-card border-border/50 rounded-2xl" />
+            <Input 
+              placeholder="بحث في الصفحات..." 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pr-10 h-12 w-[280px] bg-card border-border/50 rounded-2xl shadow-sm focus:ring-primary/20"
+            />
           </div>
-          <Button className="h-12 px-6 rounded-2xl bg-primary shadow-lg hover:scale-105 transition-all"><Plus className="w-5 h-5 ml-2" /> صفحة جديدة</Button>
+          <Button className="h-12 px-6 rounded-2xl gap-2 bg-primary shadow-lg shadow-primary/20 hover:scale-105 transition-all">
+            <Plus className="w-5 h-5" />
+            صفحة جديدة
+          </Button>
         </div>
       </motion.div>
 
+      {/* Stats row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        {isLoading ? [1,2,3,4].map(i => <div key={i} className="bg-card h-24 rounded-[2rem] animate-pulse border" />) : (
+        {isLoading ? (
+          [1,2,3,4].map(i => (
+            <div key={i} className="bg-card p-5 rounded-[2rem] border border-border/50 animate-pulse">
+              <div className="w-8 h-8 bg-muted rounded-xl mb-3" />
+              <div className="h-6 w-16 bg-muted rounded-lg mb-2" />
+              <div className="h-3 w-24 bg-muted rounded-md" />
+            </div>
+          ))
+        ) : (
           [
-            { label: "إجمالي الزيارات", value: (pages || []).reduce((s, p) => s + (p.views || 0), 0).toLocaleString(), icon: Eye },
-            { label: "التحويلات", value: (pages || []).reduce((s, p) => s + (p.conversions || 0), 0).toLocaleString(), icon: ShoppingCart },
-            { label: "معدل التحويل", value: `${(pages || []).reduce((s, p) => s + (p.views || 0), 0) > 0 ? (((pages || []).reduce((s, p) => s + (p.conversions || 0), 0) / (pages || []).reduce((s, p) => s + (p.views || 0), 0)) * 100).toFixed(1) : 0}%`, icon: Zap },
-            { label: "نشط حالياً", value: (pages || []).filter(p => p.status === 'published').length.toString(), icon: Rocket }
+            { label: "إجمالي الزيارات", value: pages.reduce((s, p) => s + p.views, 0).toLocaleString(), icon: Eye },
+            { label: "التحويلات", value: pages.reduce((s, p) => s + p.conversions, 0).toLocaleString(), icon: ShoppingCart },
+            { label: "معدل التحويل", value: `${pages.reduce((s, p) => s + p.views, 0) > 0 ? ((pages.reduce((s, p) => s + p.conversions, 0) / pages.reduce((s, p) => s + p.views, 0)) * 100).toFixed(1) : 0}%`, icon: Zap },
+            { label: "نشط حالياً", value: pages.filter(p => p.status === 'published').length.toString(), icon: Rocket }
           ].map((stat, i) => (
             <motion.div key={i} {...cardAnim(i * 0.1)} className="bg-card p-5 rounded-[2rem] border border-border/50">
               <stat.icon className="w-5 h-5 text-muted-foreground mb-2" />
@@ -712,20 +349,46 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
         )}
       </div>
 
+      {/* Page cards */}
       <div className="grid md:grid-cols-2 gap-6">
         <AnimatePresence mode="popLayout">
-          {isLoading ? [1,2,3,4].map(i => (
-              <div key={i} className="bg-card h-64 rounded-[2.5rem] border animate-pulse" />
-            )) : (
-            (pages || []).map((page, i) => {
+          {isLoading ? (
+            [1,2,3,4].map(i => (
+              <div key={i} className="bg-card rounded-[2.5rem] border border-border/50 overflow-hidden animate-pulse">
+                <div className="h-32 bg-muted" />
+                <div className="p-6 space-y-4">
+                  <div className="flex justify-between"><div className="h-4 w-20 bg-muted rounded" /><div className="h-4 w-16 bg-muted rounded" /></div>
+                  <div className="flex gap-2"><div className="h-3 w-12 bg-muted rounded" /><div className="h-3 w-12 bg-muted rounded" /></div>
+                  <div className="pt-4 border-t border-border flex gap-2"><div className="h-9 flex-1 bg-muted rounded-xl" /><div className="h-9 w-12 bg-muted rounded-xl" /></div>
+                </div>
+              </div>
+            ))
+          ) : (
+            pages.map((page, i) => {
               const tmpl = templates.find(t => t.id === page.template);
               return (
-                <motion.div key={page.id} layout initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9 }} transition={{ delay: i * 0.05 }} className="dash-card-interactive overflow-hidden group">
+                <motion.div key={page.id} layout
+                  initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9 }}
+                  transition={{ delay: i * 0.05 }} className="dash-card-interactive overflow-hidden group">
                   <div className={`h-32 bg-gradient-to-br ${tmpl?.preview || "from-primary to-primary/80"} p-5 flex items-end relative`}>
                     <div className="absolute inset-0 bg-black/10" />
                     <div className="relative z-10">
                       <p className="text-white font-bold text-lg line-clamp-1">{page.productName}</p>
-                      <p className="text-white/80 text-sm">{tmpl?.name} • {tmpl?.icon}</p>
+                      <p className="text-white/80 text-sm">
+                        {tmpl?.name || "قالب"} • {tmpl?.icon}
+                        {isAdmin && (page as any).ownerName && (
+                          <span className="mr-2 text-white/60">• {(page as any).ownerName}</span>
+                        )}
+                      </p>
+                    </div>
+                    <div className="absolute top-3 left-3 flex gap-1.5">
+                      {tmpl?.tag && (
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-white/20 text-white backdrop-blur-sm">{tmpl.tag}</span>
+                      )}
+                      <span className={`px-3 py-1 rounded-full text-xs font-bold ${page.status === "published" ? "bg-emerald-500 text-white" : "bg-white/20 text-white backdrop-blur-sm"
+                        }`}>
+                        {page.status === "published" ? "منشورة" : "مسودة"}
+                      </span>
                     </div>
                   </div>
                   <div className="p-5 space-y-4">
@@ -733,15 +396,44 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
                       <span className="text-muted-foreground">{page.views.toLocaleString()} زيارة</span>
                       <span className="text-secondary font-semibold">{page.conversions} تحويل</span>
                     </div>
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      {(page.sections || []).slice(0, 5).map(s => {
+                        const sec = availableSections.find(a => a.id === s);
+                        return sec ? (
+                          <span key={s} className="text-[10px] bg-muted px-2 py-0.5 rounded-lg text-muted-foreground">{sec.name}</span>
+                        ) : null;
+                      })}
+                      {page.sections?.length > 5 && (
+                        <span className="text-[10px] text-muted-foreground">+{page.sections.length - 5}</span>
+                      )}
+                    </div>
                     <div className="flex gap-2 pt-2 border-t border-border">
-                      <Button variant="outline" size="sm" onClick={() => handleEdit(page)} disabled={isFetchingDetails === page.id} className="flex-1 rounded-xl gap-1.5">
-                        {isFetchingDetails === page.id ? <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }} className="w-3.5 h-3.5 border-2 border-primary/30 border-t-primary rounded-full" /> : <Paintbrush className="w-3.5 h-3.5" />}
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => handleEdit(page)} 
+                        disabled={isFetchingDetails === page.id}
+                        className="flex-1 rounded-xl gap-1.5"
+                      >
+                        {isFetchingDetails === page.id ? (
+                          <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }} className="w-3.5 h-3.5 border-2 border-primary/30 border-t-primary rounded-full" />
+                        ) : (
+                          <Paintbrush className="w-3.5 h-3.5" />
+                        )}
                         تخصيص
                       </Button>
-                      <Button variant="outline" size="sm" onClick={() => viewPage(page)} className="rounded-xl"><ExternalLink className="w-3.5 h-3.5" /></Button>
-                      <Button variant="outline" size="sm" onClick={() => copyLink(page)} className="rounded-xl"><Copy className="w-3.5 h-3.5" /></Button>
-                      <Button variant="outline" size="sm" onClick={() => publishPage(page)} className="rounded-xl">{page.status === "published" ? <Eye className="w-3.5 h-3.5" /> : <Zap className="w-3.5 h-3.5" />}</Button>
-                      <Button variant="outline" size="sm" onClick={() => deletePage(page.id)} className="rounded-xl text-destructive hover:bg-destructive/10"><Trash2 className="w-3.5 h-3.5" /></Button>
+                      <Button variant="outline" size="sm" onClick={() => viewPage(page)} className="rounded-xl gap-1.5">
+                        <ExternalLink className="w-3.5 h-3.5" />
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={() => copyLink(page)} className="rounded-xl gap-1.5">
+                        {copiedId === page.id ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={() => publishPage(page)} className="rounded-xl">
+                        {page.status === "published" ? <Eye className="w-3.5 h-3.5" /> : <Zap className="w-3.5 h-3.5" />}
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={() => deletePage(page.id)} className="rounded-xl text-destructive hover:bg-destructive/10">
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </Button>
                     </div>
                   </div>
                 </motion.div>
@@ -752,10 +444,11 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
       </div>
 
       {pages.length === 0 && !isLoading && (
-        <div className="text-center py-16">
+        <motion.div {...cardAnim()} className="text-center py-16">
           <LayoutTemplate className="w-16 h-16 text-muted-foreground/30 mx-auto mb-4" />
           <p className="text-lg font-semibold text-muted-foreground">لا توجد صفحات هبوط</p>
-        </div>
+          <p className="text-sm text-muted-foreground/70 mt-1">أضف منتجات إلى متجرك لتظهر هنا تلقائياً</p>
+        </motion.div>
       )}
     </div>
   );
