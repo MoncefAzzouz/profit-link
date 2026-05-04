@@ -185,17 +185,22 @@ router.put('/:id', authenticateToken, requireAdmin, async (req: AuthRequest, res
       }
     });
 
-    // Sync colors/sizes to ALL existing landing pages for this product
-    if (availableColors !== undefined || availableSizes !== undefined || showFreeShipping !== undefined) {
-      const landingPages = await prisma.landingPage.findMany({ where: { productId: id as string } });
-      
+    // Sync essential product details to ALL existing landing pages for this product
+    // This ensures that when the admin updates a product, those changes reflect on all affiliate landing pages
+    const landingPages = await prisma.landingPage.findMany({ where: { productId: id as string } });
+    
+    if (landingPages.length > 0) {
       const updatePromises = landingPages.map(lp => {
         const config = lp.pageConfig as any;
         const updatedConfig = {
           ...config,
-          ...(availableColors !== undefined && { availableColors: hasColors ? availableColors : [] }),
-          ...(availableSizes !== undefined && { availableSizes: hasSizes ? availableSizes : [] }),
-          ...(showFreeShipping !== undefined && { showFreeShipping }),
+          productName: product.name,
+          price: product.price,
+          originalPrice: product.originalPrice,
+          category: product.category,
+          availableColors: product.hasColors ? product.availableColors : [],
+          availableSizes: product.hasSizes ? product.availableSizes : [],
+          showFreeShipping: product.showFreeShipping,
         };
         return prisma.landingPage.update({
           where: { id: lp.id },
