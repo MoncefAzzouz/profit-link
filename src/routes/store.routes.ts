@@ -233,6 +233,32 @@ router.get('/pages', authenticateToken, async (req: AuthRequest, res: Response) 
   }
 });
 
+// GET /api/store/pages/all (Admin: List ALL landing pages across all affiliates)
+router.get('/pages/all', authenticateToken, async (req: AuthRequest, res: Response): Promise<any> => {
+  try {
+    const userId = req.user?.userId;
+    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+
+    // Verify user is admin
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user || user.role.toUpperCase() !== 'ADMIN') {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const pages = await prisma.landingPage.findMany({
+      orderBy: { updatedAt: 'desc' },
+      include: {
+        owner: { select: { id: true, name: true, storeName: true } }
+      }
+    });
+
+    res.json({ data: pages });
+  } catch (error) {
+    console.error('Admin fetch all pages error:', error);
+    res.status(500).json({ error: 'Failed to fetch landing pages' });
+  }
+});
+
 // POST /api/store/page (Save or Create Landing Page config)
 router.post('/page', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
@@ -259,15 +285,20 @@ router.post('/page', authenticateToken, async (req: AuthRequest, res: Response) 
 // PUT /api/store/page/:id (Update existing landing page)
 router.put('/page/:id', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
-    const ownerId = req.user?.userId;
+    const userId = req.user?.userId;
     const { id } = req.params;
     const { configData, status } = req.body;
 
-    if (!ownerId) return res.status(401).json({ error: 'Unauthorized' });
+    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
 
     const existingPage = await prisma.landingPage.findUnique({ where: { id: id as string } });
-    if (!existingPage || existingPage.ownerId !== ownerId) {
-      return res.status(404).json({ error: 'Page not found or unauthorized' });
+    if (!existingPage) return res.status(404).json({ error: 'Page not found' });
+
+    // Allow if owner OR admin
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    const userIsAdmin = user?.role.toUpperCase() === 'ADMIN';
+    if (existingPage.ownerId !== userId && !userIsAdmin) {
+      return res.status(403).json({ error: 'Unauthorized' });
     }
 
     const page = await prisma.landingPage.update({
@@ -287,14 +318,19 @@ router.put('/page/:id', authenticateToken, async (req: AuthRequest, res: Respons
 // DELETE /api/store/page/:id (Delete landing page)
 router.delete('/page/:id', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
-    const ownerId = req.user?.userId;
+    const userId = req.user?.userId;
     const { id } = req.params;
 
-    if (!ownerId) return res.status(401).json({ error: 'Unauthorized' });
+    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
 
     const existingPage = await prisma.landingPage.findUnique({ where: { id: id as string } });
-    if (!existingPage || existingPage.ownerId !== ownerId) {
-      return res.status(404).json({ error: 'Page not found or unauthorized' });
+    if (!existingPage) return res.status(404).json({ error: 'Page not found' });
+
+    // Allow if owner OR admin
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    const userIsAdmin = user?.role.toUpperCase() === 'ADMIN';
+    if (existingPage.ownerId !== userId && !userIsAdmin) {
+      return res.status(403).json({ error: 'Unauthorized' });
     }
 
     await prisma.landingPage.delete({
