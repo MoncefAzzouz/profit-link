@@ -271,6 +271,7 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
   const [isFetchingDetails, setIsFetchingDetails] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const lastHandledProductId = useRef<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Fetch pages from backend on mount
   useEffect(() => {
@@ -287,11 +288,14 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
         const json = await response.json();
         if (response.ok && json.data) {
           // Backend now returns a summary (no heavy pageConfig) for the list
-          const mappedPages = json.data.map((p: any) => ({
-            ...p, // Contains id, productName, template, status, views, conversions, sections, ownerName
-            // Note: pageConfig is missing here, will be fetched when editing
-          }));
-          setPages(mappedPages);
+          const mappedPages = (json.data || []).map((p: any) => {
+            if (!p || !p.id) return null;
+            return {
+              ...p,
+              sections: p.sections || []
+            };
+          }).filter(Boolean);
+          setPages(mappedPages as LandingPageConfig[]);
         }
       } catch (err) {
         console.error("Failed to fetch pages:", err);
@@ -305,7 +309,17 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
 
   const handleEdit = async (page: any) => {
     if (page?.id?.startsWith("lp-")) {
-      setEditingPage(page);
+      // Ensure local pages also have all defaults hydrated
+      const hydratedPage = { ...defaultNewPage(), ...page };
+      hydratedPage.sections = Array.isArray(hydratedPage.sections) ? hydratedPage.sections : ["hero", "features", "cta"];
+      hydratedPage.features = Array.isArray(hydratedPage.features) ? hydratedPage.features : [];
+      hydratedPage.socialProof = Array.isArray(hydratedPage.socialProof) ? hydratedPage.socialProof : [];
+      hydratedPage.faqItems = Array.isArray(hydratedPage.faqItems) ? hydratedPage.faqItems : [];
+      hydratedPage.trustBadges = Array.isArray(hydratedPage.trustBadges) ? hydratedPage.trustBadges : [];
+      hydratedPage.galleryImages = Array.isArray(hydratedPage.galleryImages) ? hydratedPage.galleryImages : [];
+      hydratedPage.availableColors = Array.isArray(hydratedPage.availableColors) ? hydratedPage.availableColors : [];
+      hydratedPage.availableSizes = Array.isArray(hydratedPage.availableSizes) ? hydratedPage.availableSizes : [];
+      setEditingPage(hydratedPage as LandingPageConfig);
       return;
     }
 
@@ -317,7 +331,23 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
       });
       const json = await res.json();
       if (res.ok && json.data) {
-        setEditingPage(json.data);
+        // Hydrate: merge server data on top of defaults to guarantee all array fields exist
+        const serverData = json.data;
+        const hydratedPage: LandingPageConfig = {
+          ...defaultNewPage(),
+          ...serverData,
+          sections: Array.isArray(serverData.sections) ? serverData.sections : ["hero", "features", "cta"],
+          features: Array.isArray(serverData.features) ? serverData.features : [],
+          socialProof: Array.isArray(serverData.socialProof) ? serverData.socialProof : [],
+          faqItems: Array.isArray(serverData.faqItems) ? serverData.faqItems : [],
+          trustBadges: Array.isArray(serverData.trustBadges) ? serverData.trustBadges : [],
+          galleryImages: Array.isArray(serverData.galleryImages) ? serverData.galleryImages : [],
+          availableColors: Array.isArray(serverData.availableColors) ? serverData.availableColors : [],
+          availableSizes: Array.isArray(serverData.availableSizes) ? serverData.availableSizes : [],
+        };
+        setEditingPage(hydratedPage);
+      } else {
+        toast({ variant: "destructive", title: "خطأ", description: "لم يتم العثور على بيانات الصفحة" });
       }
     } catch (err) {
       toast({ variant: "destructive", title: "خطأ", description: "تعذر تحميل تفاصيل الصفحة" });
@@ -338,14 +368,19 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
   };
 
   const saveToDatabase = async (pageToSave: LandingPageConfig) => {
+    if (!pageToSave || !pageToSave.id) {
+      toast({ variant: "destructive", title: "خطأ", description: "بيانات الصفحة غير مكتملة" });
+      return;
+    }
     const token = localStorage.getItem("token");
     if (!token) {
       toast({ variant: "destructive", title: "غير مصرح", description: "يرجى تسجيل الدخول أولاً" });
       return;
     }
 
+    setIsSaving(true);
     try {
-      const isNew = pageToSave?.id?.startsWith("lp-");
+      const isNew = (pageToSave.id || "").startsWith("lp-");
       const url = isNew
         ? `${API_BASE_URL}/store/page`
         : `${API_BASE_URL}/store/page/${pageToSave.id}`;
@@ -383,6 +418,8 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
     } catch (err) {
       console.error("Save error:", err);
       toast({ variant: "destructive", title: "خطأ في الحفظ", description: "تعذر حفظ البيانات في السيرفر" });
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -569,35 +606,45 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
     if (!editingPage) return;
     const section = availableSections.find(s => s.id === sectionId);
     if (section?.required) return;
-    const sections = editingPage.sections.includes(sectionId)
-      ? editingPage.sections.filter(s => s !== sectionId)
-      : [...editingPage.sections, sectionId];
+    const sections = (editingPage?.sections || []).includes(sectionId)
+      ? editingPage!.sections.filter(s => s !== sectionId)
+      : [...(editingPage?.sections || []), sectionId];
     updatePage("sections", sections);
   };
 
   const deletePage = async (id: string) => {
     if (!id) return;
-    const token = localStorage.getItem("token");
-    if (id?.startsWith("lp-")) {
-      // Only local, just filter it
-      setPages(pages.filter(p => p.id !== id));
-      if (editingPage?.id === id) setEditingPage(null);
-      toast({ title: "🗑️ تم الحذف" });
-      return;
-    }
-
-    try {
-      const res = await fetch(`${API_BASE_URL}/store/page/${id}`, {
-        method: "DELETE",
-        headers: { "Authorization": `Bearer ${token}` }
-      });
-      if (res.ok) {
+    
+    if (window.confirm("هل أنت متأكد من حذف هذه الصفحة؟")) {
+      const token = localStorage.getItem("token");
+      
+      if ((id || "").startsWith("lp-")) {
+        // Only local, just filter it
         setPages(pages.filter(p => p.id !== id));
         if (editingPage?.id === id) setEditingPage(null);
-        toast({ title: "🗑️ تم الحذف من قاعدة البيانات" });
+        toast({ title: "🗑️ تم الحذف" });
+        return;
       }
-    } catch (err) {
-      toast({ variant: "destructive", title: "فشل الحذف" });
+
+      setIsSaving(true);
+      try {
+        const res = await fetch(`${API_BASE_URL}/store/page/${id}`, {
+          method: "DELETE",
+          headers: { "Authorization": `Bearer ${token}` }
+        });
+        if (res.ok) {
+          setPages(pages.filter(p => p.id !== id));
+          if (editingPage?.id === id) setEditingPage(null);
+          toast({ title: "🗑️ تم الحذف من قاعدة البيانات" });
+        } else {
+          const data = await res.json();
+          throw new Error(data.message || "فشل الحذف");
+        }
+      } catch (err: any) {
+        toast({ variant: "destructive", title: "فشل الحذف", description: err.message });
+      } finally {
+        setIsSaving(false);
+      }
     }
   };
 
@@ -642,7 +689,7 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
     transition: { delay, duration: 0.5, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] },
   });
 
-  const isDark = (bg: string) => bg?.startsWith("#0") || bg?.startsWith("#1") || bg?.startsWith("#2") || bg === "#020617";
+  const isDark = (bg: string | undefined) => !!(bg?.startsWith("#0") || bg?.startsWith("#1") || bg?.startsWith("#2") || bg === "#020617");
 
   const renderPreview = (isMobile: boolean) => {
     const p = editingPage;
@@ -1858,7 +1905,7 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
                 <div className="space-y-2">
                   <p className="text-xs text-muted-foreground mb-3">فعّل أو عطّل الأقسام حسب حاجتك</p>
                   {availableSections.map((section) => {
-                    const isActive = editingPage.sections.includes(section.id);
+                    const isActive = (editingPage?.sections || []).includes(section.id);
                     return (
                       <div key={section.id} className="space-y-2">
                         <button
