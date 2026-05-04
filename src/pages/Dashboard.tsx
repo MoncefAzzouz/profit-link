@@ -467,7 +467,9 @@ const Dashboard = () => {
     address: "",
     deliveryType: "home" as "home" | "office",
     stopDesk: 0,
-    deliveryFee: 500
+    deliveryFee: 500,
+    selectedColor: "",
+    selectedSize: ""
   });
 
   // Store Editor State
@@ -3279,6 +3281,54 @@ const Dashboard = () => {
                   </div>
                 </div>
 
+                {(selectedProduct.availableColors?.length > 0 || selectedProduct.availableSizes?.length > 0) && (
+                  <div className="grid md:grid-cols-2 gap-6">
+                    {selectedProduct.availableColors?.length > 0 && (
+                      <div className="space-y-2">
+                        <Label className="flex items-center gap-2 text-sm font-bold ml-1">اللون</Label>
+                        <div className="flex flex-wrap gap-2">
+                          {selectedProduct.availableColors.map((color: string) => (
+                            <button
+                              key={color}
+                              type="button"
+                              onClick={() => setOrderFormData({ ...orderFormData, selectedColor: color })}
+                              className={`px-4 py-2 rounded-xl text-sm font-bold border-2 transition-all ${
+                                orderFormData.selectedColor === color 
+                                  ? "border-primary bg-primary/5 text-primary" 
+                                  : "border-muted bg-muted/30 text-muted-foreground hover:border-muted-foreground/30"
+                              }`}
+                            >
+                              {color}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {selectedProduct.availableSizes?.length > 0 && (
+                      <div className="space-y-2">
+                        <Label className="flex items-center gap-2 text-sm font-bold ml-1">المقاس</Label>
+                        <div className="flex flex-wrap gap-2">
+                          {selectedProduct.availableSizes.map((size: string) => (
+                            <button
+                              key={size}
+                              type="button"
+                              onClick={() => setOrderFormData({ ...orderFormData, selectedSize: size })}
+                              className={`min-w-[50px] h-10 rounded-xl text-sm font-bold border-2 transition-all ${
+                                orderFormData.selectedSize === size 
+                                  ? "border-secondary bg-secondary/5 text-secondary" 
+                                  : "border-muted bg-muted/30 text-muted-foreground hover:border-muted-foreground/30"
+                              }`}
+                            >
+                              {size}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 <div className="space-y-2">
                   <Label className="flex items-center gap-2 text-sm font-bold ml-1">
                     <MapPin className="w-4 h-4 text-primary" /> العنوان بالتفصيل
@@ -3325,6 +3375,15 @@ const Dashboard = () => {
                         return;
                       }
 
+                      if (selectedProduct.availableColors?.length > 0 && !orderFormData.selectedColor) {
+                        toast({ title: "تنبيه", description: "يرجى اختيار اللون المطلوب", variant: "destructive" });
+                        return;
+                      }
+                      if (selectedProduct.availableSizes?.length > 0 && !orderFormData.selectedSize) {
+                        toast({ title: "تنبيه", description: "يرجى اختيار المقاس المطلوب", variant: "destructive" });
+                        return;
+                      }
+
                       try {
                         const response = await fetch(`${API_BASE_URL}/orders`, {
                           method: 'POST',
@@ -3341,7 +3400,9 @@ const Dashboard = () => {
                             totalAmount: selectedProduct.price + orderFormData.deliveryFee,
                             commissionAmount: selectedProduct.commission,
                             shippingFee: orderFormData.deliveryFee, // Added
-                            stopDesk: orderFormData.stopDesk // Added
+                            stopDesk: orderFormData.stopDesk, // Added
+                            selectedColor: orderFormData.selectedColor,
+                            selectedSize: orderFormData.selectedSize
                           })
                         });
 
@@ -3349,7 +3410,7 @@ const Dashboard = () => {
 
                         toast({ title: "تم تسجيل الطلب بنجاح! 🚀", description: "سيتم تتبع الطلب من قسم طلبياتي." });
                         setIsOrderDialogOpen(false);
-                        setOrderFormData({ firstName: "", lastName: "", phone: "", wilaya: "", commune: "", address: "", deliveryType: "home", stopDesk: 0, deliveryFee: 500 });
+                        setOrderFormData({ firstName: "", lastName: "", phone: "", wilaya: "", commune: "", address: "", deliveryType: "home", stopDesk: 0, deliveryFee: 500, selectedColor: "", selectedSize: "" });
 
                         // Refetch orders immediately
                         const currentToken = localStorage.getItem("token");
