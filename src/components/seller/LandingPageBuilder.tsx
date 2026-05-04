@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { API_BASE_URL } from '@/config';
+import { API_BASE_URL } from '@/config/api';
 
 interface LandingPage {
   id: string;
@@ -183,7 +183,7 @@ const LandingPageBuilder = () => {
     initial: { opacity: 0, y: 20 },
     animate: { opacity: 1, y: 0 },
     transition: { delay, duration: 0.4, ease: "easeOut" }
-  });
+  } as const);
 
   if (isEditing && activePage) {
     return (
