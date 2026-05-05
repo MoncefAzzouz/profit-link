@@ -466,6 +466,8 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
           galleryImages: initialProductToEdit.images && initialProductToEdit.images.length > 0 
             ? initialProductToEdit.images 
             : (initialProductToEdit.image ? [initialProductToEdit.image] : existingPage.galleryImages),
+          category: initialProductToEdit.category || existingPage.category,
+          heroSubtitle: initialProductToEdit.description || existingPage.heroSubtitle,
           // Sync variants
           availableColors: initialProductToEdit.hasColors ? (initialProductToEdit.availableColors || []) : [],
           availableSizes: initialProductToEdit.hasSizes ? (initialProductToEdit.availableSizes || []) : [],
@@ -1549,6 +1551,35 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
                         <Upload className="w-5 h-5 text-primary/40 group-hover:text-primary transition-colors mb-1" />
                         <span className="text-[9px] font-bold text-muted-foreground text-center">اضف<br/>صورة</span>
                       </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4 p-4 bg-muted/30 rounded-2xl border border-border">
+                    <div className="space-y-2">
+                      <Label className="text-xs font-bold opacity-70">التصنيف</Label>
+                      <Input 
+                        disabled={!isAdmin} 
+                        value={editingPage.category} 
+                        onChange={(e) => updatePage("category", e.target.value)} 
+                        className="rounded-xl h-9 text-sm bg-background" 
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-xs font-bold opacity-70">العنوان الرئيسي</Label>
+                      <Input 
+                        value={editingPage.heroTitle} 
+                        onChange={(e) => updatePage("heroTitle", e.target.value)} 
+                        className="rounded-xl h-9 text-sm bg-background" 
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-xs font-bold opacity-70">الوصف (العنوان الفرعي)</Label>
+                      <Textarea 
+                        value={editingPage.heroSubtitle} 
+                        onChange={(e) => updatePage("heroSubtitle", e.target.value)} 
+                        className="rounded-xl text-sm bg-background" 
+                        rows={3} 
+                      />
                     </div>
                   </div>
 
