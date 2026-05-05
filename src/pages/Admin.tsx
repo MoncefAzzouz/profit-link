@@ -3053,23 +3053,99 @@ const Admin = () => {
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label className="text-xs font-bold text-muted-foreground">صورة قبل (Before)</Label>
-                        <Input 
-                          placeholder="رابط صورة قبل" 
-                          value={productFormData.beforeImage} 
-                          onChange={e => setProductFormData({...productFormData, beforeImage: e.target.value})}
-                          className="h-10 rounded-xl bg-white border-none"
-                          dir="ltr"
-                        />
+                        <div className="relative group aspect-square rounded-2xl overflow-hidden bg-white border-2 border-dashed border-amber-500/20 hover:border-amber-500/40 transition-colors">
+                          {productFormData.beforeImage ? (
+                            <>
+                              <img src={productFormData.beforeImage} className="w-full h-full object-cover" />
+                              <button 
+                                type="button"
+                                onClick={() => setProductFormData({...productFormData, beforeImage: ""})}
+                                className="absolute top-2 right-2 bg-destructive text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                              >
+                                <X className="w-4 h-4" />
+                              </button>
+                            </>
+                          ) : (
+                            <label className="w-full h-full cursor-pointer flex flex-col items-center justify-center gap-2">
+                              <Plus className="w-6 h-6 text-amber-500/40" />
+                              <span className="text-[10px] font-bold text-amber-600/60">رفع صورة</span>
+                              <input 
+                                type="file" 
+                                accept="image/*" 
+                                className="hidden" 
+                                onChange={async (e) => {
+                                  const file = e.target.files?.[0];
+                                  if (!file) return;
+                                  const token = localStorage.getItem("token");
+                                  const formData = new FormData();
+                                  formData.append("image", file);
+                                  try {
+                                    const res = await fetch(`${API_BASE_URL}/upload/image`, {
+                                      method: "POST",
+                                      headers: { "Authorization": `Bearer ${token}` },
+                                      body: formData,
+                                    });
+                                    const json = await res.json();
+                                    if (res.ok && json.url) {
+                                      setProductFormData({ ...productFormData, beforeImage: json.url });
+                                      toast({ title: "تم رفع صورة (قبل) بنجاح ✅" });
+                                    }
+                                  } catch (err: any) {
+                                    toast({ title: "خطأ", description: err.message, variant: "destructive" });
+                                  }
+                                }}
+                              />
+                            </label>
+                          )}
+                        </div>
                       </div>
                       <div className="space-y-2">
                         <Label className="text-xs font-bold text-muted-foreground">صورة بعد (After)</Label>
-                        <Input 
-                          placeholder="رابط صورة بعد" 
-                          value={productFormData.afterImage} 
-                          onChange={e => setProductFormData({...productFormData, afterImage: e.target.value})}
-                          className="h-10 rounded-xl bg-white border-none"
-                          dir="ltr"
-                        />
+                        <div className="relative group aspect-square rounded-2xl overflow-hidden bg-white border-2 border-dashed border-amber-500/20 hover:border-amber-500/40 transition-colors">
+                          {productFormData.afterImage ? (
+                            <>
+                              <img src={productFormData.afterImage} className="w-full h-full object-cover" />
+                              <button 
+                                type="button"
+                                onClick={() => setProductFormData({...productFormData, afterImage: ""})}
+                                className="absolute top-2 right-2 bg-destructive text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                              >
+                                <X className="w-4 h-4" />
+                              </button>
+                            </>
+                          ) : (
+                            <label className="w-full h-full cursor-pointer flex flex-col items-center justify-center gap-2">
+                              <Plus className="w-6 h-6 text-amber-500/40" />
+                              <span className="text-[10px] font-bold text-amber-600/60">رفع صورة</span>
+                              <input 
+                                type="file" 
+                                accept="image/*" 
+                                className="hidden" 
+                                onChange={async (e) => {
+                                  const file = e.target.files?.[0];
+                                  if (!file) return;
+                                  const token = localStorage.getItem("token");
+                                  const formData = new FormData();
+                                  formData.append("image", file);
+                                  try {
+                                    const res = await fetch(`${API_BASE_URL}/upload/image`, {
+                                      method: "POST",
+                                      headers: { "Authorization": `Bearer ${token}` },
+                                      body: formData,
+                                    });
+                                    const json = await res.json();
+                                    if (res.ok && json.url) {
+                                      setProductFormData({ ...productFormData, afterImage: json.url });
+                                      toast({ title: "تم رفع صورة (بعد) بنجاح ✅" });
+                                    }
+                                  } catch (err: any) {
+                                    toast({ title: "خطأ", description: err.message, variant: "destructive" });
+                                  }
+                                }}
+                              />
+                            </label>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </motion.div>

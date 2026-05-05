@@ -1615,23 +1615,63 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
                     <Label className="text-xs font-bold flex items-center gap-2">
                       <Image className="w-4 h-4 text-amber-600" /> صور قبل وبعد
                     </Label>
-                    <div className="space-y-2">
-                      <Label className="text-[10px] text-muted-foreground">صورة قبل (Before)</Label>
-                      <Input 
-                        value={editingPage.beforeAfterImages?.before || ""} 
-                        onChange={(e) => updatePage("beforeAfterImages", { ...editingPage.beforeAfterImages, before: e.target.value })} 
-                        className="rounded-xl h-8 text-xs" 
-                        dir="ltr"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-[10px] text-muted-foreground">صورة بعد (After)</Label>
-                      <Input 
-                        value={editingPage.beforeAfterImages?.after || ""} 
-                        onChange={(e) => updatePage("beforeAfterImages", { ...editingPage.beforeAfterImages, after: e.target.value })} 
-                        className="rounded-xl h-8 text-xs" 
-                        dir="ltr"
-                      />
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-2">
+                        <Label className="text-[10px] text-muted-foreground">صورة قبل (Before)</Label>
+                        <div 
+                          className="relative aspect-square rounded-xl bg-background border-2 border-dashed border-primary/20 flex flex-col items-center justify-center cursor-pointer hover:bg-primary/5 transition-all overflow-hidden group"
+                          onClick={() => {
+                            const input = document.createElement('input');
+                            input.type = 'file';
+                            input.accept = 'image/*';
+                            input.onchange = (e: any) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                const reader = new FileReader();
+                                reader.onloadend = () => {
+                                  updatePage("beforeAfterImages", { ...editingPage.beforeAfterImages, before: reader.result as string });
+                                };
+                                reader.readAsDataURL(file);
+                              }
+                            };
+                            input.click();
+                          }}
+                        >
+                          {editingPage.beforeAfterImages?.before ? (
+                            <img src={editingPage.beforeAfterImages.before} className="w-full h-full object-cover" />
+                          ) : (
+                            <Upload className="w-4 h-4 text-primary/40 group-hover:text-primary transition-colors" />
+                          )}
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] text-muted-foreground">صورة بعد (After)</Label>
+                        <div 
+                          className="relative aspect-square rounded-xl bg-background border-2 border-dashed border-primary/20 flex flex-col items-center justify-center cursor-pointer hover:bg-primary/5 transition-all overflow-hidden group"
+                          onClick={() => {
+                            const input = document.createElement('input');
+                            input.type = 'file';
+                            input.accept = 'image/*';
+                            input.onchange = (e: any) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                const reader = new FileReader();
+                                reader.onloadend = () => {
+                                  updatePage("beforeAfterImages", { ...editingPage.beforeAfterImages, after: reader.result as string });
+                                };
+                                reader.readAsDataURL(file);
+                              }
+                            };
+                            input.click();
+                          }}
+                        >
+                          {editingPage.beforeAfterImages?.after ? (
+                            <img src={editingPage.beforeAfterImages.after} className="w-full h-full object-cover" />
+                          ) : (
+                            <Upload className="w-4 h-4 text-primary/40 group-hover:text-primary transition-colors" />
+                          )}
+                        </div>
+                      </div>
                     </div>
                   </div>
 
