@@ -469,7 +469,11 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
           // Sync variants
           availableColors: initialProductToEdit.hasColors ? (initialProductToEdit.availableColors || []) : [],
           availableSizes: initialProductToEdit.hasSizes ? (initialProductToEdit.availableSizes || []) : [],
-          showFreeShipping: initialProductToEdit.showFreeShipping !== undefined ? initialProductToEdit.showFreeShipping : existingPage.showFreeShipping
+          showFreeShipping: initialProductToEdit.showFreeShipping !== undefined ? initialProductToEdit.showFreeShipping : existingPage.showFreeShipping,
+          beforeAfterImages: initialProductToEdit.hasBeforeAfter ? { before: initialProductToEdit.beforeImage, after: initialProductToEdit.afterImage } : existingPage.beforeAfterImages,
+          sections: initialProductToEdit.hasBeforeAfter && !existingPage.sections.includes("before-after") 
+            ? [...existingPage.sections.slice(0, 4), "before-after", ...existingPage.sections.slice(4)]
+            : existingPage.sections
         };
         setEditingPage(updatedPage);
         setActiveDesignTab("content");
@@ -497,7 +501,10 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
           availableColors: initialProductToEdit.hasColors ? (initialProductToEdit.availableColors || []) : [],
           availableSizes: initialProductToEdit.hasSizes ? (initialProductToEdit.availableSizes || []) : [],
           showFreeShipping: initialProductToEdit.showFreeShipping || false,
-          sections: ["hero", "urgency-bar", "features", "gallery", "social-proof", "reviews", "shipping", "cta"],
+          beforeAfterImages: initialProductToEdit.hasBeforeAfter ? { before: initialProductToEdit.beforeImage, after: initialProductToEdit.afterImage } : { before: "", after: "" },
+          sections: initialProductToEdit.hasBeforeAfter 
+            ? ["hero", "urgency-bar", "before-after", "features", "gallery", "social-proof", "reviews", "shipping", "cta"]
+            : ["hero", "urgency-bar", "features", "gallery", "social-proof", "reviews", "shipping", "cta"],
           status: "draft"
         };
 
@@ -1603,6 +1610,30 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
                     />
                   </div>
 
+                  {/* Before & After Images */}
+                  <div className="space-y-4 p-4 bg-amber-500/5 rounded-2xl border border-amber-500/10">
+                    <Label className="text-xs font-bold flex items-center gap-2">
+                      <Image className="w-4 h-4 text-amber-600" /> صور قبل وبعد
+                    </Label>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] text-muted-foreground">صورة قبل (Before)</Label>
+                      <Input 
+                        value={editingPage.beforeAfterImages?.before || ""} 
+                        onChange={(e) => updatePage("beforeAfterImages", { ...editingPage.beforeAfterImages, before: e.target.value })} 
+                        className="rounded-xl h-8 text-xs" 
+                        dir="ltr"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] text-muted-foreground">صورة بعد (After)</Label>
+                      <Input 
+                        value={editingPage.beforeAfterImages?.after || ""} 
+                        onChange={(e) => updatePage("beforeAfterImages", { ...editingPage.beforeAfterImages, after: e.target.value })} 
+                        className="rounded-xl h-8 text-xs" 
+                        dir="ltr"
+                      />
+                    </div>
+                  </div>
 
                   {/* Features */}
 

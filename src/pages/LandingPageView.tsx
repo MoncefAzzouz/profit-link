@@ -782,6 +782,26 @@ const LandingPageView = () => {
                 </div>
               )}
 
+              {p.sections.includes("before-after") && (
+                <div className="space-y-4 pt-8" id="before-after">
+                  <h2 className="text-2xl font-bold border-r-4 border-primary pr-3">قبل وبعد الاستخدام</h2>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="rounded-2xl overflow-hidden border-2 border-red-300 shadow-lg">
+                      <div className="bg-red-500 text-center py-2 text-sm font-bold text-white">قبل ❌</div>
+                      <div className="aspect-square bg-muted flex items-center justify-center">
+                        {p.beforeAfterImages?.before ? <img src={p.beforeAfterImages.before} className="w-full h-full object-cover" /> : <Image className="w-12 h-12 opacity-20" />}
+                      </div>
+                    </div>
+                    <div className="rounded-2xl overflow-hidden border-2 shadow-lg" style={{ borderColor: p.primaryColor }}>
+                      <div className="text-center py-2 text-sm font-bold text-white" style={{ backgroundColor: p.primaryColor }}>بعد ✅</div>
+                      <div className="aspect-square bg-muted flex items-center justify-center">
+                        {p.beforeAfterImages?.after ? <img src={p.beforeAfterImages.after} className="w-full h-full object-cover" /> : <Image className="w-12 h-12 opacity-20" />}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {p.sections.includes("reviews") && (
                 <div className="space-y-6 pt-8" id="reviews">
                   <h2 className="text-2xl font-bold border-r-4 border-primary pr-3">آراء العملاء</h2>

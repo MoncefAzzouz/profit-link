@@ -7,7 +7,7 @@ import {
   Settings, Menu, X, TrendingUp, CheckCircle, XCircle,
   Truck, Clock, Eye, Edit, Ban, Search, Filter, Plus, Trophy, Sparkles,
   BarChart3, ChevronLeft, AlertTriangle, SlidersHorizontal, Store, UserPlus, Check, MapPin, CreditCard,
-  Video, Star, EyeOff, Trash2, Upload, FileText, Film, Image as ImageIcon, User, LayoutTemplate, Layers, LogOut, MessageSquare
+  Video, Star, EyeOff, Trash2, Upload, FileText, Film, Image as ImageIcon, User, LayoutTemplate, Layers, LogOut, MessageSquare, SplitSquareHorizontal
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -425,7 +425,10 @@ const Admin = () => {
     sizeType: "clothing",
     availableColors: [],
     availableSizes: [],
-    showFreeShipping: false
+    showFreeShipping: false,
+    hasBeforeAfter: false,
+    beforeImage: "",
+    afterImage: ""
   });
 
 
@@ -858,7 +861,10 @@ const Admin = () => {
       hasSizes: false,
       sizeType: "clothing",
       availableColors: [],
-      availableSizes: []
+      availableSizes: [],
+      hasBeforeAfter: false,
+      beforeImage: "",
+      afterImage: ""
     });
 
     setIsProductDialogOpen(true);
@@ -873,7 +879,10 @@ const Admin = () => {
       hasSizes: !!product.hasSizes,
       sizeType: product.sizeType || "clothing",
       availableColors: product.availableColors || [],
-      availableSizes: product.availableSizes || []
+      availableSizes: product.availableSizes || [],
+      hasBeforeAfter: !!product.hasBeforeAfter,
+      beforeImage: product.beforeImage || "",
+      afterImage: product.afterImage || ""
     });
 
     setIsProductDialogOpen(true);
@@ -906,7 +915,10 @@ const Admin = () => {
         availableColors: productFormData.hasColors ? productFormData.availableColors : [],
         availableSizes: productFormData.hasSizes ? productFormData.availableSizes : [],
         showFreeShipping: productFormData.showFreeShipping,
-        features: productFormData.features || []
+        features: productFormData.features || [],
+        hasBeforeAfter: productFormData.hasBeforeAfter,
+        beforeImage: productFormData.hasBeforeAfter ? productFormData.beforeImage : null,
+        afterImage: productFormData.hasBeforeAfter ? productFormData.afterImage : null
       };
 
 
@@ -3018,7 +3030,50 @@ const Admin = () => {
                       onCheckedChange={v => setProductFormData({...productFormData, showFreeShipping: v})}
                     />
                   </div>
+                  <div className="flex items-center justify-between p-4 bg-amber-500/5 rounded-2xl border border-amber-500/10 col-span-2">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center">
+                        <SplitSquareHorizontal className="w-4 h-4 text-amber-600" />
+                      </div>
+                      <Label className="font-bold text-sm cursor-pointer" htmlFor="hasBeforeAfter">ميزة قبل وبعد (Before & After)</Label>
+                    </div>
+                    <Switch 
+                      id="hasBeforeAfter"
+                      checked={productFormData.hasBeforeAfter}
+                      onCheckedChange={v => setProductFormData({...productFormData, hasBeforeAfter: v})}
+                    />
+                  </div>
                 </div>
+
+                {productFormData.hasBeforeAfter && (
+                  <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4 p-5 bg-amber-500/5 rounded-3xl border border-amber-500/10">
+                    <Label className="font-bold text-sm flex items-center gap-2">
+                      <SplitSquareHorizontal className="w-4 h-4 text-amber-600" /> صور قبل وبعد
+                    </Label>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label className="text-xs font-bold text-muted-foreground">صورة قبل (Before)</Label>
+                        <Input 
+                          placeholder="رابط صورة قبل" 
+                          value={productFormData.beforeImage} 
+                          onChange={e => setProductFormData({...productFormData, beforeImage: e.target.value})}
+                          className="h-10 rounded-xl bg-white border-none"
+                          dir="ltr"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-xs font-bold text-muted-foreground">صورة بعد (After)</Label>
+                        <Input 
+                          placeholder="رابط صورة بعد" 
+                          value={productFormData.afterImage} 
+                          onChange={e => setProductFormData({...productFormData, afterImage: e.target.value})}
+                          className="h-10 rounded-xl bg-white border-none"
+                          dir="ltr"
+                        />
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
 
                 {productFormData.hasColors && (
                   <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="space-y-3 p-5 bg-primary/5 rounded-3xl border border-primary/10">

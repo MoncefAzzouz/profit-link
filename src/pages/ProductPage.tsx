@@ -471,6 +471,34 @@ const ProductPage = () => {
                 </div>
               </div>
             </div>
+            {/* Before & After Images */}
+            {product.hasBeforeAfter && (
+              <div className="space-y-4 p-4 bg-amber-500/5 rounded-2xl border border-amber-500/10">
+                <h3 className="text-lg font-bold text-center">قبل وبعد الاستخدام</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="rounded-xl overflow-hidden border-2 border-red-200">
+                    <div className="bg-red-500 text-white text-[10px] font-bold py-1 text-center">قبل (Before)</div>
+                    <div className="aspect-square bg-muted">
+                      {product.beforeImage ? (
+                        <img src={product.beforeImage} alt="Before" className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center opacity-20"><Image /></div>
+                      )}
+                    </div>
+                  </div>
+                  <div className="rounded-xl overflow-hidden border-2 border-green-200">
+                    <div className="bg-green-500 text-white text-[10px] font-bold py-1 text-center">بعد (After)</div>
+                    <div className="aspect-square bg-muted">
+                      {product.afterImage ? (
+                        <img src={product.afterImage} alt="After" className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center opacity-20"><Image /></div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Order Form */}
             <form onSubmit={handleSubmit} className="bg-card rounded-2xl p-6 shadow-lg space-y-5">
