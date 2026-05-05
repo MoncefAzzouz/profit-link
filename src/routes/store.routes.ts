@@ -49,7 +49,7 @@ router.put('/settings', authenticateToken, async (req: AuthRequest, res: Respons
     const settings = await prisma.storeSettings.upsert({
       where: { affiliateId },
       update: { 
-        storeName: storeName || 'My Store', 
+        storeName: storeName || '', 
         logoUrl: storeLogo, 
         primaryColor, 
         fontFamily, 
@@ -58,7 +58,7 @@ router.put('/settings', authenticateToken, async (req: AuthRequest, res: Respons
       },
       create: { 
         affiliateId, 
-        storeName: storeName || 'My Store', 
+        storeName: storeName || '', 
         logoUrl: storeLogo, 
         primaryColor, 
         fontFamily, 
@@ -607,7 +607,7 @@ router.put('/products', authenticateToken, async (req: AuthRequest, res: Respons
       update: { config: updatedConfig },
       create: {
         affiliateId,
-        storeName: 'My Store',
+        storeName: '',
         config: updatedConfig
       }
     });
@@ -703,7 +703,7 @@ router.put('/favorites', authenticateToken, async (req: AuthRequest, res: Respon
     await prisma.storeSettings.upsert({
       where: { affiliateId },
       update: { config: updatedConfig },
-      create: { affiliateId, storeName: 'My Store', config: updatedConfig }
+      create: { affiliateId, storeName: '', config: updatedConfig }
     });
 
     res.json({ message: 'Favorites saved successfully' });
