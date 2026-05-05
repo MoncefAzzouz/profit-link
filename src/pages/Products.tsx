@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
 import { 
@@ -67,8 +68,32 @@ const Products = () => {
   const [isAffiliate, setIsAffiliate] = useState(false);
 
   const [storeSettings, setStoreSettings] = useState<StoreSettings>(defaultStoreSettings);
-  const [products, setProducts] = useState<any[]>([]);
-  const [dbCategories, setDbCategories] = useState<any[]>([]);
+
+  const { data: productsData } = useQuery({
+    queryKey: ['products', 'list'],
+    queryFn: async () => {
+      const res = await fetch(`${API_BASE_URL}/products`);
+      if (!res.ok) throw new Error('Failed to fetch products');
+      return res.json();
+    },
+    staleTime: 60_000,
+    gcTime: 5 * 60_000,
+    placeholderData: keepPreviousData,
+  });
+  const products: any[] = productsData?.data ?? [];
+
+  const { data: categoriesData } = useQuery({
+    queryKey: ['products', 'categories'],
+    queryFn: async () => {
+      const res = await fetch(`${API_BASE_URL}/products/categories`);
+      if (!res.ok) throw new Error('Failed to fetch categories');
+      return res.json();
+    },
+    staleTime: 5 * 60_000,
+    gcTime: 30 * 60_000,
+    placeholderData: keepPreviousData,
+  });
+  const dbCategories: any[] = categoriesData?.data ?? [];
 
   const activeCategories = useMemo(() => {
     return ["الكل", ...dbCategories.filter(c => c.isActive).map(c => c.name)];
@@ -79,34 +104,6 @@ const Products = () => {
     if (saved) {
       setStoreSettings(JSON.parse(saved));
     }
-
-    // Fetch products from backend
-    const fetchProducts = async () => {
-      try {
-        const res = await fetch(`${API_BASE_URL}/products`);
-        const json = await res.json();
-        if (res.ok && json.data) {
-          setProducts(json.data);
-        }
-      } catch (err) {
-        console.error('Failed to fetch products', err);
-      }
-    };
-    fetchProducts();
-
-    // Fetch categories from backend
-    const fetchCategories = async () => {
-      try {
-        const res = await fetch(`${API_BASE_URL}/products/categories`);
-        const json = await res.json();
-        if (res.ok && json.data) {
-          setDbCategories(json.data);
-        }
-      } catch (err) {
-        console.error('Failed to fetch categories', err);
-      }
-    };
-    fetchCategories();
   }, []);
 
   const [affiliateId, setAffiliateId] = useState("aff-demo-123");
@@ -236,10 +233,12 @@ const Products = () => {
             transition={{ duration: 10, repeat: Infinity, repeatType: "reverse" }}
             className="absolute inset-0"
            >
-             <img 
-               src={storeSettings.hero?.bannerUrl} 
-               alt="Hero Banner" 
+             <img
+               src={storeSettings.hero?.bannerUrl}
+               alt="Hero Banner"
                className="w-full h-full object-cover"
+               decoding="async"
+               fetchPriority="high"
              />
              <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/30 to-background" />
            </motion.div>
@@ -255,7 +254,7 @@ const Products = () => {
                  transition={{ duration: 0.6 }}
                  className="w-24 h-24 md:w-32 md:h-32 rounded-full overflow-hidden border-4 border-background/20 shadow-2xl mb-6 mx-auto backdrop-blur-sm bg-black/20"
                >
-                 <img src={storeSettings.storeLogo} alt={storeSettings.storeName} className="w-full h-full object-cover" />
+                 <img src={storeSettings.storeLogo} alt={storeSettings.storeName} className="w-full h-full object-cover" loading="lazy" decoding="async" />
                </motion.div>
              )}
 
@@ -597,7 +596,7 @@ const Products = () => {
             <div className="md:col-span-2 space-y-6">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 rounded-2xl overflow-hidden shadow-md">
-                  <img src={storeSettings.storeLogo} alt={storeSettings.storeName} className="w-full h-full object-cover" />
+                  <img src={storeSettings.storeLogo} alt={storeSettings.storeName} className="w-full h-full object-cover" loading="lazy" decoding="async" />
                 </div>
                 <h3 className="text-2xl font-black text-foreground">{storeSettings.storeName}</h3>
               </div>
@@ -779,6 +778,8 @@ const ProductCard = ({ product, index, viewMode, storeSettings, copyAffiliateLin
           src={isHovered && product.images?.length > 1 ? product.images[1] : product.image}
           className="w-full h-full object-cover"
           alt={product.name}
+          loading="lazy"
+          decoding="async"
         />
         
         {/* Glass Badges */}
@@ -909,12 +910,12 @@ const QuickViewModal = ({ isOpen, onOpenChange, product, storeSettings, copyAffi
           {/* Gallery Sidebar */}
           <div className="lg:w-1/2 bg-muted/30 p-8 space-y-6 overflow-y-auto">
             <div className="aspect-square rounded-3xl overflow-hidden bg-white shadow-xl">
-              <img src={product.image} className="w-full h-full object-cover" />
+              <img src={product.image} alt={product.name} className="w-full h-full object-cover" loading="lazy" decoding="async" />
             </div>
             <div className="grid grid-cols-4 gap-4">
               {product.images?.map((img: string, i: number) => (
                 <div key={i} className="aspect-square rounded-xl overflow-hidden border-2 border-transparent hover:border-primary transition-all cursor-pointer">
-                  <img src={img} className="w-full h-full object-cover" />
+                  <img src={img} alt="" className="w-full h-full object-cover" loading="lazy" decoding="async" />
                 </div>
               ))}
             </div>
