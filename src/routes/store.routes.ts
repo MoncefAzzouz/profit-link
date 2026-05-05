@@ -227,6 +227,8 @@ router.get('/pages', authenticateToken, async (req: AuthRequest, res: Response) 
     const limit = parseInt(req.query.limit as string) || 20;
     const skip = (page - 1) * limit;
 
+    res.set('Cache-Control', 'private, max-age=10, stale-while-revalidate=30');
+
     const [pages, total] = await Promise.all([
       prisma.landingPage.findMany({
         where: { ownerId },
@@ -239,31 +241,15 @@ router.get('/pages', authenticateToken, async (req: AuthRequest, res: Response) 
           status: true,
           views: true,
           conversions: true,
-          createdAt: true,
           updatedAt: true,
-          // Extract specific metadata from pageConfig if possible, 
-          // or just rely on the frontend to fetch full config when editing.
-          // For now, we return a version WITHOUT the heavy pageConfig
-        }
+          pageConfig: true,
+          product: { select: { name: true } },
+        },
       }),
-      prisma.landingPage.count({ where: { ownerId } })
+      prisma.landingPage.count({ where: { ownerId } }),
     ]);
 
-    // We still need some basic info for the list cards. 
-    // Since we can't easily extract from JSON in Prisma findMany, 
-    // we'll fetch a "light" version of the config or include product info.
-    const pagesWithProduct = await prisma.landingPage.findMany({
-      where: { ownerId },
-      orderBy: { updatedAt: 'desc' },
-      skip,
-      take: limit,
-      include: {
-        product: { select: { name: true } }
-      }
-    });
-
-    // Strip out the massive pageConfig if requested or if it's too large
-    const summaryPages = pagesWithProduct.map(p => {
+    const summaryPages = pages.map(p => {
       const config = p.pageConfig as any;
       return {
         id: p.id,
@@ -278,7 +264,7 @@ router.get('/pages', authenticateToken, async (req: AuthRequest, res: Response) 
       };
     });
 
-    res.json({ 
+    res.json({
       data: summaryPages,
       pagination: { total, page, limit, pages: Math.ceil(total / limit) }
     });
@@ -303,17 +289,26 @@ router.get('/pages/all', authenticateToken, async (req: AuthRequest, res: Respon
     const limit = parseInt(req.query.limit as string) || 20;
     const skip = (page - 1) * limit;
 
+    res.set('Cache-Control', 'private, max-age=10, stale-while-revalidate=30');
+
     const [pages, total] = await Promise.all([
       prisma.landingPage.findMany({
         orderBy: { updatedAt: 'desc' },
         skip,
         take: limit,
-        include: {
+        select: {
+          id: true,
+          productId: true,
+          status: true,
+          views: true,
+          conversions: true,
+          updatedAt: true,
+          pageConfig: true,
           owner: { select: { id: true, name: true, storeName: true } },
-          product: { select: { name: true } }
-        }
+          product: { select: { name: true } },
+        },
       }),
-      prisma.landingPage.count()
+      prisma.landingPage.count(),
     ]);
 
     const summaryPages = pages.map(p => {

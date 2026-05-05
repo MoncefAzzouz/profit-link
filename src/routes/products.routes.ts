@@ -5,12 +5,64 @@ import { authenticateToken, AuthRequest, requireAdmin } from '../middleware/auth
 const router = Router();
 const prisma = new PrismaClient();
 
-// GET /api/products (List all products — public for affiliates)
+// Fields needed by the products listing / quick-view UI. Heavy detail-only
+// fields (adText, videoUrl, features, variant arrays, before/after, wholesale
+// pricing) are loaded by the product detail endpoint instead.
+const productListSelect = {
+  id: true,
+  name: true,
+  description: true,
+  price: true,
+  originalPrice: true,
+  commission: true,
+  images: true,
+  image: true,
+  category: true,
+  stock: true,
+  status: true,
+  isVisible: true,
+  isTrend: true,
+  isFeatured: true,
+  createdAt: true,
+} as const;
+
+// GET /api/products (List products — public for affiliates)
+// Optional: ?page=1&limit=24 enables server pagination. Without them, returns
+// all visible products (legacy behaviour) so the existing client keeps working.
 router.get('/', async (req: Request, res: Response) => {
   try {
+    const pageParam = req.query.page ? parseInt(String(req.query.page), 10) : null;
+    const limitParam = req.query.limit ? parseInt(String(req.query.limit), 10) : null;
+    const paginated = pageParam !== null || limitParam !== null;
+
+    const where = { isVisible: true } as const;
+    const orderBy = { createdAt: 'desc' as const };
+
+    res.set('Cache-Control', 'public, max-age=30, stale-while-revalidate=60');
+
+    if (paginated) {
+      const page = Math.max(1, pageParam ?? 1);
+      const limit = Math.min(100, Math.max(1, limitParam ?? 24));
+      const [total, products] = await Promise.all([
+        prisma.product.count({ where }),
+        prisma.product.findMany({
+          where,
+          orderBy,
+          select: productListSelect,
+          skip: (page - 1) * limit,
+          take: limit,
+        }),
+      ]);
+      return res.json({
+        data: products,
+        pagination: { total, page, limit, pages: Math.ceil(total / limit) },
+      });
+    }
+
     const products = await prisma.product.findMany({
-      where: { isVisible: true },
-      orderBy: { createdAt: 'desc' }
+      where,
+      orderBy,
+      select: productListSelect,
     });
     res.json({ data: products });
   } catch (error) {
@@ -96,8 +148,34 @@ router.delete('/categories/:id', authenticateToken, requireAdmin, async (req: Au
 // GET /api/products/all (Admin: List ALL products including hidden)
 router.get('/all', authenticateToken, requireAdmin, async (req: AuthRequest, res: Response): Promise<any> => {
   try {
+    const pageParam = req.query.page ? parseInt(String(req.query.page), 10) : null;
+    const limitParam = req.query.limit ? parseInt(String(req.query.limit), 10) : null;
+    const paginated = pageParam !== null || limitParam !== null;
+    const orderBy = { createdAt: 'desc' as const };
+
+    res.set('Cache-Control', 'private, max-age=10, stale-while-revalidate=30');
+
+    if (paginated) {
+      const page = Math.max(1, pageParam ?? 1);
+      const limit = Math.min(100, Math.max(1, limitParam ?? 24));
+      const [total, products] = await Promise.all([
+        prisma.product.count(),
+        prisma.product.findMany({
+          orderBy,
+          select: productListSelect,
+          skip: (page - 1) * limit,
+          take: limit,
+        }),
+      ]);
+      return res.json({
+        data: products,
+        pagination: { total, page, limit, pages: Math.ceil(total / limit) },
+      });
+    }
+
     const products = await prisma.product.findMany({
-      orderBy: { createdAt: 'desc' }
+      orderBy,
+      select: productListSelect,
     });
     res.json({ data: products });
   } catch (error) {
