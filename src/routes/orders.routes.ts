@@ -99,13 +99,30 @@ router.get('/affiliate', authenticateToken, async (req: AuthRequest, res: Respon
     console.log(`🔍 Fetching orders for affiliate: ${affiliateId}`);
     if (!affiliateId) return res.status(401).json({ error: 'Unauthorized' });
 
-    const orders = await prisma.order.findMany({
-      where: { affiliateId },
-      include: { product: true },
-      orderBy: { createdAt: 'desc' }
-    });
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 50;
+    const skip = (page - 1) * limit;
 
-    res.json({ data: orders });
+    const [orders, total] = await Promise.all([
+      prisma.order.findMany({
+        where: { affiliateId },
+        include: { product: true },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit
+      }),
+      prisma.order.count({ where: { affiliateId } })
+    ]);
+
+    res.json({ 
+      data: orders,
+      pagination: {
+        total,
+        page,
+        limit,
+        pages: Math.ceil(total / limit)
+      }
+    });
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch affiliate orders' });
   }
@@ -114,12 +131,29 @@ router.get('/affiliate', authenticateToken, async (req: AuthRequest, res: Respon
 // GET /api/orders/all (Admin sees everything)
 router.get('/all', authenticateToken, requireAdmin, async (req: AuthRequest, res: Response) => {
   try {
-    const orders = await prisma.order.findMany({
-      include: { product: true, affiliate: { select: { name: true, email: true } } },
-      orderBy: { createdAt: 'desc' }
-    });
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 50;
+    const skip = (page - 1) * limit;
 
-    res.json({ data: orders });
+    const [orders, total] = await Promise.all([
+      prisma.order.findMany({
+        include: { product: true, affiliate: { select: { name: true, email: true } } },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit
+      }),
+      prisma.order.count()
+    ]);
+
+    res.json({ 
+      data: orders,
+      pagination: {
+        total,
+        page,
+        limit,
+        pages: Math.ceil(total / limit)
+      }
+    });
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch system orders' });
   }
