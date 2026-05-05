@@ -204,6 +204,7 @@ router.put('/:id', authenticateToken, requireAdmin, async (req: AuthRequest, res
           price: product.price,
           originalPrice: product.originalPrice,
           category: product.category,
+          heroSubtitle: product.description || config.heroSubtitle,
           availableColors: product.hasColors ? product.availableColors : [],
           availableSizes: product.hasSizes ? product.availableSizes : [],
           showFreeShipping: product.showFreeShipping,
