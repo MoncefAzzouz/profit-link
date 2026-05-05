@@ -108,7 +108,7 @@ router.get('/all', authenticateToken, requireAdmin, async (req: AuthRequest, res
 // POST /api/products (Admin: Create new product)
 router.post('/', authenticateToken, requireAdmin, async (req: AuthRequest, res: Response): Promise<any> => {
   try {
-    const { name, description, adText, price, originalPrice, commission, category, images, videoUrl, stock, isVisible, isTrend, isFeatured, features, wholesalePrice, affiliatePrice, hasColors, availableColors, hasSizes, availableSizes, showFreeShipping } = req.body;
+    const { name, description, adText, price, originalPrice, commission, category, images, videoUrl, stock, isVisible, isTrend, isFeatured, features, wholesalePrice, affiliatePrice, hasColors, availableColors, hasSizes, availableSizes, showFreeShipping, hasBeforeAfter, beforeImage, afterImage } = req.body;
     const image: string | undefined = req.body.image;
 
     if (!name || !price || !commission || !category) {
@@ -138,7 +138,10 @@ router.post('/', authenticateToken, requireAdmin, async (req: AuthRequest, res: 
         availableColors: availableColors || [],
         hasSizes: hasSizes || false,
         availableSizes: availableSizes || [],
-        showFreeShipping: showFreeShipping || false
+        showFreeShipping: showFreeShipping || false,
+        hasBeforeAfter: hasBeforeAfter || false,
+        beforeImage: beforeImage || null,
+        afterImage: afterImage || null
       }
     });
 
@@ -153,7 +156,7 @@ router.post('/', authenticateToken, requireAdmin, async (req: AuthRequest, res: 
 router.put('/:id', authenticateToken, requireAdmin, async (req: AuthRequest, res: Response): Promise<any> => {
   try {
     const { id } = req.params;
-    const { name, description, adText, price, originalPrice, commission, category, images, videoUrl, stock, isVisible, isTrend, isFeatured, features, status, wholesalePrice, affiliatePrice, hasColors, availableColors, hasSizes, availableSizes, showFreeShipping } = req.body;
+    const { name, description, adText, price, originalPrice, commission, category, images, videoUrl, stock, isVisible, isTrend, isFeatured, features, status, wholesalePrice, affiliatePrice, hasColors, availableColors, hasSizes, availableSizes, showFreeShipping, hasBeforeAfter, beforeImage, afterImage } = req.body;
     const image: string | undefined = req.body.image;
 
     const product = await prisma.product.update({
@@ -182,6 +185,9 @@ router.put('/:id', authenticateToken, requireAdmin, async (req: AuthRequest, res
         ...(hasSizes !== undefined && { hasSizes }),
         ...(availableSizes !== undefined && { availableSizes }),
         ...(showFreeShipping !== undefined && { showFreeShipping }),
+        ...(hasBeforeAfter !== undefined && { hasBeforeAfter }),
+        ...(beforeImage !== undefined && { beforeImage }),
+        ...(afterImage !== undefined && { afterImage }),
       }
     });
 
@@ -201,6 +207,7 @@ router.put('/:id', authenticateToken, requireAdmin, async (req: AuthRequest, res
           availableColors: product.hasColors ? product.availableColors : [],
           availableSizes: product.hasSizes ? product.availableSizes : [],
           showFreeShipping: product.showFreeShipping,
+          beforeAfterImages: product.hasBeforeAfter ? { before: product.beforeImage, after: product.afterImage } : config.beforeAfterImages,
         };
         return prisma.landingPage.update({
           where: { id: lp.id },

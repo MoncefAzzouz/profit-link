@@ -98,6 +98,11 @@ model Product {
   availableSizes   String[]
   showFreeShipping Boolean  @default(false)
   
+  // Before and After 
+  hasBeforeAfter   Boolean  @default(false)
+  beforeImage      String?
+  afterImage       String?
+  
   orders         Order[]
   landingPages   LandingPage[]
   
