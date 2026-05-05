@@ -1308,7 +1308,7 @@ const Dashboard = () => {
               </div>
 
               {/* Products Grid */}
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
                 {filteredProducts.map((product, index) => {
                   const isFavorite = favorites.has(product.id);
                   const isInStore = storeProducts.has(product.id);
@@ -1349,22 +1349,21 @@ const Dashboard = () => {
                             <span className="text-[10px] text-muted-foreground font-bold">سعر الجملة</span>
                             <span className="text-xs font-black text-orange-600">{(product.affiliatePrice || product.originalPrice || 0).toLocaleString()} دج</span>
                           </div>
-                          <div className="space-y-1">
-                            <div className="flex justify-between items-center">
-                              <span className="text-[10px] text-muted-foreground font-bold">سعر البيع النهائي</span>
-                              <span className="text-sm font-black text-secondary">{(product.price || 0).toLocaleString()} دج</span>
-                            </div>
-                            <div className="bg-destructive p-2 rounded-lg mt-1 shadow-sm">
-                              <p className="text-[10px] text-white font-bold leading-tight text-center">
-                                إذا رفعت السعر عن هذا، فإن كل الأرباح الإضافية هي لك ولن تتحصل المنصة على أي فائدة منها
-                              </p>
-                            </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-[10px] text-muted-foreground font-bold">سعر البيع النهائي</span>
+                            <span className="text-sm font-black text-secondary">{(product.price || 0).toLocaleString()} دج</span>
                           </div>
                           <div className="h-px bg-border/50 my-0.5"></div>
                           <div className="flex justify-between items-center">
                             <span className="text-[10px] text-primary font-bold">عمولة المسوق</span>
                             <span className="text-sm font-black text-primary">{(product.commission || 0).toLocaleString()} دج</span>
                           </div>
+                        </div>
+
+                        <div className="bg-amber-50 p-2.5 rounded-xl border border-amber-200">
+                          <p className="text-[9px] text-amber-700 font-bold leading-tight text-center">
+                            إذا رفعت السعر عن هذا، فإن كل الأرباح الإضافية هي لك ولن تتحصل المنصة على أي فائدة منها
+                          </p>
                         </div>
 
                         <Button
@@ -3024,12 +3023,12 @@ const Dashboard = () => {
 
       {/* ===== PRODUCT DETAIL DIALOG ===== */}
       <Dialog open={isDetailDialogOpen} onOpenChange={setIsDetailDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto rounded-[2rem] p-0 border-none bg-background shadow-2xl" dir="rtl">
+        <DialogContent className="w-[95vw] sm:max-w-4xl max-h-[95vh] overflow-y-auto rounded-[2.5rem] md:rounded-[3rem] p-0 border-none bg-background shadow-2xl scrollbar-hide" dir="rtl">
           {selectedProduct && (
             <div className="flex flex-col lg:flex-row h-full">
               {/* Image Gallery Side */}
-              <div className="lg:w-1/2 p-6 lg:p-10 bg-muted/30 relative">
-                <div className="aspect-square rounded-3xl overflow-hidden bg-white shadow-inner mb-6 space-y-4">
+              <div className="lg:w-1/2 p-4 sm:p-6 lg:p-10 bg-muted/30 relative">
+                <div className="aspect-square rounded-3xl overflow-hidden bg-white shadow-inner mb-6 relative">
                   <motion.img
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -3089,22 +3088,22 @@ const Dashboard = () => {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-6">
-                  <div className="bg-muted/50 p-4 rounded-2xl flex flex-col justify-between">
-                    <div>
-                      <p className="text-xs text-muted-foreground mb-1">سعر البيع النهائي</p>
-                      <p className="text-2xl font-black text-primary">{selectedProduct.price.toLocaleString()} دج</p>
-                    </div>
-                    <div className="bg-destructive p-3 rounded-xl mt-4 shadow-md">
-                      <p className="text-xs text-white font-black leading-relaxed text-center">
-                        إذا رفعت السعر عن هذا، فإن كل الأرباح الإضافية هي لك ولن تتحصل المنصة على أي فائدة منها
-                      </p>
-                    </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="bg-primary/5 p-6 rounded-3xl border border-primary/10 flex flex-col items-center text-center">
+                    <p className="text-[10px] font-black uppercase tracking-wider text-primary/60 mb-2">سعر البيع النهائي</p>
+                    <p className="text-3xl font-black text-primary">{selectedProduct.price.toLocaleString()} دج</p>
                   </div>
-                  <div className="bg-secondary/10 p-4 rounded-2xl border border-secondary/20">
-                    <p className="text-xs text-muted-foreground mb-1">عمولتك الصافية</p>
-                    <p className="text-2xl font-black text-secondary">{selectedProduct.commission.toLocaleString()} دج</p>
+                  <div className="bg-secondary/5 p-6 rounded-3xl border border-secondary/10 flex flex-col items-center text-center">
+                    <p className="text-[10px] font-black uppercase tracking-wider text-secondary/60 mb-2">عمولتك الصافية</p>
+                    <p className="text-3xl font-black text-secondary">{selectedProduct.commission.toLocaleString()} دج</p>
                   </div>
+                </div>
+
+                <div className="bg-amber-500/10 p-5 rounded-[2rem] border border-amber-500/20 relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 rounded-full -mr-16 -mt-16 transition-transform group-hover:scale-110" />
+                  <p className="relative z-10 text-xs md:text-sm text-amber-700 font-bold leading-relaxed text-center">
+                    إذا رفعت السعر عن هذا، فإن كل الأرباح الإضافية هي لك ولن تتحصل المنصة على أي فائدة منها
+                  </p>
                 </div>
 
                 <div className="space-y-3">
