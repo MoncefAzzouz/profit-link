@@ -227,44 +227,15 @@ const ProductsTab: React.FC<ProductsTabProps> = ({
                   </p>
                 </div>
 
-                <div className="grid grid-cols-2 gap-2 mt-auto">
+                <div className="mt-auto">
                   <Button
                     variant="outline"
                     onClick={() => toggleStoreProduct(product.id)}
-                    className={`gap-2 rounded-xl h-10 text-[10px] font-black ${isInStore ? "border-secondary text-secondary bg-secondary/5" : "border-border hover:bg-muted"
+                    className={`w-full gap-2 rounded-xl h-11 text-xs font-black ${isInStore ? "border-secondary text-secondary bg-secondary/5" : "border-border hover:bg-muted"
                       }`}
                   >
-                    {isInStore ? <X className="w-3.5 h-3.5" /> : <PackagePlus className="w-3.5 h-3.5" />}
-                    {isInStore ? "إزالة" : "إضافة للمتجر"}
-                  </Button>
-                  <Button
-                    onClick={() => openOrderForm(product)}
-                    className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2 rounded-xl h-10 text-[10px] font-black shadow-md shadow-primary/20"
-                  >
-                    <ShoppingCart className="w-3.5 h-3.5" />
-                    طلب سريع
-                  </Button>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-2">
-                  <Button
-                    variant="ghost"
-                    className="text-[10px] font-black gap-2 bg-muted/50 hover:bg-muted text-foreground transition-all rounded-xl h-10"
-                    onClick={() => handleCopyLink(product)}
-                  >
-                    {copiedId === product.id ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5" />}
-                    {copiedId === product.id ? "تم النسخ" : "رابط المنتج"}
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    className="text-[10px] font-black gap-2 bg-secondary/10 hover:bg-secondary/20 text-secondary transition-all rounded-xl h-10"
-                    onClick={() => {
-                      setProductToEditLandingPage(product);
-                      setActiveTab("landing_pages");
-                    }}
-                  >
-                    <LayoutTemplate className="w-3.5 h-3.5" />
-                    تعديل الهبوط
+                    {isInStore ? <X className="w-4 h-4" /> : <PackagePlus className="w-4 h-4" />}
+                    {isInStore ? "إزالة من المتجر" : "إضافة للمتجر"}
                   </Button>
                 </div>
               </div>
