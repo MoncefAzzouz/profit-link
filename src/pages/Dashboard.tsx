@@ -970,12 +970,14 @@ const Dashboard = () => {
               {sidebarItems.find(item => item.id === activeTab)?.label}
             </h1>
             <div className="flex items-center gap-3">
-              <Link to="/products">
-                <Button variant="outline" size="sm" className="gap-2 rounded-xl">
-                  <Package className="w-4 h-4" />
-                  <span className="hidden sm:inline">تصفح المنتجات</span>
-                </Button>
-              </Link>
+              {activeTab !== "products" && (
+                <Link to="/products">
+                  <Button variant="outline" size="sm" className="gap-2 rounded-xl">
+                    <Package className="w-4 h-4" />
+                    <span className="hidden sm:inline">تصفح المنتجات</span>
+                  </Button>
+                </Link>
+              )}
               <Button
                 variant="ghost"
                 size="icon"
