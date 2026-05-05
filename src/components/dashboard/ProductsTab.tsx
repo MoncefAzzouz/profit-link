@@ -170,7 +170,7 @@ const ProductsTab: React.FC<ProductsTabProps> = ({
       </div>
 
       {/* Products Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
         {filteredProducts.map((product, index) => {
           const isFavorite = favorites.has(product.id);
           const isInStore = storeProducts.has(product.id);
