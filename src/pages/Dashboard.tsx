@@ -2402,6 +2402,35 @@ const Dashboard = () => {
                   </p>
                 </div>
 
+                {selectedProduct.hasMarketingOffers && selectedProduct.marketingOffers && selectedProduct.marketingOffers.length > 0 && (
+                  <div className="space-y-3">
+                    <h4 className="font-bold flex items-center gap-2 text-orange-600">
+                      <Gift className="w-4 h-4" /> العروض التسويقية
+                    </h4>
+                    <div className="grid grid-cols-1 gap-3">
+                      {selectedProduct.marketingOffers.map((offer: any, idx: number) => (
+                        <div key={idx} className="bg-orange-500/5 p-4 rounded-2xl border border-orange-500/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                          <div className="space-y-1">
+                            <p className="font-bold text-sm text-orange-700">{offer.name}</p>
+                            <p className="text-[10px] text-muted-foreground line-through">السعر الأصلي: {offer.originalPrice.toLocaleString()} دج</p>
+                          </div>
+                          <div className="flex items-center gap-4 text-left">
+                            <div className="space-y-0.5">
+                              <p className="text-[10px] font-black uppercase text-primary/60">سعر البيع</p>
+                              <p className="font-black text-sm text-primary">{offer.price.toLocaleString()} دج</p>
+                            </div>
+                            <div className="h-8 w-px bg-orange-500/20"></div>
+                            <div className="space-y-0.5">
+                              <p className="text-[10px] font-black uppercase text-secondary/60">عمولتك</p>
+                              <p className="font-black text-sm text-secondary">{offer.commission.toLocaleString()} دج</p>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <h4 className="font-bold flex items-center gap-2">
