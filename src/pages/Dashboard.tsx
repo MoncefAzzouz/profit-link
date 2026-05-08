@@ -9,7 +9,7 @@ import {
   Calendar, Filter, Search, SlidersHorizontal, Store, Sparkles,
   Heart, Download, PlusCircle, User, Phone, MapPin, PackagePlus, MessageSquare, Plus, Trash2, Maximize2, LayoutTemplate,
   Save, Globe, Facebook, Instagram, Palette, Layers,
-  Image as ImageIcon, ShieldCheck, CreditCard, Type, MessageCircle
+  Image as ImageIcon, ShieldCheck, CreditCard, Type, MessageCircle, Gift
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";

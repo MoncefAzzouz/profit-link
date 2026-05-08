@@ -845,6 +845,35 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
           </div>
         </div>
 
+        {p.hasMarketingOffers && p.marketingOffers && p.marketingOffers.length > 0 && (
+          <div className="space-y-3 pt-2 text-right">
+            <label className="text-[11px] font-bold opacity-70 flex items-center gap-2">
+              <Gift className="w-4 h-4" style={{ color: p.primaryColor }} /> العروض التسويقية
+            </label>
+            <div className="grid grid-cols-1 gap-2">
+              <div className="flex items-center justify-between p-2 rounded-xl border-2 border-primary bg-primary/5 ring-1 ring-primary/20">
+                <div className="space-y-1">
+                  <p className="font-bold text-[10px] flex items-center gap-1">
+                    <Check className="w-3 h-3" style={{ color: p.primaryColor }} />
+                    قطعة واحدة (عرض عادي)
+                  </p>
+                </div>
+                <p className="font-black text-xs" style={{ color: p.primaryColor }}>{p.price.toLocaleString()} دج</p>
+              </div>
+              {p.marketingOffers.map((offer: any, idx: number) => (
+                <div key={idx} className="flex items-center justify-between p-2 rounded-xl border-2 border-muted bg-card">
+                  <div className="space-y-1">
+                    <p className="font-bold text-[10px] flex items-center gap-1">
+                      {offer.name}
+                    </p>
+                  </div>
+                  <p className="font-black text-xs" style={{ color: p.primaryColor }}>{offer.price.toLocaleString()} دج</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="bg-muted/30 rounded-2xl p-4 space-y-2.5">
           <div className="flex justify-between text-xs">
             <span className="opacity-60">السعر</span>
