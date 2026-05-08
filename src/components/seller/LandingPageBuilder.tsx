@@ -89,6 +89,8 @@ interface LandingPageConfig {
   productId?: string;
   commission?: number;
   bundles?: BundlePack[];
+  hasMarketingOffers?: boolean;
+  marketingOffers?: any[];
 }
 
 
