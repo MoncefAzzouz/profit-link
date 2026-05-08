@@ -866,7 +866,9 @@ const Admin = () => {
       availableSizes: [],
       hasBeforeAfter: false,
       beforeImage: "",
-      afterImage: ""
+      afterImage: "",
+      hasMarketingOffers: false,
+      marketingOffers: []
     });
 
     setIsProductDialogOpen(true);
@@ -3076,10 +3078,11 @@ const Admin = () => {
                         size="sm"
                         className="h-8 gap-2 border-orange-500/20 text-orange-700 hover:bg-orange-500/10 rounded-xl"
                         onClick={() => {
-                          const newOffer = { name: `عرض ${productFormData.marketingOffers.length + 1}`, originalPrice: 0, price: 0, commission: 0 };
+                          const currentOffers = productFormData.marketingOffers || [];
+                          const newOffer = { name: `عرض ${currentOffers.length + 1}`, originalPrice: 0, price: 0, commission: 0 };
                           setProductFormData({
                             ...productFormData,
-                            marketingOffers: [...(productFormData.marketingOffers || []), newOffer]
+                            marketingOffers: [...currentOffers, newOffer]
                           });
                         }}
                       >
