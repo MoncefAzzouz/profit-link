@@ -116,7 +116,7 @@ model Product {
 model Order {
   id        String  @id @default(uuid())
   productId String
-  product   Product @relation(fields: [productId], references: [id])
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   affiliateId String
   affiliate   User   @relation(fields: [affiliateId], references: [id])
@@ -153,7 +153,7 @@ model LandingPage {
   owner   User   @relation(fields: [ownerId], references: [id])
 
   productId String?
-  product   Product? @relation(fields: [productId], references: [id])
+  product   Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
 
   // Entire visual representation of the page builder saved as flexible JSON
   pageConfig Json
