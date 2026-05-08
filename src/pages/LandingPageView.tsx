@@ -436,7 +436,7 @@ const LandingPageView = () => {
     const savings = (activeOriginalPrice - activePrice) * quantity;
 
     return (
-      <div className="min-h-screen" style={{ backgroundColor: p.backgroundColor, fontFamily: p.fontFamily, color: tc }} dir="rtl">
+      <div className="min-h-screen overflow-x-hidden w-full max-w-[100vw]" style={{ backgroundColor: p.backgroundColor, fontFamily: p.fontFamily, color: tc }} dir="rtl">
         <link href={`https://fonts.googleapis.com/css2?family=${p.fontFamily === "cairo" ? "Cairo" : p.fontFamily === "tajawal" ? "Tajawal" : p.fontFamily === "almarai" ? "Almarai" : p.fontFamily === "changa" ? "Changa" : p.fontFamily === "ibm-plex" ? "IBM+Plex+Sans+Arabic" : p.fontFamily === "noto-kufi" ? "Noto+Kufi+Arabic" : "Readex+Pro"}:wght@400;600;700;800;900&display=swap`} rel="stylesheet" />
         
         {/* Sticky Header */}
@@ -618,15 +618,18 @@ const LandingPageView = () => {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <label className="text-sm font-bold opacity-70">الولاية *</label>
-                      <select 
-                        className="w-full h-12 rounded-xl border bg-transparent px-3 appearance-none focus:ring-2"
-                        style={{ outlineColor: p.primaryColor }}
-                        value={orderForm.wilaya}
-                        onChange={e => setOrderForm(f => ({ ...f, wilaya: e.target.value, commune: "", deliveryType: "home" }))}
-                      >
-                        <option value="">اختر الولاية</option>
-                        {wilayas.map(w => <option key={w.wilaya_id} value={w.wilaya_id}>{w.wilaya_id} - {w.wilaya_name}</option>)}
-                      </select>
+                      <div className="relative">
+                        <select 
+                          className="w-full h-12 rounded-xl border bg-transparent pl-3 pr-10 appearance-none focus:ring-2 text-base"
+                          style={{ outlineColor: p.primaryColor }}
+                          value={orderForm.wilaya}
+                          onChange={e => setOrderForm(f => ({ ...f, wilaya: e.target.value, commune: "", deliveryType: "home" }))}
+                        >
+                          <option value="">اختر الولاية</option>
+                          {wilayas.map(w => <option key={w.wilaya_id} value={w.wilaya_id}>{w.wilaya_id} - {w.wilaya_name}</option>)}
+                        </select>
+                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 opacity-50 pointer-events-none" />
+                      </div>
                     </div>
 
                     <div className="space-y-2">
@@ -662,19 +665,22 @@ const LandingPageView = () => {
 
                   <div className="space-y-2">
                     <label className="text-sm font-bold opacity-70">البلدية *</label>
-                    <select 
-                      className="w-full h-12 rounded-xl border bg-transparent px-3 appearance-none focus:ring-2"
-                      style={{ outlineColor: p.primaryColor }}
-                      value={orderForm.commune}
-                      onChange={e => setOrderForm(f => ({ ...f, commune: e.target.value }))}
-                      disabled={!orderForm.wilaya || loadingDelivery}
-                    >
-                      <option value="">اختر البلدية</option>
-                      {(orderForm.deliveryType === "desk"
-                        ? communes.filter(c => c.has_stop_desk === 1)
-                        : communes
-                      ).map(c => <option key={c.commune_id || c.nom} value={c.nom}>{c.nom}</option>)}
-                    </select>
+                    <div className="relative">
+                      <select 
+                        className="w-full h-12 rounded-xl border bg-transparent pl-3 pr-10 appearance-none focus:ring-2 text-base"
+                        style={{ outlineColor: p.primaryColor }}
+                        value={orderForm.commune}
+                        onChange={e => setOrderForm(f => ({ ...f, commune: e.target.value }))}
+                        disabled={!orderForm.wilaya || loadingDelivery}
+                      >
+                        <option value="">اختر البلدية</option>
+                        {(orderForm.deliveryType === "desk"
+                          ? communes.filter(c => c.has_stop_desk === 1)
+                          : communes
+                        ).map(c => <option key={c.commune_id || c.nom} value={c.nom}>{c.nom}</option>)}
+                      </select>
+                      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 opacity-50 pointer-events-none" />
+                    </div>
                   </div>
 
                   <div className="space-y-2">
@@ -939,7 +945,7 @@ const LandingPageView = () => {
   }
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: p.backgroundColor, fontFamily: p.fontFamily, color: tc }} dir="rtl">
+    <div className="min-h-screen overflow-x-hidden w-full max-w-[100vw]" style={{ backgroundColor: p.backgroundColor, fontFamily: p.fontFamily, color: tc }} dir="rtl">
       {/* Google Fonts */}
       <link href={`https://fonts.googleapis.com/css2?family=${p.fontFamily === "cairo" ? "Cairo" : p.fontFamily === "tajawal" ? "Tajawal" : p.fontFamily === "almarai" ? "Almarai" : p.fontFamily === "changa" ? "Changa" : p.fontFamily === "ibm-plex" ? "IBM+Plex+Sans+Arabic" : p.fontFamily === "noto-kufi" ? "Noto+Kufi+Arabic" : "Readex+Pro"}:wght@400;600;700;800;900&display=swap`} rel="stylesheet" />
 
@@ -1529,21 +1535,24 @@ const LandingPageView = () => {
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <label className="text-sm font-bold opacity-70">الولاية *</label>
-                        <select 
-                          className="w-full h-12 rounded-xl border bg-transparent px-3 appearance-none focus:ring-2"
-                          style={{ 
-                            borderRadius: `${Math.min(p.borderRadius, 16)}px`, 
-                            borderColor: isDark(p.backgroundColor) ? "#334155" : "#d1d5db", 
-                            backgroundColor: isDark(p.backgroundColor) ? "#1e293b" : "#fff", 
-                            color: tc,
-                            outlineColor: p.primaryColor 
-                          }}
-                          value={orderForm.wilaya}
-                          onChange={e => setOrderForm(f => ({ ...f, wilaya: e.target.value, commune: "", deliveryType: "home" }))}
-                        >
-                          <option value="">اختر الولاية</option>
-                          {wilayas.map(w => <option key={w.wilaya_id} value={w.wilaya_id}>{w.wilaya_id} - {w.wilaya_name}</option>)}
-                        </select>
+                        <div className="relative">
+                          <select 
+                            className="w-full h-12 rounded-xl border bg-transparent pl-3 pr-10 appearance-none focus:ring-2 text-base"
+                            style={{ 
+                              borderRadius: `${Math.min(p.borderRadius, 16)}px`, 
+                              borderColor: isDark(p.backgroundColor) ? "#334155" : "#d1d5db", 
+                              backgroundColor: isDark(p.backgroundColor) ? "#1e293b" : "#fff", 
+                              color: tc,
+                              outlineColor: p.primaryColor 
+                            }}
+                            value={orderForm.wilaya}
+                            onChange={e => setOrderForm(f => ({ ...f, wilaya: e.target.value, commune: "", deliveryType: "home" }))}
+                          >
+                            <option value="">اختر الولاية</option>
+                            {wilayas.map(w => <option key={w.wilaya_id} value={w.wilaya_id}>{w.wilaya_id} - {w.wilaya_name}</option>)}
+                          </select>
+                          <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 opacity-50 pointer-events-none" />
+                        </div>
                       </div>
 
                       <div className="space-y-2">
@@ -1581,25 +1590,28 @@ const LandingPageView = () => {
 
                     <div className="space-y-2">
                       <label className="text-sm font-bold opacity-70">البلدية *</label>
-                      <select 
-                        className="w-full h-12 rounded-xl border bg-transparent px-3 appearance-none focus:ring-2"
-                        style={{ 
-                          borderRadius: `${Math.min(p.borderRadius, 16)}px`, 
-                          borderColor: isDark(p.backgroundColor) ? "#334155" : "#d1d5db", 
-                          backgroundColor: isDark(p.backgroundColor) ? "#1e293b" : "#fff", 
-                          color: tc,
-                          outlineColor: p.primaryColor 
-                        }}
-                        value={orderForm.commune}
-                        onChange={e => setOrderForm(f => ({ ...f, commune: e.target.value }))}
-                        disabled={!orderForm.wilaya || loadingDelivery}
-                      >
-                        <option value="">اختر البلدية</option>
-                        {(orderForm.deliveryType === "desk"
-                          ? communes.filter(c => c.has_stop_desk === 1)
-                          : communes
-                        ).map(c => <option key={c.commune_id || c.nom} value={c.nom}>{c.nom}</option>)}
-                      </select>
+                      <div className="relative">
+                        <select 
+                          className="w-full h-12 rounded-xl border bg-transparent pl-3 pr-10 appearance-none focus:ring-2 text-base"
+                          style={{ 
+                            borderRadius: `${Math.min(p.borderRadius, 16)}px`, 
+                            borderColor: isDark(p.backgroundColor) ? "#334155" : "#d1d5db", 
+                            backgroundColor: isDark(p.backgroundColor) ? "#1e293b" : "#fff", 
+                            color: tc,
+                            outlineColor: p.primaryColor 
+                          }}
+                          value={orderForm.commune}
+                          onChange={e => setOrderForm(f => ({ ...f, commune: e.target.value }))}
+                          disabled={!orderForm.wilaya || loadingDelivery}
+                        >
+                          <option value="">اختر البلدية</option>
+                          {(orderForm.deliveryType === "desk"
+                            ? communes.filter(c => c.has_stop_desk === 1)
+                            : communes
+                          ).map(c => <option key={c.commune_id || c.nom} value={c.nom}>{c.nom}</option>)}
+                        </select>
+                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 opacity-50 pointer-events-none" />
+                      </div>
                     </div>
 
                     <div className="space-y-2">
