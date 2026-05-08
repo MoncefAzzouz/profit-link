@@ -175,8 +175,8 @@ router.get('/pages/:id/public', async (req: Request, res: Response): Promise<any
         status: page.status,
         views: page.views,
         conversions: page.conversions,
-        hasMarketingOffers: page.product?.hasMarketingOffers || false,
-        marketingOffers: page.product?.marketingOffers || []
+        hasMarketingOffers: (page as any).product?.hasMarketingOffers || false,
+        marketingOffers: (page as any).product?.marketingOffers || []
       } 
     });
   } catch (error) {
@@ -227,8 +227,8 @@ router.get('/product-page/:productId/:affiliateId', async (req: Request, res: Re
         status: page.status,
         views: page.views,
         conversions: page.conversions,
-        hasMarketingOffers: page.product?.hasMarketingOffers || false,
-        marketingOffers: page.product?.marketingOffers || []
+        hasMarketingOffers: (page as any).product?.hasMarketingOffers || false,
+        marketingOffers: (page as any).product?.marketingOffers || []
       } 
     });
   } catch (error) {
@@ -416,8 +416,8 @@ router.get('/pages/:id', authenticateToken, async (req: AuthRequest, res: Respon
       ...page,
       pageConfig: {
         ...(page.pageConfig as any),
-        hasMarketingOffers: page.product?.hasMarketingOffers || false,
-        marketingOffers: page.product?.marketingOffers || []
+        hasMarketingOffers: (page as any).product?.hasMarketingOffers || false,
+        marketingOffers: (page as any).product?.marketingOffers || []
       }
     };
 
