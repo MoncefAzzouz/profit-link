@@ -366,7 +366,8 @@ router.get('/pages/:id', authenticateToken, async (req: AuthRequest, res: Respon
     const page = await prisma.landingPage.findUnique({
       where: { id: String(id) },
       include: {
-        owner: { select: { id: true, name: true, storeName: true } }
+        owner: { select: { id: true, name: true, storeName: true } },
+        product: { select: { hasMarketingOffers: true, marketingOffers: true } }
       }
     });
 
@@ -379,7 +380,16 @@ router.get('/pages/:id', authenticateToken, async (req: AuthRequest, res: Respon
       return res.status(403).json({ error: 'Access denied' });
     }
 
-    res.json({ data: page });
+    const responseData = {
+      ...page,
+      pageConfig: {
+        ...(page.pageConfig as any),
+        hasMarketingOffers: page.product?.hasMarketingOffers || false,
+        marketingOffers: page.product?.marketingOffers || []
+      }
+    };
+
+    res.json({ data: responseData });
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch page details' });
   }
