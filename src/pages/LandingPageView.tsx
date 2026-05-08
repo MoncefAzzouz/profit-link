@@ -969,7 +969,6 @@ const LandingPageView = () => {
             </div>
             <div>
               <span className="text-sm font-bold block">{storeName}</span>
-              <span className="text-xs" style={{ color: stc }}>شحن مجاني لكل الولايات 🚚</span>
             </div>
           </div>
 
@@ -1314,7 +1313,6 @@ const LandingPageView = () => {
                 <Truck className="w-5 h-5" style={{ color: p.primaryColor }} /> معلومات التوصيل
               </h3>
               {[
-                { icon: Truck, text: "توصيل مجاني لجميع الولايات 58" },
                 { icon: Clock, text: "التوصيل خلال 2-5 أيام عمل" },
                 { icon: ShoppingCart, text: "الدفع عند الاستلام COD 💵" },
               ].map((item, i) => (
