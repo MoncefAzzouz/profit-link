@@ -442,24 +442,44 @@ router.get('/pages/:id', authenticateToken, async (req: AuthRequest, res: Respon
 });
 
 // POST /api/store/page (Save or Create Landing Page config)
-router.post('/page', authenticateToken, async (req: AuthRequest, res: Response) => {
+router.post('/page', authenticateToken, async (req: AuthRequest, res: Response): Promise<any> => {
   try {
     const ownerId = req.user?.userId;
     if (!ownerId) return res.status(401).json({ error: 'Unauthorized' });
 
-    const { productId, configData } = req.body;
+    const { productId, configData, status } = req.body;
+
+    // Prevent duplicates: Check if a landing page already exists for this product and owner
+    const existing = await prisma.landingPage.findFirst({
+      where: {
+        ownerId,
+        productId: String(productId)
+      }
+    });
+
+    if (existing) {
+      const updated = await prisma.landingPage.update({
+        where: { id: existing.id },
+        data: {
+          pageConfig: configData,
+          status: status || existing.status
+        }
+      });
+      return res.json({ message: 'Existing landing page updated successfully!', data: updated });
+    }
 
     const page = await prisma.landingPage.create({
       data: {
         ownerId,
         productId,
-        pageConfig: configData 
+        pageConfig: configData,
+        status: status || 'draft'
       }
     });
 
     res.json({ message: 'Landing page created successfully!', data: page });
   } catch (error) {
-    console.error(error);
+    console.error('Failed to save landing page:', error);
     res.status(500).json({ error: 'Failed to save landing page' });
   }
 });

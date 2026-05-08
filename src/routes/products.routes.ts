@@ -229,41 +229,49 @@ router.post('/', authenticateToken, requireAdmin, async (req: AuthRequest, res: 
       }
     });
 
-    // Automatically create a default landing page for the admin
+    // Automatically create a default landing page for the admin if it doesn't exist
     try {
       const adminUserId = req.user?.userId;
       if (adminUserId) {
-        await prisma.landingPage.create({
-          data: {
+        const existingLP = await prisma.landingPage.findFirst({
+          where: {
             ownerId: adminUserId,
-            productId: product.id,
-            status: 'draft',
-            pageConfig: {
-              productName: product.name,
-              template: "original",
-              heroTitle: product.name,
-              heroSubtitle: product.description || "أفضل جودة بأفضل سعر في السوق الجزائري",
-              price: product.price,
-              originalPrice: product.originalPrice,
-              category: product.category,
-              heroImage: product.image,
-              galleryImages: product.images,
-              features: product.features.length > 0 ? product.features : ["جودة عالية مضمونة", "توصيل سريع لكل الولايات", "الدفع عند الاستلام", "ضمان الاستبدال والاسترجاع"],
-              sections: product.hasBeforeAfter 
-                ? ["hero", "urgency-bar", "before-after", "features", "gallery", "social-proof", "reviews", "shipping", "cta"]
-                : ["hero", "urgency-bar", "features", "gallery", "social-proof", "reviews", "shipping", "cta"],
-              primaryColor: "#10b981",
-              accentColor: "#3b82f6",
-              ctaText: "اطلب الآن",
-              fontFamily: "cairo",
-              backgroundColor: "#ffffff"
-            }
+            productId: product.id
           }
         });
+
+        if (!existingLP) {
+          await prisma.landingPage.create({
+            data: {
+              ownerId: adminUserId,
+              productId: product.id,
+              status: 'draft',
+              pageConfig: {
+                productName: product.name,
+                template: "original",
+                heroTitle: product.name,
+                heroSubtitle: product.description || "أفضل جودة بأفضل سعر في السوق الجزائري",
+                price: product.price,
+                originalPrice: product.originalPrice,
+                category: product.category,
+                heroImage: product.image,
+                galleryImages: product.images,
+                features: product.features.length > 0 ? product.features : ["جودة عالية مضمونة", "توصيل سريع لكل الولايات", "الدفع عند الاستلام", "ضمان الاستبدال والاسترجاع"],
+                sections: product.hasBeforeAfter 
+                  ? ["hero", "urgency-bar", "before-after", "features", "gallery", "social-proof", "reviews", "shipping", "cta"]
+                  : ["hero", "urgency-bar", "features", "gallery", "social-proof", "reviews", "shipping", "cta"],
+                primaryColor: "#10b981",
+                accentColor: "#3b82f6",
+                ctaText: "اطلب الآن",
+                fontFamily: "cairo",
+                backgroundColor: "#ffffff"
+              }
+            }
+          });
+        }
       }
     } catch (lpError) {
       console.error('Failed to auto-create landing page for admin:', lpError);
-      // We don't fail the whole product creation if LP creation fails
     }
 
     res.status(201).json({ message: 'Product created successfully', data: product });
