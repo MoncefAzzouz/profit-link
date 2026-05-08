@@ -190,8 +190,7 @@ router.get('/product-page/:productId/:affiliateId', async (req: Request, res: Re
   try {
     const { productId, affiliateId } = req.params;
     
-    // Find the latest published landing page for this product and affiliate
-    const page = await prisma.landingPage.findFirst({
+    let page = await prisma.landingPage.findFirst({
       where: { 
         productId: String(productId),
         ownerId: String(affiliateId),
@@ -207,6 +206,26 @@ router.get('/product-page/:productId/:affiliateId', async (req: Request, res: Re
         }
       }
     });
+
+    // If affiliate has no customized page, fallback to ADMIN's latest page for this product
+    if (!page) {
+      page = await prisma.landingPage.findFirst({
+        where: {
+          productId: String(productId),
+          owner: { role: 'ADMIN' },
+          status: 'published'
+        },
+        orderBy: { updatedAt: 'desc' },
+        include: {
+          product: {
+            select: {
+              hasMarketingOffers: true,
+              marketingOffers: true
+            }
+          }
+        }
+      });
+    }
 
     if (!page) {
       return res.status(404).json({ error: 'Landing page not found' });
@@ -242,18 +261,13 @@ router.get('/pages/admin-default/:productId', authenticateToken, async (req: Aut
   try {
     const { productId } = req.params;
     
-    const adminUser = await prisma.user.findFirst({
-      where: { role: 'ADMIN' }
-    });
-
-    if (!adminUser) {
-      return res.status(404).json({ error: 'No admin found' });
-    }
-
+    // Find any landing page for this product owned by an ADMIN
     const adminPage = await prisma.landingPage.findFirst({
       where: {
-        ownerId: adminUser.id,
-        productId: String(productId)
+        productId: String(productId),
+        owner: {
+          role: 'ADMIN'
+        }
       },
       orderBy: { updatedAt: 'desc' }
     });
