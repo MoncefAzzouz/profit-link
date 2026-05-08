@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { ArrowRight, ShoppingCart, Check, Star, Truck, Shield, Clock, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -15,9 +16,21 @@ import { API_BASE_URL } from '@/config/api';
 const ProductPage = () => {
   const { productId, affiliateId } = useParams();
   const { toast } = useToast();
-  const [product, setProduct] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  
+
+  const { data: productData, isLoading: loading } = useQuery({
+    queryKey: ['product', productId],
+    queryFn: async () => {
+      const res = await fetch(`${API_BASE_URL}/products/${productId}`);
+      if (!res.ok) throw new Error('Failed to fetch product');
+      return res.json();
+    },
+    enabled: !!productId,
+    staleTime: 60_000,
+    gcTime: 5 * 60_000,
+    retry: 1,
+  });
+  const product: any = productData?.data ?? null;
+
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [shippingRates, setShippingRates] = useState<ShippingRate[]>([]);
@@ -44,23 +57,6 @@ const ProductPage = () => {
   const [storeIdentifier, setStoreIdentifier] = useState<string | null>(null);
 
   useEffect(() => {
-    // Fetch product from backend
-    const fetchProduct = async () => {
-      try {
-        const res = await fetch(`${API_BASE_URL}/products`);
-        const json = await res.json();
-        if (res.ok && json.data) {
-          const found = json.data.find((p: any) => p.id === productId);
-          setProduct(found || null);
-        }
-      } catch (err) {
-        console.error('Failed to fetch product', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchProduct();
-
     const fetchRates = async () => {
       try {
         const res = await fetch(`${API_BASE_URL}/delivery/all-rates`);

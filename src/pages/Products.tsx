@@ -1,5 +1,5 @@
-import { useState, useEffect, useMemo } from "react";
-import { useQuery, keepPreviousData } from "@tanstack/react-query";
+import { useState, useEffect, useMemo, useRef } from "react";
+import { useQuery, useInfiniteQuery, keepPreviousData } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
 import { 
@@ -69,18 +69,49 @@ const Products = () => {
 
   const [storeSettings, setStoreSettings] = useState<StoreSettings>(defaultStoreSettings);
 
-  const { data: productsData } = useQuery({
-    queryKey: ['products', 'list'],
-    queryFn: async () => {
-      const res = await fetch(`${API_BASE_URL}/products`);
+  const PAGE_SIZE = 24;
+  const {
+    data: productsData,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
+    queryKey: ['products', 'list', 'infinite'],
+    initialPageParam: 1,
+    queryFn: async ({ pageParam }) => {
+      const res = await fetch(`${API_BASE_URL}/products?page=${pageParam}&limit=${PAGE_SIZE}`);
       if (!res.ok) throw new Error('Failed to fetch products');
       return res.json();
+    },
+    getNextPageParam: (lastPage) => {
+      const p = lastPage?.pagination;
+      if (!p) return undefined;
+      return p.page < p.pages ? p.page + 1 : undefined;
     },
     staleTime: 60_000,
     gcTime: 5 * 60_000,
     placeholderData: keepPreviousData,
   });
-  const products: any[] = productsData?.data ?? [];
+  const products: any[] = useMemo(
+    () => productsData?.pages.flatMap((pg: any) => pg?.data ?? []) ?? [],
+    [productsData]
+  );
+
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el || !hasNextPage) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
+        }
+      },
+      { rootMargin: '600px 0px' }
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const { data: categoriesData } = useQuery({
     queryKey: ['products', 'categories'],
@@ -529,6 +560,15 @@ const Products = () => {
                 ))}
               </AnimatePresence>
             </div>
+
+            {/* Infinite scroll sentinel + loader */}
+            {hasNextPage && (
+              <div ref={sentinelRef} className="h-12 flex items-center justify-center mt-8">
+                {isFetchingNextPage && (
+                  <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+                )}
+              </div>
+            )}
 
             {filteredProducts.length === 0 && (
               <motion.div 
