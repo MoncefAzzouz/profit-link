@@ -105,6 +105,7 @@ const LandingPageView = () => {
   const [quantity, setQuantity] = useState(1);
   const [storeName, setStoreName] = useState<string>(defaultStoreName);
   const [selectedBundleId, setSelectedBundleId] = useState<string | null>(null);
+  const [selectedOffer, setSelectedOffer] = useState<any>(null);
 
   useEffect(() => {
     const fetchPage = async () => {
@@ -319,7 +320,18 @@ const LandingPageView = () => {
     }
 
     const selectedBundle = p.bundles?.find(b => b.id === selectedBundleId);
-    const activePrice = selectedBundle ? selectedBundle.price : p.price;
+    let activePrice = selectedBundle ? selectedBundle.price : p.price;
+    let activeCommission = p.commission || 500;
+    let selectedSizeLabel = orderForm.selectedSize;
+
+    if (selectedOffer) {
+      activePrice = selectedOffer.price;
+      activeCommission = selectedOffer.commission;
+      selectedSizeLabel = orderForm.selectedSize ? `${orderForm.selectedSize} - ${selectedOffer.name}` : selectedOffer.name;
+    } else if (selectedBundle) {
+      selectedSizeLabel = orderForm.selectedSize ? `${orderForm.selectedSize} - ${selectedBundle.name}` : selectedBundle.name;
+    }
+
     const currentShipping = orderForm.deliveryType === "home" ? shippingRate.home : shippingRate.desk;
     const finalAmount = (activePrice * quantity) + currentShipping;
 
@@ -337,11 +349,11 @@ const LandingPageView = () => {
           address: orderForm.address,
           quantity: quantity,
           totalAmount: finalAmount,
-          commissionAmount: p.commission || 500,
+          commissionAmount: activeCommission * quantity,
           shippingFee: currentShipping,
           stopDesk: orderForm.deliveryType === "desk" ? 1 : 0,
           selectedColor: orderForm.selectedColor,
-          selectedSize: selectedBundle ? (orderForm.selectedSize ? `${orderForm.selectedSize} - ${selectedBundle.name}` : selectedBundle.name) : orderForm.selectedSize
+          selectedSize: selectedSizeLabel
         })
 
       });
@@ -410,9 +422,16 @@ const LandingPageView = () => {
   if (p.template === "original") {
     const currentShipping = orderForm.deliveryType === "home" ? shippingRate.home : shippingRate.desk;
     const selectedBundle = p.bundles?.find(b => b.id === selectedBundleId);
-    const activePrice = selectedBundle ? selectedBundle.price : p.price;
+    let activePrice = selectedBundle ? selectedBundle.price : p.price;
+    let activeOriginalPrice = p.originalPrice;
+
+    if (selectedOffer) {
+      activePrice = selectedOffer.price;
+      activeOriginalPrice = selectedOffer.originalPrice;
+    }
+
     const totalPrice = (activePrice * quantity) + currentShipping;
-    const savings = (p.originalPrice - activePrice) * quantity;
+    const savings = (activeOriginalPrice - activePrice) * quantity;
 
     return (
       <div className="min-h-screen" style={{ backgroundColor: p.backgroundColor, fontFamily: p.fontFamily, color: tc }} dir="rtl">
@@ -480,11 +499,11 @@ const LandingPageView = () => {
               </div>
 
               {/* Price Block */}
-              <div className="rounded-2xl p-6 border" style={{ backgroundColor: `${p.primaryColor}08`, borderColor: `${p.primaryColor}20` }}>
+              <div className="rounded-2xl p-6 border transition-all" style={{ backgroundColor: `${p.primaryColor}08`, borderColor: `${p.primaryColor}20` }}>
                 <div className="flex items-center gap-4">
-                  <span className="text-4xl font-bold" style={{ color: p.primaryColor }}>{p.price.toLocaleString()} دج</span>
-                  {p.originalPrice > p.price && (
-                    <span className="text-xl line-through opacity-50">{p.originalPrice.toLocaleString()} دج</span>
+                  <span className="text-4xl font-bold" style={{ color: p.primaryColor }}>{activePrice.toLocaleString()} دج</span>
+                  {activeOriginalPrice > activePrice && (
+                    <span className="text-xl line-through opacity-50">{activeOriginalPrice.toLocaleString()} دج</span>
                   )}
                 </div>
                 {savings > 0 && <p className="font-semibold mt-2 opacity-80">وفّر {savings.toLocaleString()} دج</p>}
@@ -666,7 +685,7 @@ const LandingPageView = () => {
                     />
                   </div>
 
-                  {p.sections.includes("bundle") && p.bundles && p.bundles.length > 0 && (
+                  {p.sections.includes("bundle") && p.bundles && p.bundles.length > 0 && !p.hasMarketingOffers && (
                     <div className="space-y-3 pt-2 text-right">
                       <label className="text-sm font-bold opacity-70">عروض الحزم (اختياري)</label>
                       <div className="grid grid-cols-1 gap-3">
@@ -703,6 +722,61 @@ const LandingPageView = () => {
                             <div className="text-left shrink-0">
                               <span className="font-black text-lg block" style={{ color: p.primaryColor }}>{bundle.price.toLocaleString()} دج</span>
                             </div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Marketing Offers */}
+                  {p.hasMarketingOffers && p.marketingOffers && p.marketingOffers.length > 0 && (
+                    <div className="space-y-3 pt-2 text-right">
+                      <label className="text-sm font-bold opacity-70 flex items-center gap-2">
+                        <Gift className="w-4 h-4" style={{ color: p.primaryColor }} /> العروض التسويقية
+                      </label>
+                      <div className="grid grid-cols-1 gap-3">
+                        {/* Standard Offer */}
+                        <button
+                          type="button"
+                          onClick={() => setSelectedOffer(null)}
+                          className={`flex items-center justify-between p-3 rounded-xl border-2 transition-all ${
+                            selectedOffer === null 
+                              ? "border-primary bg-primary/5 ring-1 ring-primary/20" 
+                              : "border-muted bg-card hover:border-primary/30"
+                          }`}
+                          style={{ borderColor: selectedOffer === null ? p.primaryColor : undefined }}
+                        >
+                          <div className="space-y-1">
+                            <p className="font-bold text-sm flex items-center gap-2">
+                              {selectedOffer === null && <Check className="w-4 h-4" style={{ color: p.primaryColor }} />}
+                              قطعة واحدة (عرض عادي)
+                            </p>
+                            <p className="text-xs text-muted-foreground line-through">{p.originalPrice.toLocaleString()} دج</p>
+                          </div>
+                          <p className="font-black text-lg" style={{ color: p.primaryColor }}>{p.price.toLocaleString()} دج</p>
+                        </button>
+
+                        {/* Custom Offers */}
+                        {p.marketingOffers.map((offer: any, idx: number) => (
+                          <button
+                            key={idx}
+                            type="button"
+                            onClick={() => setSelectedOffer(offer)}
+                            className={`flex items-center justify-between p-3 rounded-xl border-2 transition-all ${
+                              selectedOffer === offer 
+                                ? "border-primary bg-primary/5 ring-1 ring-primary/20" 
+                                : "border-muted bg-card hover:border-primary/30"
+                            }`}
+                            style={{ borderColor: selectedOffer === offer ? p.primaryColor : undefined }}
+                          >
+                            <div className="space-y-1">
+                              <p className="font-bold text-sm flex items-center gap-2">
+                                {selectedOffer === offer && <Check className="w-4 h-4" style={{ color: p.primaryColor }} />}
+                                {offer.name}
+                              </p>
+                              <p className="text-xs text-muted-foreground line-through">{offer.originalPrice.toLocaleString()} دج</p>
+                            </div>
+                            <p className="font-black text-lg" style={{ color: p.primaryColor }}>{offer.price.toLocaleString()} دج</p>
                           </button>
                         ))}
                       </div>
@@ -1329,7 +1403,7 @@ const LandingPageView = () => {
                       </div>
                     )}
 
-                    {p.sections.includes("bundle") && p.bundles && p.bundles.length > 0 && (
+                    {p.sections.includes("bundle") && p.bundles && p.bundles.length > 0 && !p.hasMarketingOffers && (
                       <div className="space-y-3 pt-2 text-right">
                         <label className="text-sm font-bold opacity-70">عروض الحزم (اختياري)</label>
                         <div className="grid grid-cols-1 gap-3">
@@ -1365,14 +1439,69 @@ const LandingPageView = () => {
                               </div>
                               <div className="text-left shrink-0">
                                 <span className="font-black text-lg block" style={{ color: p.primaryColor }}>{bundle.price.toLocaleString()} دج</span>
-                              </div>
-                            </button>
-                          ))}
-                        </div>
+                            </div>
+                          </button>
+                        ))}
                       </div>
-                    )}
+                    </div>
+                  )}
 
-                    <div className="space-y-2">
+                  {/* Marketing Offers */}
+                  {p.hasMarketingOffers && p.marketingOffers && p.marketingOffers.length > 0 && (
+                    <div className="space-y-3 pt-2 text-right">
+                      <label className="text-sm font-bold opacity-70 flex items-center gap-2">
+                        <Gift className="w-4 h-4" style={{ color: p.primaryColor }} /> العروض التسويقية
+                      </label>
+                      <div className="grid grid-cols-1 gap-3">
+                        {/* Standard Offer */}
+                        <button
+                          type="button"
+                          onClick={() => setSelectedOffer(null)}
+                          className={`flex items-center justify-between p-3 rounded-xl border-2 transition-all ${
+                            selectedOffer === null 
+                              ? "border-primary bg-primary/5 ring-1 ring-primary/20" 
+                              : "border-muted bg-card hover:border-primary/30"
+                          }`}
+                          style={{ borderColor: selectedOffer === null ? p.primaryColor : undefined }}
+                        >
+                          <div className="space-y-1">
+                            <p className="font-bold text-sm flex items-center gap-2">
+                              {selectedOffer === null && <Check className="w-4 h-4" style={{ color: p.primaryColor }} />}
+                              قطعة واحدة (عرض عادي)
+                            </p>
+                            <p className="text-xs text-muted-foreground line-through">{p.originalPrice.toLocaleString()} دج</p>
+                          </div>
+                          <p className="font-black text-lg" style={{ color: p.primaryColor }}>{p.price.toLocaleString()} دج</p>
+                        </button>
+
+                        {/* Custom Offers */}
+                        {p.marketingOffers.map((offer: any, idx: number) => (
+                          <button
+                            key={idx}
+                            type="button"
+                            onClick={() => setSelectedOffer(offer)}
+                            className={`flex items-center justify-between p-3 rounded-xl border-2 transition-all ${
+                              selectedOffer === offer 
+                                ? "border-primary bg-primary/5 ring-1 ring-primary/20" 
+                                : "border-muted bg-card hover:border-primary/30"
+                            }`}
+                            style={{ borderColor: selectedOffer === offer ? p.primaryColor : undefined }}
+                          >
+                            <div className="space-y-1">
+                              <p className="font-bold text-sm flex items-center gap-2">
+                                {selectedOffer === offer && <Check className="w-4 h-4" style={{ color: p.primaryColor }} />}
+                                {offer.name}
+                              </p>
+                              <p className="text-xs text-muted-foreground line-through">{offer.originalPrice.toLocaleString()} دج</p>
+                            </div>
+                            <p className="font-black text-lg" style={{ color: p.primaryColor }}>{offer.price.toLocaleString()} دج</p>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="space-y-2">
 
                       <label className="text-sm font-bold opacity-70">الاسم الكامل *</label>
                       <Input 

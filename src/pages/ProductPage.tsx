@@ -48,6 +48,8 @@ const ProductPage = () => {
     selectedSize: ""
   });
 
+  const [selectedOffer, setSelectedOffer] = useState<any>(null);
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState(false);
 
@@ -263,8 +265,8 @@ const ProductPage = () => {
           commune: formData.commune,
           address: formData.address,
           quantity: quantity,
-          totalAmount: (product.price * quantity) + currentShippingPrice,
-          commissionAmount: product.commission * quantity,
+          totalAmount: (basePrice * quantity) + currentShippingPrice,
+          commissionAmount: baseCommission * quantity,
           shippingFee: currentShippingPrice,
           stopDesk: formData.deliveryType === "office" ? 1 : 0,
           selectedColor: formData.selectedColor,
@@ -278,7 +280,7 @@ const ProductPage = () => {
       setOrderSuccess(true);
       
       // Fire pixels
-      const conversionValue = product.price * quantity;
+      const conversionValue = basePrice * quantity;
       if (pixels?.facebook && typeof window !== "undefined" && (window as any).fbq) {
         (window as any).fbq("track", "Purchase", { value: conversionValue, currency: "DZD" });
       }
@@ -310,8 +312,12 @@ const ProductPage = () => {
     ? (formData.deliveryType === "home" ? currentRate.homePrice : currentRate.officePrice)
     : 0;
 
-  const totalPrice = (product.price * quantity) + currentShippingPrice;
-  const savings = (product.originalPrice - product.price) * quantity;
+  const basePrice = selectedOffer ? selectedOffer.price : product.price;
+  const baseOriginalPrice = selectedOffer ? selectedOffer.originalPrice : product.originalPrice;
+  const baseCommission = selectedOffer ? selectedOffer.commission : product.commission;
+
+  const totalPrice = (basePrice * quantity) + currentShippingPrice;
+  const savings = (baseOriginalPrice - basePrice) * quantity;
 
   if (orderSuccess) {
     return (
@@ -422,17 +428,17 @@ const ProductPage = () => {
             </div>
 
             {/* Price */}
-            <div className="bg-gradient-to-r from-secondary/10 to-accent/10 rounded-2xl p-6">
+            <div className="bg-gradient-to-r from-secondary/10 to-accent/10 rounded-2xl p-6 transition-all">
               <div className="flex items-center gap-4">
                 <span className="text-4xl font-bold text-secondary">
-                  {product.price.toLocaleString()} دج
+                  {basePrice.toLocaleString()} دج
                 </span>
                 <span className="text-xl text-muted-foreground line-through">
-                  {product.originalPrice.toLocaleString()} دج
+                  {baseOriginalPrice.toLocaleString()} دج
                 </span>
               </div>
               <p className="text-accent font-semibold mt-2">
-                وفّر {(product.originalPrice - product.price).toLocaleString()} دج
+                وفّر {(baseOriginalPrice - basePrice).toLocaleString()} دج
               </p>
             </div>
 
@@ -504,6 +510,58 @@ const ProductPage = () => {
               </h2>
 
               <div className="space-y-4">
+                {product.hasMarketingOffers && product.marketingOffers?.length > 0 && (
+                  <div className="space-y-3 mb-6">
+                    <Label className="font-bold text-base flex items-center gap-2 text-orange-600">
+                      🎁 اختر العرض المناسب لك:
+                    </Label>
+                    <div className="grid grid-cols-1 gap-3">
+                      {/* Standard Offer */}
+                      <button
+                        type="button"
+                        onClick={() => setSelectedOffer(null)}
+                        className={`p-4 rounded-2xl border-2 text-right transition-all flex justify-between items-center ${
+                          selectedOffer === null 
+                            ? "border-secondary bg-secondary/5 ring-2 ring-secondary/20 shadow-md" 
+                            : "border-border bg-card hover:border-secondary/30 hover:bg-secondary/5"
+                        }`}
+                      >
+                        <div className="space-y-1">
+                          <p className="font-bold text-sm text-foreground flex items-center gap-2">
+                            {selectedOffer === null && <Check className="w-4 h-4 text-secondary" />}
+                            قطعة واحدة (عرض عادي)
+                          </p>
+                          <p className="text-xs text-muted-foreground line-through">{product.originalPrice.toLocaleString()} دج</p>
+                        </div>
+                        <p className="font-black text-secondary text-xl">{product.price.toLocaleString()} دج</p>
+                      </button>
+
+                      {/* Marketing Offers */}
+                      {product.marketingOffers.map((offer: any, idx: number) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => setSelectedOffer(offer)}
+                          className={`p-4 rounded-2xl border-2 text-right transition-all flex justify-between items-center ${
+                            selectedOffer === offer 
+                              ? "border-orange-500 bg-orange-500/5 ring-2 ring-orange-500/20 shadow-md" 
+                              : "border-orange-500/20 bg-orange-50/30 hover:border-orange-500/50 hover:bg-orange-500/5"
+                          }`}
+                        >
+                          <div className="space-y-1">
+                            <p className="font-bold text-sm text-orange-700 flex items-center gap-2">
+                              {selectedOffer === offer && <Check className="w-4 h-4 text-orange-600" />}
+                              {offer.name}
+                            </p>
+                            <p className="text-xs text-orange-600/60 line-through">{offer.originalPrice.toLocaleString()} دج</p>
+                          </div>
+                          <p className="font-black text-orange-600 text-xl">{offer.price.toLocaleString()} دج</p>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {product.availableColors && product.availableColors.length > 0 && (
                   <div className="space-y-2">
                     <Label className="font-bold">اختر اللون *</Label>

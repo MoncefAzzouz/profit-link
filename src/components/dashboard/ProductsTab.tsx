@@ -226,6 +226,14 @@ const ProductsTab: React.FC<ProductsTabProps> = ({
                     إذا رفعت السعر عن هذا، فإن كل الأرباح الإضافية هي لك ولن تتحصل المنصة على أي فائدة منها
                   </p>
                 </div>
+                
+                {product.hasMarketingOffers && (
+                  <div className="bg-orange-500/10 p-2 rounded-xl border border-orange-500/20 text-center">
+                    <p className="text-[10px] text-orange-700 font-black leading-tight">
+                      🎁 هذا المنتج يحتوي على عروض تسويقية
+                    </p>
+                  </div>
+                )}
 
                 <div className="mt-auto">
                   <Button

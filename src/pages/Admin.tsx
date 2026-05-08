@@ -7,7 +7,7 @@ import {
   Settings, Menu, X, TrendingUp, CheckCircle, XCircle,
   Truck, Clock, Eye, Edit, Ban, Search, Filter, Plus, Trophy, Sparkles,
   BarChart3, ChevronLeft, AlertTriangle, SlidersHorizontal, Store, UserPlus, Check, MapPin, CreditCard,
-  Video, Star, EyeOff, Trash2, Upload, FileText, Film, Image as ImageIcon, User, LayoutTemplate, Layers, LogOut, MessageSquare, SplitSquareHorizontal
+  Video, Star, EyeOff, Trash2, Upload, FileText, Film, Image as ImageIcon, User, LayoutTemplate, Layers, LogOut, MessageSquare, SplitSquareHorizontal, Gift
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -428,6 +428,8 @@ const Admin = () => {
     showFreeShipping: false,
     hasBeforeAfter: false,
     beforeImage: "",
+    hasMarketingOffers: false,
+    marketingOffers: [],
     afterImage: ""
   });
 
@@ -882,7 +884,9 @@ const Admin = () => {
       availableSizes: product.availableSizes || [],
       hasBeforeAfter: !!product.hasBeforeAfter,
       beforeImage: product.beforeImage || "",
-      afterImage: product.afterImage || ""
+      afterImage: product.afterImage || "",
+      hasMarketingOffers: !!product.hasMarketingOffers,
+      marketingOffers: product.marketingOffers || []
     });
 
     setIsProductDialogOpen(true);
@@ -918,7 +922,9 @@ const Admin = () => {
         features: productFormData.features || [],
         hasBeforeAfter: productFormData.hasBeforeAfter,
         beforeImage: productFormData.hasBeforeAfter ? productFormData.beforeImage : null,
-        afterImage: productFormData.hasBeforeAfter ? productFormData.afterImage : null
+        afterImage: productFormData.hasBeforeAfter ? productFormData.afterImage : null,
+        hasMarketingOffers: productFormData.hasMarketingOffers,
+        marketingOffers: productFormData.hasMarketingOffers ? productFormData.marketingOffers : []
       };
 
 
@@ -3030,6 +3036,19 @@ const Admin = () => {
                       onCheckedChange={v => setProductFormData({...productFormData, showFreeShipping: v})}
                     />
                   </div>
+                  <div className="flex items-center justify-between p-4 bg-orange-500/5 rounded-2xl border border-orange-500/10 col-span-2">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-orange-500/10 flex items-center justify-center">
+                        <Gift className="w-4 h-4 text-orange-600" />
+                      </div>
+                      <Label className="font-bold text-sm cursor-pointer" htmlFor="hasMarketingOffers">العروض التسويقية</Label>
+                    </div>
+                    <Switch 
+                      id="hasMarketingOffers"
+                      checked={productFormData.hasMarketingOffers}
+                      onCheckedChange={v => setProductFormData({...productFormData, hasMarketingOffers: v})}
+                    />
+                  </div>
                   <div className="flex items-center justify-between p-4 bg-amber-500/5 rounded-2xl border border-amber-500/10 col-span-2">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center">
@@ -3044,6 +3063,108 @@ const Admin = () => {
                     />
                   </div>
                 </div>
+
+                {productFormData.hasMarketingOffers && (
+                  <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4 p-5 bg-orange-500/5 rounded-3xl border border-orange-500/10">
+                    <div className="flex items-center justify-between">
+                      <Label className="font-bold text-sm flex items-center gap-2 text-orange-700">
+                        <Gift className="w-4 h-4" /> العروض التسويقية
+                      </Label>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="h-8 gap-2 border-orange-500/20 text-orange-700 hover:bg-orange-500/10 rounded-xl"
+                        onClick={() => {
+                          const newOffer = { name: `عرض ${productFormData.marketingOffers.length + 1}`, originalPrice: 0, price: 0, commission: 0 };
+                          setProductFormData({
+                            ...productFormData,
+                            marketingOffers: [...(productFormData.marketingOffers || []), newOffer]
+                          });
+                        }}
+                      >
+                        <Plus className="w-3.5 h-3.5" /> إضافة عرض إضافي
+                      </Button>
+                    </div>
+                    
+                    <div className="space-y-3">
+                      {productFormData.marketingOffers?.map((offer: any, index: number) => (
+                        <div key={index} className="p-4 bg-white rounded-2xl border border-orange-500/20 relative group">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const newOffers = [...productFormData.marketingOffers];
+                              newOffers.splice(index, 1);
+                              setProductFormData({ ...productFormData, marketingOffers: newOffers });
+                            }}
+                            className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                            <div className="space-y-1 col-span-1 md:col-span-2">
+                              <Label className="text-[10px] font-bold text-muted-foreground">اسم العرض (مثال: حبتين بسعر 4000 دج)</Label>
+                              <Input
+                                value={offer.name}
+                                onChange={(e) => {
+                                  const newOffers = [...productFormData.marketingOffers];
+                                  newOffers[index].name = e.target.value;
+                                  setProductFormData({ ...productFormData, marketingOffers: newOffers });
+                                }}
+                                className="h-9 rounded-xl text-sm"
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-[10px] font-bold text-muted-foreground">السعر الأصلي (المشطوب)</Label>
+                              <Input
+                                type="number"
+                                value={offer.originalPrice}
+                                onChange={(e) => {
+                                  const newOffers = [...productFormData.marketingOffers];
+                                  newOffers[index].originalPrice = Number(e.target.value);
+                                  setProductFormData({ ...productFormData, marketingOffers: newOffers });
+                                }}
+                                className="h-9 rounded-xl text-sm"
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-[10px] font-bold text-secondary">سعر البيع النهائي</Label>
+                              <Input
+                                type="number"
+                                value={offer.price}
+                                onChange={(e) => {
+                                  const newOffers = [...productFormData.marketingOffers];
+                                  newOffers[index].price = Number(e.target.value);
+                                  setProductFormData({ ...productFormData, marketingOffers: newOffers });
+                                }}
+                                className="h-9 rounded-xl text-sm border-secondary/30"
+                              />
+                            </div>
+                            <div className="space-y-1 md:col-span-2">
+                              <Label className="text-[10px] font-bold text-primary">العمولة (دج)</Label>
+                              <Input
+                                type="number"
+                                value={offer.commission}
+                                onChange={(e) => {
+                                  const newOffers = [...productFormData.marketingOffers];
+                                  newOffers[index].commission = Number(e.target.value);
+                                  setProductFormData({ ...productFormData, marketingOffers: newOffers });
+                                }}
+                                className="h-9 rounded-xl text-sm border-primary/30 font-bold text-primary"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                      {(!productFormData.marketingOffers || productFormData.marketingOffers.length === 0) && (
+                        <div className="text-center p-6 text-sm text-orange-600/60 font-bold bg-white/50 rounded-2xl border border-dashed border-orange-500/20">
+                          لا توجد عروض حالياً. انقر على "إضافة عرض إضافي".
+                        </div>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
 
                 {productFormData.hasBeforeAfter && (
                   <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4 p-5 bg-amber-500/5 rounded-3xl border border-amber-500/10">
