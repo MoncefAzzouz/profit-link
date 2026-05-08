@@ -145,7 +145,15 @@ router.get('/pages/:id/public', async (req: Request, res: Response): Promise<any
   try {
     const { id } = req.params;
     const page = await prisma.landingPage.findUnique({
-      where: { id: String(id) }
+      where: { id: String(id) },
+      include: {
+        product: {
+          select: {
+            hasMarketingOffers: true,
+            marketingOffers: true
+          }
+        }
+      }
     });
 
     if (!page) {
@@ -166,7 +174,9 @@ router.get('/pages/:id/public', async (req: Request, res: Response): Promise<any
         ownerId: page.ownerId,
         status: page.status,
         views: page.views,
-        conversions: page.conversions
+        conversions: page.conversions,
+        hasMarketingOffers: page.product?.hasMarketingOffers || false,
+        marketingOffers: page.product?.marketingOffers || []
       } 
     });
   } catch (error) {
@@ -187,7 +197,15 @@ router.get('/product-page/:productId/:affiliateId', async (req: Request, res: Re
         ownerId: String(affiliateId),
         status: 'published'
       },
-      orderBy: { updatedAt: 'desc' }
+      orderBy: { updatedAt: 'desc' },
+      include: {
+        product: {
+          select: {
+            hasMarketingOffers: true,
+            marketingOffers: true
+          }
+        }
+      }
     });
 
     if (!page) {
@@ -208,7 +226,9 @@ router.get('/product-page/:productId/:affiliateId', async (req: Request, res: Re
         ownerId: page.ownerId,
         status: page.status,
         views: page.views,
-        conversions: page.conversions
+        conversions: page.conversions,
+        hasMarketingOffers: page.product?.hasMarketingOffers || false,
+        marketingOffers: page.product?.marketingOffers || []
       } 
     });
   } catch (error) {

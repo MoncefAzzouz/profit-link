@@ -103,6 +103,10 @@ model Product {
   beforeImage    String?
   afterImage     String?
 
+  // Marketing Offers
+  hasMarketingOffers Boolean @default(false)
+  marketingOffers    Json?
+
   orders       Order[]
   landingPages LandingPage[]
 

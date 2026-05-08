@@ -23,6 +23,10 @@ const productListSelect = {
   isVisible: true,
   isTrend: true,
   isFeatured: true,
+  wholesalePrice: true,
+  affiliatePrice: true,
+  hasMarketingOffers: true,
+  marketingOffers: true,
   createdAt: true,
 } as const;
 
@@ -186,7 +190,7 @@ router.get('/all', authenticateToken, requireAdmin, async (req: AuthRequest, res
 // POST /api/products (Admin: Create new product)
 router.post('/', authenticateToken, requireAdmin, async (req: AuthRequest, res: Response): Promise<any> => {
   try {
-    const { name, description, adText, price, originalPrice, commission, category, images, videoUrl, stock, isVisible, isTrend, isFeatured, features, wholesalePrice, affiliatePrice, hasColors, availableColors, hasSizes, availableSizes, showFreeShipping, hasBeforeAfter, beforeImage, afterImage } = req.body;
+    const { name, description, adText, price, originalPrice, commission, category, images, videoUrl, stock, isVisible, isTrend, isFeatured, features, wholesalePrice, affiliatePrice, hasColors, availableColors, hasSizes, availableSizes, showFreeShipping, hasBeforeAfter, beforeImage, afterImage, hasMarketingOffers, marketingOffers } = req.body;
     const image: string | undefined = req.body.image;
 
     if (!name || !price || !commission || !category) {
@@ -219,7 +223,9 @@ router.post('/', authenticateToken, requireAdmin, async (req: AuthRequest, res: 
         showFreeShipping: showFreeShipping || false,
         hasBeforeAfter: hasBeforeAfter || false,
         beforeImage: beforeImage || null,
-        afterImage: afterImage || null
+        afterImage: afterImage || null,
+        hasMarketingOffers: hasMarketingOffers || false,
+        marketingOffers: marketingOffers || []
       }
     });
 
@@ -234,7 +240,7 @@ router.post('/', authenticateToken, requireAdmin, async (req: AuthRequest, res: 
 router.put('/:id', authenticateToken, requireAdmin, async (req: AuthRequest, res: Response): Promise<any> => {
   try {
     const { id } = req.params;
-    const { name, description, adText, price, originalPrice, commission, category, images, videoUrl, stock, isVisible, isTrend, isFeatured, features, status, wholesalePrice, affiliatePrice, hasColors, availableColors, hasSizes, availableSizes, showFreeShipping, hasBeforeAfter, beforeImage, afterImage } = req.body;
+    const { name, description, adText, price, originalPrice, commission, category, images, videoUrl, stock, isVisible, isTrend, isFeatured, features, status, wholesalePrice, affiliatePrice, hasColors, availableColors, hasSizes, availableSizes, showFreeShipping, hasBeforeAfter, beforeImage, afterImage, hasMarketingOffers, marketingOffers } = req.body;
     const image: string | undefined = req.body.image;
 
     const product = await prisma.product.update({
@@ -266,6 +272,8 @@ router.put('/:id', authenticateToken, requireAdmin, async (req: AuthRequest, res
         ...(hasBeforeAfter !== undefined && { hasBeforeAfter }),
         ...(beforeImage !== undefined && { beforeImage }),
         ...(afterImage !== undefined && { afterImage }),
+        ...(hasMarketingOffers !== undefined && { hasMarketingOffers }),
+        ...(marketingOffers !== undefined && { marketingOffers })
       }
     });
 
