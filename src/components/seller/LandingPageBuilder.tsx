@@ -480,41 +480,75 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
         setEditingPage(updatedPage);
         setActiveDesignTab("content");
       } else {
-        // Create a new landing page specifically for this product
-        const newPage: LandingPageConfig = {
-          ...defaultNewPage(),
-          id: `lp-${Date.now()}`,
-          productId: initialProductToEdit.id,
-          productName: initialProductToEdit.name,
-          template: "original", // Default to the original/classic design as requested
-          heroTitle: initialProductToEdit.name,
-          heroSubtitle: initialProductToEdit.description || "أفضل جودة بأفضل سعر في السوق الجزائري",
-          price: initialProductToEdit.price,
-          originalPrice: initialProductToEdit.originalPrice,
-          category: initialProductToEdit.category,
-          heroImage: initialProductToEdit.image,
-          galleryImages: initialProductToEdit.images && initialProductToEdit.images.length > 0
-            ? initialProductToEdit.images
-            : (initialProductToEdit.image ? [initialProductToEdit.image] : []),
-          features: initialProductToEdit.features && initialProductToEdit.features.length > 0
-            ? initialProductToEdit.features
-            : ["جودة عالية مضمونة", "توصيل سريع لكل الولايات", "الدفع عند الاستلام", "ضمان الاستبدال والاسترجاع"],
-          videoUrl: initialProductToEdit.videoUrl || "",
-          availableColors: initialProductToEdit.hasColors ? (initialProductToEdit.availableColors || []) : [],
-          availableSizes: initialProductToEdit.hasSizes ? (initialProductToEdit.availableSizes || []) : [],
-          showFreeShipping: initialProductToEdit.showFreeShipping || false,
-          beforeAfterImages: initialProductToEdit.hasBeforeAfter ? { before: initialProductToEdit.beforeImage, after: initialProductToEdit.afterImage } : { before: "", after: "" },
-          sections: initialProductToEdit.hasBeforeAfter 
-            ? ["hero", "urgency-bar", "before-after", "features", "gallery", "social-proof", "reviews", "shipping", "cta"]
-            : ["hero", "urgency-bar", "features", "gallery", "social-proof", "reviews", "shipping", "cta"],
-          status: "draft"
+        // Fetch admin default template if it exists
+        const fetchAdminTemplate = async () => {
+          try {
+            const token = localStorage.getItem("token");
+            const res = await fetch(`${API_BASE_URL}/store/pages/admin-default/${initialProductToEdit.id}`, {
+              headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const json = await res.json();
+            
+            let newPage: LandingPageConfig;
+
+            if (res.ok && json.data) {
+              const adminConfig = json.data.pageConfig || json.data;
+              newPage = {
+                ...defaultNewPage(),
+                ...adminConfig,
+                id: `lp-${Date.now()}`,
+                productId: initialProductToEdit.id,
+                ownerId: undefined, // Backend will set affiliate's ID on save
+                status: "draft",
+                views: 0,
+                conversions: 0,
+                // Ensure the affiliate's dynamic product prices are synced
+                productName: initialProductToEdit.name || adminConfig.productName,
+                price: initialProductToEdit.price || adminConfig.price,
+                originalPrice: initialProductToEdit.originalPrice || adminConfig.originalPrice,
+              };
+            } else {
+              // Create a new landing page specifically for this product
+              newPage = {
+                ...defaultNewPage(),
+                id: `lp-${Date.now()}`,
+                productId: initialProductToEdit.id,
+                productName: initialProductToEdit.name,
+                template: "original", // Default to the original/classic design as requested
+                heroTitle: initialProductToEdit.name,
+                heroSubtitle: initialProductToEdit.description || "أفضل جودة بأفضل سعر في السوق الجزائري",
+                price: initialProductToEdit.price,
+                originalPrice: initialProductToEdit.originalPrice,
+                category: initialProductToEdit.category,
+                heroImage: initialProductToEdit.image,
+                galleryImages: initialProductToEdit.images && initialProductToEdit.images.length > 0
+                  ? initialProductToEdit.images
+                  : (initialProductToEdit.image ? [initialProductToEdit.image] : []),
+                features: initialProductToEdit.features && initialProductToEdit.features.length > 0
+                  ? initialProductToEdit.features
+                  : ["جودة عالية مضمونة", "توصيل سريع لكل الولايات", "الدفع عند الاستلام", "ضمان الاستبدال والاسترجاع"],
+                videoUrl: initialProductToEdit.videoUrl || "",
+                availableColors: initialProductToEdit.hasColors ? (initialProductToEdit.availableColors || []) : [],
+                availableSizes: initialProductToEdit.hasSizes ? (initialProductToEdit.availableSizes || []) : [],
+                showFreeShipping: initialProductToEdit.showFreeShipping || false,
+                beforeAfterImages: initialProductToEdit.hasBeforeAfter ? { before: initialProductToEdit.beforeImage, after: initialProductToEdit.afterImage } : { before: "", after: "" },
+                sections: initialProductToEdit.hasBeforeAfter 
+                  ? ["hero", "urgency-bar", "before-after", "features", "gallery", "social-proof", "reviews", "shipping", "cta"]
+                  : ["hero", "urgency-bar", "features", "gallery", "social-proof", "reviews", "shipping", "cta"],
+                status: "draft"
+              };
+            }
+
+            const newPages = [newPage, ...pages];
+            savePagesLocally(newPages);
+            setEditingPage(newPage);
+            setActiveDesignTab("content");
+          } catch (err) {
+            console.error("Failed to fetch admin template:", err);
+          }
         };
 
-
-        const newPages = [newPage, ...pages];
-        savePagesLocally(newPages);
-        setEditingPage(newPage);
-        setActiveDesignTab("content");
+        fetchAdminTemplate();
       }
     }
   }, [initialProductToEdit, isLoading, pages]);
