@@ -317,7 +317,7 @@ router.delete('/:id', authenticateToken, requireAdmin, async (req: AuthRequest, 
 });
 
 // GET /api/products/:id (Get single product)
-router.get('/:id', async (req: Request, res: Response) => {
+router.get('/:id', async (req: Request, res: Response): Promise<any> => {
   try {
     const id = req.params.id;
     const product = await prisma.product.findUnique({
@@ -328,6 +328,7 @@ router.get('/:id', async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Product not found' });
     }
 
+    res.set('Cache-Control', 'public, max-age=60, stale-while-revalidate=300');
     res.json({ data: product });
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch specific product' });
