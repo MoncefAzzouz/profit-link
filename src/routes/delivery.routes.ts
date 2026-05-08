@@ -16,6 +16,8 @@ const southWilayas = ["01", "08", "11", "30", "32", "33", "37", "39", "45", "47"
 router.get('/wilayas', async (req: Request, res: Response) => {
   try {
     const wilayas = await EcotrackService.getWilayas();
+    // Wilayas are basically static — cache aggressively.
+    res.set('Cache-Control', 'public, max-age=86400, stale-while-revalidate=604800');
     res.json({ data: wilayas });
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch wilayas' });
@@ -27,6 +29,7 @@ router.get('/communes', async (req: Request, res: Response) => {
   try {
     const { wilaya_id } = req.query;
     const communes = await EcotrackService.getCommunes(wilaya_id as string);
+    res.set('Cache-Control', 'public, max-age=86400, stale-while-revalidate=604800');
     res.json({ data: communes });
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch communes' });
@@ -84,6 +87,7 @@ router.get('/all-rates', async (req: Request, res: Response) => {
       };
     });
 
+    res.set('Cache-Control', 'public, max-age=3600, stale-while-revalidate=86400');
     res.json({ data: combined });
   } catch (error) {
     console.error('Error fetching all rates:', error);

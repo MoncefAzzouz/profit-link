@@ -1,9 +1,8 @@
 import { Router, Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
 import { authenticateToken, AuthRequest, requireAdmin } from '../middleware/auth';
+import { prisma } from '../db';
 
 const router = Router();
-const prisma = new PrismaClient();
 
 // Fields needed by the products listing / quick-view UI. Heavy detail-only
 // fields (adText, videoUrl, features, variant arrays, before/after, wholesale
@@ -83,6 +82,7 @@ router.get('/categories', async (req: Request, res: Response) => {
       where: { isActive: true },
       orderBy: { createdAt: 'asc' }
     });
+    res.set('Cache-Control', 'public, max-age=300, stale-while-revalidate=600');
     res.json({ data: categories });
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch categories' });
@@ -277,12 +277,16 @@ router.put('/:id', authenticateToken, requireAdmin, async (req: AuthRequest, res
       }
     });
 
-    // Sync essential product details to ALL existing landing pages for this product
-    // This ensures that when the admin updates a product, those changes reflect on all affiliate landing pages
-    const landingPages = await prisma.landingPage.findMany({ where: { productId: id as string } });
-    
+    // Sync essential product details to ALL existing landing pages for this product.
+    // Each row's pageConfig is JSON-merged individually, so we can't use updateMany —
+    // but we run all updates in a single transaction for atomicity and one round-trip.
+    const landingPages = await prisma.landingPage.findMany({
+      where: { productId: id as string },
+      select: { id: true, pageConfig: true },
+    });
+
     if (landingPages.length > 0) {
-      const updatePromises = landingPages.map(lp => {
+      const updates = landingPages.map(lp => {
         const config = lp.pageConfig as any;
         const updatedConfig = {
           ...config,
@@ -298,11 +302,10 @@ router.put('/:id', authenticateToken, requireAdmin, async (req: AuthRequest, res
         };
         return prisma.landingPage.update({
           where: { id: lp.id },
-          data: { pageConfig: updatedConfig }
+          data: { pageConfig: updatedConfig },
         });
       });
-      
-      await Promise.all(updatePromises);
+      await prisma.$transaction(updates);
     }
 
     res.json({ message: 'Product updated successfully', data: product });

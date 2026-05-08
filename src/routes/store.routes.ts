@@ -1,10 +1,9 @@
 import { Router, Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { authenticateToken, AuthRequest } from '../middleware/auth';
+import { prisma } from '../db';
 
 const router = Router();
-const prisma = new PrismaClient();
 
 // GET /api/store/settings (Fetch affiliate store settings)
 router.get('/settings', authenticateToken, async (req: AuthRequest, res: Response): Promise<any> => {
@@ -107,6 +106,7 @@ router.get('/public/:storeName', async (req: Request, res: Response): Promise<an
     });
 
     // We only send safe public data
+    res.set('Cache-Control', 'public, max-age=60, stale-while-revalidate=300');
     res.json({
       data: {
         storeInfo: {

@@ -1,7 +1,8 @@
 import express, { Request, Response } from 'express';
 import cors from 'cors';
+import compression from 'compression';
 import dotenv from 'dotenv';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from './db';
 
 import authRoutes from './routes/auth.routes';
 import productsRoutes from './routes/products.routes';
@@ -16,8 +17,10 @@ import levelsRoutes from './routes/levels.routes';
 dotenv.config();
 
 const app = express();
-const prisma = new PrismaClient();
 const PORT = process.env.PORT || 5000;
+
+// Compress all JSON / text responses (skip already-compressed assets)
+app.use(compression());
 
 // Middleware
 const corsOptions = {

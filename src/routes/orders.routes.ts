@@ -1,10 +1,9 @@
 import { Router, Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
 import { EcotrackService } from '../services/ecotrack.service';
 import { authenticateToken, AuthRequest, requireAdmin } from '../middleware/auth';
+import { prisma } from '../db';
 
 const router = Router();
-const prisma = new PrismaClient();
 
 // POST /api/orders (Public: Triggered by Landing Page checkout)
 router.post('/', async (req: Request, res: Response) => {

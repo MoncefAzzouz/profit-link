@@ -53,6 +53,8 @@ model User {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([role])
 }
 
 model AffiliateLevel {
@@ -115,6 +117,7 @@ model Product {
 
   @@index([isVisible, createdAt])
   @@index([category])
+  @@index([status])
 }
 
 model Order {
@@ -149,6 +152,9 @@ model Order {
 
   @@index([affiliateId])
   @@index([productId])
+  @@index([status])
+  @@index([affiliateId, status])
+  @@index([createdAt])
 }
 
 model LandingPage {
@@ -171,6 +177,7 @@ model LandingPage {
 
   @@index([ownerId])
   @@index([productId])
+  @@index([status])
 }
 
 model StoreSettings {
@@ -203,4 +210,7 @@ model WithdrawalRequest {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([status])
 }

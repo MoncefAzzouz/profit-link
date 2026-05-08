@@ -1,9 +1,8 @@
 import { Router, Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
 import { authenticateToken, AuthRequest } from '../middleware/auth';
+import { prisma } from '../db';
 
 const router = Router();
-const prisma = new PrismaClient();
 
 // GET /api/finance/dashboard (Affiliate dashboard statistics)
 router.get('/dashboard', authenticateToken, async (req: AuthRequest, res: Response): Promise<any> => {
@@ -13,39 +12,35 @@ router.get('/dashboard', authenticateToken, async (req: AuthRequest, res: Respon
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    // Get all orders for this affiliate
-    const orders = await prisma.order.findMany({
-      where: { affiliateId: userId }
-    });
+    // Aggregate counts/sums DB-side instead of pulling every order into memory.
+    const [totalOrders, confirmedOrders, pendingAgg, deliveredAgg] = await Promise.all([
+      prisma.order.count({ where: { affiliateId: userId } }),
+      prisma.order.count({
+        where: { affiliateId: userId, status: { in: ['CONFIRMED', 'SHIPPED', 'DELIVERED'] } },
+      }),
+      prisma.order.aggregate({
+        where: { affiliateId: userId, status: { in: ['PENDING', 'CONFIRMED', 'SHIPPED'] } },
+        _sum: { commissionAmount: true },
+      }),
+      prisma.order.aggregate({
+        where: { affiliateId: userId, status: 'DELIVERED' },
+        _sum: { commissionAmount: true },
+      }),
+    ]);
 
-    const totalOrders = orders.length;
-    
-    // Count confirmed orders (CONFIRMED, SHIPPED, DELIVERED)
-    const confirmedOrders = orders.filter(o => 
-      ['CONFIRMED', 'SHIPPED', 'DELIVERED'].includes(o.status)
-    ).length;
-
-    const confirmationRate = totalOrders > 0 
-      ? Math.round((confirmedOrders / totalOrders) * 100) 
+    const confirmationRate = totalOrders > 0
+      ? Math.round((confirmedOrders / totalOrders) * 100)
       : 0;
+    const pendingEarnings = pendingAgg._sum.commissionAmount ?? 0;
+    const totalEarnings = deliveredAgg._sum.commissionAmount ?? 0;
 
-    // Pending Earnings (PENDING, CONFIRMED, SHIPPED)
-    const pendingEarnings = orders
-      .filter(o => ['PENDING', 'CONFIRMED', 'SHIPPED'].includes(o.status))
-      .reduce((sum, o) => sum + o.commissionAmount, 0);
-
-    // Total Earnings (DELIVERED) - Or we can use the user's walletBalance plus withdrawn.
-    // For now, based on the agreed logic:
-    const totalEarnings = orders
-      .filter(o => o.status === 'DELIVERED')
-      .reduce((sum, o) => sum + o.commissionAmount, 0);
-
+    res.set('Cache-Control', 'private, max-age=10, stale-while-revalidate=30');
     res.json({
       totalOrders,
       confirmedOrders,
       confirmationRate,
       pendingEarnings,
-      totalEarnings
+      totalEarnings,
     });
   } catch (error) {
     console.error('Error fetching dashboard stats:', error);
@@ -66,18 +61,19 @@ router.post('/withdraw', authenticateToken, async (req: AuthRequest, res: Respon
       return res.status(400).json({ error: 'Invalid amount' });
     }
 
-    // SECURITY CHECK: Calculate real withdrawable balance
-    // 1. Sum of all DELIVERED commissions
-    const deliveredOrders = await prisma.order.findMany({
-      where: { affiliateId: userId, status: 'DELIVERED' }
-    });
-    const totalDeliveredCommissions = deliveredOrders.reduce((sum, o) => sum + o.commissionAmount, 0);
-
-    // 2. Sum of all previous withdrawal requests
-    const pastWithdrawals = await prisma.withdrawalRequest.findMany({
-      where: { userId }
-    });
-    const totalWithdrawnOrPending = pastWithdrawals.reduce((sum, w) => sum + w.amount, 0);
+    // SECURITY CHECK: Calculate real withdrawable balance via DB-side aggregation.
+    const [deliveredAgg, withdrawnAgg] = await Promise.all([
+      prisma.order.aggregate({
+        where: { affiliateId: userId, status: 'DELIVERED' },
+        _sum: { commissionAmount: true },
+      }),
+      prisma.withdrawalRequest.aggregate({
+        where: { userId },
+        _sum: { amount: true },
+      }),
+    ]);
+    const totalDeliveredCommissions = deliveredAgg._sum.commissionAmount ?? 0;
+    const totalWithdrawnOrPending = withdrawnAgg._sum.amount ?? 0;
 
     const withdrawableBalance = totalDeliveredCommissions - totalWithdrawnOrPending;
 
