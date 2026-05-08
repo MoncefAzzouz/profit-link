@@ -82,6 +82,8 @@ interface LandingPageConfig {
   commission?: number;
   galleryImages?: string[];
   bundles?: BundlePack[];
+  hasMarketingOffers?: boolean;
+  marketingOffers?: any;
 }
 
 const defaultStoreName = "متجري";

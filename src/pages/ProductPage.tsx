@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { ArrowRight, ShoppingCart, Check, Star, Truck, Shield, Clock, Phone } from "lucide-react";
+import { ArrowRight, ShoppingCart, Check, Star, Truck, Shield, Clock, Phone, Image } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
