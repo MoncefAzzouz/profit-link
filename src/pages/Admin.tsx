@@ -947,8 +947,20 @@ const Admin = () => {
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || 'Failed to save product');
 
+      // Update local state from the response instead of refetching the entire list.
+      const saved = json.data;
+      if (saved) {
+        setProducts(prev =>
+          editingProduct
+            ? prev.map(p => (p.id === saved.id ? saved : p))
+            : [saved, ...prev]
+        );
+      } else {
+        // Fallback only if the API didn't echo the row back.
+        fetchProducts();
+      }
+
       setIsProductDialogOpen(false);
-      fetchProducts(); // Refresh list from DB
       toast({
         title: editingProduct ? "تم تحديث المنتج بنجاح" : "تم إضافة المنتج بنجاح",
         description: `المنتج "${productFormData.name}" جاهز الآن.`,
@@ -960,15 +972,18 @@ const Admin = () => {
 
   const handleDeleteProduct = async (id: string) => {
     const token = localStorage.getItem("token");
+    // Optimistic removal — restore on failure.
+    const snapshot = products;
+    setProducts(prev => prev.filter(p => p.id !== id));
     try {
       const res = await fetch(`${API_BASE_URL}/products/${id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (!res.ok) throw new Error('Failed to delete');
-      fetchProducts();
       toast({ title: "تم حذف المنتج", variant: "destructive" });
     } catch (err: any) {
+      setProducts(snapshot);
       toast({ title: "خطأ", description: err.message, variant: "destructive" });
     }
   };
@@ -978,6 +993,10 @@ const Admin = () => {
     const product = products.find(p => p.id === id);
     if (!product) return;
 
+    // Optimistic toggle — flip locally first, reconcile on failure.
+    const newValue = !product[field];
+    setProducts(prev => prev.map(p => (p.id === id ? { ...p, [field]: newValue } : p)));
+
     try {
       const res = await fetch(`${API_BASE_URL}/products/${id}`, {
         method: 'PUT',
@@ -985,12 +1004,13 @@ const Admin = () => {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ [field]: !product[field] })
+        body: JSON.stringify({ [field]: newValue })
       });
       if (!res.ok) throw new Error('Failed to update');
-      fetchProducts();
       toast({ title: "تم تحديث حالة المنتج" });
     } catch (err: any) {
+      // Revert.
+      setProducts(prev => prev.map(p => (p.id === id ? { ...p, [field]: !newValue } : p)));
       toast({ title: "خطأ", description: err.message, variant: "destructive" });
     }
   };
