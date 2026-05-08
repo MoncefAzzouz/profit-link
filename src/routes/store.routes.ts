@@ -237,6 +237,38 @@ router.get('/product-page/:productId/:affiliateId', async (req: Request, res: Re
   }
 });
 
+// GET /api/store/pages/admin-default/:productId
+router.get('/pages/admin-default/:productId', authenticateToken, async (req: AuthRequest, res: Response): Promise<any> => {
+  try {
+    const { productId } = req.params;
+    
+    const adminUser = await prisma.user.findFirst({
+      where: { role: 'ADMIN' }
+    });
+
+    if (!adminUser) {
+      return res.status(404).json({ error: 'No admin found' });
+    }
+
+    const adminPage = await prisma.landingPage.findFirst({
+      where: {
+        ownerId: adminUser.id,
+        productId: String(productId)
+      },
+      orderBy: { updatedAt: 'desc' }
+    });
+
+    if (!adminPage) {
+      return res.status(404).json({ error: 'No admin page found' });
+    }
+
+    res.json({ data: adminPage });
+  } catch (error) {
+    console.error('Failed to fetch admin default page:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
 // GET /api/store/pages (List all landing pages for the affiliate)
 router.get('/pages', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
