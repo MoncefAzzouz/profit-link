@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { authenticateToken, AuthRequest, requireAdmin } from '../middleware/auth';
 import { prisma } from '../db';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const router = Router();
 
@@ -388,6 +389,148 @@ router.get('/:id', async (req: Request, res: Response): Promise<any> => {
     res.json({ data: product });
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch specific product' });
+  }
+});
+
+// POST /api/products/:id/generate-ai-landing-page (Admin: Generate AI Landing Page from Product Data)
+router.post('/:id/generate-ai-landing-page', authenticateToken, requireAdmin, async (req: AuthRequest, res: Response): Promise<any> => {
+  try {
+    const adminUserId = req.user?.userId;
+    if (!adminUserId) return res.status(401).json({ error: 'Unauthorized' });
+
+    const { id } = req.params;
+    const product = await prisma.product.findUnique({
+      where: { id: String(id) }
+    });
+
+    if (!product) {
+      return res.status(404).json({ error: 'Product not found' });
+    }
+
+    if (!process.env.GEMINI_API_KEY) {
+      return res.status(500).json({ error: 'GEMINI_API_KEY is missing from backend' });
+    }
+
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY as string);
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+
+    // Prepare context
+    const contextText = `
+      Product Name: ${product.name}
+      Description: ${product.description}
+      Price: ${product.price}
+      Original Price: ${product.originalPrice}
+      Category: ${product.category}
+      Features: ${product.features.join(', ')}
+      Marketing Offers: ${product.hasMarketingOffers ? JSON.stringify(product.marketingOffers) : 'None'}
+      Has Before/After Images: ${product.hasBeforeAfter ? 'Yes' : 'No'}
+    `;
+
+    const prompt = `
+      You are an expert E-Commerce Copywriter and UI/UX Designer creating high-converting landing pages for the Algerian market in Arabic.
+      Analyze the provided product details: "${contextText}".
+      
+      Generate a STUNNING landing page configuration for this specific product. Your response must be an expert-level blueprint.
+      
+      Respond ONLY with a valid JSON object matching this exact structure, with no markdown code blocks around it:
+      {
+        "productName": "${product.name}",
+        "template": "modern", // pick best fit: luxury, modern, bold, dark, neon, tiktok, instagram, flash-sale
+        "category": "${product.category}",
+        "price": ${product.price},
+        "originalPrice": ${product.originalPrice},
+        "primaryColor": "#HEX_COLOR", // Pick a strong, attractive color
+        "accentColor": "#HEX_COLOR", // A complementary accent color
+        "backgroundColor": "#F8F9FA", // A clean background color
+        "heroTitle": "Extremely catchy Arabic title about ${product.name}",
+        "heroSubtitle": "A persuasive Arabic hook highlighting benefits",
+        "urgencyText": "Offer ends soon or limited stock (in Arabic)",
+        "ctaText": "Buy Now (in Arabic)",
+        "features": ["3 to 5 persuasive feature points in Arabic"],
+        "sections": ["hero", "urgency-bar", "features", "gallery", "social-proof", "reviews", "shipping", "cta"] // add "before-after" if the product has before/after images
+      }
+      Make the colors modern and vibrant. The copy must be highly persuasive Algerian Arabic or standard Arabic.
+    `;
+
+    // Process image if available and is base64 data URL
+    let result;
+    if (product.image && product.image.startsWith('data:image/')) {
+      const parts = product.image.split(',');
+      const mimeType = parts[0].match(/:(.*?);/)?.[1] || 'image/jpeg';
+      const base64Data = parts[1];
+      
+      const imagePart = {
+        inlineData: {
+          data: base64Data,
+          mimeType: mimeType
+        }
+      };
+      
+      result = await model.generateContent([prompt, imagePart]);
+    } else {
+      result = await model.generateContent(prompt);
+    }
+
+    const responseText = result.response.text();
+    const cleanJson = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
+    const generatedConfig = JSON.parse(cleanJson);
+
+    // Merge with explicitly required data to avoid Gemini hallucinating bad base values
+    const finalConfig = {
+      ...generatedConfig,
+      productName: product.name,
+      price: product.price,
+      originalPrice: product.originalPrice,
+      category: product.category,
+      heroImage: product.image,
+      galleryImages: product.images && product.images.length > 0 ? product.images : (product.image ? [product.image] : []),
+      availableColors: product.hasColors ? product.availableColors : [],
+      availableSizes: product.hasSizes ? product.availableSizes : [],
+      showFreeShipping: product.showFreeShipping,
+      beforeAfterImages: product.hasBeforeAfter ? { before: product.beforeImage, after: product.afterImage } : { before: "", after: "" },
+      hasMarketingOffers: product.hasMarketingOffers,
+      marketingOffers: product.hasMarketingOffers ? product.marketingOffers : []
+    };
+
+    // Ensure 'before-after' is in sections if applicable, or remove it if not
+    if (product.hasBeforeAfter && !finalConfig.sections.includes("before-after")) {
+      finalConfig.sections.splice(2, 0, "before-after");
+    } else if (!product.hasBeforeAfter) {
+      finalConfig.sections = finalConfig.sections.filter((s: string) => s !== "before-after");
+    }
+
+    // Save to database
+    const existingPage = await prisma.landingPage.findFirst({
+      where: {
+        ownerId: adminUserId,
+        productId: product.id
+      }
+    });
+
+    let savedPage;
+    if (existingPage) {
+      savedPage = await prisma.landingPage.update({
+        where: { id: existingPage.id },
+        data: {
+          pageConfig: finalConfig,
+          status: 'published'
+        }
+      });
+    } else {
+      savedPage = await prisma.landingPage.create({
+        data: {
+          ownerId: adminUserId,
+          productId: product.id,
+          pageConfig: finalConfig,
+          status: 'published'
+        }
+      });
+    }
+
+    res.json({ message: 'Landing page generated and saved successfully', data: savedPage });
+  } catch (error) {
+    console.error('Error generating AI landing page:', error);
+    res.status(500).json({ error: 'Failed to generate AI landing page' });
   }
 });
 
