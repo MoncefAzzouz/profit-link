@@ -133,9 +133,10 @@ const LandingPageView = () => {
           };
           setPage(safeFound);
 
-          if (safeFound.ownerId) {
+          const effectiveAffiliateId = affiliateId || safeFound.ownerId;
+          if (effectiveAffiliateId) {
             try {
-              const storeRes = await fetch(`${API_BASE_URL}/store/public/${safeFound.ownerId}`);
+              const storeRes = await fetch(`${API_BASE_URL}/store/public/${effectiveAffiliateId}`);
               if (storeRes.ok) {
                 const storeJson = await storeRes.json();
                 if (storeJson.data?.storeInfo?.storeName) {
@@ -343,7 +344,7 @@ const LandingPageView = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           productId: p.productId || p.id,
-          affiliateId: p.ownerId || "aff-demo-123",
+          affiliateId: affiliateId || p.ownerId || "aff-demo-123",
           customerName: orderForm.name,
           customerPhone: orderForm.phone,
           wilaya: orderForm.wilaya,
