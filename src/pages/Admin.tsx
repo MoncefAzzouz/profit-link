@@ -7,7 +7,7 @@ import {
   Settings, Menu, X, TrendingUp, CheckCircle, XCircle,
   Truck, Clock, Eye, Edit, Ban, Search, Filter, Plus, Trophy, Sparkles,
   BarChart3, ChevronLeft, AlertTriangle, SlidersHorizontal, Store, UserPlus, Check, MapPin, CreditCard,
-  Video, Star, EyeOff, Trash2, Upload, FileText, Film, Image as ImageIcon, User, LayoutTemplate, Layers, LogOut, MessageSquare, SplitSquareHorizontal, Gift
+  Video, Star, EyeOff, Trash2, Upload, FileText, Film, Image as ImageIcon, User, LayoutTemplate, Layers, LogOut, MessageSquare, SplitSquareHorizontal, Gift, Loader2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -403,6 +403,7 @@ const Admin = () => {
   const [isProductDialogOpen, setIsProductDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<any | null>(null);
   const [productToEditLandingPage, setProductToEditLandingPage] = useState<any>(null);
+  const [generatingAiProductId, setGeneratingAiProductId] = useState<string | null>(null);
   const [productFormData, setProductFormData] = useState<any>({
     name: "",
     description: "",
@@ -842,6 +843,34 @@ const Admin = () => {
   };
 
   // Product CRUD Handlers
+  const handleGenerateLandingPageWithAI = async (productId: string) => {
+    try {
+      setGeneratingAiProductId(productId);
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${API_BASE_URL}/products/${productId}/generate-ai-landing-page`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to generate AI landing page');
+      
+      toast({
+        title: "✨ تم بنجاح",
+        description: "تم توليد صفحة الهبوط بالذكاء الاصطناعي وتعيينها كقالب افتراضي.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "خطأ",
+        description: error.message || "فشل توليد صفحة الهبوط",
+        variant: "destructive"
+      });
+    } finally {
+      setGeneratingAiProductId(null);
+    }
+  };
+
   const handleOpenAddProduct = () => {
     setEditingProduct(null);
     setProductFormData({
@@ -2095,6 +2124,16 @@ const Admin = () => {
                          </Button>
                          <Button size="sm" variant="secondary" className="rounded-full h-9 w-9 p-0" onClick={() => handleToggleProductStatus(product.id, 'isFeatured')}>
                             <Star className={`w-4 h-4 ${product.isFeatured ? "text-yellow-500 fill-yellow-500" : ""}`} />
+                         </Button>
+                         <Button 
+                           size="sm" 
+                           variant="secondary" 
+                           className="rounded-full h-9 w-9 p-0 text-indigo-500 hover:bg-indigo-50" 
+                           onClick={() => handleGenerateLandingPageWithAI(product.id)}
+                           disabled={generatingAiProductId === product.id}
+                           title="توليد صفحة هبوط بالذكاء الاصطناعي"
+                         >
+                            {generatingAiProductId === product.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
                          </Button>
                       </div>
                       <div className="absolute top-3 right-3 flex flex-col gap-2">
