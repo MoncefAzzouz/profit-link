@@ -2455,13 +2455,13 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
                       <span className="text-[10px] text-muted-foreground">+{page.sections.length - 5}</span>
                     )}
                   </div>
-                  <div className="flex gap-2 pt-2 border-t border-border">
+                  <div className="flex flex-wrap gap-2 pt-2 border-t border-border">
                     <Button 
                       variant="outline" 
                       size="sm" 
                       onClick={() => handleEdit(page)} 
                       disabled={isFetchingDetails === page.id}
-                      className="flex-1 rounded-xl gap-1.5"
+                      className="w-full sm:w-auto sm:flex-1 rounded-xl gap-1.5 bg-primary/5 hover:bg-primary/10 border-primary/20 font-bold"
                     >
                       {isFetchingDetails === page.id ? (
                         <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }} className="w-3.5 h-3.5 border-2 border-primary/30 border-t-primary rounded-full" />
@@ -2470,18 +2470,20 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
                       )}
                       تخصيص
                     </Button>
-                    <Button variant="outline" size="sm" onClick={() => viewPage(page)} className="rounded-xl gap-1.5">
-                      <ExternalLink className="w-3.5 h-3.5" />
-                    </Button>
-                    <Button variant="outline" size="sm" onClick={() => copyLink(page)} className="rounded-xl gap-1.5">
-                      {copiedId === page.id ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                    </Button>
-                    <Button variant="outline" size="sm" onClick={() => publishPage(page)} className="rounded-xl">
-                      {page.status === "published" ? <Eye className="w-3.5 h-3.5" /> : <Zap className="w-3.5 h-3.5" />}
-                    </Button>
-                    <Button variant="outline" size="sm" onClick={() => deletePage(page.id)} className="rounded-xl text-destructive hover:bg-destructive/10">
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </Button>
+                    <div className="flex w-full sm:w-auto flex-1 gap-2">
+                      <Button variant="outline" size="sm" onClick={() => viewPage(page)} className="flex-1 sm:flex-none rounded-xl gap-1.5">
+                        <ExternalLink className="w-3.5 h-3.5" />
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={() => copyLink(page)} className="flex-1 sm:flex-none rounded-xl gap-1.5">
+                        {copiedId === page.id ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={() => publishPage(page)} className="flex-1 sm:flex-none rounded-xl">
+                        {page.status === "published" ? <Eye className="w-3.5 h-3.5" /> : <Zap className="w-3.5 h-3.5" />}
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={() => deletePage(page.id)} className="flex-1 sm:flex-none rounded-xl text-destructive hover:bg-destructive/10">
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </motion.div>
