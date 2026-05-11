@@ -458,29 +458,65 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
       // Check if we already have a landing page for this product
       const existingPage = pages.find((p) => p.productId === initialProductToEdit.id);
       if (existingPage) {
-        // Sync with the latest product data (in case admin updated prices, images, or variants)
-        const updatedPage = {
-          ...existingPage,
-          productName: initialProductToEdit.name || existingPage.productName,
-          price: initialProductToEdit.price || existingPage.price,
-          originalPrice: initialProductToEdit.originalPrice || existingPage.originalPrice,
-          heroImage: initialProductToEdit.image || existingPage.heroImage,
-          galleryImages: initialProductToEdit.images && initialProductToEdit.images.length > 0 
-            ? initialProductToEdit.images 
-            : (initialProductToEdit.image ? [initialProductToEdit.image] : existingPage.galleryImages),
-          category: initialProductToEdit.category || existingPage.category,
-          heroSubtitle: initialProductToEdit.description || existingPage.heroSubtitle,
-          // Sync variants
-          availableColors: initialProductToEdit.hasColors ? (initialProductToEdit.availableColors || []) : [],
-          availableSizes: initialProductToEdit.hasSizes ? (initialProductToEdit.availableSizes || []) : [],
-          showFreeShipping: initialProductToEdit.showFreeShipping !== undefined ? initialProductToEdit.showFreeShipping : existingPage.showFreeShipping,
-          beforeAfterImages: initialProductToEdit.hasBeforeAfter ? { before: initialProductToEdit.beforeImage, after: initialProductToEdit.afterImage } : existingPage.beforeAfterImages,
-          sections: initialProductToEdit.hasBeforeAfter && !existingPage.sections.includes("before-after") 
-            ? [...existingPage.sections.slice(0, 4), "before-after", ...existingPage.sections.slice(4)]
-            : existingPage.sections
+        // Fetch full page details from backend to ensure we don't overwrite AI config with summary data
+        const fetchFullPage = async () => {
+          setIsFetchingDetails(existingPage.id);
+          try {
+            const token = localStorage.getItem("token");
+            const res = await fetch(`${API_BASE_URL}/store/pages/${existingPage.id}`, {
+              headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const json = await res.json();
+            if (res.ok && json.data) {
+              const raw = json.data.pageConfig || json.data;
+              const def = defaultNewPage();
+              const fullPage: LandingPageConfig = {
+                ...def,
+                ...raw,
+                id: json.data.id,
+                productId: json.data.productId,
+                ownerId: json.data.ownerId,
+                sections: Array.isArray(raw.sections) ? raw.sections : def.sections,
+                features: Array.isArray(raw.features) ? raw.features : def.features,
+                socialProof: Array.isArray(raw.socialProof) ? raw.socialProof : def.socialProof,
+                faqItems: Array.isArray(raw.faqItems) ? raw.faqItems : def.faqItems,
+                trustBadges: Array.isArray(raw.trustBadges) ? raw.trustBadges : def.trustBadges,
+                galleryImages: Array.isArray(raw.galleryImages) ? raw.galleryImages : def.galleryImages,
+                availableColors: Array.isArray(raw.availableColors) ? raw.availableColors : def.availableColors,
+                availableSizes: Array.isArray(raw.availableSizes) ? raw.availableSizes : def.availableSizes,
+              };
+
+              // Sync with the latest product data (in case admin updated prices, images, or variants)
+              const updatedPage = {
+                ...fullPage,
+                productName: initialProductToEdit.name || fullPage.productName,
+                price: initialProductToEdit.price || fullPage.price,
+                originalPrice: initialProductToEdit.originalPrice || fullPage.originalPrice,
+                heroImage: initialProductToEdit.image || fullPage.heroImage,
+                galleryImages: initialProductToEdit.images && initialProductToEdit.images.length > 0 
+                  ? initialProductToEdit.images 
+                  : (initialProductToEdit.image ? [initialProductToEdit.image] : fullPage.galleryImages),
+                category: initialProductToEdit.category || fullPage.category,
+                heroSubtitle: initialProductToEdit.description || fullPage.heroSubtitle,
+                // Sync variants
+                availableColors: initialProductToEdit.hasColors ? (initialProductToEdit.availableColors || []) : [],
+                availableSizes: initialProductToEdit.hasSizes ? (initialProductToEdit.availableSizes || []) : [],
+                showFreeShipping: initialProductToEdit.showFreeShipping !== undefined ? initialProductToEdit.showFreeShipping : fullPage.showFreeShipping,
+                beforeAfterImages: initialProductToEdit.hasBeforeAfter ? { before: initialProductToEdit.beforeImage, after: initialProductToEdit.afterImage } : fullPage.beforeAfterImages,
+                sections: initialProductToEdit.hasBeforeAfter && !fullPage.sections.includes("before-after") 
+                  ? [...fullPage.sections.slice(0, 4), "before-after", ...fullPage.sections.slice(4)]
+                  : fullPage.sections
+              };
+              setEditingPage(updatedPage);
+              setActiveDesignTab("content");
+            }
+          } catch (err) {
+            console.error("Failed to fetch full page for editing", err);
+          } finally {
+            setIsFetchingDetails(null);
+          }
         };
-        setEditingPage(updatedPage);
-        setActiveDesignTab("content");
+        fetchFullPage();
       } else {
         // Fetch admin default template if it exists
         const fetchAdminTemplate = async () => {
