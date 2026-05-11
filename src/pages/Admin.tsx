@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, lazy, Suspense, startTransition } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import {
   LayoutDashboard, Users, Package, ShoppingCart, Wallet, Palette,
@@ -404,6 +404,7 @@ const Admin = () => {
   const [editingProduct, setEditingProduct] = useState<any | null>(null);
   const [productToEditLandingPage, setProductToEditLandingPage] = useState<any>(null);
   const [generatingAiProductId, setGeneratingAiProductId] = useState<string | null>(null);
+  const [aiProgressStep, setAiProgressStep] = useState(0);
   const [productFormData, setProductFormData] = useState<any>({
     name: "",
     description: "",
@@ -846,6 +847,12 @@ const Admin = () => {
   const handleGenerateLandingPageWithAI = async (productId: string) => {
     try {
       setGeneratingAiProductId(productId);
+      setAiProgressStep(1);
+      
+      const stepInterval = setInterval(() => {
+        setAiProgressStep(prev => prev < 4 ? prev + 1 : prev);
+      }, 1500);
+
       const token = localStorage.getItem("token");
       const res = await fetch(`${API_BASE_URL}/products/${productId}/generate-ai-landing-page`, {
         method: 'POST',
@@ -853,6 +860,11 @@ const Admin = () => {
           'Authorization': `Bearer ${token}`
         }
       });
+      
+      clearInterval(stepInterval);
+      setAiProgressStep(5);
+      await new Promise(r => setTimeout(r, 800));
+
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to generate AI landing page');
       
@@ -868,6 +880,7 @@ const Admin = () => {
       });
     } finally {
       setGeneratingAiProductId(null);
+      setTimeout(() => setAiProgressStep(0), 500);
     }
   };
 
@@ -2125,16 +2138,6 @@ const Admin = () => {
                          <Button size="sm" variant="secondary" className="rounded-full h-9 w-9 p-0" onClick={() => handleToggleProductStatus(product.id, 'isFeatured')}>
                             <Star className={`w-4 h-4 ${product.isFeatured ? "text-yellow-500 fill-yellow-500" : ""}`} />
                          </Button>
-                         <Button 
-                           size="sm" 
-                           variant="secondary" 
-                           className="rounded-full h-9 w-9 p-0 text-indigo-500 hover:bg-indigo-50" 
-                           onClick={() => handleGenerateLandingPageWithAI(product.id)}
-                           disabled={generatingAiProductId === product.id}
-                           title="توليد صفحة هبوط بالذكاء الاصطناعي"
-                         >
-                            {generatingAiProductId === product.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-                         </Button>
                       </div>
                       <div className="absolute top-3 right-3 flex flex-col gap-2">
                         {!product.isVisible && <Badge variant="destructive" className="font-bold">مخفي</Badge>}
@@ -2170,23 +2173,34 @@ const Admin = () => {
                           <span className="text-sm font-black text-primary">{(product.commission || 0).toLocaleString()} دج</span>
                         </div>
                       </div>
-                      <div className="flex gap-2 mt-6">
-                        <Button variant="default" className="flex-1 gap-2 rounded-xl h-10 font-bold text-[10px] bg-secondary hover:bg-secondary/90 text-white" onClick={() => {
+                      <div className="grid grid-cols-2 gap-2 mt-6">
+                        <Button 
+                          variant="default" 
+                          className="col-span-2 gap-2 rounded-xl h-10 font-bold text-xs bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-500/20" 
+                          onClick={() => handleGenerateLandingPageWithAI(product.id)}
+                          disabled={generatingAiProductId === product.id}
+                        >
+                          {generatingAiProductId === product.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                          سحر AI (توليد صفحة هبوط)
+                        </Button>
+                        <Button variant="default" className="gap-2 rounded-xl h-10 font-bold text-[10px] bg-secondary hover:bg-secondary/90 text-white" onClick={() => {
                           setProductToEditLandingPage(product);
                           startTransition(() => {
                             setActiveTab("landing_pages");
                           });
                         }}>
                           <LayoutTemplate className="w-3.5 h-3.5" />
-                          صفحة الهبوط
+                          تصميم الصفحة
                         </Button>
-                        <Button variant="outline" className="flex-1 gap-2 rounded-xl h-10 font-bold text-xs" onClick={() => handleOpenEditProduct(product)}>
-                          <Edit className="w-3.5 h-3.5" />
-                          تعديل
-                        </Button>
-                        <Button variant="ghost" size="icon" className="h-10 w-10 text-destructive hover:bg-destructive/10 rounded-xl shrink-0" onClick={() => handleDeleteProduct(product.id)}>
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
+                        <div className="flex gap-2">
+                          <Button variant="outline" className="flex-1 gap-2 rounded-xl h-10 font-bold text-xs" onClick={() => handleOpenEditProduct(product)}>
+                            <Edit className="w-3.5 h-3.5" />
+                            تعديل
+                          </Button>
+                          <Button variant="ghost" size="icon" className="h-10 w-10 text-destructive hover:bg-destructive/10 rounded-xl shrink-0" onClick={() => handleDeleteProduct(product.id)}>
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   </motion.div>
@@ -3673,6 +3687,71 @@ const Admin = () => {
           </form>
         </DialogContent>
       </Dialog>
+
+      <AnimatePresence>
+        {generatingAiProductId && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[9999] bg-background/80 backdrop-blur-xl flex flex-col items-center justify-center p-6"
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              className="bg-card w-full max-w-md rounded-3xl p-8 border border-border shadow-2xl flex flex-col items-center text-center"
+            >
+              <div className="relative w-32 h-32 flex items-center justify-center mb-8">
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+                  className="absolute inset-0 rounded-full border-[3px] border-dashed border-primary/30"
+                />
+                <motion.div
+                  animate={{ rotate: -360 }}
+                  transition={{ duration: 12, repeat: Infinity, ease: "linear" }}
+                  className="absolute inset-4 rounded-full border-[3px] border-dotted border-purple-500/50"
+                />
+                <motion.div
+                  animate={{ scale: [0.9, 1.1, 0.9] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                  className="w-16 h-16 bg-gradient-to-br from-primary to-purple-600 rounded-full flex items-center justify-center shadow-[0_0_30px_rgba(168,85,247,0.5)]"
+                >
+                  <Sparkles className="w-8 h-8 text-white" />
+                </motion.div>
+              </div>
+
+              <div className="space-y-4 w-full px-6">
+                <div className="flex items-center gap-3">
+                  <Check className={`w-5 h-5 transition-colors ${aiProgressStep > 0 ? "text-primary" : "text-muted/30"}`} />
+                  <p className={`font-bold transition-all ${aiProgressStep === 1 ? "text-foreground text-lg scale-105" : aiProgressStep > 1 ? "text-muted-foreground text-sm" : "text-muted"}`}>
+                    تحليل تفاصيل ومميزات المنتج...
+                  </p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Check className={`w-5 h-5 transition-colors ${aiProgressStep > 1 ? "text-primary" : "text-muted/30"}`} />
+                  <p className={`font-bold transition-all ${aiProgressStep === 2 ? "text-foreground text-lg scale-105" : aiProgressStep > 2 ? "text-muted-foreground text-sm" : "text-muted"}`}>
+                    كتابة محتوى بيعي مقنع...
+                  </p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Check className={`w-5 h-5 transition-colors ${aiProgressStep > 2 ? "text-primary" : "text-muted/30"}`} />
+                  <p className={`font-bold transition-all ${aiProgressStep === 3 ? "text-foreground text-lg scale-105" : aiProgressStep > 3 ? "text-muted-foreground text-sm" : "text-muted"}`}>
+                    توليد واختيار صور احترافية للمنتج...
+                  </p>
+                </div>
+                <div className="flex items-center gap-4">
+                  <Check className={`w-5 h-5 transition-colors ${aiProgressStep > 3 ? "text-primary" : "text-muted/30"}`} />
+                  <p className={`font-bold transition-all ${aiProgressStep === 4 ? "text-foreground text-lg scale-105" : aiProgressStep > 4 ? "text-muted-foreground text-sm" : "text-muted"}`}>
+                    تنسيق الألوان وبناء الهوية البصرية...
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
