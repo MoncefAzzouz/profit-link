@@ -409,7 +409,24 @@ const Dashboard = () => {
         if (res.ok) {
           const json = await res.json();
           if (json.data) {
-            setOrders(json.data);
+            const fetchedOrders = json.data.map((o: any) => ({
+              id: o.id,
+              productName: o.product?.name || "منتج محذوف",
+              customerName: o.customerName,
+              customerPhone: o.customerPhone,
+              wilaya: o.wilaya,
+              commune: o.commune || "",
+              stopDesk: o.stopDesk || 0,
+              address: o.address,
+              status: o.status.toLowerCase(),
+              amount: o.totalAmount || 0,
+              commission: o.commissionAmount || 0,
+              date: new Date(o.createdAt).toLocaleDateString('ar-DZ'),
+              trackingNumber: o.trackingNumber,
+              selectedColor: o.selectedColor,
+              selectedSize: o.selectedSize
+            }));
+            setOrders(fetchedOrders);
             
             // Check for new orders
             const lastSeenCount = Number(localStorage.getItem(`last_orders_count_${user?.id}`) || 0);
@@ -417,33 +434,6 @@ const Dashboard = () => {
               setNewOrdersCount(json.data.length - lastSeenCount);
             }
           }
-        }
-      } catch (err) {
-        console.error("Failed to fetch orders", err);
-      } finally {
-        setLoadingOrders(false);
-      }
-    };
-        const json = await res.json();
-        if (res.ok && json.data) {
-          const fetchedOrders = json.data.map((o: any) => ({
-            id: o.id,
-            productName: o.product?.name || "منتج محذوف",
-            customerName: o.customerName,
-            customerPhone: o.customerPhone,
-            wilaya: o.wilaya,
-            commune: o.commune || "",
-            stopDesk: o.stopDesk || 0,
-            address: o.address,
-            status: o.status.toLowerCase(),
-            amount: o.totalAmount || 0,
-            commission: o.commissionAmount || 0,
-            date: new Date(o.createdAt).toLocaleDateString('ar-DZ'),
-            trackingNumber: o.trackingNumber,
-            selectedColor: o.selectedColor,
-            selectedSize: o.selectedSize
-          }));
-          setOrders(fetchedOrders);
         }
       } catch (err) {
         console.error("Failed to fetch orders", err);
