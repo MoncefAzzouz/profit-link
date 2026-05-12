@@ -153,6 +153,7 @@ const Admin = () => {
     activeAffiliates: 0,
     ordersThisMonth: 0,
   });
+  const [newOrdersCount, setNewOrdersCount] = useState(0);
   const [withdrawals, setWithdrawals] = useState<any[]>([]);
   const [isFetchingWithdrawals, setIsFetchingWithdrawals] = useState(false);
   const [affiliates, setAffiliates] = useState<any[]>([]);
@@ -279,7 +280,15 @@ const Admin = () => {
       });
       if (res.ok) {
         const data = await res.json();
-        setDbOrders(data.data);
+        if (data.data) {
+          setDbOrders(data.data);
+          
+          // Check for new orders
+          const lastSeenCount = Number(localStorage.getItem('admin_last_orders_count') || 0);
+          if (data.data.length > lastSeenCount && activeTab !== 'orders') {
+            setNewOrdersCount(data.data.length - lastSeenCount);
+          }
+        }
       }
     } catch (err) {
       console.error('Failed to fetch all orders', err);
@@ -610,7 +619,7 @@ const Admin = () => {
     { id: "affiliates" as Tab, label: "المسوّقين", icon: Users },
 
     { id: "join_requests" as Tab, label: "طلبات الانضمام", icon: UserPlus },
-    { id: "orders" as Tab, label: "الطلبيات", icon: ShoppingCart },
+    { id: "orders" as Tab, label: "الطلبيات", icon: ShoppingCart, badge: newOrdersCount },
     { id: "withdrawals" as Tab, label: "طلبات السحب", icon: Wallet },
     { id: "levels" as Tab, label: "المستويات", icon: Trophy },
     { id: "shipping" as Tab, label: "التوصيل", icon: Truck },
@@ -1118,6 +1127,10 @@ const Admin = () => {
                 onClick={() => {
                   startTransition(() => {
                     setActiveTab(item.id);
+                    if (item.id === 'orders') {
+                      setNewOrdersCount(0);
+                      localStorage.setItem('admin_last_orders_count', String(dbOrders.length));
+                    }
                   });
                   setSidebarOpen(false);
                 }}
@@ -1127,7 +1140,12 @@ const Admin = () => {
                   }`}
               >
                 <item.icon className="w-5 h-5 shrink-0 opacity-90" />
-                <span className="font-medium">{item.label}</span>
+                <span className="font-medium flex-1 text-right">{item.label}</span>
+                {item.badge > 0 && (
+                  <span className="px-2 py-0.5 rounded-full bg-emerald-500 text-white text-[10px] font-bold shadow-lg shadow-emerald-500/40">
+                    {item.badge}
+                  </span>
+                )}
               </button>
             ))}
           </nav>

@@ -187,6 +187,8 @@ const Dashboard = () => {
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [productToEditLandingPage, setProductToEditLandingPage] = useState<any>(null);
   const [dbCategories, setDbCategories] = useState<any[]>([]);
+  const [newOrdersCount, setNewOrdersCount] = useState(0);
+  const [newProductsCount, setNewProductsCount] = useState(0);
 
   // Sync activeTab with URL
   useEffect(() => {
@@ -263,6 +265,12 @@ const Dashboard = () => {
         const json = await res.json();
         if (res.ok && json.data) {
           setProducts(json.data);
+          
+          // Check for new products
+          const lastSeenCount = Number(localStorage.getItem(`last_products_count_${user?.id}`) || 0);
+          if (json.data.length > lastSeenCount && activeTab !== 'products') {
+            setNewProductsCount(json.data.length - lastSeenCount);
+          }
         }
       } catch (err) {
         console.error('Failed to fetch products', err);
@@ -398,6 +406,24 @@ const Dashboard = () => {
         const res = await fetch(`${API_BASE_URL}/orders/affiliate`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
+        if (res.ok) {
+          const json = await res.json();
+          if (json.data) {
+            setOrders(json.data);
+            
+            // Check for new orders
+            const lastSeenCount = Number(localStorage.getItem(`last_orders_count_${user?.id}`) || 0);
+            if (json.data.length > lastSeenCount && activeTab !== 'orders') {
+              setNewOrdersCount(json.data.length - lastSeenCount);
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch orders", err);
+      } finally {
+        setLoadingOrders(false);
+      }
+    };
         const json = await res.json();
         if (res.ok && json.data) {
           const fetchedOrders = json.data.map((o: any) => ({
@@ -856,12 +882,12 @@ const Dashboard = () => {
 
   const sidebarItems = [
     { id: "overview" as Tab, label: "نظرة عامة", icon: LayoutDashboard },
-    { id: "products" as Tab, label: "المنتجات", icon: Package },
+    { id: "products" as Tab, label: "المنتجات", icon: Package, badge: newProductsCount },
     { id: "my_store" as Tab, label: "متجري", icon: Store },
     { id: "my_store_edit" as Tab, label: "تعديل متجري", icon: LayoutTemplate },
     { id: "favorites" as Tab, label: "المنتجات المفضلة", icon: Heart },
     { id: "landing_pages" as Tab, label: "صفحات الهبوط", icon: LayoutTemplate },
-    { id: "orders" as Tab, label: "طلبياتي", icon: ShoppingCart },
+    { id: "orders" as Tab, label: "طلبياتي", icon: ShoppingCart, badge: newOrdersCount },
     { id: "earnings" as Tab, label: "الأرباح", icon: Wallet },
     { id: "withdrawals" as Tab, label: "طلبات السحب", icon: CheckCircle },
     { id: "shipping" as Tab, label: "التوصيل", icon: Truck },
@@ -920,6 +946,14 @@ const Dashboard = () => {
                 onClick={() => {
                   startTransition(() => {
                     setActiveTab(item.id);
+                    if (item.id === 'orders') {
+                      setNewOrdersCount(0);
+                      localStorage.setItem(`last_orders_count_${user?.id}`, String(orders.length));
+                    }
+                    if (item.id === 'products') {
+                      setNewProductsCount(0);
+                      localStorage.setItem(`last_products_count_${user?.id}`, String(products.length));
+                    }
                   });
                   setSidebarOpen(false);
                 }}
@@ -929,7 +963,14 @@ const Dashboard = () => {
                   }`}
               >
                 <item.icon className="w-5 h-5" />
-                <span className="font-medium">{item.label}</span>
+                <span className="font-medium flex-1 text-right">{item.label}</span>
+                {item.badge > 0 && (
+                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                    activeTab === item.id ? "bg-white text-primary" : "bg-primary text-white"
+                  }`}>
+                    {item.badge}
+                  </span>
+                )}
               </button>
             ))}
           </nav>
