@@ -477,6 +477,13 @@ const Dashboard = () => {
   const [productStockFilter, setProductStockFilter] = useState("all");
   const [showProductFilters, setShowProductFilters] = useState(false);
 
+  // Store tab filter states
+  const [storeSearch, setStoreSearch] = useState("");
+  const [storeCategory, setStoreCategory] = useState("الكل");
+  const [storePriceRange, setStorePriceRange] = useState(0);
+  const [storeSort, setStoreSort] = useState("default");
+  const [showStoreFilters, setShowStoreFilters] = useState(false);
+
   // Filter states
   const [orderSearch, setOrderSearch] = useState("");
   const [orderStatus, setOrderStatus] = useState("all");
@@ -870,6 +877,26 @@ const Dashboard = () => {
       });
   }, [productSearch, productCategory, productPriceRange, productSort, productStockFilter, products]);
 
+  const filteredStoreProducts = useMemo(() => {
+    const range = productPriceRanges[storePriceRange];
+    return products
+      .filter((p) => storeProducts.has(p.id))
+      .filter((product) => {
+        const matchesSearch = product.name.toLowerCase().includes(storeSearch.toLowerCase()) || 
+                             (product.description && product.description.toLowerCase().includes(storeSearch.toLowerCase()));
+        const matchesCategory = storeCategory === "الكل" || product.category === storeCategory;
+        const matchesPrice = product.price >= range.min && product.price <= range.max;
+        return matchesSearch && matchesCategory && matchesPrice;
+      })
+      .sort((a, b) => {
+        if (storeSort === "price-asc") return a.price - b.price;
+        if (storeSort === "price-desc") return b.price - a.price;
+        if (storeSort === "commission-desc") return b.commission - a.commission;
+        if (storeSort === "stock-desc") return b.stock - a.stock;
+        return 0;
+      });
+  }, [storeSearch, storeCategory, storePriceRange, storeSort, storeProducts, products, productPriceRanges]);
+
   const sidebarItems = [
     { id: "overview" as Tab, label: "نظرة عامة", icon: LayoutDashboard },
     { id: "products" as Tab, label: "المنتجات", icon: Package, badge: newProductsCount },
@@ -1134,9 +1161,91 @@ const Dashboard = () => {
                   </Badge>
                 </div>
 
-                {storeProducts.size > 0 ? (
+                {/* Filters Bar for My Store */}
+                <div className="bg-card rounded-2xl p-6 shadow-sm border border-border/50 space-y-4">
+                  <div className="flex flex-col lg:flex-row gap-4">
+                    <div className="flex-1 relative">
+                      <Search className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground w-5 h-5" />
+                      <Input
+                        value={storeSearch}
+                        onChange={(e) => setStoreSearch(e.target.value)}
+                        placeholder="ابحث في متجرك..."
+                        className="pr-12 h-12 rounded-xl"
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      <Select value={storeSort} onValueChange={setStoreSort}>
+                        <SelectTrigger className="w-[180px] h-12 rounded-xl">
+                          <SelectValue placeholder="ترتيب حسب" />
+                        </SelectTrigger>
+                        <SelectContent className="rounded-xl">
+                          {productSortOptions.map(opt => (
+                            <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Button
+                        variant={showStoreFilters ? "default" : "outline"}
+                        onClick={() => setShowStoreFilters(!showStoreFilters)}
+                        className="h-12 gap-2 rounded-xl"
+                      >
+                        <SlidersHorizontal className="w-4 h-4" />
+                        فلاتر
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Categories */}
+                  <div className="flex gap-2 flex-wrap">
+                    {activeCategories.map((category) => (
+                      <Button
+                        key={category}
+                        variant={storeCategory === category ? "default" : "outline"}
+                        onClick={() => setStoreCategory(category)}
+                        className="rounded-full h-9 px-5 font-bold transition-all"
+                      >
+                        {category}
+                      </Button>
+                    ))}
+                  </div>
+
+                  {/* Advanced filters */}
+                  {showStoreFilters && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      className="flex flex-col sm:flex-row gap-4 pt-4 border-t border-border/50"
+                    >
+                      <div className="flex-1 space-y-2">
+                        <label className="text-sm font-bold text-muted-foreground">نطاق السعر</label>
+                        <Select value={String(storePriceRange)} onValueChange={(v) => setStorePriceRange(Number(v))}>
+                          <SelectTrigger className="rounded-xl">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent className="rounded-xl">
+                            {productPriceRanges.map((range, i) => (
+                              <SelectItem key={i} value={String(i)}>{range.label}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="flex items-end">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => { setStorePriceRange(0); setStoreSort("default"); setStoreCategory("الكل"); setStoreSearch(""); }}
+                          className="gap-1.5 text-destructive hover:bg-destructive/10 font-bold"
+                        >
+                          <X className="w-4 h-4" /> مسح الفلاتر
+                        </Button>
+                      </div>
+                    </motion.div>
+                  )}
+                </div>
+
+                {filteredStoreProducts.length > 0 ? (
                   <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                    {products.filter(p => storeProducts.has(p.id)).map((product) => (
+                    {filteredStoreProducts.map((product) => (
                       <motion.div
                         key={product.id}
                         layout
