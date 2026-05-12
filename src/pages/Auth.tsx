@@ -171,7 +171,7 @@ const Auth = () => {
             <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center backdrop-blur-md group-hover:scale-110 transition-transform">
               <Sparkles className="w-6 h-6 text-secondary" />
             </div>
-            <span className="text-2xl font-black">Link<span className="text-secondary">DZ</span></span>
+            <span className="text-2xl font-black">Easy <span className="text-secondary">Profit</span></span>
           </Link>
 
           <div className="flex-1">
@@ -206,7 +206,7 @@ const Auth = () => {
 
           <div className="mt-auto p-8 rounded-[2rem] bg-indigo-500/10 border border-white/10 backdrop-blur-md">
             <p className="text-sm font-medium leading-relaxed opacity-80 italic">
-              "بفضل LinkDZ استطعت تأمين مدخول شهري إضافي يتجاوز 8 ملايين سنتيم شهرياً وأنا في المنزل."
+              "بفضل Easy Profit استطعت تأمين مدخول شهري إضافي يتجاوز 8 ملايين سنتيم شهرياً وأنا في المنزل."
             </p>
             <div className="flex items-center gap-3 mt-4">
               <div className="w-8 h-8 rounded-full bg-secondary/30 border border-secondary/50" />
@@ -220,7 +220,7 @@ const Auth = () => {
       <div className="flex-1 flex flex-col order-2 lg:order-1">
         {/* Header Mobile */}
         <div className="lg:hidden p-6 flex justify-between items-center bg-card border-b border-border">
-          <Link to="/" className="text-xl font-black">Link<span className="text-secondary">DZ</span></Link>
+          <Link to="/" className="text-xl font-black">Easy <span className="text-secondary">Profit</span></Link>
           <Link to="/" className="text-sm font-bold text-primary flex items-center gap-1">
             <ArrowRight className="w-4 h-4" /> العودة
           </Link>

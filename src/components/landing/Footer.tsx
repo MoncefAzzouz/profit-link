@@ -17,7 +17,7 @@ const Footer = () => {
               transition={{ duration: 0.45 }}
             >
               <h3 className="mb-4 text-2xl font-extrabold">
-                Link<span className="gradient-text">DZ</span>
+                Easy <span className="gradient-text">Profit</span>
               </h3>
               <p className="mb-6 max-w-md leading-relaxed text-white/65">
                 منصة تربط المسوّقين بالمنتجات الجاهزة للتوصيل — نركّز على الشفافية، سرعة الدفع، وتجربة سهلة من الجوال.
@@ -99,7 +99,7 @@ const Footer = () => {
           transition={{ duration: 0.45, delay: 0.15 }}
           className="flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-8 md:flex-row"
         >
-          <p className="text-sm text-white/45">© 2026 LinkDZ. جميع الحقوق محفوظة.</p>
+          <p className="text-sm text-white/45">© 2026 Easy Profit. جميع الحقوق محفوظة.</p>
           <p className="flex items-center gap-1 text-sm text-white/45">
             صُنع بكل احتراف في الجزائر
             <span aria-hidden>🇩🇿</span>

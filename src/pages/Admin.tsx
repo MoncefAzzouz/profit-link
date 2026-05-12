@@ -1100,10 +1100,10 @@ const Admin = () => {
             <div className="rounded-2xl border border-white/10 bg-white/[0.06] p-4 backdrop-blur-md">
               <Link to="/" className="flex items-center gap-3">
                 <div className="w-11 h-11 bg-gradient-to-br from-emerald-400 to-emerald-700 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/30 ring-2 ring-white/10">
-                  <span className="text-white font-bold text-lg">L</span>
+                  <span className="text-white font-bold text-lg">E</span>
                 </div>
                 <div>
-                  <span className="text-lg font-bold tracking-tight">LinkDZ</span>
+                  <span className="text-lg font-bold tracking-tight">Easy Profit</span>
                   <span className="block text-xs text-emerald-200/85 font-medium">لوحة الإدارة</span>
                 </div>
               </Link>

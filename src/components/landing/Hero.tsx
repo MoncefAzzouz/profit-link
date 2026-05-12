@@ -167,7 +167,7 @@ const Hero = () => {
                       <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-secondary to-emerald-600 shadow-2xl shadow-secondary/30 ring-4 ring-white/10">
                         <Zap className="h-10 w-10 text-white" aria-hidden />
                       </div>
-                      <p className="text-xl font-bold text-white tracking-tight">LinkDZ</p>
+                      <p className="text-xl font-bold text-white tracking-tight">Easy Profit</p>
                       <p className="text-sm text-white/65 mt-1">تسويق بالعمولة • الجزائر</p>
                     </div>
                   </div>

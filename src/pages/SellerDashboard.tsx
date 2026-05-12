@@ -314,10 +314,10 @@ const SellerDashboard = () => {
             <div className="rounded-2xl border border-white/10 bg-white/[0.07] p-4 backdrop-blur-md">
               <Link to="/" className="flex items-center gap-3">
                 <div className="w-11 h-11 bg-gradient-to-br from-emerald-400 to-teal-600 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-600/35 ring-2 ring-white/15">
-                  <span className="text-white font-bold text-lg">L</span>
+                  <span className="text-white font-bold text-lg">E</span>
                 </div>
                 <div>
-                  <span className="text-lg font-bold tracking-tight">LinkDZ</span>
+                  <span className="text-lg font-bold tracking-tight">Easy Profit</span>
                   <span className="block text-xs text-emerald-200/90 font-medium">لوحة البائع</span>
                 </div>
               </Link>
@@ -926,14 +926,14 @@ const SellerDashboard = () => {
                       <p className="text-sm text-muted-foreground">رد سريع خلال ساعة</p>
                     </div>
                   </a>
-                  <a href="mailto:sellers@linkdz.com"
+                  <a href="mailto:sellers@easyprofit.org"
                     className="flex items-center gap-4 p-4 bg-primary/5 rounded-xl hover:bg-primary/10 transition-colors border border-primary/10">
                     <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
                       <span className="text-xl">📧</span>
                     </div>
                     <div>
                       <p className="font-semibold text-foreground">البريد الإلكتروني</p>
-                      <p className="text-sm text-muted-foreground">sellers@linkdz.com</p>
+                      <p className="text-sm text-muted-foreground">sellers@easyprofit.org</p>
                     </div>
                   </a>
                 </div>

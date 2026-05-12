@@ -44,7 +44,7 @@ const Navbar = () => {
                   "text-primary",
                 )}
               >
-                Link<span className="gradient-text">DZ</span>
+                Easy<span className="gradient-text"> Profit</span>
               </span>
             </Link>
 

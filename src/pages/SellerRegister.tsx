@@ -98,7 +98,7 @@ const SellerRegister = () => {
             <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center backdrop-blur-md group-hover:scale-110 transition-transform">
               <Sparkles className="w-6 h-6 text-secondary" />
             </div>
-            <span className="text-2xl font-black">Link<span className="text-secondary">DZ</span></span>
+            <span className="text-2xl font-black">Easy <span className="text-secondary">Profit</span></span>
           </Link>
 
           <div className="flex-1">
@@ -132,7 +132,7 @@ const SellerRegister = () => {
 
           <div className="p-8 rounded-[2rem] bg-white/5 backdrop-blur-lg border border-white/10 mt-auto">
             <p className="text-sm italic text-white/70 leading-relaxed">
-              "لقد تضاعفت مبيعات متجري 5 مرات خلال الشهر الأول من انضمامي لـ LinkDZ. المنصة غيرت مجرى نشاطي بالكامل."
+              "لقد تضاعفت مبيعات متجري 5 مرات خلال الشهر الأول من انضمامي لـ Easy Profit. المنصة غيرت مجرى نشاطي بالكامل."
             </p>
             <div className="flex items-center gap-3 mt-4">
               <div className="w-10 h-10 rounded-full bg-secondary/30 border border-secondary/50 overflow-hidden shadow-lg">
@@ -151,7 +151,7 @@ const SellerRegister = () => {
       <div className="flex-1 flex flex-col">
         {/* Header (Mobile Logo + Link) */}
         <div className="lg:hidden p-6 flex justify-between items-center bg-card border-b border-border">
-          <Link to="/" className="text-xl font-black">Link<span className="text-secondary">DZ</span></Link>
+          <Link to="/" className="text-xl font-black">Easy <span className="text-secondary">Profit</span></Link>
           <Link to="/" className="text-sm font-bold text-primary flex items-center gap-1">
             <ArrowRight className="w-4 h-4" /> العودة للرئيسية
           </Link>
