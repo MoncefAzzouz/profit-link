@@ -14,10 +14,10 @@ const contactMethods = [
   {
     icon: Mail,
     title: "البريد الإلكتروني",
-    description: "support@platform.dz",
+    description: "support@easyprofit.org",
     action: "أرسل رسالة",
     color: "from-blue-500 to-indigo-600",
-    href: "mailto:support@platform.dz",
+    href: "mailto:support@easyprofit.org",
   },
 ];
 
