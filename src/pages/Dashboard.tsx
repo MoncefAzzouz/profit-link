@@ -219,7 +219,7 @@ const Dashboard = () => {
   };
 
   const handleCopyLink = (product: any) => {
-    const link = `http://5.196.32.211/product/${product.id}/${user?.id}`;
+    const link = `https://www.easyprofit.org/product/${product.id}/${user?.id}`;
     if (navigator.clipboard && window.isSecureContext) {
       navigator.clipboard.writeText(link);
     } else {
@@ -1158,7 +1158,7 @@ const Dashboard = () => {
                               variant="ghost"
                               className="w-full text-xs font-bold gap-2 bg-muted/50 hover:bg-muted text-foreground transition-colors"
                               onClick={() => {
-                                const link = `http://5.196.32.211/product/${product.id}/${user?.id}`;
+                                const link = `https://www.easyprofit.org/product/${product.id}/${user?.id}`;
                                 if (navigator.clipboard && window.isSecureContext) {
                                   navigator.clipboard.writeText(link);
                                 } else {
