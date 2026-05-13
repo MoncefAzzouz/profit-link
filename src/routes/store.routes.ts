@@ -707,17 +707,23 @@ router.put('/products', authenticateToken, async (req: AuthRequest, res: Respons
     const newProductIds = (productIds as string[]).filter((id: string) => !oldProductIds.includes(id));
 
     if (newProductIds.length > 0) {
-      const products = await prisma.product.findMany({
-        where: { id: { in: newProductIds } }
-      });
+      const [products, existingPages] = await Promise.all([
+        prisma.product.findMany({ where: { id: { in: newProductIds } } }),
+        prisma.landingPage.findMany({
+          where: { ownerId: affiliateId, productId: { in: newProductIds } },
+          select: { productId: true }
+        })
+      ]);
 
-      for (const product of products) {
-        const existingPage = await prisma.landingPage.findFirst({
-          where: { ownerId: affiliateId, productId: product.id }
-        });
+      const existingProductIds = new Set(existingPages.map(p => p.productId));
+      const productsNeedingPages = products.filter(p => !existingProductIds.has(p.id));
 
-        if (!existingPage) {
-          const defaultConfig = {
+      if (productsNeedingPages.length > 0) {
+        const newPages = productsNeedingPages.map(product => ({
+          ownerId: affiliateId,
+          productId: product.id,
+          status: "draft",
+          pageConfig: {
             productName: product.name,
             template: "original",
             heroTitle: product.name,
@@ -741,17 +747,10 @@ router.put('/products', authenticateToken, async (req: AuthRequest, res: Respons
             fontFamily: "cairo",
             availableColors: product.hasColors ? product.availableColors : [],
             availableSizes: product.hasSizes ? product.availableSizes : []
-          };
+          }
+        }));
 
-          await prisma.landingPage.create({
-            data: {
-              ownerId: affiliateId,
-              productId: product.id,
-              pageConfig: defaultConfig,
-              status: "draft"
-            }
-          });
-        }
+        await prisma.landingPage.createMany({ data: newPages });
       }
     }
 

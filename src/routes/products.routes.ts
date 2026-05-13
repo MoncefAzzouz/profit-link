@@ -2,8 +2,21 @@ import { Router, Request, Response } from 'express';
 import { authenticateToken, AuthRequest, requireAdmin } from '../middleware/auth';
 import { prisma } from '../db';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { cache, withCache } from '../services/cache';
 
 const router = Router();
+
+const PRODUCTS_CACHE_PREFIX = 'products:public:';
+const CATEGORIES_CACHE_KEY = 'categories:public';
+const PRODUCTS_TTL_MS = 60_000;
+const CATEGORIES_TTL_MS = 5 * 60_000;
+
+function invalidateProductCaches() {
+  cache.invalidate(PRODUCTS_CACHE_PREFIX);
+}
+function invalidateCategoryCaches() {
+  cache.invalidate('categories:');
+}
 
 // Fields needed by the products listing / quick-view UI. Heavy detail-only
 // fields (adText, videoUrl, features, variant arrays, before/after, wholesale
@@ -47,27 +60,28 @@ router.get('/', async (req: Request, res: Response) => {
     if (paginated) {
       const page = Math.max(1, pageParam ?? 1);
       const limit = Math.min(100, Math.max(1, limitParam ?? 24));
-      const [total, products] = await Promise.all([
-        prisma.product.count({ where }),
-        prisma.product.findMany({
-          where,
-          orderBy,
-          select: productListSelect,
-          skip: (page - 1) * limit,
-          take: limit,
-        }),
-      ]);
-      return res.json({
-        data: products,
-        pagination: { total, page, limit, pages: Math.ceil(total / limit) },
+      const cacheKey = `${PRODUCTS_CACHE_PREFIX}p=${page}&l=${limit}`;
+      const payload = await withCache(cacheKey, PRODUCTS_TTL_MS, async () => {
+        const [total, products] = await Promise.all([
+          prisma.product.count({ where }),
+          prisma.product.findMany({
+            where,
+            orderBy,
+            select: productListSelect,
+            skip: (page - 1) * limit,
+            take: limit,
+          }),
+        ]);
+        return { data: products, pagination: { total, page, limit, pages: Math.ceil(total / limit) } };
       });
+      return res.json(payload);
     }
 
-    const products = await prisma.product.findMany({
-      where,
-      orderBy,
-      select: productListSelect,
-    });
+    const products = await withCache(
+      `${PRODUCTS_CACHE_PREFIX}all`,
+      PRODUCTS_TTL_MS,
+      () => prisma.product.findMany({ where, orderBy, select: productListSelect })
+    );
     res.json({ data: products });
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch products' });
@@ -79,10 +93,11 @@ router.get('/', async (req: Request, res: Response) => {
 // GET /api/products/categories (Public: list active categories)
 router.get('/categories', async (req: Request, res: Response) => {
   try {
-    const categories = await prisma.category.findMany({
-      where: { isActive: true },
-      orderBy: { createdAt: 'asc' }
-    });
+    const categories = await withCache(
+      CATEGORIES_CACHE_KEY,
+      CATEGORIES_TTL_MS,
+      () => prisma.category.findMany({ where: { isActive: true }, orderBy: { createdAt: 'asc' } })
+    );
     res.set('Cache-Control', 'public, max-age=300, stale-while-revalidate=600');
     res.json({ data: categories });
   } catch (error) {
@@ -111,6 +126,7 @@ router.post('/categories', authenticateToken, requireAdmin, async (req: AuthRequ
     const category = await prisma.category.create({
       data: { name, icon: icon || "📦", isActive: isActive ?? true }
     });
+    invalidateCategoryCaches();
     res.status(201).json({ data: category });
   } catch (error) {
     res.status(500).json({ error: 'Failed to create category' });
@@ -131,6 +147,7 @@ router.put('/categories/:id', authenticateToken, requireAdmin, async (req: AuthR
         ...(isActive !== undefined && { isActive })
       }
     });
+    invalidateCategoryCaches();
     res.json({ data: category });
   } catch (error) {
     res.status(500).json({ error: 'Failed to update category' });
@@ -142,6 +159,7 @@ router.delete('/categories/:id', authenticateToken, requireAdmin, async (req: Au
   try {
     const { id } = req.params;
     await prisma.category.delete({ where: { id: id as string } });
+    invalidateCategoryCaches();
     res.json({ message: 'Category deleted' });
   } catch (error) {
     res.status(500).json({ error: 'Failed to delete category' });
@@ -275,6 +293,7 @@ router.post('/', authenticateToken, requireAdmin, async (req: AuthRequest, res: 
       console.error('Failed to auto-create landing page for admin:', lpError);
     }
 
+    invalidateProductCaches();
     res.status(201).json({ message: 'Product created successfully', data: product });
   } catch (error) {
     console.error('Error creating product:', error);
@@ -354,6 +373,7 @@ router.put('/:id', authenticateToken, requireAdmin, async (req: AuthRequest, res
       await prisma.$transaction(updates);
     }
 
+    invalidateProductCaches();
     res.json({ message: 'Product updated successfully', data: product });
   } catch (error) {
     console.error('Error updating product:', error);
@@ -366,6 +386,7 @@ router.delete('/:id', authenticateToken, requireAdmin, async (req: AuthRequest, 
   try {
     const { id } = req.params;
     await prisma.product.delete({ where: { id: id as string } });
+    invalidateProductCaches();
     res.json({ message: 'Product deleted successfully' });
   } catch (error) {
     console.error('Error deleting product:', error);
