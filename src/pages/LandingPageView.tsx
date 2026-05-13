@@ -110,17 +110,29 @@ const LandingPageView = () => {
   const [selectedOffer, setSelectedOffer] = useState<any>(null);
 
   useEffect(() => {
+    const controller = new AbortController();
+
     const fetchPage = async () => {
       try {
-        const url = pageId 
+        const pageUrl = pageId
           ? `${API_BASE_URL}/store/pages/${pageId}/public`
           : `${API_BASE_URL}/store/product-page/${productId}/${affiliateId}`;
-        
-        const res = await fetch(url);
-        const json = await res.json();
-        if (res.ok && json.data) {
-          const found = json.data;
-          // Ensure arrays and nested objects exist to prevent crashes
+
+        const pagePromise = fetch(pageUrl, { signal: controller.signal }).then(r =>
+          r.ok ? r.json().then(j => ({ ok: true, data: j.data })) : { ok: false, data: null }
+        );
+
+        // If we already know affiliateId from the URL, fire the store fetch in parallel
+        const storePromise = affiliateId
+          ? fetch(`${API_BASE_URL}/store/public/${affiliateId}`, { signal: controller.signal })
+              .then(r => (r.ok ? r.json() : null))
+              .catch(() => null)
+          : Promise.resolve(null);
+
+        const [pageRes, storeRes] = await Promise.all([pagePromise, storePromise]);
+
+        if (pageRes.ok && pageRes.data) {
+          const found = pageRes.data;
           const safeFound = {
             ...found,
             features: found.features || [],
@@ -133,22 +145,21 @@ const LandingPageView = () => {
           };
           setPage(safeFound);
 
-          const effectiveAffiliateId = affiliateId || safeFound.ownerId;
-          if (effectiveAffiliateId) {
+          if (storeRes?.data?.storeInfo?.storeName) {
+            setStoreName(storeRes.data.storeInfo.storeName);
+          } else if (!affiliateId && safeFound.ownerId) {
+            // ownerId only known after page response; fall back to sequential fetch
             try {
-              const storeRes = await fetch(`${API_BASE_URL}/store/public/${effectiveAffiliateId}`);
-              if (storeRes.ok) {
-                const storeJson = await storeRes.json();
-                if (storeJson.data?.storeInfo?.storeName) {
-                  setStoreName(storeJson.data.storeInfo.storeName);
-                }
+              const r = await fetch(`${API_BASE_URL}/store/public/${safeFound.ownerId}`, { signal: controller.signal });
+              if (r.ok) {
+                const j = await r.json();
+                if (j.data?.storeInfo?.storeName) setStoreName(j.data.storeInfo.storeName);
               }
             } catch (err) {
-              console.error("Failed to fetch store info", err);
+              if ((err as any)?.name !== 'AbortError') console.error("Failed to fetch store info", err);
             }
           }
         } else {
-          // Fallback to localStorage for existing unsaved pages (optional/backward compatibility)
           const stored = localStorage.getItem("landing_pages");
           if (stored) {
             const pages: LandingPageConfig[] = JSON.parse(stored);
@@ -157,12 +168,14 @@ const LandingPageView = () => {
           }
         }
       } catch (err) {
-        console.error('Failed to fetch page', err);
+        if ((err as any)?.name !== 'AbortError') console.error('Failed to fetch page', err);
       } finally {
         setLoading(false);
       }
     };
     if (pageId || (productId && affiliateId)) fetchPage();
+
+    return () => controller.abort();
   }, [pageId, productId, affiliateId]);
 
   // Fetch Wilayas on mount

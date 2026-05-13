@@ -33,10 +33,10 @@ import { wilayas } from "@/data/mockAffiliateData";
 import { ShippingRate, shippingRegions } from "@/data/mockShippingData";
 import { LandingSettings, defaultLandingSettings } from "@/data/landingSettings";
 import { useToast } from "@/hooks/use-toast";
-import {
-  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell
-} from "recharts";
+const RevenueAreaChart = lazy(() => import("./AdminCharts").then(m => ({ default: m.RevenueAreaChart })));
+const OrderDistributionPieChart = lazy(() => import("./AdminCharts").then(m => ({ default: m.OrderDistributionPieChart })));
+const MonthlyBarChart = lazy(() => import("./AdminCharts").then(m => ({ default: m.MonthlyBarChart })));
+const ChartFallback = () => <div className="w-full h-full animate-pulse bg-muted/40 rounded" />;
 import LandingPageBuilder from "@/components/seller/LandingPageBuilder";
 import { API_BASE_URL } from '@/config/api';
 
@@ -1305,33 +1305,9 @@ const Admin = () => {
                 >
                   <h3 className="text-lg font-bold text-foreground mb-4">الإيرادات والعمولات</h3>
                   <div className="h-[280px]">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={revenueData}>
-                        <defs>
-                          <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="hsl(142, 76%, 36%)" stopOpacity={0.3} />
-                            <stop offset="95%" stopColor="hsl(142, 76%, 36%)" stopOpacity={0} />
-                          </linearGradient>
-                          <linearGradient id="commissionGradient" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="hsl(217, 91%, 60%)" stopOpacity={0.3} />
-                            <stop offset="95%" stopColor="hsl(217, 91%, 60%)" stopOpacity={0} />
-                          </linearGradient>
-                        </defs>
-                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                        <XAxis dataKey="month" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }} />
-                        <YAxis tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }} tickFormatter={(v) => `${(v / 1000000).toFixed(1)}M`} />
-                        <Tooltip
-                          contentStyle={{
-                            backgroundColor: "hsl(var(--card))",
-                            border: "1px solid hsl(var(--border))",
-                            borderRadius: "8px",
-                          }}
-                          formatter={(value: any) => [`${value.toLocaleString()} دج`, ""]}
-                        />
-                        <Area type="monotone" dataKey="revenue" stroke="hsl(142, 76%, 36%)" fill="url(#revenueGradient)" name="الإيرادات" />
-                        <Area type="monotone" dataKey="commissions" stroke="hsl(217, 91%, 60%)" fill="url(#commissionGradient)" name="العمولات" />
-                      </AreaChart>
-                    </ResponsiveContainer>
+                    <Suspense fallback={<ChartFallback />}>
+                      <RevenueAreaChart data={revenueData} />
+                    </Suspense>
                   </div>
                 </motion.div>
 
@@ -1343,24 +1319,9 @@ const Admin = () => {
                 >
                   <h3 className="text-lg font-bold text-foreground mb-4">توزيع الطلبيات</h3>
                   <div className="h-[200px]">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie
-                          data={orderDistribution}
-                          cx="50%"
-                          cy="50%"
-                          innerRadius={50}
-                          outerRadius={80}
-                          paddingAngle={5}
-                          dataKey="value"
-                        >
-                          {orderDistribution.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.color} />
-                          ))}
-                        </Pie>
-                        <Tooltip formatter={(value: any) => [`${value} طلبية`, ""]} />
-                      </PieChart>
-                    </ResponsiveContainer>
+                    <Suspense fallback={<ChartFallback />}>
+                      <OrderDistributionPieChart data={orderDistribution} />
+                    </Suspense>
                   </div>
                   <div className="flex flex-wrap justify-center gap-3 mt-2">
                     {orderDistribution.map((item) => (
@@ -2446,23 +2407,9 @@ const Admin = () => {
               >
                 <h3 className="text-lg font-bold text-foreground mb-6">تحليل المبيعات الشهرية</h3>
                 <div className="h-[400px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={revenueData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                      <XAxis dataKey="month" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }} />
-                      <YAxis tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }} tickFormatter={(v) => `${(v / 1000000).toFixed(1)}M`} />
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: "hsl(var(--card))",
-                          border: "1px solid hsl(var(--border))",
-                          borderRadius: "8px",
-                        }}
-                        formatter={(value: any) => [`${value.toLocaleString()} دج`, ""]}
-                      />
-                      <Bar dataKey="revenue" fill="hsl(142, 76%, 36%)" radius={[4, 4, 0, 0]} name="الإيرادات" />
-                      <Bar dataKey="commissions" fill="hsl(217, 91%, 60%)" radius={[4, 4, 0, 0]} name="العمولات" />
-                    </BarChart>
-                  </ResponsiveContainer>
+                  <Suspense fallback={<ChartFallback />}>
+                    <MonthlyBarChart data={revenueData} />
+                  </Suspense>
                 </div>
               </motion.div>
             </div>
