@@ -181,7 +181,7 @@ const ProductsTab: React.FC<ProductsTabProps> = ({
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.05 }}
-              className="bg-card rounded-[2rem] overflow-hidden shadow-sm border border-border/50 hover:shadow-md transition-all group flex flex-col"
+              className="bg-card rounded-[1.5rem] sm:rounded-[2rem] overflow-hidden shadow-sm border border-border/50 hover:shadow-md transition-all group flex flex-col"
             >
               <div className="aspect-[4/3] relative overflow-hidden">
                 <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" loading="lazy" />
@@ -192,57 +192,51 @@ const ProductsTab: React.FC<ProductsTabProps> = ({
                 </div>
                 <button
                   onClick={() => toggleFavorite(product.id)}
-                  className={`absolute top-3 right-3 p-2 rounded-full backdrop-blur-md transition-all shadow-sm ${isFavorite ? "bg-red-500 text-white" : "bg-white/80 text-muted-foreground hover:bg-white"
+                  className={`absolute top-2 right-2 sm:top-3 sm:right-3 p-1.5 sm:p-2 rounded-full backdrop-blur-md transition-all shadow-sm ${isFavorite ? "bg-red-500 text-white" : "bg-white/80 text-muted-foreground hover:bg-white"
                     }`}
                 >
-                  <Heart className={`w-4 h-4 ${isFavorite ? "fill-current" : ""}`} />
+                  <Heart className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${isFavorite ? "fill-current" : ""}`} />
                 </button>
-                <div className="absolute bottom-3 left-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-lg text-[10px] font-black text-primary border border-primary/20 shadow-sm">
+                <div className="absolute bottom-2 left-2 sm:bottom-3 sm:left-3 bg-white/90 backdrop-blur-sm px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-lg text-[8px] sm:text-[10px] font-black text-primary border border-primary/20 shadow-sm">
                   {product.category}
                 </div>
               </div>
 
-              <div className="p-4 space-y-3 flex-1 flex flex-col">
-                <h3 className="font-black text-foreground text-sm line-clamp-1">{product.name}</h3>
+              <div className="p-3 sm:p-4 space-y-2 sm:space-y-3 flex-1 flex flex-col">
+                <h3 className="font-black text-foreground text-xs sm:text-sm line-clamp-1">{product.name}</h3>
 
-                <div className="flex flex-col gap-1.5 bg-muted/40 p-3 rounded-2xl border border-border/40">
+                <div className="flex flex-col gap-1 sm:gap-1.5 bg-muted/40 p-2 sm:p-3 rounded-xl sm:rounded-2xl border border-border/40">
                   <div className="flex justify-between items-center">
-                    <span className="text-[10px] text-muted-foreground font-black">سعر الجملة</span>
-                    <span className="text-xs font-black text-orange-600">{(product.affiliatePrice || product.originalPrice || 0).toLocaleString()} دج</span>
+                    <span className="text-[9px] sm:text-[10px] text-muted-foreground font-black">سعر الجملة</span>
+                    <span className="text-[10px] sm:text-xs font-black text-orange-600">{(product.affiliatePrice || product.originalPrice || 0).toLocaleString()} دج</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-[10px] text-muted-foreground font-black">سعر البيع النهائي</span>
-                    <span className="text-sm font-black text-secondary">{(product.price || 0).toLocaleString()} دج</span>
+                    <span className="text-[9px] sm:text-[10px] text-muted-foreground font-black">سعر البيع النهائي</span>
+                    <span className="text-xs sm:text-sm font-black text-secondary">{(product.price || 0).toLocaleString()} دج</span>
                   </div>
                   <div className="h-px bg-border/50 my-0.5"></div>
                   <div className="flex justify-between items-center">
-                    <span className="text-[10px] text-primary font-black">عمولة المسوق</span>
-                    <span className="text-sm font-black text-primary">{(product.commission || 0).toLocaleString()} دج</span>
+                    <span className="text-[9px] sm:text-[10px] text-primary font-black">عمولة المسوق</span>
+                    <span className="text-xs sm:text-sm font-black text-primary">{(product.commission || 0).toLocaleString()} دج</span>
                   </div>
                 </div>
 
-                <div className="bg-amber-500/10 p-2.5 rounded-xl border border-amber-500/20">
-                  <p className="text-[9px] text-amber-700 font-black leading-tight text-center">
-                    إذا رفعت السعر عن هذا، فإن كل الأرباح الإضافية هي لك ولن تتحصل المنصة على أي فائدة منها
-                  </p>
-                </div>
-                
                 {product.hasMarketingOffers && (
-                  <div className="bg-orange-500/10 p-2 rounded-xl border border-orange-500/20 text-center">
-                    <p className="text-[10px] text-orange-700 font-black leading-tight">
-                      🎁 هذا المنتج يحتوي على عروض تسويقية
+                  <div className="bg-orange-500/10 p-1.5 sm:p-2 rounded-lg sm:rounded-xl border border-orange-500/20 text-center">
+                    <p className="text-[8px] sm:text-[10px] text-orange-700 font-black leading-tight">
+                      🎁 عروض تسويقية متوفرة
                     </p>
                   </div>
                 )}
 
-                <div className="mt-auto">
+                <div className="mt-auto pt-2">
                   <Button
                     variant="outline"
                     onClick={() => toggleStoreProduct(product.id)}
-                    className={`w-full gap-2 rounded-xl h-11 text-xs font-black ${isInStore ? "border-secondary text-secondary bg-secondary/5" : "border-border hover:bg-muted"
+                    className={`w-full gap-2 rounded-lg sm:rounded-xl h-10 sm:h-11 text-[10px] sm:text-xs font-black ${isInStore ? "border-secondary text-secondary bg-secondary/5" : "border-border hover:bg-muted"
                       }`}
                   >
-                    {isInStore ? <X className="w-4 h-4" /> : <PackagePlus className="w-4 h-4" />}
+                    {isInStore ? <X className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> : <PackagePlus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
                     {isInStore ? "إزالة من المتجر" : "إضافة للمتجر"}
                   </Button>
                 </div>

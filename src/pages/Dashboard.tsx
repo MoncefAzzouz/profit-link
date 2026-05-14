@@ -2468,12 +2468,12 @@ const Dashboard = () => {
 
       {/* ===== PRODUCT DETAIL DIALOG ===== */}
       <Dialog open={isDetailDialogOpen} onOpenChange={setIsDetailDialogOpen}>
-        <DialogContent className="w-[95vw] sm:max-w-4xl max-h-[95vh] overflow-y-auto rounded-[2.5rem] md:rounded-[3rem] p-0 border-none bg-background shadow-2xl scrollbar-hide" dir="rtl">
+        <DialogContent className="w-[95vw] sm:max-w-4xl max-h-[90vh] sm:max-h-[95vh] overflow-y-auto rounded-[2rem] sm:rounded-[2.5rem] md:rounded-[3rem] p-0 border-none bg-background shadow-2xl scrollbar-hide" dir="rtl">
           {selectedProduct && (
-            <div className="flex flex-col lg:flex-row h-full">
+            <div className="flex flex-col lg:flex-row min-h-full">
               {/* Image Gallery Side */}
-              <div className="lg:w-1/2 p-4 sm:p-6 lg:p-10 bg-muted/30 relative">
-                <div className="aspect-square rounded-3xl overflow-hidden bg-white shadow-inner mb-6 relative">
+              <div className="lg:w-1/2 p-4 sm:p-6 lg:p-10 bg-muted/30 relative shrink-0">
+                <div className="aspect-square sm:aspect-square rounded-2xl sm:rounded-3xl overflow-hidden bg-white shadow-inner mb-4 sm:mb-6 relative">
                   <motion.img
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -2484,12 +2484,12 @@ const Dashboard = () => {
                     loading="lazy"
                   />
                 </div>
-                <div className="grid grid-cols-4 gap-3">
+                <div className="grid grid-cols-4 gap-2 sm:gap-3">
                   {selectedProduct.images.map((img: string, i: number) => (
                     <button
                       key={i}
                       onClick={() => setSelectedProduct({ ...selectedProduct, image: img })}
-                      className={`aspect-square rounded-xl overflow-hidden border-2 transition-all ${selectedProduct.image === img ? "border-primary shadow-md" : "border-transparent opacity-60 hover:opacity-100"}`}
+                      className={`aspect-square rounded-lg sm:rounded-xl overflow-hidden border-2 transition-all ${selectedProduct.image === img ? "border-primary shadow-md" : "border-transparent opacity-60 hover:opacity-100"}`}
                     >
                       <img src={img} className="w-full h-full object-cover" />
                     </button>
@@ -2498,81 +2498,80 @@ const Dashboard = () => {
                 <Button
                   variant="secondary"
                   size="sm"
-                  className="absolute top-10 left-10 rounded-full gap-2 backdrop-blur-md"
+                  className="absolute top-6 left-6 sm:top-10 sm:left-10 rounded-full gap-2 backdrop-blur-md text-[10px] sm:text-xs h-8 sm:h-10"
                   onClick={() => {
-                    // Logic to download image would go here
                     toast({ title: "بدأ تحميل الصور... 📥" });
                   }}
                 >
-                  <Download className="w-4 h-4" />
+                  <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                   تحميل الصور
                 </Button>
               </div>
 
               {/* Content Side */}
-              <div className="lg:w-1/2 p-8 lg:p-12 space-y-8 flex flex-col">
-                <div className="space-y-2">
+              <div className="lg:w-1/2 p-6 sm:p-8 lg:p-12 space-y-6 sm:space-y-8 flex flex-col">
+                <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="px-3 py-1 bg-primary/10 text-primary text-xs font-bold rounded-full uppercase tracking-wider">
+                    <span className="px-3 py-1 bg-primary/10 text-primary text-[10px] sm:text-xs font-bold rounded-full uppercase tracking-wider">
                       {selectedProduct.category}
                     </span>
                     <button
                       onClick={() => toggleFavorite(selectedProduct.id)}
-                      className={`p-2.5 rounded-full transition-all ${favorites.has(selectedProduct.id) ? "bg-red-500 text-white" : "bg-muted text-muted-foreground hover:bg-muted/80"}`}
+                      className={`p-2 sm:p-2.5 rounded-full transition-all ${favorites.has(selectedProduct.id) ? "bg-red-500 text-white" : "bg-muted text-muted-foreground hover:bg-muted/80"}`}
                     >
-                      <Heart className={`w-5 h-5 ${favorites.has(selectedProduct.id) ? "fill-current" : ""}`} />
+                      <Heart className={`w-4 h-4 sm:w-5 sm:h-5 ${favorites.has(selectedProduct.id) ? "fill-current" : ""}`} />
                     </button>
                   </div>
                   <div className="flex items-start justify-between gap-4">
-                    <h2 className="text-3xl font-black text-foreground">{selectedProduct.name}</h2>
-                    <Button variant="ghost" size="icon" onClick={() => {
+                    <h2 className="text-xl sm:text-2xl lg:text-3xl font-black text-foreground leading-tight">{selectedProduct.name}</h2>
+                    <Button variant="ghost" size="icon" className="shrink-0" onClick={() => {
                       navigator.clipboard.writeText(selectedProduct.name);
                       toast({ title: "تم نسخ الاسم" });
                     }}>
-                      <Copy className="w-5 h-5 text-muted-foreground" />
+                      <Copy className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
                     </Button>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="bg-primary/5 p-6 rounded-3xl border border-primary/10 flex flex-col items-center text-center">
-                    <p className="text-[10px] font-black uppercase tracking-wider text-primary/60 mb-2">سعر البيع النهائي</p>
-                    <p className="text-3xl font-black text-primary">{selectedProduct.price.toLocaleString()} دج</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                  <div className="bg-primary/5 p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-primary/10 flex flex-col items-center text-center">
+                    <p className="text-[8px] sm:text-[10px] font-black uppercase tracking-wider text-primary/60 mb-1 sm:mb-2">سعر البيع النهائي</p>
+                    <p className="text-xl sm:text-3xl font-black text-primary">{selectedProduct.price.toLocaleString()} دج</p>
                   </div>
-                  <div className="bg-secondary/5 p-6 rounded-3xl border border-secondary/10 flex flex-col items-center text-center">
-                    <p className="text-[10px] font-black uppercase tracking-wider text-secondary/60 mb-2">عمولتك الصافية</p>
-                    <p className="text-3xl font-black text-secondary">{selectedProduct.commission.toLocaleString()} دج</p>
+                  <div className="bg-secondary/5 p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-secondary/10 flex flex-col items-center text-center">
+                    <p className="text-[8px] sm:text-[10px] font-black uppercase tracking-wider text-secondary/60 mb-1 sm:mb-2">عمولتك الصافية</p>
+                    <p className="text-xl sm:text-3xl font-black text-secondary">{selectedProduct.commission.toLocaleString()} دج</p>
                   </div>
                 </div>
 
-                <div className="bg-amber-500/10 p-5 rounded-[2rem] border border-amber-500/20 relative overflow-hidden group">
+                <div className="bg-amber-500/10 p-4 sm:p-5 rounded-[1.5rem] sm:rounded-[2rem] border border-amber-500/20 relative overflow-hidden group">
                   <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 rounded-full -mr-16 -mt-16 transition-transform group-hover:scale-110" />
-                  <p className="relative z-10 text-xs md:text-sm text-amber-700 font-bold leading-relaxed text-center">
+                  <p className="relative z-10 text-[10px] sm:text-xs md:text-sm text-amber-700 font-bold leading-relaxed text-center">
                     إذا رفعت السعر عن هذا، فإن كل الأرباح الإضافية هي لك ولن تتحصل المنصة على أي فائدة منها
                   </p>
                 </div>
 
                 {selectedProduct.hasMarketingOffers && selectedProduct.marketingOffers && selectedProduct.marketingOffers.length > 0 && (
                   <div className="space-y-3">
-                    <h4 className="font-bold flex items-center gap-2 text-orange-600">
-                      <Gift className="w-4 h-4" /> العروض التسويقية
+                    <h4 className="font-bold text-xs sm:text-sm flex items-center gap-2 text-orange-600">
+                      <Gift className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> العروض التسويقية
                     </h4>
-                    <div className="grid grid-cols-1 gap-3">
+                    <div className="grid grid-cols-1 gap-2 sm:gap-3">
                       {selectedProduct.marketingOffers.map((offer: any, idx: number) => (
-                        <div key={idx} className="bg-orange-500/5 p-4 rounded-2xl border border-orange-500/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                          <div className="space-y-1">
-                            <p className="font-bold text-sm text-orange-700">{offer.name}</p>
-                            <p className="text-[10px] text-muted-foreground line-through">السعر الأصلي: {offer.originalPrice.toLocaleString()} دج</p>
+                        <div key={idx} className="bg-orange-500/5 p-3 sm:p-4 rounded-xl sm:rounded-2xl border border-orange-500/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                          <div className="space-y-0.5 sm:space-y-1">
+                            <p className="font-bold text-xs sm:text-sm text-orange-700">{offer.name}</p>
+                            <p className="text-[8px] sm:text-[10px] text-muted-foreground line-through">السعر الأصلي: {offer.originalPrice.toLocaleString()} دج</p>
                           </div>
                           <div className="flex items-center gap-4 text-left">
                             <div className="space-y-0.5">
-                              <p className="text-[10px] font-black uppercase text-primary/60">سعر البيع</p>
-                              <p className="font-black text-sm text-primary">{offer.price.toLocaleString()} دج</p>
+                              <p className="text-[8px] font-black uppercase text-primary/60">سعر البيع</p>
+                              <p className="font-black text-xs sm:text-sm text-primary">{offer.price.toLocaleString()} دج</p>
                             </div>
-                            <div className="h-8 w-px bg-orange-500/20"></div>
+                            <div className="h-6 sm:h-8 w-px bg-orange-500/20"></div>
                             <div className="space-y-0.5">
-                              <p className="text-[10px] font-black uppercase text-secondary/60">عمولتك</p>
-                              <p className="font-black text-sm text-secondary">{offer.commission.toLocaleString()} دج</p>
+                              <p className="text-[8px] font-black uppercase text-secondary/60">عمولتك</p>
+                              <p className="font-black text-xs sm:text-sm text-secondary">{offer.commission.toLocaleString()} دج</p>
                             </div>
                           </div>
                         </div>
@@ -2581,34 +2580,34 @@ const Dashboard = () => {
                   </div>
                 )}
 
-                <div className="space-y-3">
+                <div className="space-y-2 sm:space-y-3">
                   <div className="flex items-center justify-between">
-                    <h4 className="font-bold flex items-center gap-2">
-                      <MessageSquare className="w-4 h-4 text-primary" />
+                    <h4 className="font-bold text-xs sm:text-sm flex items-center gap-2">
+                      <MessageSquare className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
                       النص الإعلاني الجاهز
                     </h4>
-                    <Button variant="outline" size="sm" className="h-8 gap-1.5 rounded-lg text-xs" onClick={() => {
+                    <Button variant="outline" size="sm" className="h-7 sm:h-8 gap-1.5 rounded-lg text-[10px] sm:text-xs" onClick={() => {
                       navigator.clipboard.writeText(selectedProduct.description || '');
                       toast({ title: "تم نسخ النص الإعلاني ✨" });
                     }}>
-                      <Copy className="w-3.5 h-3.5" />
+                      <Copy className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                       نسخ النص
                     </Button>
                   </div>
-                  <div className="bg-muted/50 p-5 rounded-2xl border border-border/50 text-sm leading-relaxed text-muted-foreground italic">
+                  <div className="bg-muted/50 p-4 sm:p-5 rounded-xl sm:rounded-2xl border border-border/50 text-[11px] sm:text-sm leading-relaxed text-muted-foreground italic line-clamp-4 sm:line-clamp-none">
                     {selectedProduct.description || "لا يوجد وصف متوفر حالياً لهذا المنتج."}
                   </div>
                 </div>
 
-                <div className="mt-auto pt-6 flex gap-4">
+                <div className="mt-auto pt-4 sm:pt-6 flex flex-col sm:flex-row gap-3 sm:gap-4">
                   <Button
-                    className="flex-1 h-14 rounded-2xl bg-primary text-primary-foreground font-black text-lg gap-3 shadow-xl shadow-primary/20"
+                    className="flex-1 h-12 sm:h-14 rounded-xl sm:rounded-2xl bg-primary text-primary-foreground font-black text-base sm:text-lg gap-2 sm:gap-3 shadow-xl shadow-primary/20"
                     onClick={() => {
                       setIsDetailDialogOpen(false);
                       openOrderForm(selectedProduct);
                     }}
                   >
-                    <ShoppingCart className="w-6 h-6" />
+                    <ShoppingCart className="w-5 h-5 sm:w-6 sm:h-6" />
                     اطلب المنتج الآن
                   </Button>
                   <Link
@@ -2618,9 +2617,9 @@ const Dashboard = () => {
                   >
                     <Button
                       variant="outline"
-                      className="w-full h-14 rounded-2xl border-2 font-black text-lg gap-3"
+                      className="w-full h-12 sm:h-14 rounded-xl sm:rounded-2xl border-2 font-black text-base sm:text-lg gap-2 sm:gap-3"
                     >
-                      <Globe className="w-6 h-6" />
+                      <Globe className="w-5 h-5 sm:w-6 sm:h-6" />
                       صفحة المنتج
                     </Button>
                   </Link>
