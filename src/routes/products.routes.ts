@@ -177,7 +177,7 @@ router.get('/all', authenticateToken, requireAdmin, async (req: AuthRequest, res
     const paginated = pageParam !== null || limitParam !== null;
     const orderBy = { createdAt: 'desc' as const };
 
-    res.set('Cache-Control', 'private, max-age=10, stale-while-revalidate=30');
+    res.set('Cache-Control', 'no-store');
 
     if (paginated) {
       const page = Math.max(1, pageParam ?? 1);
