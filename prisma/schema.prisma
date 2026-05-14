@@ -55,6 +55,7 @@ model User {
   updatedAt DateTime @updatedAt
 
   @@index([role])
+  @@index([storeName])
 }
 
 model AffiliateLevel {

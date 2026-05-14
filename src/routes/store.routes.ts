@@ -2,8 +2,24 @@ import { Router, Request, Response } from 'express';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { authenticateToken, AuthRequest } from '../middleware/auth';
 import { prisma } from '../db';
+import { cache, withCache } from '../services/cache';
 
 const router = Router();
+
+const STORE_PUBLIC_PREFIX = 'store:public:';
+const LANDING_PUBLIC_PREFIX = 'landing:public:';
+const PRODUCT_PAGE_PREFIX = 'landing:product:';
+const PUBLIC_TTL_MS = 60_000;
+
+export function invalidateStoreCache(storeKey?: string) {
+  if (storeKey) cache.invalidate(`${STORE_PUBLIC_PREFIX}${storeKey.toLowerCase()}`);
+  else cache.invalidate(STORE_PUBLIC_PREFIX);
+}
+export function invalidateLandingCache(pageId?: string) {
+  if (pageId) cache.invalidate(`${LANDING_PUBLIC_PREFIX}${pageId}`);
+  else cache.invalidate(LANDING_PUBLIC_PREFIX);
+  cache.invalidate(PRODUCT_PAGE_PREFIX);
+}
 
 // GET /api/store/settings (Fetch affiliate store settings)
 router.get('/settings', authenticateToken, async (req: AuthRequest, res: Response): Promise<any> => {
@@ -66,6 +82,7 @@ router.put('/settings', authenticateToken, async (req: AuthRequest, res: Respons
       }
     });
 
+    invalidateStoreCache();
     res.json({ message: 'Settings saved successfully', data: settings });
   } catch (error) {
     console.error(error);
@@ -76,147 +93,90 @@ router.put('/settings', authenticateToken, async (req: AuthRequest, res: Respons
 router.get('/public/:storeName', async (req: Request, res: Response): Promise<any> => {
   try {
     const storeNameStr = String(req.params.storeName);
-    
-    // Find the affiliate by storeName or ID
-    const affiliate = await prisma.user.findFirst({
-      where: { 
-        OR: [
-          { storeName: { equals: storeNameStr, mode: 'insensitive' } },
-          { id: storeNameStr }
-        ],
-        role: 'AFFILIATE' 
-      },
-      include: { storeSettings: true }
-    }) as any;
+    const cacheKey = `${STORE_PUBLIC_PREFIX}${storeNameStr.toLowerCase()}`;
 
-    if (!affiliate) {
+    const payload = await withCache(cacheKey, PUBLIC_TTL_MS, async () => {
+      const affiliate = await prisma.user.findFirst({
+        where: {
+          OR: [
+            { storeName: { equals: storeNameStr, mode: 'insensitive' } },
+            { id: storeNameStr }
+          ],
+          role: 'AFFILIATE'
+        },
+        include: { storeSettings: true }
+      }) as any;
+
+      if (!affiliate) return null;
+
+      const storeProductIds = (affiliate.storeSettings?.config as any)?.storeProductIds || [];
+      if (storeProductIds.length === 0) {
+        return { ok: true, data: buildStorePayload(affiliate, []) };
+      }
+
+      const products = await prisma.product.findMany({
+        where: {
+          status: 'active',
+          isVisible: true,
+          hasLandingPage: true,
+          id: { in: storeProductIds }
+        },
+        orderBy: { createdAt: 'desc' },
+        select: {
+          id: true,
+          name: true,
+          description: true,
+          price: true,
+          originalPrice: true,
+          image: true,
+          images: true,
+          category: true,
+          stock: true,
+          isTrend: true,
+          isFeatured: true,
+          features: true,
+        },
+      });
+
+      return { ok: true, data: buildStorePayload(affiliate, products) };
+    });
+
+    if (!payload) {
       return res.status(404).json({ error: 'Store not found' });
     }
 
-    // Get products specifically added to this store
-    const storeProductIds = (affiliate.storeSettings?.config as any)?.storeProductIds || [];
-    
-    const products = await prisma.product.findMany({
-      where: { 
-        status: 'active', 
-        isVisible: true,
-        hasLandingPage: true,
-        ...(storeProductIds.length > 0 ? { id: { in: storeProductIds } } : { id: 'none' }) // If empty, show nothing
-      },
-      orderBy: { createdAt: 'desc' }
-    });
-
-    // We only send safe public data
     res.set('Cache-Control', 'public, max-age=60, stale-while-revalidate=300');
-    res.json({
-      data: {
-        storeInfo: {
-          id: affiliate.id,
-          identifier: affiliate.storeName, // The unique slug (e.g. "dsad")
-          storeName: affiliate.storeSettings?.storeName || affiliate.storeName, // Display Name
-          storeLogo: affiliate.storeSettings?.logoUrl,
-          primaryColor: affiliate.storeSettings?.primaryColor || '#000000',
-          fontFamily: affiliate.storeSettings?.fontFamily || 'Cairo',
-          templateId: affiliate.storeSettings?.templateId || 'modern',
-          ...(typeof affiliate.storeSettings?.config === 'object' && affiliate.storeSettings.config !== null ? affiliate.storeSettings.config : {})
-        },
-        products: products.map(p => ({
-          id: p.id,
-          name: p.name,
-          description: p.description,
-          price: p.price,
-          originalPrice: p.originalPrice,
-          image: p.image,
-          images: p.images,
-          category: p.category,
-          stock: p.stock,
-          isTrend: p.isTrend,
-          isFeatured: p.isFeatured,
-          features: p.features
-        }))
-      }
-    });
+    res.json({ data: payload.data });
   } catch (error) {
     console.error('Public store error:', error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
+
+function buildStorePayload(affiliate: any, products: any[]) {
+  return {
+    storeInfo: {
+      id: affiliate.id,
+      identifier: affiliate.storeName,
+      storeName: affiliate.storeSettings?.storeName || affiliate.storeName,
+      storeLogo: affiliate.storeSettings?.logoUrl,
+      primaryColor: affiliate.storeSettings?.primaryColor || '#000000',
+      fontFamily: affiliate.storeSettings?.fontFamily || 'Cairo',
+      templateId: affiliate.storeSettings?.templateId || 'modern',
+      ...(typeof affiliate.storeSettings?.config === 'object' && affiliate.storeSettings.config !== null ? affiliate.storeSettings.config : {})
+    },
+    products,
+  };
+}
 // GET /api/store/pages/:id/public (Fetch a specific landing page for public view)
 router.get('/pages/:id/public', async (req: Request, res: Response): Promise<any> => {
   try {
-    const { id } = req.params;
-    const page = await prisma.landingPage.findUnique({
-      where: { id: String(id) },
-      include: {
-        product: {
-          select: {
-            hasMarketingOffers: true,
-            marketingOffers: true
-          }
-        }
-      }
-    });
+    const id = String(req.params.id);
+    const cacheKey = `${LANDING_PUBLIC_PREFIX}${id}`;
 
-    if (!page) {
-      return res.status(404).json({ error: 'Landing page not found' });
-    }
-
-    // Increment views safely in the background
-    prisma.landingPage.update({
-      where: { id: String(id) },
-      data: { views: { increment: 1 } }
-    }).catch(err => console.error('Failed to increment views', err));
-
-    res.json({ 
-      data: {
-        ...(page.pageConfig as any),
-        id: page.id,
-        productId: page.productId,
-        ownerId: page.ownerId,
-        status: page.status,
-        views: page.views,
-        conversions: page.conversions,
-        hasMarketingOffers: (page as any).product?.hasMarketingOffers || false,
-        marketingOffers: (page as any).product?.marketingOffers || []
-      } 
-    });
-  } catch (error) {
-    console.error('Public landing page error:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
-});
-
-// GET /api/store/product-page/:productId/:affiliateId (Public: Fetch by product and affiliate)
-router.get('/product-page/:productId/:affiliateId', async (req: Request, res: Response): Promise<any> => {
-  try {
-    const { productId, affiliateId } = req.params;
-    
-    let page = await prisma.landingPage.findFirst({
-      where: { 
-        productId: String(productId),
-        ownerId: String(affiliateId),
-        status: 'published'
-      },
-      orderBy: { updatedAt: 'desc' },
-      include: {
-        product: {
-          select: {
-            hasMarketingOffers: true,
-            marketingOffers: true
-          }
-        }
-      }
-    });
-
-    // If affiliate has no customized page, fallback to ADMIN's latest page for this product
-    if (!page) {
-      page = await prisma.landingPage.findFirst({
-        where: {
-          productId: String(productId),
-          owner: { role: 'ADMIN' },
-          status: 'published'
-        },
-        orderBy: { updatedAt: 'desc' },
+    const data = await withCache(cacheKey, PUBLIC_TTL_MS, async () => {
+      const page = await prisma.landingPage.findUnique({
+        where: { id },
         include: {
           product: {
             select: {
@@ -226,31 +186,85 @@ router.get('/product-page/:productId/:affiliateId', async (req: Request, res: Re
           }
         }
       });
-    }
-
-    if (!page) {
-      return res.status(404).json({ error: 'Landing page not found' });
-    }
-
-    // Increment views safely
-    prisma.landingPage.update({
-      where: { id: page.id },
-      data: { views: { increment: 1 } }
-    }).catch(err => console.error('Failed to increment views', err));
-
-    res.json({ 
-      data: {
+      if (!page) return null;
+      return {
         ...(page.pageConfig as any),
         id: page.id,
         productId: page.productId,
         ownerId: page.ownerId,
         status: page.status,
-        views: page.views,
-        conversions: page.conversions,
         hasMarketingOffers: (page as any).product?.hasMarketingOffers || false,
         marketingOffers: (page as any).product?.marketingOffers || []
-      } 
+      };
     });
+
+    if (!data) {
+      return res.status(404).json({ error: 'Landing page not found' });
+    }
+
+    // Increment views in background; not part of cached payload.
+    prisma.landingPage.update({
+      where: { id },
+      data: { views: { increment: 1 } }
+    }).catch(err => console.error('Failed to increment views', err));
+
+    res.set('Cache-Control', 'public, max-age=60, stale-while-revalidate=300');
+    res.json({ data });
+  } catch (error) {
+    console.error('Public landing page error:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// GET /api/store/product-page/:productId/:affiliateId (Public: Fetch by product and affiliate)
+router.get('/product-page/:productId/:affiliateId', async (req: Request, res: Response): Promise<any> => {
+  try {
+    const productId = String(req.params.productId);
+    const affiliateId = String(req.params.affiliateId);
+    const cacheKey = `${PRODUCT_PAGE_PREFIX}${productId}:${affiliateId}`;
+
+    const result = await withCache(cacheKey, PUBLIC_TTL_MS, async () => {
+      let page = await prisma.landingPage.findFirst({
+        where: { productId, ownerId: affiliateId, status: 'published' },
+        orderBy: { updatedAt: 'desc' },
+        include: { product: { select: { hasMarketingOffers: true, marketingOffers: true } } }
+      });
+
+      if (!page) {
+        page = await prisma.landingPage.findFirst({
+          where: { productId, owner: { role: 'ADMIN' }, status: 'published' },
+          orderBy: { updatedAt: 'desc' },
+          include: { product: { select: { hasMarketingOffers: true, marketingOffers: true } } }
+        });
+      }
+
+      if (!page) return null;
+
+      return {
+        pageId: page.id,
+        data: {
+          ...(page.pageConfig as any),
+          id: page.id,
+          productId: page.productId,
+          ownerId: page.ownerId,
+          status: page.status,
+          hasMarketingOffers: (page as any).product?.hasMarketingOffers || false,
+          marketingOffers: (page as any).product?.marketingOffers || []
+        }
+      };
+    });
+
+    if (!result) {
+      return res.status(404).json({ error: 'Landing page not found' });
+    }
+
+    prisma.landingPage.update({
+      where: { id: result.pageId },
+      data: { views: { increment: 1 } }
+    }).catch(err => console.error('Failed to increment views', err));
+
+    res.set('Cache-Control', 'public, max-age=60, stale-while-revalidate=300');
+    res.json({ data: result.data });
   } catch (error) {
     console.error('Public product page lookup error:', error);
     res.status(500).json({ error: 'Internal Server Error' });
@@ -466,6 +480,7 @@ router.post('/page', authenticateToken, async (req: AuthRequest, res: Response):
           status: status || existing.status
         }
       });
+      invalidateLandingCache(existing.id);
       return res.json({ message: 'Existing landing page updated successfully!', data: updated });
     }
 
@@ -478,6 +493,7 @@ router.post('/page', authenticateToken, async (req: AuthRequest, res: Response):
       }
     });
 
+    invalidateLandingCache(page.id);
     res.json({ message: 'Landing page created successfully!', data: page });
   } catch (error) {
     console.error('Failed to save landing page:', error);
@@ -512,6 +528,7 @@ router.put('/page/:id', authenticateToken, async (req: AuthRequest, res: Respons
       }
     });
 
+    invalidateLandingCache(page.id);
     res.json({ message: 'Landing page updated successfully!', data: page });
   } catch (error) {
     res.status(500).json({ error: 'Failed to update landing page' });
@@ -540,6 +557,7 @@ router.delete('/page/:id', authenticateToken, async (req: AuthRequest, res: Resp
       where: { id: id as string }
     });
 
+    invalidateLandingCache(id as string);
     res.json({ message: 'Landing page deleted successfully!' });
   } catch (error) {
     res.status(500).json({ error: 'Failed to delete landing page' });
@@ -755,6 +773,8 @@ router.put('/products', authenticateToken, async (req: AuthRequest, res: Respons
       }
     }
 
+    invalidateStoreCache();
+    invalidateLandingCache();
     res.json({ message: 'Store products saved and landing pages initialized' });
   } catch (error) {
     console.error(error);
