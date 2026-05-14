@@ -15,6 +15,10 @@
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="@EasyProfit" />
 
+    <!-- API origin: open the connection during HTML parse so the first XHR isn't waiting on DNS+TLS -->
+    <link rel="preconnect" href="https://www.easyprofit.org" crossorigin>
+    <link rel="dns-prefetch" href="https://www.easyprofit.org">
+
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
