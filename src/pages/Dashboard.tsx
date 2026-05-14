@@ -520,7 +520,9 @@ const Dashboard = () => {
     stopDesk: 0,
     deliveryFee: 500,
     selectedColor: "",
-    selectedSize: ""
+    selectedSize: "",
+    selectedOffer: null as any,
+    quantity: 1
   });
 
   // Store Editor State
@@ -623,20 +625,21 @@ const Dashboard = () => {
     }
   };
 
-  // Calculate delivery fee automatically
+  // Calculate delivery fee automatically (respects free delivery from offers & product)
   useEffect(() => {
     if (orderFormData.wilaya) {
       const rate = shippingRates.find(r => r.code === orderFormData.wilaya);
       if (rate) {
-        const fee = orderFormData.deliveryType === "home" ? rate.homePrice : rate.officePrice;
+        const baseFee = orderFormData.deliveryType === "home" ? rate.homePrice : rate.officePrice;
+        const isFreeDelivery = selectedProduct?.showFreeShipping || orderFormData.selectedOffer?.freeDelivery;
         setOrderFormData(prev => ({
           ...prev,
-          deliveryFee: fee,
+          deliveryFee: isFreeDelivery ? 0 : baseFee,
           stopDesk: orderFormData.deliveryType === "office" ? 1 : 0
         }));
       }
     }
-  }, [orderFormData.wilaya, orderFormData.deliveryType]);
+  }, [orderFormData.wilaya, orderFormData.deliveryType, orderFormData.selectedOffer, selectedProduct]);
 
   // Fetch communes when wilaya changes
   useEffect(() => {
@@ -2798,6 +2801,84 @@ const Dashboard = () => {
                   </div>
                 )}
 
+                {/* Marketing Offers / Packs */}
+                {selectedProduct.hasMarketingOffers && selectedProduct.marketingOffers?.length > 0 && (
+                  <div className="space-y-3">
+                    <Label className="flex items-center gap-2 text-sm font-bold ml-1">
+                      <Gift className="w-4 h-4 text-primary" /> العروض التسويقية
+                    </Label>
+                    <div className="grid gap-3">
+                      {/* Default: no offer */}
+                      <button
+                        type="button"
+                        onClick={() => setOrderFormData({ ...orderFormData, selectedOffer: null, quantity: 1 })}
+                        className={`relative p-4 rounded-2xl border-2 text-right transition-all ${
+                          !orderFormData.selectedOffer
+                            ? "border-primary bg-primary/5 shadow-md"
+                            : "border-border hover:border-muted-foreground/30"
+                        }`}
+                      >
+                        <div className="flex justify-between items-center">
+                          <span className="font-bold text-sm">بدون عرض (قطعة واحدة)</span>
+                          <span className="font-black text-primary">{selectedProduct.price.toLocaleString()} دج</span>
+                        </div>
+                      </button>
+                      {(selectedProduct.marketingOffers as any[]).map((offer: any, idx: number) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => setOrderFormData({ ...orderFormData, selectedOffer: offer, quantity: offer.quantity || 1 })}
+                          className={`relative p-4 rounded-2xl border-2 text-right transition-all ${
+                            orderFormData.selectedOffer === offer
+                              ? "border-secondary bg-secondary/5 shadow-md"
+                              : "border-border hover:border-muted-foreground/30"
+                          }`}
+                        >
+                          <div className="flex justify-between items-center">
+                            <div>
+                              <span className="font-bold text-sm">{offer.name || `عرض ${idx + 1}`}</span>
+                              {offer.quantity > 1 && <span className="text-xs text-muted-foreground mr-2">({offer.quantity} قطع)</span>}
+                              {offer.freeDelivery && (
+                                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-green-600 bg-green-100 px-2 py-0.5 rounded-full mr-2">
+                                  <Truck className="w-3 h-3" /> توصيل مجاني
+                                </span>
+                              )}
+                            </div>
+                            <div className="text-left">
+                              <span className="font-black text-secondary">{(offer.price || 0).toLocaleString()} دج</span>
+                              {offer.originalPrice && offer.originalPrice > offer.price && (
+                                <span className="text-xs text-muted-foreground line-through mr-2">{offer.originalPrice.toLocaleString()} دج</span>
+                              )}
+                            </div>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Quantity selector (only when no offer is selected) */}
+                {!orderFormData.selectedOffer && (
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-2 text-sm font-bold ml-1">
+                      <PackagePlus className="w-4 h-4 text-primary" /> الكمية
+                    </Label>
+                    <div className="flex items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setOrderFormData({ ...orderFormData, quantity: Math.max(1, orderFormData.quantity - 1) })}
+                        className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center font-bold text-lg hover:bg-muted/80 transition-colors"
+                      >−</button>
+                      <span className="w-12 text-center text-lg font-black">{orderFormData.quantity}</span>
+                      <button
+                        type="button"
+                        onClick={() => setOrderFormData({ ...orderFormData, quantity: orderFormData.quantity + 1 })}
+                        className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center font-bold text-lg hover:bg-muted/80 transition-colors"
+                      >+</button>
+                    </div>
+                  </div>
+                )}
+
                 <div className="space-y-2">
                   <Label className="flex items-center gap-2 text-sm font-bold ml-1">
                     <MapPin className="w-4 h-4 text-primary" /> العنوان بالتفصيل
@@ -2813,10 +2894,23 @@ const Dashboard = () => {
                 <div className="bg-muted/40 p-6 rounded-[2rem] border border-border/40 space-y-4">
                   <div className="flex justify-between items-center text-sm">
                     <span className="text-muted-foreground">سعر المنتج:</span>
-                    <span className="font-bold">{selectedProduct.price.toLocaleString()} دج</span>
+                    <span className="font-bold">
+                      {orderFormData.selectedOffer
+                        ? `${(orderFormData.selectedOffer.price || 0).toLocaleString()} دج`
+                        : `${(selectedProduct.price * orderFormData.quantity).toLocaleString()} دج`
+                      }
+                      {orderFormData.quantity > 1 && !orderFormData.selectedOffer && (
+                        <span className="text-xs text-muted-foreground mr-1">({orderFormData.quantity} × {selectedProduct.price.toLocaleString()})</span>
+                      )}
+                    </span>
                   </div>
                   <div className="flex justify-between items-center gap-4">
-                    <span className="text-muted-foreground text-sm">سعر التوصيل:</span>
+                    <span className="text-muted-foreground text-sm flex items-center gap-1">
+                      سعر التوصيل:
+                      {(selectedProduct.showFreeShipping || orderFormData.selectedOffer?.freeDelivery) && (
+                        <span className="text-[10px] font-bold text-green-600 bg-green-100 px-1.5 py-0.5 rounded-full">مجاني</span>
+                      )}
+                    </span>
                     <div className="w-32">
                       <Input
                         type="number"
@@ -2830,7 +2924,12 @@ const Dashboard = () => {
                   <div className="flex justify-between items-center">
                     <span className="text-lg font-bold">السعر الكلي:</span>
                     <span className="text-3xl font-black text-secondary">
-                      {(selectedProduct.price + orderFormData.deliveryFee).toLocaleString()} دج
+                      {(() => {
+                        const productPrice = orderFormData.selectedOffer
+                          ? (orderFormData.selectedOffer.price || 0)
+                          : selectedProduct.price * orderFormData.quantity;
+                        return (productPrice + orderFormData.deliveryFee).toLocaleString();
+                      })()} دج
                     </span>
                   </div>
                 </div>
@@ -2854,6 +2953,13 @@ const Dashboard = () => {
                       }
 
                       try {
+                        const finalPrice = orderFormData.selectedOffer
+                          ? (orderFormData.selectedOffer.price || 0)
+                          : selectedProduct.price * orderFormData.quantity;
+                        const finalQuantity = orderFormData.selectedOffer
+                          ? (orderFormData.selectedOffer.quantity || 1)
+                          : orderFormData.quantity;
+
                         const response = await fetch(`${API_BASE_URL}/orders`, {
                           method: 'POST',
                           headers: { 'Content-Type': 'application/json' },
@@ -2863,15 +2969,16 @@ const Dashboard = () => {
                             customerName: `${orderFormData.firstName} ${orderFormData.lastName}`,
                             customerPhone: orderFormData.phone,
                             wilaya: orderFormData.wilaya,
-                            commune: orderFormData.commune, // Added
+                            commune: orderFormData.commune,
                             address: orderFormData.address,
-                            quantity: 1,
-                            totalAmount: selectedProduct.price + orderFormData.deliveryFee,
-                            commissionAmount: selectedProduct.commission,
-                            shippingFee: orderFormData.deliveryFee, // Added
-                            stopDesk: orderFormData.stopDesk, // Added
+                            quantity: finalQuantity,
+                            totalAmount: finalPrice + orderFormData.deliveryFee,
+                            commissionAmount: selectedProduct.commission * finalQuantity,
+                            shippingFee: orderFormData.deliveryFee,
+                            stopDesk: orderFormData.stopDesk,
                             selectedColor: orderFormData.selectedColor,
-                            selectedSize: orderFormData.selectedSize
+                            selectedSize: orderFormData.selectedSize,
+                            selectedOffer: orderFormData.selectedOffer ? orderFormData.selectedOffer.name : null
                           })
                         });
 
@@ -2879,7 +2986,7 @@ const Dashboard = () => {
 
                         toast({ title: "تم تسجيل الطلب بنجاح! 🚀", description: "سيتم تتبع الطلب من قسم طلبياتي." });
                         setIsOrderDialogOpen(false);
-                        setOrderFormData({ firstName: "", lastName: "", phone: "", wilaya: "", commune: "", address: "", deliveryType: "home", stopDesk: 0, deliveryFee: 500, selectedColor: "", selectedSize: "" });
+                        setOrderFormData({ firstName: "", lastName: "", phone: "", wilaya: "", commune: "", address: "", deliveryType: "home", stopDesk: 0, deliveryFee: 500, selectedColor: "", selectedSize: "", selectedOffer: null, quantity: 1 });
 
                         // Refetch orders immediately
                         const currentToken = localStorage.getItem("token");
