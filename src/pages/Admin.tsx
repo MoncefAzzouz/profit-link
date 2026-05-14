@@ -2160,7 +2160,7 @@ const Admin = () => {
                           disabled={generatingAiProductId === product.id}
                         >
                           {generatingAiProductId === product.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-                          سحر AI (توليد صفحة هبوط)
+                          إنشاء بـ AI
                         </Button>
                         <Button variant="default" className="gap-2 rounded-xl h-10 font-bold text-[10px] bg-secondary hover:bg-secondary/90 text-white" onClick={() => {
                           setProductToEditLandingPage(product);
@@ -2171,7 +2171,16 @@ const Admin = () => {
                           <LayoutTemplate className="w-3.5 h-3.5" />
                           تصميم الصفحة
                         </Button>
-                        <div className="flex gap-2">
+                        <Button variant="outline" className="gap-2 rounded-xl h-10 font-bold text-[10px] bg-muted hover:bg-muted/80 text-foreground border-border" onClick={() => {
+                          const userStr = localStorage.getItem("affiliate_user");
+                          const user = userStr ? JSON.parse(userStr) : null;
+                          const adminId = user?.id || "admin";
+                          window.open(`/product/${product.id}/${adminId}`, "_blank");
+                        }}>
+                          <Eye className="w-3.5 h-3.5" />
+                          معاينة صفحة هبوط
+                        </Button>
+                        <div className="col-span-2 flex gap-2">
                           <Button variant="outline" className="flex-1 gap-2 rounded-xl h-10 font-bold text-xs" onClick={() => handleOpenEditProduct(product)}>
                             <Edit className="w-3.5 h-3.5" />
                             تعديل
