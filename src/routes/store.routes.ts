@@ -100,6 +100,7 @@ router.get('/public/:storeName', async (req: Request, res: Response): Promise<an
       where: { 
         status: 'active', 
         isVisible: true,
+        hasLandingPage: true,
         ...(storeProductIds.length > 0 ? { id: { in: storeProductIds } } : { id: 'none' }) // If empty, show nothing
       },
       orderBy: { createdAt: 'desc' }

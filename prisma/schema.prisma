@@ -109,6 +109,9 @@ model Product {
   hasMarketingOffers Boolean @default(false)
   marketingOffers    Json?
 
+  // Landing Page publishing status
+  hasLandingPage     Boolean @default(false)
+
   orders       Order[]
   landingPages LandingPage[]
 

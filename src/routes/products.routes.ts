@@ -40,6 +40,7 @@ const productListSelect = {
   affiliatePrice: true,
   hasMarketingOffers: true,
   marketingOffers: true,
+  hasLandingPage: true,
   createdAt: true,
 } as const;
 
@@ -209,7 +210,7 @@ router.get('/all', authenticateToken, requireAdmin, async (req: AuthRequest, res
 // POST /api/products (Admin: Create new product)
 router.post('/', authenticateToken, requireAdmin, async (req: AuthRequest, res: Response): Promise<any> => {
   try {
-    const { name, description, adText, price, originalPrice, commission, category, images, videoUrl, stock, isVisible, isTrend, isFeatured, features, wholesalePrice, affiliatePrice, hasColors, availableColors, hasSizes, availableSizes, showFreeShipping, hasBeforeAfter, beforeImage, afterImage, hasMarketingOffers, marketingOffers } = req.body;
+    const { name, description, adText, price, originalPrice, commission, category, images, videoUrl, stock, isVisible, isTrend, isFeatured, features, wholesalePrice, affiliatePrice, hasColors, availableColors, hasSizes, availableSizes, showFreeShipping, hasBeforeAfter, beforeImage, afterImage, hasMarketingOffers, marketingOffers, hasLandingPage } = req.body;
     const image: string | undefined = req.body.image;
 
     if (!name || !price || !commission || !category) {
@@ -244,7 +245,8 @@ router.post('/', authenticateToken, requireAdmin, async (req: AuthRequest, res: 
         beforeImage: beforeImage || null,
         afterImage: afterImage || null,
         hasMarketingOffers: hasMarketingOffers || false,
-        marketingOffers: marketingOffers || []
+        marketingOffers: marketingOffers || [],
+        hasLandingPage: hasLandingPage || false
       }
     });
 
@@ -305,7 +307,7 @@ router.post('/', authenticateToken, requireAdmin, async (req: AuthRequest, res: 
 router.put('/:id', authenticateToken, requireAdmin, async (req: AuthRequest, res: Response): Promise<any> => {
   try {
     const { id } = req.params;
-    const { name, description, adText, price, originalPrice, commission, category, images, videoUrl, stock, isVisible, isTrend, isFeatured, features, status, wholesalePrice, affiliatePrice, hasColors, availableColors, hasSizes, availableSizes, showFreeShipping, hasBeforeAfter, beforeImage, afterImage, hasMarketingOffers, marketingOffers } = req.body;
+    const { name, description, adText, price, originalPrice, commission, category, images, videoUrl, stock, isVisible, isTrend, isFeatured, features, status, wholesalePrice, affiliatePrice, hasColors, availableColors, hasSizes, availableSizes, showFreeShipping, hasBeforeAfter, beforeImage, afterImage, hasMarketingOffers, marketingOffers, hasLandingPage } = req.body;
     const image: string | undefined = req.body.image;
 
     const product = await prisma.product.update({
@@ -338,7 +340,8 @@ router.put('/:id', authenticateToken, requireAdmin, async (req: AuthRequest, res
         ...(beforeImage !== undefined && { beforeImage }),
         ...(afterImage !== undefined && { afterImage }),
         ...(hasMarketingOffers !== undefined && { hasMarketingOffers }),
-        ...(marketingOffers !== undefined && { marketingOffers })
+        ...(marketingOffers !== undefined && { marketingOffers }),
+        ...(hasLandingPage !== undefined && { hasLandingPage })
       }
     });
 
@@ -391,6 +394,30 @@ router.delete('/:id', authenticateToken, requireAdmin, async (req: AuthRequest, 
   } catch (error) {
     console.error('Error deleting product:', error);
     res.status(500).json({ error: 'Failed to delete product' });
+  }
+});
+
+// PUT /api/products/:id/toggle-landing-page (Admin: Toggle landing page visibility)
+router.put('/:id/toggle-landing-page', authenticateToken, requireAdmin, async (req: AuthRequest, res: Response): Promise<any> => {
+  try {
+    const { id } = req.params;
+    const { hasLandingPage } = req.body;
+    
+    if (typeof hasLandingPage !== 'boolean') {
+      return res.status(400).json({ error: 'hasLandingPage must be a boolean' });
+    }
+
+    const product = await prisma.product.update({
+      where: { id: id as string },
+      data: { hasLandingPage },
+      select: { id: true, hasLandingPage: true }
+    });
+
+    invalidateProductCaches();
+    res.json({ message: 'Product landing page status updated', data: product });
+  } catch (error) {
+    console.error('Error toggling landing page status:', error);
+    res.status(500).json({ error: 'Failed to update landing page status' });
   }
 });
 
