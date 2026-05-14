@@ -196,12 +196,12 @@ router.post('/:id/push-ecotrack', async (req: Request, res: Response) => {
       nom_client: order.customerName,
       telephone: order.customerPhone,
       adresse: order.address,
-      code_wilaya: order.wilaya,
+      code_wilaya: parseInt(String(order.wilaya), 10),
       commune: order.commune,
       montant: order.totalAmount,
       produit: `${order.product.name}${order.selectedOffer ? ' - ' + order.selectedOffer : ''}${order.selectedColor ? ' - ' + order.selectedColor : ''}${order.selectedSize ? ' - ' + order.selectedSize : ''}`,
-      quantite: order.quantity,
-      stop_desk: order.stopDesk,
+      quantite: parseInt(String(order.quantity), 10),
+      stop_desk: parseInt(String(order.stopDesk), 10),
       type: 1 // 1 = Livraison, as per Ecotrack docs
     };
 
