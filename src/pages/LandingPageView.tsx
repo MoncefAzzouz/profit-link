@@ -1652,15 +1652,24 @@ const LandingPageView = () => {
                   <div className="bg-muted/10 rounded-2xl p-4 border border-border/20 space-y-2 mt-6">
                      {/* Dynamic pricing calculation */}
                      {(() => {
+                        const selectedBundle = p.bundles?.find(b => b.id === selectedBundleId);
+                        let activePrice = selectedBundle ? selectedBundle.price : p.price;
+                        let activeOriginalPrice = p.originalPrice;
+
+                        if (selectedOffer) {
+                          activePrice = selectedOffer.price;
+                          activeOriginalPrice = selectedOffer.originalPrice;
+                        }
+
                         let currentShipping = orderForm.deliveryType === "home" ? shippingRate.home : shippingRate.desk;
                         if (selectedOffer?.freeDelivery || p.showFreeShipping) currentShipping = 0;
-                        const totalPrice = (p.price * quantity) + currentShipping;
-                        const savings = (p.originalPrice - p.price) * quantity;
+                        const totalPrice = (activePrice * quantity) + currentShipping;
+                        const savings = (activeOriginalPrice - activePrice) * quantity;
                         return (
                           <>
                             <div className="flex justify-between text-sm">
                               <span className="opacity-60">السعر</span>
-                              <span className="font-bold">{(p.price * quantity).toLocaleString()} دج</span>
+                              <span className="font-bold">{(activePrice * quantity).toLocaleString()} دج</span>
                             </div>
                             {savings > 0 && (
                               <div className="flex justify-between text-sm text-green-600 font-bold">
