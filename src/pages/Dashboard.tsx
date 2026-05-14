@@ -908,7 +908,6 @@ const Dashboard = () => {
     { id: "my_store" as Tab, label: "متجري", icon: Store },
     { id: "my_store_edit" as Tab, label: "تعديل متجري", icon: LayoutTemplate },
     { id: "favorites" as Tab, label: "المنتجات المفضلة", icon: Heart },
-    { id: "landing_pages" as Tab, label: "صفحات الهبوط", icon: LayoutTemplate },
     { id: "orders" as Tab, label: "طلبياتي", icon: ShoppingCart, badge: newOrdersCount },
     { id: "earnings" as Tab, label: "الأرباح", icon: Wallet },
     { id: "withdrawals" as Tab, label: "طلبات السحب", icon: CheckCircle },

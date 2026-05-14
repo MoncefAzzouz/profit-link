@@ -2404,7 +2404,7 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
     );
   }
 
-  if (isLoading) {
+  if (isLoading || (initialProductToEdit && !editingPage)) {
     return (
       <div className="flex flex-col items-center justify-center py-32 space-y-4">
         <motion.div
@@ -2412,7 +2412,9 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
           transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
           className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full"
         />
-        <p className="text-muted-foreground font-bold animate-pulse">جاري تحميل صفحات الهبوط...</p>
+        <p className="text-muted-foreground font-bold animate-pulse">
+          {initialProductToEdit ? "جاري تحضير محرر صفحة الهبوط..." : "جاري تحميل صفحات الهبوط..."}
+        </p>
       </div>
     );
   }
