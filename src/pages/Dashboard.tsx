@@ -1591,15 +1591,15 @@ const Dashboard = () => {
           {/* Shipping Tab */}
           {activeTab === "shipping" && (
             <div className="space-y-8">
-              <div className="flex flex-col lg:flex-row gap-8">
+              <div className="flex flex-col lg:flex-row gap-6 sm:gap-8">
                 {/* Algeria Map Illustration */}
                 <motion.div
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  className="lg:w-1/3 bg-card rounded-[2.5rem] p-8 shadow-sm border border-border/50 flex flex-col items-center justify-center relative overflow-hidden"
+                  className="lg:w-1/3 bg-card rounded-[2rem] sm:rounded-[2.5rem] p-6 sm:p-8 shadow-sm border border-border/50 flex flex-col items-center justify-center relative overflow-hidden"
                 >
                   <div className="relative z-10 w-full h-full flex flex-col items-center">
-                    <h3 className="text-xl font-bold text-foreground mb-6 self-start">تغطية التوصيل عبر الوطن</h3>
+                    <h3 className="text-lg sm:text-xl font-bold text-foreground mb-4 sm:mb-6 self-start">تغطية التوصيل عبر الوطن</h3>
                     <div className="w-full aspect-[4/5] relative">
                       {/* Stylized SVG Map of Algeria */}
                       <svg viewBox="0 0 400 500" className="w-full h-full drop-shadow-2xl">
@@ -1607,51 +1607,48 @@ const Dashboard = () => {
                           d="M150,50 L250,50 L300,100 L350,150 L350,250 L300,350 L250,450 L100,450 L50,350 L50,150 L100,100 Z"
                           className="fill-primary/10 stroke-primary/30 stroke-2"
                         />
-                        {/* Highlights (North) */}
                         <path d="M150,50 L250,50 L300,100 L350,150 L250,150 L150,150 Z" className="fill-secondary/20 hover:fill-secondary/40 transition-colors cursor-pointer" />
-                        {/* Cities dots */}
-                        <circle cx="200" cy="80" r="5" className="fill-secondary animate-pulse" /> {/* Algiers */}
-                        <circle cx="120" cy="120" r="4" className="fill-primary" /> {/* Oran */}
-                        <circle cx="280" cy="110" r="4" className="fill-primary" /> {/* Constantine */}
+                        <circle cx="200" cy="80" r="5" className="fill-secondary animate-pulse" />
+                        <circle cx="120" cy="120" r="4" className="fill-primary" />
+                        <circle cx="280" cy="110" r="4" className="fill-primary" />
                       </svg>
 
-                      <div className="absolute bottom-4 right-4 bg-background/80 backdrop-blur-sm p-4 rounded-2xl border border-border/50 shadow-lg">
-                        <div className="flex items-center gap-2 mb-2">
-                          <div className="w-3 h-3 rounded-full bg-secondary" />
-                          <span className="text-xs font-bold">توصيل سريع (24-48 ساعة)</span>
+                      <div className="absolute bottom-2 right-2 sm:bottom-4 sm:right-4 bg-background/80 backdrop-blur-sm p-3 sm:p-4 rounded-xl sm:rounded-2xl border border-border/50 shadow-lg">
+                        <div className="flex items-center gap-2 mb-1.5 sm:mb-2">
+                          <div className="w-2.5 h-2.5 rounded-full bg-secondary" />
+                          <span className="text-[10px] sm:text-xs font-bold">توصيل سريع (24-48 ساعة)</span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <div className="w-3 h-3 rounded-full bg-primary/40" />
-                          <span className="text-xs font-bold">توصيل عادي (3-7 أيام)</span>
+                          <div className="w-2.5 h-2.5 rounded-full bg-primary/40" />
+                          <span className="text-[10px] sm:text-xs font-bold">توصيل عادي (3-7 أيام)</span>
                         </div>
                       </div>
                     </div>
                   </div>
-                  {/* Decorative backgrounds */}
                   <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl" />
                   <div className="absolute bottom-0 left-0 w-32 h-32 bg-secondary/5 rounded-full blur-3xl" />
                 </motion.div>
 
                 {/* Pricing Summary */}
                 <div className="lg:w-2/3 space-y-6">
-                  <div className="bg-card rounded-3xl p-8 border border-border/50 shadow-sm relative overflow-hidden">
+                  <div className="bg-card rounded-[2rem] sm:rounded-3xl p-6 sm:p-8 border border-border/50 shadow-sm relative overflow-hidden">
                     <div className="relative z-10">
-                      <h4 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
+                      <h4 className="text-lg sm:text-xl font-bold text-foreground mb-4 flex items-center gap-2">
                         <Clock className="w-5 h-5 text-primary" />
                         مواعيد التسليم المتوقعة
                       </h4>
-                      <div className="grid grid-cols-3 gap-6">
-                        <div>
-                          <p className="text-xs text-muted-foreground mb-1">الشمال</p>
-                          <p className="font-bold text-lg">24 - 48 ساعة</p>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
+                        <div className="bg-muted/30 p-4 rounded-2xl border border-border/40">
+                          <p className="text-[10px] sm:text-xs text-muted-foreground mb-1 font-black uppercase">الشمال</p>
+                          <p className="font-black text-base sm:text-lg text-foreground">24 - 48 ساعة</p>
                         </div>
-                        <div>
-                          <p className="text-xs text-muted-foreground mb-1">الهضاب</p>
-                          <p className="font-bold text-lg">2 - 4 أيام</p>
+                        <div className="bg-muted/30 p-4 rounded-2xl border border-border/40">
+                          <p className="text-[10px] sm:text-xs text-muted-foreground mb-1 font-black uppercase">الهضاب</p>
+                          <p className="font-black text-base sm:text-lg text-foreground">2 - 4 أيام</p>
                         </div>
-                        <div>
-                          <p className="text-xs text-muted-foreground mb-1">الجنوب</p>
-                          <p className="font-bold text-lg">5 - 10 أيام</p>
+                        <div className="bg-muted/30 p-4 rounded-2xl border border-border/40">
+                          <p className="text-[10px] sm:text-xs text-muted-foreground mb-1 font-black uppercase">الجنوب</p>
+                          <p className="font-black text-base sm:text-lg text-foreground">5 - 10 أيام</p>
                         </div>
                       </div>
                     </div>
@@ -1660,11 +1657,11 @@ const Dashboard = () => {
                 </div>
               </div>
 
-              <div className="bg-card rounded-[2.5rem] shadow-sm border border-border/50 overflow-hidden" dir="rtl">
-                <div className="p-8 border-b border-border flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="bg-card rounded-[2rem] sm:rounded-[2.5rem] shadow-sm border border-border/50 overflow-hidden" dir="rtl">
+                <div className="p-6 sm:p-8 border-b border-border flex flex-col sm:flex-row items-center justify-between gap-4">
                   <div>
-                    <h3 className="text-2xl font-black text-foreground">قائمة الأسعار حسب الولايات</h3>
-                    <p className="text-muted-foreground mt-1 text-sm">تفاصيل تكاليف الشحن ومدة التوصيل لكل ولاية.</p>
+                    <h3 className="text-xl sm:text-2xl font-black text-foreground">قائمة الأسعار حسب الولايات</h3>
+                    <p className="text-muted-foreground mt-1 text-xs sm:text-sm">تفاصيل تكاليف الشحن ومدة التوصيل لكل ولاية.</p>
                   </div>
                   <div className="flex items-center gap-3 w-full sm:w-64">
                     <div className="relative w-full">
@@ -1681,7 +1678,9 @@ const Dashboard = () => {
                     </div>
                   </div>
                 </div>
-                <div className="overflow-x-auto">
+
+                {/* Desktop View Table */}
+                <div className="hidden md:block overflow-x-auto">
                   <table className="w-full text-right">
                     <thead>
                       <tr className="bg-muted/50 border-b border-border">
@@ -1727,15 +1726,46 @@ const Dashboard = () => {
                   </table>
                 </div>
 
+                {/* Mobile View Cards */}
+                <div className="md:hidden divide-y divide-border">
+                  {paginatedShippingRates.length > 0 ? (
+                    paginatedShippingRates.map((rate, idx) => (
+                      <div key={idx} className="p-5 space-y-4">
+                        <div className="flex justify-between items-center">
+                          <span className="font-black text-lg text-foreground">{rate.wilaya}</span>
+                          <span className="inline-flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground">
+                            <Clock className="w-3.5 h-3.5" />
+                            {rate.deliveryTime}
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="bg-primary/5 p-3 rounded-xl border border-primary/10">
+                            <p className="text-[9px] font-black text-primary/60 uppercase mb-1">توصيل للمنزل</p>
+                            <p className="font-black text-sm text-primary">{rate.homePrice} دج</p>
+                          </div>
+                          <div className="bg-secondary/5 p-3 rounded-xl border border-secondary/10">
+                            <p className="text-[9px] font-black text-secondary/60 uppercase mb-1">توصيل للمكتب</p>
+                            <p className="font-black text-sm text-secondary">{rate.officePrice} دج</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="p-10 text-center text-muted-foreground font-bold text-sm">
+                      لا توجد ولاية تطابق البحث
+                    </div>
+                  )}
+                </div>
+
                 {totalShippingPages > 1 && (
-                  <div className="p-6 border-t border-border flex items-center justify-between bg-muted/20">
+                  <div className="p-4 sm:p-6 border-t border-border flex items-center justify-between bg-muted/20">
                     <div className="flex items-center gap-2">
                       <Button
                         variant="outline"
                         size="sm"
                         disabled={shippingPage === 1}
                         onClick={() => setShippingPage(prev => Math.max(1, prev - 1))}
-                        className="rounded-xl font-bold"
+                        className="rounded-lg sm:rounded-xl font-bold h-9 text-xs sm:text-sm"
                       >
                         السابق
                       </Button>
@@ -1744,13 +1774,13 @@ const Dashboard = () => {
                         size="sm"
                         disabled={shippingPage === totalShippingPages}
                         onClick={() => setShippingPage(prev => Math.min(totalShippingPages, prev + 1))}
-                        className="rounded-xl font-bold"
+                        className="rounded-lg sm:rounded-xl font-bold h-9 text-xs sm:text-sm"
                       >
                         التالي
                       </Button>
                     </div>
-                    <div className="text-sm font-bold text-muted-foreground">
-                      الصفحة {shippingPage} من {totalShippingPages}
+                    <div className="text-[10px] sm:text-sm font-bold text-muted-foreground">
+                      {shippingPage} / {totalShippingPages}
                     </div>
                   </div>
                 )}
