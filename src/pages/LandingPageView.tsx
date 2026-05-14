@@ -348,7 +348,8 @@ const LandingPageView = () => {
       selectedSizeLabel = orderForm.selectedSize ? `${orderForm.selectedSize} - ${selectedBundle.name}` : selectedBundle.name;
     }
 
-    const currentShipping = orderForm.deliveryType === "home" ? shippingRate.home : shippingRate.desk;
+    let currentShipping = orderForm.deliveryType === "home" ? shippingRate.home : shippingRate.desk;
+    if (selectedOffer?.freeDelivery || p.showFreeShipping) currentShipping = 0;
     const finalAmount = (activePrice * quantity) + currentShipping;
 
     try {
@@ -436,7 +437,8 @@ const LandingPageView = () => {
   // const wilayas = [ ... removed hardcoded list ... ]
 
   if (p.template === "original") {
-    const currentShipping = orderForm.deliveryType === "home" ? shippingRate.home : shippingRate.desk;
+    let currentShipping = orderForm.deliveryType === "home" ? shippingRate.home : shippingRate.desk;
+    if (selectedOffer?.freeDelivery || p.showFreeShipping) currentShipping = 0;
     const selectedBundle = p.bundles?.find(b => b.id === selectedBundleId);
     let activePrice = selectedBundle ? selectedBundle.price : p.price;
     let activeOriginalPrice = p.originalPrice;
@@ -1650,7 +1652,8 @@ const LandingPageView = () => {
                   <div className="bg-muted/10 rounded-2xl p-4 border border-border/20 space-y-2 mt-6">
                      {/* Dynamic pricing calculation */}
                      {(() => {
-                        const currentShipping = orderForm.deliveryType === "home" ? shippingRate.home : shippingRate.desk;
+                        let currentShipping = orderForm.deliveryType === "home" ? shippingRate.home : shippingRate.desk;
+                        if (selectedOffer?.freeDelivery || p.showFreeShipping) currentShipping = 0;
                         const totalPrice = (p.price * quantity) + currentShipping;
                         const savings = (p.originalPrice - p.price) * quantity;
                         return (

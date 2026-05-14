@@ -9,7 +9,7 @@ import {
   Calendar, Filter, Search, SlidersHorizontal, Store, Sparkles,
   Heart, Download, PlusCircle, User, Phone, MapPin, PackagePlus, MessageSquare, Plus, Trash2, Maximize2, LayoutTemplate,
   Save, Globe, Facebook, Instagram, Palette, Layers,
-  Image as ImageIcon, ShieldCheck, CreditCard, Type, MessageCircle, Gift
+  Image as ImageIcon, ShieldCheck, CreditCard, Type, MessageCircle, Gift, Loader2
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -1296,7 +1296,12 @@ const Dashboard = () => {
                             </Button>
                             <Button
                               variant="ghost"
-                              className="w-full text-xs font-bold gap-2 bg-muted/50 hover:bg-muted text-foreground transition-colors"
+                              disabled={!product.hasLandingPage}
+                              className={`w-full text-xs font-bold gap-2 transition-colors ${
+                                product.hasLandingPage 
+                                  ? "bg-muted/50 hover:bg-muted text-foreground" 
+                                  : "bg-orange-500/10 text-orange-600 opacity-80"
+                              }`}
                               onClick={() => {
                                 const link = `https://www.easyprofit.org/product/${product.id}/${user?.id}`;
                                 if (navigator.clipboard && window.isSecureContext) {
@@ -1322,8 +1327,8 @@ const Dashboard = () => {
                                 setTimeout(() => setCopiedId(null), 2000);
                               }}
                             >
-                              {copiedId === product.id ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
-                              {copiedId === product.id ? "تم النسخ" : "نسخ الرابط"}
+                              {copiedId === product.id ? <Check className="w-4 h-4 text-green-500" /> : (!product.hasLandingPage ? <Loader2 className="w-4 h-4 animate-spin" /> : <Copy className="w-4 h-4" />)}
+                              {copiedId === product.id ? "تم النسخ" : (!product.hasLandingPage ? "بانتظار صفحة الهبوط" : "نسخ الرابط")}
                             </Button>
                           </div>
                         </div>

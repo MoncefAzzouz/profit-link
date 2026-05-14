@@ -624,7 +624,6 @@ const Admin = () => {
     { id: "levels" as Tab, label: "المستويات", icon: Trophy },
     { id: "shipping" as Tab, label: "التوصيل", icon: Truck },
     { id: "landing_editor" as Tab, label: "تعديل الواجهة", icon: LayoutTemplate },
-    { id: "landing_pages" as Tab, label: "صفحات الهبوط", icon: FileText },
     { id: "analytics" as Tab, label: "الإحصائيات", icon: BarChart3 },
     { id: "settings" as Tab, label: "الإعدادات", icon: Settings },
   ];
@@ -1035,6 +1034,37 @@ const Admin = () => {
       toast({ title: "تم حذف المنتج", variant: "destructive" });
     } catch (err: any) {
       setProducts(snapshot);
+      toast({ title: "خطأ", description: err.message, variant: "destructive" });
+    }
+  };
+
+  const handleToggleLandingPage = async (id: string, currentStatus: boolean) => {
+    const token = localStorage.getItem("token");
+    const newStatus = !currentStatus;
+    
+    // Optimistic update
+    setProducts(prev => prev.map(p => p.id === id ? { ...p, hasLandingPage: newStatus } : p));
+    
+    try {
+      const res = await fetch(`${API_BASE_URL}/products/${id}/toggle-landing-page`, {
+        method: 'PUT',
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ hasLandingPage: newStatus })
+      });
+      
+      if (!res.ok) throw new Error('فشل تحديث حالة نشر صفحة الهبوط');
+      
+      toast({ 
+        title: newStatus ? "تم نشر صفحة الهبوط" : "تم إلغاء نشر صفحة الهبوط", 
+        description: newStatus ? "الآن يمكن للمسوقين نسخ الرابط ورؤية المنتج في متاجرهم" : "تم إخفاء صفحة الهبوط من متاجر المسوقين",
+        variant: "default" 
+      });
+    } catch (err: any) {
+      // Revert on failure
+      setProducts(prev => prev.map(p => p.id === id ? { ...p, hasLandingPage: currentStatus } : p));
       toast({ title: "خطأ", description: err.message, variant: "destructive" });
     }
   };
@@ -2180,6 +2210,18 @@ const Admin = () => {
                           <Eye className="w-3.5 h-3.5" />
                           معاينة صفحة هبوط
                         </Button>
+                        <Button 
+                          variant={product.hasLandingPage ? "default" : "outline"} 
+                          className={`col-span-2 gap-2 rounded-xl h-10 font-bold text-[10px] ${
+                            product.hasLandingPage 
+                              ? "bg-green-600 hover:bg-green-700 text-white" 
+                              : "border-green-600 text-green-600 hover:bg-green-50"
+                          }`}
+                          onClick={() => handleToggleLandingPage(product.id, product.hasLandingPage || false)}
+                        >
+                          <Check className="w-3.5 h-3.5" />
+                          {product.hasLandingPage ? "إلغاء نشر صفحة الهبوط" : "نشر صفحة هبوط للمسوقين"}
+                        </Button>
                         <div className="col-span-2 flex gap-2">
                           <Button variant="outline" className="flex-1 gap-2 rounded-xl h-10 font-bold text-xs" onClick={() => handleOpenEditProduct(product)}>
                             <Edit className="w-3.5 h-3.5" />
@@ -3126,7 +3168,7 @@ const Admin = () => {
                         className="h-8 gap-2 border-orange-500/20 text-orange-700 hover:bg-orange-500/10 rounded-xl"
                         onClick={() => {
                           const currentOffers = productFormData.marketingOffers || [];
-                          const newOffer = { name: `عرض ${currentOffers.length + 1}`, originalPrice: 0, price: 0, commission: 0 };
+                          const newOffer = { name: `عرض ${currentOffers.length + 1}`, originalPrice: 0, price: 0, commission: 0, freeDelivery: false };
                           setProductFormData({
                             ...productFormData,
                             marketingOffers: [...currentOffers, newOffer]
@@ -3202,6 +3244,20 @@ const Admin = () => {
                                   setProductFormData({ ...productFormData, marketingOffers: newOffers });
                                 }}
                                 className="h-9 rounded-xl text-sm border-primary/30 font-bold text-primary"
+                              />
+                            </div>
+                            <div className="flex items-center justify-between p-3 bg-green-500/5 rounded-xl border border-green-500/10 md:col-span-2 mt-2">
+                              <div className="flex items-center gap-2">
+                                <Truck className="w-4 h-4 text-green-600" />
+                                <Label className="text-xs font-bold cursor-pointer">توصيل مجاني (Free Delivery)</Label>
+                              </div>
+                              <Switch
+                                checked={offer.freeDelivery || false}
+                                onCheckedChange={(v) => {
+                                  const newOffers = [...productFormData.marketingOffers];
+                                  newOffers[index].freeDelivery = v;
+                                  setProductFormData({ ...productFormData, marketingOffers: newOffers });
+                                }}
                               />
                             </div>
                           </div>

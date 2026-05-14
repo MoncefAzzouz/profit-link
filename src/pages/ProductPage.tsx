@@ -308,9 +308,13 @@ const ProductPage = () => {
   };
 
   const currentRate = shippingRates.find(r => r.code === formData.wilaya || r.wilaya === formData.wilaya);
-  const currentShippingPrice = currentRate 
+  let currentShippingPrice = currentRate 
     ? (formData.deliveryType === "home" ? currentRate.homePrice : currentRate.officePrice)
     : 0;
+
+  if (selectedOffer?.freeDelivery || product.showFreeShipping) {
+    currentShippingPrice = 0;
+  }
 
   const basePrice = selectedOffer ? selectedOffer.price : product.price;
   const baseOriginalPrice = selectedOffer ? selectedOffer.originalPrice : product.originalPrice;
@@ -553,7 +557,14 @@ const ProductPage = () => {
                               {selectedOffer === offer && <Check className="w-4 h-4 text-orange-600" />}
                               {offer.name}
                             </p>
-                            <p className="text-xs text-orange-600/60 line-through">{offer.originalPrice.toLocaleString()} دج</p>
+                            <div className="flex items-center gap-2">
+                              <p className="text-xs text-orange-600/60 line-through">{offer.originalPrice.toLocaleString()} دج</p>
+                              {offer.freeDelivery && (
+                                <span className="bg-green-500/10 text-green-600 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
+                                  <Truck className="w-3 h-3" /> توصيل مجاني
+                                </span>
+                              )}
+                            </div>
                           </div>
                           <p className="font-black text-orange-600 text-xl">{offer.price.toLocaleString()} دج</p>
                         </button>
