@@ -88,6 +88,10 @@ const ProductPage = () => {
           if (json.data?.storeInfo) {
             setStoreName(json.data.storeInfo.storeName);
             setStoreIdentifier(json.data.storeInfo.identifier || affiliateId);
+            // Apply store theme color
+            if (json.data.storeInfo.primaryColor) {
+              document.documentElement.style.setProperty('--primary', json.data.storeInfo.primaryColor);
+            }
           }
         })
         .catch(err => console.error("Failed to fetch store info", err));
@@ -102,17 +106,14 @@ const ProductPage = () => {
         return;
       }
       setLoadingCommunes(true);
-      console.log(`🔍 Fetching communes for wilaya_id: ${formData.wilaya}`);
       try {
         const wilayaId = parseInt(formData.wilaya);
         if (isNaN(wilayaId)) {
-          console.warn("⚠️ wilaya_id is not a number:", formData.wilaya);
           setLoadingCommunes(false);
           return;
         }
         const res = await fetch(`${API_BASE_URL}/delivery/communes?wilaya_id=${wilayaId}`);
         const json = await res.json();
-        console.log("📦 Communes API Response:", json);
         if (res.ok && json.data && Array.isArray(json.data)) {
           setCommunes(json.data);
           // Auto-select first commune if current one is invalid/empty
@@ -226,6 +227,15 @@ const ProductPage = () => {
       toast({
         title: "خطأ",
         description: "يرجى ملء جميع الحقول الأساسية",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (formData.phone.length !== 10) {
+      toast({
+        title: "رقم هاتف غير صحيح",
+        description: "يجب أن يتكون رقم الهاتف من 10 أرقام (مثال: 0XXXXXXXXX)",
         variant: "destructive"
       });
       return;
@@ -545,7 +555,10 @@ const ProductPage = () => {
                         <button
                           key={idx}
                           type="button"
-                          onClick={() => setSelectedOffer(offer)}
+                          onClick={() => {
+                            setSelectedOffer(offer);
+                            setQuantity(1);
+                          }}
                           className={`p-4 rounded-2xl border-2 text-right transition-all flex justify-between items-center ${
                             selectedOffer === offer 
                               ? "border-orange-500 bg-orange-500/5 ring-2 ring-orange-500/20 shadow-md" 

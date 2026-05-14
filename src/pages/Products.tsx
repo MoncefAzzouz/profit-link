@@ -131,10 +131,31 @@ const Products = () => {
   }, [dbCategories]);
 
   useEffect(() => {
-    const saved = localStorage.getItem("affiliate_store_settings");
-    if (saved) {
-      setStoreSettings(JSON.parse(saved));
-    }
+    const fetchSettings = async () => {
+      // 1. Try localStorage first for instant load
+      const saved = localStorage.getItem("affiliate_store_settings");
+      if (saved) {
+        setStoreSettings(JSON.parse(saved));
+      }
+
+      // 2. Try fetching fresh settings if logged in
+      const token = localStorage.getItem("token");
+      if (token) {
+        try {
+          const res = await fetch(`${API_BASE_URL}/store/settings`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          const json = await res.json();
+          if (res.ok && json.data) {
+            setStoreSettings(prev => ({ ...prev, ...json.data }));
+            localStorage.setItem("affiliate_store_settings", JSON.stringify({ ...storeSettings, ...json.data }));
+          }
+        } catch (err) {
+          console.error("Failed to fetch fresh settings", err);
+        }
+      }
+    };
+    fetchSettings();
   }, []);
 
   const [affiliateId, setAffiliateId] = useState("aff-demo-123");

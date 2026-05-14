@@ -357,7 +357,9 @@ const Dashboard = () => {
           const json = await res.json();
           if (json.data) {
             // Merge with defaultStoreSettings to ensure missing fields exist
-            setStoreSettings({ ...defaultStoreSettings, ...json.data });
+            const updatedSettings = { ...defaultStoreSettings, ...json.data };
+            setStoreSettings(updatedSettings);
+            localStorage.setItem("affiliate_store_settings", JSON.stringify(updatedSettings));
           }
         }
       } catch (err) {
@@ -568,6 +570,7 @@ const Dashboard = () => {
       });
 
       if (res.ok) {
+        localStorage.setItem("affiliate_store_settings", JSON.stringify(storeSettings));
         toast({
           title: "تم حفظ إعدادات المتجر! ✅",
           description: "تم تحديث مظهر متجرك العام بنجاح.",
@@ -603,12 +606,16 @@ const Dashboard = () => {
       if (response.ok) {
         const json = await response.json();
         if (type === 'logo') {
-          setStoreSettings({ ...storeSettings, storeLogo: json.url });
+          const updated = { ...storeSettings, storeLogo: json.url };
+          setStoreSettings(updated);
+          localStorage.setItem("affiliate_store_settings", JSON.stringify(updated));
         } else {
-          setStoreSettings({
+          const updated = {
             ...storeSettings,
             hero: { ...storeSettings.hero, bannerUrl: json.url }
-          });
+          };
+          setStoreSettings(updated);
+          localStorage.setItem("affiliate_store_settings", JSON.stringify(updated));
         }
         toast({ title: "✅ تم رفع الصورة بنجاح" });
       } else {
@@ -1852,7 +1859,7 @@ const Dashboard = () => {
                   <Button
                     variant="outline"
                     className="flex-1 sm:flex-none h-12 px-6 rounded-2xl gap-2 font-bold"
-                    onClick={() => window.open('/products', '_blank')}
+                    onClick={() => window.open(`/store/${user?.storeName || user?.id}`, '_blank')}
                   >
                     <Eye className="w-5 h-5" />
                     معاينة
@@ -2394,7 +2401,7 @@ const Dashboard = () => {
                     <Button
                       variant="outline"
                       className="w-full h-12 rounded-2xl border-primary/20 text-primary bg-background hover:bg-primary hover:text-white transition-all gap-2"
-                      onClick={() => window.open('/products', '_blank')}
+                      onClick={() => window.open(`/store/${user?.storeName || user?.id}`, '_blank')}
                     >
                       <Eye className="w-5 h-5" />
                       فتح رابط المتجر
@@ -2497,12 +2504,12 @@ const Dashboard = () => {
 
       {/* ===== PRODUCT DETAIL DIALOG ===== */}
       <Dialog open={isDetailDialogOpen} onOpenChange={setIsDetailDialogOpen}>
-        <DialogContent className="w-[95vw] sm:max-w-4xl max-h-[90vh] sm:max-h-[95vh] overflow-y-auto rounded-[2rem] sm:rounded-[2.5rem] md:rounded-[3rem] p-0 border-none bg-background shadow-2xl scrollbar-hide" dir="rtl">
+        <DialogContent className="w-[98vw] sm:max-w-4xl max-h-[95vh] overflow-y-auto rounded-3xl p-0 border-none bg-background shadow-2xl scrollbar-hide" dir="rtl">
           {selectedProduct && (
             <div className="flex flex-col lg:flex-row min-h-full">
               {/* Image Gallery Side */}
-              <div className="lg:w-1/2 p-4 sm:p-6 lg:p-10 bg-muted/30 relative shrink-0">
-                <div className="aspect-square sm:aspect-square rounded-2xl sm:rounded-3xl overflow-hidden bg-white shadow-inner mb-4 sm:mb-6 relative">
+              <div className="lg:w-1/2 p-3 sm:p-6 lg:p-10 bg-muted/30 relative shrink-0">
+                <div className="aspect-[4/3] sm:aspect-square rounded-2xl sm:rounded-3xl overflow-hidden bg-white shadow-inner mb-4 sm:mb-6 relative">
                   <motion.img
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -2562,7 +2569,7 @@ const Dashboard = () => {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                <div className="grid grid-cols-2 gap-3 sm:gap-4">
                   <div className="bg-primary/5 p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-primary/10 flex flex-col items-center text-center">
                     <p className="text-[8px] sm:text-[10px] font-black uppercase tracking-wider text-primary/60 mb-1 sm:mb-2">سعر البيع النهائي</p>
                     <p className="text-xl sm:text-3xl font-black text-primary">{selectedProduct.price.toLocaleString()} دج</p>
@@ -2970,6 +2977,11 @@ const Dashboard = () => {
                     onClick={async () => {
                       if (!orderFormData.firstName || !orderFormData.lastName || !orderFormData.phone || !orderFormData.address || !orderFormData.wilaya || !orderFormData.commune) {
                         toast({ title: "يرجى ملء كافة البيانات الأساسية", description: "تأكد من اختيار البلدية واللقب", variant: "destructive" });
+                        return;
+                      }
+
+                      if (orderFormData.phone.length !== 10) {
+                        toast({ title: "رقم هاتف غير صحيح", description: "يجب أن يتكون رقم الهاتف من 10 أرقام", variant: "destructive" });
                         return;
                       }
 

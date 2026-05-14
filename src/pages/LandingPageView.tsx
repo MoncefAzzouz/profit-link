@@ -324,7 +324,7 @@ const LandingPageView = () => {
     }
 
     if (orderForm.phone.length !== 10) {
-      toast({ title: "⚠️ رقم الهاتف يجب أن يتكون من 10 أرقام", variant: "destructive" });
+      toast({ title: "⚠️ رقم الهاتف يجب أن يتكون من 10 أرقام (مثال: 0XXXXXXXXX)", variant: "destructive" });
       return;
     }
 
@@ -723,7 +723,10 @@ const LandingPageView = () => {
                       <div className="grid grid-cols-1 gap-3">
                         <button
                           type="button"
-                          onClick={() => setSelectedBundleId(null)}
+                          onClick={() => {
+                            setSelectedBundleId(null);
+                            setQuantity(1);
+                          }}
                           className={`flex items-center justify-between p-3 rounded-xl border-2 transition-all ${
                             selectedBundleId === null 
                               ? "border-primary bg-primary/5 ring-1 ring-primary/20" 
@@ -738,7 +741,10 @@ const LandingPageView = () => {
                           <button
                             key={bundle.id}
                             type="button"
-                            onClick={() => setSelectedBundleId(bundle.id)}
+                            onClick={() => {
+                              setSelectedBundleId(bundle.id);
+                              setQuantity(1);
+                            }}
                             className={`flex items-center gap-3 p-3 rounded-xl border-2 transition-all ${
                               selectedBundleId === bundle.id 
                                 ? "border-primary bg-primary/5 ring-1 ring-primary/20" 
@@ -770,7 +776,10 @@ const LandingPageView = () => {
                         {/* Standard Offer */}
                         <button
                           type="button"
-                          onClick={() => setSelectedOffer(null)}
+                          onClick={() => {
+                            setSelectedOffer(null);
+                            setQuantity(1);
+                          }}
                           className={`flex items-center justify-between p-3 rounded-xl border-2 transition-all ${
                             selectedOffer === null 
                               ? "border-primary bg-primary/5 ring-1 ring-primary/20" 
@@ -793,7 +802,10 @@ const LandingPageView = () => {
                           <button
                             key={idx}
                             type="button"
-                            onClick={() => setSelectedOffer(offer)}
+                            onClick={() => {
+                              setSelectedOffer(offer);
+                              setQuantity(1);
+                            }}
                             className={`flex items-center justify-between p-3 rounded-xl border-2 transition-all ${
                               selectedOffer === offer 
                                 ? "border-primary bg-primary/5 ring-1 ring-primary/20" 
