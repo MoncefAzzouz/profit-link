@@ -424,7 +424,9 @@ const Dashboard = () => {
               date: new Date(o.createdAt).toLocaleDateString('ar-DZ'),
               trackingNumber: o.trackingNumber,
               selectedColor: o.selectedColor,
-              selectedSize: o.selectedSize
+              selectedSize: o.selectedSize,
+              selectedOffer: o.selectedOffer,
+              quantity: o.quantity || 1
             }));
             setOrders(fetchedOrders);
             
@@ -3006,7 +3008,11 @@ const Dashboard = () => {
                             amount: o.totalAmount, // Final sale price
                             commission: o.commissionAmount,
                             date: new Date(o.createdAt).toLocaleDateString('ar-DZ'),
-                            trackingNumber: o.trackingNumber
+                            trackingNumber: o.trackingNumber,
+                            selectedColor: o.selectedColor,
+                            selectedSize: o.selectedSize,
+                            selectedOffer: o.selectedOffer,
+                            quantity: o.quantity || 1
                           })));
                         }
                       } catch (error) {

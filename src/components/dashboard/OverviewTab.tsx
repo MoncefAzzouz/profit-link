@@ -258,6 +258,9 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
                     <div>
                       <p className="font-black text-foreground text-sm line-clamp-1">{order.productName}</p>
                       <div className="flex items-center gap-2 mt-1">
+                        {order.selectedOffer && (
+                          <span className="text-[9px] font-black bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded-md">📦 {order.selectedOffer}</span>
+                        )}
                         <span className="text-[10px] text-muted-foreground font-bold">{order.date}</span>
                         <span className="text-[10px] text-muted-foreground">•</span>
                         <span className="text-[10px] text-muted-foreground font-bold">{order.customerName}</span>

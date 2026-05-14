@@ -176,8 +176,18 @@ const OrdersTab: React.FC<OrdersTabProps> = ({
                       <td className="p-5 font-medium text-foreground">
                         <div className="space-y-1">
                           <p className="font-black text-sm">{order.productName}</p>
-                          {(order.selectedColor || order.selectedSize) && (
+                          {(order.selectedOffer || order.quantity > 1 || order.selectedColor || order.selectedSize) && (
                             <div className="flex flex-wrap gap-1.5 mt-1">
+                              {order.selectedOffer && (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded-lg text-[9px] font-black bg-orange-100 text-orange-700 border border-orange-200">
+                                  📦 {order.selectedOffer}
+                                </span>
+                              )}
+                              {order.quantity > 1 && (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded-lg text-[9px] font-black bg-indigo-100 text-indigo-700 border border-indigo-200">
+                                  الكمية: {order.quantity}
+                                </span>
+                              )}
                               {order.selectedColor && (
                                 <span className="inline-flex items-center px-2 py-0.5 rounded-lg text-[9px] font-black bg-primary/10 text-primary border border-primary/20">
                                   اللون: {order.selectedColor}
