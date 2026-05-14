@@ -323,6 +323,11 @@ const LandingPageView = () => {
       return;
     }
 
+    if (orderForm.phone.length !== 10) {
+      toast({ title: "⚠️ رقم الهاتف يجب أن يتكون من 10 أرقام", variant: "destructive" });
+      return;
+    }
+
     // @ts-ignore
     if (p.availableColors?.length > 0 && !orderForm.selectedColor) {
       toast({ title: "تنبيه", description: "يرجى اختيار اللون المطلوب", variant: "destructive" });
@@ -626,7 +631,10 @@ const LandingPageView = () => {
                     <Input 
                       placeholder="07XXXXXXXX" 
                       value={orderForm.phone} 
-                      onChange={e => setOrderForm(f => ({ ...f, phone: e.target.value }))}
+                      onChange={e => {
+                        const val = e.target.value.replace(/\D/g, '').slice(0, 10);
+                        setOrderForm(f => ({ ...f, phone: val }));
+                      }}
                       className="h-12 rounded-xl"
                     />
                   </div>
@@ -1540,7 +1548,10 @@ const LandingPageView = () => {
                       <Input 
                         placeholder="07XXXXXXXX" 
                         value={orderForm.phone} 
-                        onChange={e => setOrderForm(f => ({ ...f, phone: e.target.value }))}
+                        onChange={e => {
+                          const val = e.target.value.replace(/\D/g, '').slice(0, 10);
+                          setOrderForm(f => ({ ...f, phone: val }));
+                        }}
                         className="h-12 rounded-xl"
                         style={{ borderRadius: `${Math.min(p.borderRadius, 16)}px`, borderColor: isDark(p.backgroundColor) ? "#334155" : "#d1d5db", backgroundColor: isDark(p.backgroundColor) ? "#1e293b" : "#fff", color: tc }}
                       />
