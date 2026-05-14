@@ -11,7 +11,7 @@ router.post('/', async (req: Request, res: Response) => {
     const { 
       productId, affiliateId, customerName, customerPhone, 
       wilaya, address, quantity, totalAmount, commissionAmount,
-      commune, shippingFee, stopDesk, selectedColor, selectedSize
+      commune, shippingFee, stopDesk, selectedColor, selectedSize, selectedOffer
     } = req.body;
 
     const missing = [];
@@ -74,7 +74,8 @@ router.post('/', async (req: Request, res: Response) => {
         shippingFee: parseFloat(String(shippingFee || 0)),
         stopDesk: parseInt(String(stopDesk || 0)),
         selectedColor: selectedColor || null,
-        selectedSize: selectedSize || null
+        selectedSize: selectedSize || null,
+        selectedOffer: selectedOffer || null
       }
     });
 
@@ -198,7 +199,7 @@ router.post('/:id/push-ecotrack', async (req: Request, res: Response) => {
       code_wilaya: order.wilaya,
       commune: order.commune,
       montant: order.totalAmount,
-      produit: `${order.product.name}${order.selectedColor ? ' - ' + order.selectedColor : ''}${order.selectedSize ? ' - ' + order.selectedSize : ''}`,
+      produit: `${order.product.name}${order.selectedOffer ? ' - ' + order.selectedOffer : ''}${order.selectedColor ? ' - ' + order.selectedColor : ''}${order.selectedSize ? ' - ' + order.selectedSize : ''}`,
       quantite: order.quantity,
       stop_desk: order.stopDesk,
       type: 1 // 1 = Livraison, as per Ecotrack docs

@@ -149,6 +149,7 @@ model Order {
   // Variants selected by customer
   selectedColor String?
   selectedSize  String?
+  selectedOffer String? // Name of the marketing offer/pack chosen
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
