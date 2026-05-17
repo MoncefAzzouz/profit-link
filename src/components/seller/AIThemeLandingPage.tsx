@@ -87,65 +87,69 @@ export default function AIThemeLandingPage({ p, storeName, orderForm, setOrderFo
       <style>{`.hfont{font-family:${hFont};} .num{font-variant-numeric:tabular-nums;}`}</style>
 
       {/* Announcement / Promo bar */}
-      <div className={`${t.promo} text-center px-4 flex items-center justify-center gap-3 relative overflow-hidden`}>
-        <Clock size={13} className="opacity-80"/>
+      <div className={`${t.promo} text-center px-3 sm:px-4 flex items-center justify-center gap-2 sm:gap-3 flex-wrap relative overflow-hidden text-[10px] sm:text-xs`}>
+        <Clock size={11} className="opacity-80 shrink-0"/>
         <span>العرض ينتهي خلال</span>
         <span className="num font-mono">{pad(countdown.hours)}:{pad(countdown.minutes)}:{pad(countdown.seconds)}</span>
-        <span className="opacity-60">•</span>
-        <span>شحن مجاني</span>
+        {p.showFreeShipping && (
+          <>
+            <span className="opacity-60">•</span>
+            <span>شحن مجاني</span>
+          </>
+        )}
       </div>
 
       {/* Header */}
-      <header className={`${t.header} sticky top-0 z-50 px-6 sm:px-10 py-5 flex justify-between items-center`}>
-        <div className={`${t.brand} hfont`}>{storeName}</div>
-        <button onClick={() => document.getElementById('order-form')?.scrollIntoView({ behavior:'smooth' })} className={`${t.btnSecondary}`}>
+      <header className={`${t.header} sticky top-0 z-50 px-4 sm:px-8 lg:px-10 py-3.5 sm:py-5 flex justify-between items-center gap-3`}>
+        <div className={`${t.brand} hfont truncate text-base sm:text-xl lg:text-2xl`}>{storeName}</div>
+        <button onClick={() => document.getElementById('order-form')?.scrollIntoView({ behavior:'smooth' })} className={`${t.btnSecondary} shrink-0 !text-[10px] sm:!text-xs whitespace-nowrap`}>
           {p.ctaText || "اطلب الآن"}
         </button>
       </header>
 
       {/* Hero */}
-      <section className={`px-4 sm:px-6 py-20 sm:py-28 ${t.heroBg} relative overflow-hidden`}>
+      <section className={`px-4 sm:px-6 py-12 sm:py-20 lg:py-28 ${t.heroBg} relative overflow-hidden`}>
         <div className={`absolute inset-0 ${t.heroBlob} pointer-events-none`}/>
         <div className={`max-w-6xl mx-auto relative ${l.heroWrap}`}>
           {/* Text */}
           <motion.div initial={{y:24,opacity:0}} animate={{y:0,opacity:1}} transition={{duration:0.7,ease:[0.22,1,0.36,1]}}
-            className={`${l.heroText} ${isCentered?'flex flex-col items-center text-center':''}`}>
-            <div className={`inline-flex items-center gap-2 mb-7 ${t.accentBg}`}>
+            className={`${l.heroText} ${isCentered?'flex flex-col items-center text-center':''} w-full`}>
+            <div className={`inline-flex items-center gap-2 mb-5 sm:mb-7 ${t.accentBg}`}>
               <Sparkles size={12}/> {p.category}
             </div>
-            <h1 className={`hfont ${headlineCls[p.template]} mb-6`}>{p.heroTitle}</h1>
-            <p className={`text-base sm:text-lg ${t.textSec} mb-9 leading-relaxed max-w-xl ${isCentered?'mx-auto':''}`}>
+            <h1 className={`hfont ${headlineCls[p.template]} mb-4 sm:mb-6 break-words`}>{p.heroTitle}</h1>
+            <p className={`text-sm sm:text-base lg:text-lg ${t.textSec} mb-7 sm:mb-9 leading-relaxed max-w-xl ${isCentered?'mx-auto':''}`}>
               {p.heroSubtitle}
             </p>
 
             {/* Price block */}
-            <div className={`flex items-baseline gap-4 mb-9 flex-wrap ${isCentered?'justify-center':''}`}>
-              <span className="hfont text-4xl sm:text-5xl font-bold num">{p.price.toLocaleString()}<span className="text-xl mr-1 opacity-60">دج</span></span>
+            <div className={`flex items-baseline gap-3 sm:gap-4 mb-7 sm:mb-9 flex-wrap ${isCentered?'justify-center':''}`}>
+              <span className="hfont text-3xl sm:text-4xl lg:text-5xl font-bold num">{p.price.toLocaleString()}<span className="text-base sm:text-xl mr-1 opacity-60">دج</span></span>
               {p.originalPrice > p.price && (
-                <span className={`text-lg line-through ${t.textSec} num`}>{p.originalPrice.toLocaleString()} دج</span>
+                <span className={`text-base sm:text-lg line-through ${t.textSec} num`}>{p.originalPrice.toLocaleString()} دج</span>
               )}
               {discount > 0 && (
-                <span className={`text-xs font-bold px-3 py-1.5 ${t.accentBg}`}>وفّر {discount}%</span>
+                <span className={`text-[10px] sm:text-xs font-bold px-2.5 sm:px-3 py-1 sm:py-1.5 ${t.accentBg}`}>وفّر {discount}%</span>
               )}
             </div>
 
             <button onClick={() => document.getElementById('order-form')?.scrollIntoView({ behavior:'smooth' })}
-              className={`${t.btnPrimary} flex items-center gap-3 group`}>
+              className={`${t.btnPrimary} flex items-center gap-2 sm:gap-3 group !text-sm sm:!text-base`}>
               <span>اطلب الآن</span>
-              <ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform"/>
+              <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform"/>
             </button>
 
             {/* Micro trust row */}
-            <div className={`flex flex-wrap gap-6 text-xs sm:text-sm font-medium mt-9 ${t.textSec} ${isCentered?'justify-center':''}`}>
-              <span className="flex items-center gap-1.5"><Shield size={14}/> ضمان الجودة</span>
-              <span className="flex items-center gap-1.5"><Truck size={14}/> دفع عند الاستلام</span>
-              <span className="flex items-center gap-1.5"><RotateCcw size={14}/> إرجاع خلال 7 أيام</span>
+            <div className={`flex flex-wrap gap-3 sm:gap-6 text-[11px] sm:text-sm font-medium mt-6 sm:mt-9 ${t.textSec} ${isCentered?'justify-center':''}`}>
+              <span className="flex items-center gap-1.5"><Shield size={13}/> ضمان الجودة</span>
+              <span className="flex items-center gap-1.5"><Truck size={13}/> دفع عند الاستلام</span>
+              <span className="flex items-center gap-1.5"><RotateCcw size={13}/> إرجاع خلال 7 أيام</span>
             </div>
           </motion.div>
 
           {/* Image */}
           <motion.div initial={{scale:0.96,opacity:0}} animate={{scale:1,opacity:1}} transition={{duration:0.8,delay:0.15,ease:[0.22,1,0.36,1]}}
-            className={`${l.heroImg} relative`}>
+            className={`${l.heroImg} relative w-full`}>
             {p.heroImage
               ? <img src={p.heroImage} alt={p.productName} className={`w-full h-auto object-cover ${t.heroImg}`}/>
               : <div className={`w-full aspect-[4/5] flex items-center justify-center ${t.card}`}>
@@ -153,13 +157,13 @@ export default function AIThemeLandingPage({ p, storeName, orderForm, setOrderFo
                 </div>
             }
             <motion.div initial={{y:20,opacity:0}} animate={{y:0,opacity:1}} transition={{delay:0.6}}
-              className={`absolute -bottom-5 -right-5 sm:-right-8 ${t.trustBadge} p-4 sm:p-5 flex items-center gap-3`}>
-              <div className={`w-10 h-10 sm:w-12 sm:h-12 ${t.trustIcon} flex items-center justify-center`}>
-                <Star size={18} className="fill-current"/>
+              className={`absolute -bottom-3 -right-2 sm:-bottom-5 sm:-right-5 lg:-right-8 ${t.trustBadge} p-2.5 sm:p-4 lg:p-5 flex items-center gap-2 sm:gap-3 max-w-[85%]`}>
+              <div className={`w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 ${t.trustIcon} flex items-center justify-center shrink-0`}>
+                <Star size={14} className="fill-current"/>
               </div>
               <div>
-                <div className="hfont font-bold text-lg sm:text-xl num">4.9/5</div>
-                <div className={`${t.trustText}`}>+2000 تقييم</div>
+                <div className="hfont font-bold text-sm sm:text-lg lg:text-xl num">4.9/5</div>
+                <div className={`${t.trustText} text-[10px] sm:text-xs`}>+2000 تقييم</div>
               </div>
             </motion.div>
           </motion.div>
@@ -167,19 +171,19 @@ export default function AIThemeLandingPage({ p, storeName, orderForm, setOrderFo
       </section>
 
       {/* Trust strip */}
-      <section className={`${t.sectionLight} border-y ${isDarkTheme?'border-white/[0.06]':'border-black/[0.06]'} py-8`}>
-        <div className="max-w-6xl mx-auto px-4 grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8">
+      <section className={`${t.sectionLight} border-y ${isDarkTheme?'border-white/[0.06]':'border-black/[0.06]'} py-6 sm:py-8`}>
+        <div className="max-w-6xl mx-auto px-4 grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
           {[
             { icon: Truck, label: 'توصيل لكل الولايات' },
             { icon: Lock, label: 'دفع آمن عند الاستلام' },
             { icon: Award, label: 'منتج أصلي 100%' },
             { icon: Zap, label: 'شحن سريع 24-48 ساعة' },
           ].map((it, i) => (
-            <div key={i} className="flex items-center gap-3 justify-center sm:justify-start">
-              <div className={`w-10 h-10 ${t.featIcon} flex items-center justify-center shrink-0`}>
-                <it.icon size={16}/>
+            <div key={i} className="flex items-center gap-2 sm:gap-3 justify-start">
+              <div className={`w-9 h-9 sm:w-10 sm:h-10 ${t.featIcon} flex items-center justify-center shrink-0`}>
+                <it.icon size={14}/>
               </div>
-              <span className={`text-xs sm:text-sm font-medium ${t.textSec}`}>{it.label}</span>
+              <span className={`text-[11px] sm:text-sm font-medium ${t.textSec} leading-tight`}>{it.label}</span>
             </div>
           ))}
         </div>
@@ -187,25 +191,25 @@ export default function AIThemeLandingPage({ p, storeName, orderForm, setOrderFo
 
       {/* Features */}
       {p.sections?.includes('features') && p.features?.length > 0 && (
-        <section className={`py-20 sm:py-24 px-4 sm:px-6 ${t.sectionWhite}`}>
+        <section className={`py-14 sm:py-20 lg:py-24 px-4 sm:px-6 ${t.sectionWhite}`}>
           <div className="max-w-6xl mx-auto">
-            <div className={`mb-14 ${isCentered?'text-center':''}`}>
-              <div className={`inline-flex items-center gap-2 mb-4 ${t.accentBg}`}>
+            <div className={`mb-9 sm:mb-14 ${isCentered?'text-center':''}`}>
+              <div className={`inline-flex items-center gap-2 mb-3 sm:mb-4 ${t.accentBg}`}>
                 <Check size={12}/> المميزات
               </div>
               <h2 className={`hfont ${sectionTitleCls[p.template]}`}>لماذا تختار هذا المنتج؟</h2>
-              <p className={`${t.textSec} mt-3 max-w-2xl ${isCentered?'mx-auto':''}`}>
+              <p className={`${t.textSec} mt-2 sm:mt-3 max-w-2xl text-sm sm:text-base ${isCentered?'mx-auto':''}`}>
                 مصمّم بعناية ليقدّم تجربة استثنائية في كل تفصيل.
               </p>
             </div>
             <div className={`grid ${l.featGrid}`}>
               {p.features.slice(0,6).map((feat: string, i: number) => (
                 <motion.div key={i} initial={{y:24,opacity:0}} whileInView={{y:0,opacity:1}} viewport={{once:true,margin:'-50px'}} transition={{duration:0.5,delay:i*0.06,ease:[0.22,1,0.36,1]}}
-                  className={`${t.card} ${t.featCard} p-7 sm:p-8 flex flex-col gap-4`}>
-                  <div className={`w-12 h-12 ${t.featIcon} flex items-center justify-center shrink-0`}>
-                    <span className="hfont font-bold text-base num">{pad(i+1)}</span>
+                  className={`${t.card} ${t.featCard} p-5 sm:p-7 lg:p-8 flex flex-col gap-3 sm:gap-4`}>
+                  <div className={`w-10 h-10 sm:w-12 sm:h-12 ${t.featIcon} flex items-center justify-center shrink-0`}>
+                    <span className="hfont font-bold text-sm sm:text-base num">{pad(i+1)}</span>
                   </div>
-                  <span className="font-semibold text-base leading-relaxed">{feat}</span>
+                  <span className="font-semibold text-sm sm:text-base leading-relaxed">{feat}</span>
                 </motion.div>
               ))}
             </div>
@@ -215,35 +219,35 @@ export default function AIThemeLandingPage({ p, storeName, orderForm, setOrderFo
 
       {/* Reviews */}
       {p.sections?.includes('reviews') && p.socialProof?.length > 0 && (
-        <section className={`py-20 sm:py-24 px-4 sm:px-6 ${t.sectionLight}`}>
+        <section className={`py-14 sm:py-20 lg:py-24 px-4 sm:px-6 ${t.sectionLight}`}>
           <div className="max-w-6xl mx-auto">
-            <div className="text-center mb-14">
-              <div className={`inline-flex items-center gap-2 mb-4 ${t.accentBg}`}>
+            <div className="text-center mb-9 sm:mb-14">
+              <div className={`inline-flex items-center gap-2 mb-3 sm:mb-4 ${t.accentBg}`}>
                 <Star size={12}/> آراء العملاء
               </div>
               <h2 className={`hfont ${sectionTitleCls[p.template]}`}>ما يقوله عملاؤنا</h2>
-              <div className="flex items-center justify-center gap-2 mt-4">
-                <div className="flex gap-1">
-                  {[...Array(5)].map((_,j)=><Star key={j} size={18} className="fill-amber-400 text-amber-400"/>)}
+              <div className="flex items-center justify-center gap-2 mt-3 sm:mt-4 flex-wrap">
+                <div className="flex gap-0.5 sm:gap-1">
+                  {[...Array(5)].map((_,j)=><Star key={j} size={15} className="fill-amber-400 text-amber-400"/>)}
                 </div>
-                <span className={`${t.textSec} text-sm font-medium`}>4.9 من 5 — أكثر من 2000 تقييم</span>
+                <span className={`${t.textSec} text-xs sm:text-sm font-medium`}>4.9 من 5 — أكثر من 2000 تقييم</span>
               </div>
             </div>
             <div className={`${l.reviewsWrap}`}>
               {p.socialProof.slice(0,3).map((r: any, i: number) => (
                 <motion.div key={i} initial={{y:20,opacity:0}} whileInView={{y:0,opacity:1}} viewport={{once:true}} transition={{duration:0.5,delay:i*0.08}}
                   className={`${t.card} ${t.reviewCard} ${l.reviewCard}`}>
-                  <div className="flex text-amber-400 mb-4 gap-0.5">
-                    {[...Array(r.rating||5)].map((_,j)=><Star key={j} size={15} className="fill-amber-400"/>)}
+                  <div className="flex text-amber-400 mb-3 sm:mb-4 gap-0.5">
+                    {[...Array(r.rating||5)].map((_,j)=><Star key={j} size={14} className="fill-amber-400"/>)}
                   </div>
-                  <p className={`${t.reviewText} mb-6 text-[15px]`}>"{r.text}"</p>
-                  <div className="flex items-center gap-3 pt-4 border-t border-current/10">
-                    <div className={`w-10 h-10 ${t.reviewAvatar} flex items-center justify-center font-bold text-sm`}>
+                  <p className={`${t.reviewText} mb-5 sm:mb-6 text-sm sm:text-[15px]`}>"{r.text}"</p>
+                  <div className="flex items-center gap-3 pt-3 sm:pt-4 border-t border-current/10">
+                    <div className={`w-9 h-9 sm:w-10 sm:h-10 ${t.reviewAvatar} flex items-center justify-center font-bold text-xs sm:text-sm shrink-0`}>
                       {r.name?.charAt(0)}
                     </div>
                     <div>
-                      <div className="font-bold text-sm">{r.name}</div>
-                      <div className={`text-xs ${t.textSec}`}>{r.wilaya} • عميل موثّق</div>
+                      <div className="font-bold text-xs sm:text-sm">{r.name}</div>
+                      <div className={`text-[10px] sm:text-xs ${t.textSec}`}>{r.wilaya} • عميل موثّق</div>
                     </div>
                   </div>
                 </motion.div>
@@ -255,32 +259,32 @@ export default function AIThemeLandingPage({ p, storeName, orderForm, setOrderFo
 
       {/* Bundles / Offers */}
       {(p.bundles?.length > 0 || p.hasMarketingOffers) && (
-        <section className={`py-16 sm:py-20 px-4 sm:px-6 ${t.sectionWhite}`}>
+        <section className={`py-12 sm:py-16 lg:py-20 px-4 sm:px-6 ${t.sectionWhite}`}>
           <div className="max-w-2xl mx-auto">
-            <div className="text-center mb-10">
-              <div className={`inline-flex items-center gap-2 mb-4 ${t.accentBg}`}>
+            <div className="text-center mb-7 sm:mb-10">
+              <div className={`inline-flex items-center gap-2 mb-3 sm:mb-4 ${t.accentBg}`}>
                 <Sparkles size={12}/> عروض خاصة
               </div>
               <h3 className={`hfont ${sectionTitleCls[p.template]}`}>اختر عرضك</h3>
             </div>
-            <div className="space-y-3">
+            <div className="space-y-2.5 sm:space-y-3">
               <button type="button" onClick={() => { setSelectedBundleId(null); setSelectedOffer(null); setQuantity(1); }}
-                className={`w-full flex justify-between items-center p-5 transition-all duration-300 ${t.featCard} font-bold text-right ${!selectedBundleId && !selectedOffer ? `${t.accentBg} ring-2 ring-current/10` : t.card}`}>
-                <span className="text-base">المنتج الأساسي</span>
-                <span className="num">{p.price.toLocaleString()} دج</span>
+                className={`w-full flex justify-between items-center gap-3 p-4 sm:p-5 transition-all duration-300 ${t.featCard} font-bold text-right ${!selectedBundleId && !selectedOffer ? `${t.accentBg} ring-2 ring-current/10` : t.card}`}>
+                <span className="text-sm sm:text-base">المنتج الأساسي</span>
+                <span className="num text-sm sm:text-base shrink-0">{p.price.toLocaleString()} دج</span>
               </button>
               {p.bundles?.map((b: any) => (
                 <button key={b.id} type="button" onClick={() => { setSelectedBundleId(b.id); setSelectedOffer(null); setQuantity(1); }}
-                  className={`w-full flex justify-between items-center p-5 transition-all duration-300 ${t.featCard} font-bold text-right ${selectedBundleId===b.id ? `${t.accentBg} ring-2 ring-current/10` : t.card}`}>
-                  <span className="text-base">{b.name}</span>
-                  <span className="num">{b.price.toLocaleString()} دج</span>
+                  className={`w-full flex justify-between items-center gap-3 p-4 sm:p-5 transition-all duration-300 ${t.featCard} font-bold text-right ${selectedBundleId===b.id ? `${t.accentBg} ring-2 ring-current/10` : t.card}`}>
+                  <span className="text-sm sm:text-base">{b.name}</span>
+                  <span className="num text-sm sm:text-base shrink-0">{b.price.toLocaleString()} دج</span>
                 </button>
               ))}
               {p.marketingOffers?.map((o: any, i: number) => (
                 <button key={i} type="button" onClick={() => { setSelectedOffer(o); setSelectedBundleId(null); setQuantity(1); }}
-                  className={`w-full flex justify-between items-center p-5 transition-all duration-300 ${t.featCard} font-bold text-right ${selectedOffer===o ? `${t.accentBg} ring-2 ring-current/10` : t.card}`}>
-                  <span className="text-base">{o.name}</span>
-                  <span className="num">{o.price.toLocaleString()} دج</span>
+                  className={`w-full flex justify-between items-center gap-3 p-4 sm:p-5 transition-all duration-300 ${t.featCard} font-bold text-right ${selectedOffer===o ? `${t.accentBg} ring-2 ring-current/10` : t.card}`}>
+                  <span className="text-sm sm:text-base">{o.name}</span>
+                  <span className="num text-sm sm:text-base shrink-0">{o.price.toLocaleString()} دج</span>
                 </button>
               ))}
             </div>
@@ -289,10 +293,10 @@ export default function AIThemeLandingPage({ p, storeName, orderForm, setOrderFo
       )}
 
       {/* Order Form */}
-      <section id="order-form" className={`py-20 sm:py-24 px-4 sm:px-6 ${t.checkoutBg} relative overflow-hidden`}>
+      <section id="order-form" className={`py-14 sm:py-20 lg:py-24 px-4 sm:px-6 ${t.checkoutBg} relative overflow-hidden`}>
         <div className={`max-w-5xl mx-auto relative`}>
-          <div className="text-center mb-10">
-            <div className={`inline-flex items-center gap-2 mb-4 ${t.accentBg}`}>
+          <div className="text-center mb-7 sm:mb-10">
+            <div className={`inline-flex items-center gap-2 mb-3 sm:mb-4 ${t.accentBg}`}>
               <Lock size={12}/> الخطوة الأخيرة
             </div>
             <h2 className={`hfont ${sectionTitleCls[p.template]}`}>أكمل طلبك الآن</h2>
@@ -301,40 +305,40 @@ export default function AIThemeLandingPage({ p, storeName, orderForm, setOrderFo
 
           <div className={`${l.checkoutWrap} ${t.checkoutCard} overflow-hidden`}>
             {/* Left summary */}
-            <div className={`${t.checkoutDark} ${l.checkoutLeft} p-8 sm:p-12 flex flex-col justify-between relative`}>
+            <div className={`${t.checkoutDark} ${l.checkoutLeft} p-6 sm:p-10 lg:p-12 flex flex-col justify-between relative gap-8 sm:gap-0`}>
               <div className="absolute inset-0 opacity-30 pointer-events-none bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.08),transparent_60%)]"/>
               <div className="relative">
-                <div className="flex items-center gap-2 text-[11px] font-bold mb-6 opacity-80 tracking-widest uppercase">
+                <div className="flex items-center gap-2 text-[10px] sm:text-[11px] font-bold mb-4 sm:mb-6 opacity-80 tracking-widest uppercase flex-wrap">
                   <Clock size={12}/>
                   <span className="num">{pad(countdown.hours)}:{pad(countdown.minutes)}:{pad(countdown.seconds)}</span>
                   <span>متبقي</span>
                 </div>
-                <h3 className={`hfont text-2xl sm:text-3xl font-bold mb-4 leading-tight`}>اطلب {p.productName} الآن</h3>
-                <p className="text-sm opacity-70 mb-10 leading-relaxed">استغل الفرصة واغتنم التخفيض الحالي قبل العودة للسعر الأصلي.</p>
+                <h3 className={`hfont text-xl sm:text-2xl lg:text-3xl font-bold mb-3 sm:mb-4 leading-tight`}>اطلب {p.productName} الآن</h3>
+                <p className="text-xs sm:text-sm opacity-70 mb-6 sm:mb-10 leading-relaxed">استغل الفرصة واغتنم التخفيض الحالي قبل العودة للسعر الأصلي.</p>
 
-                <div className="space-y-3 mb-10">
+                <div className="space-y-2 sm:space-y-3 mb-6 sm:mb-10">
                   <div className="flex items-baseline gap-3">
-                    <span className="hfont text-4xl font-bold num">{p.price.toLocaleString()}</span>
-                    <span className="opacity-60 text-sm">دج</span>
+                    <span className="hfont text-3xl sm:text-4xl font-bold num">{p.price.toLocaleString()}</span>
+                    <span className="opacity-60 text-xs sm:text-sm">دج</span>
                   </div>
                   {p.originalPrice > p.price && (
-                    <div className="flex items-center gap-2 text-sm opacity-50">
+                    <div className="flex items-center gap-2 text-xs sm:text-sm opacity-50 flex-wrap">
                       <span className="line-through num">{p.originalPrice.toLocaleString()} دج</span>
-                      {discount > 0 && <span className="px-2 py-0.5 bg-white/10 rounded-md text-xs font-bold">-{discount}%</span>}
+                      {discount > 0 && <span className="px-2 py-0.5 bg-white/10 rounded-md text-[10px] sm:text-xs font-bold">-{discount}%</span>}
                     </div>
                   )}
                 </div>
               </div>
-              <div className="space-y-3 text-sm relative">
+              <div className="space-y-2.5 sm:space-y-3 text-xs sm:text-sm relative">
                 {[
                   { icon: Shield, text: 'ضمان رضى 100%' },
                   { icon: Truck, text: 'دفع عند الاستلام' },
                   { icon: RotateCcw, text: 'إرجاع مجاني خلال 7 أيام' },
                   { icon: Award, text: 'منتج أصلي مضمون' },
                 ].map((it, i) => (
-                  <div key={i} className="flex items-center gap-3 opacity-85">
-                    <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center shrink-0">
-                      <it.icon size={14}/>
+                  <div key={i} className="flex items-center gap-2.5 sm:gap-3 opacity-85">
+                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/10 flex items-center justify-center shrink-0">
+                      <it.icon size={13}/>
                     </div>
                     <span>{it.text}</span>
                   </div>
@@ -344,8 +348,8 @@ export default function AIThemeLandingPage({ p, storeName, orderForm, setOrderFo
 
             {/* Right form */}
             <div className={`${l.checkoutRight} bg-white text-gray-900`}>
-              <h3 className="hfont text-xl sm:text-2xl font-bold mb-2 text-center text-gray-900">معلومات التوصيل</h3>
-              <p className="text-center text-xs text-gray-500 mb-8">سيتصل بك فريقنا لتأكيد الطلب</p>
+              <h3 className="hfont text-lg sm:text-xl lg:text-2xl font-bold mb-2 text-center text-gray-900">معلومات التوصيل</h3>
+              <p className="text-center text-[11px] sm:text-xs text-gray-500 mb-6 sm:mb-8">سيتصل بك فريقنا لتأكيد الطلب</p>
               {orderSubmitted ? (
                 <div className="text-center py-12">
                   <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -458,36 +462,36 @@ export default function AIThemeLandingPage({ p, storeName, orderForm, setOrderFo
                   </div>
 
                   {/* Qty */}
-                  <div className="flex items-center justify-between py-4 mt-2 border-t border-gray-100">
-                    <span className="font-bold text-sm text-gray-700">الكمية</span>
+                  <div className="flex items-center justify-between py-3 sm:py-4 mt-2 border-t border-gray-100">
+                    <span className="font-bold text-xs sm:text-sm text-gray-700">الكمية</span>
                     <div className="flex items-center gap-3">
-                      <button type="button" onClick={() => setQuantity(Math.max(1,quantity-1))} className="w-9 h-9 rounded-full border-2 border-gray-200 hover:border-gray-900 hover:bg-gray-900 hover:text-white flex items-center justify-center font-black transition-all">-</button>
+                      <button type="button" onClick={() => setQuantity(Math.max(1,quantity-1))} className="w-8 h-8 sm:w-9 sm:h-9 rounded-full border-2 border-gray-200 hover:border-gray-900 hover:bg-gray-900 hover:text-white flex items-center justify-center font-black transition-all">-</button>
                       <span className="font-black w-6 text-center num">{quantity}</span>
-                      <button type="button" onClick={() => setQuantity(quantity+1)} className="w-9 h-9 rounded-full border-2 border-gray-200 hover:border-gray-900 hover:bg-gray-900 hover:text-white flex items-center justify-center font-black transition-all">+</button>
+                      <button type="button" onClick={() => setQuantity(quantity+1)} className="w-8 h-8 sm:w-9 sm:h-9 rounded-full border-2 border-gray-200 hover:border-gray-900 hover:bg-gray-900 hover:text-white flex items-center justify-center font-black transition-all">+</button>
                     </div>
                   </div>
 
                   {/* Total */}
-                  <div className="space-y-2 py-4 border-y border-gray-100">
-                    <div className="flex justify-between text-sm text-gray-500">
+                  <div className="space-y-2 py-3 sm:py-4 border-y border-gray-100">
+                    <div className="flex justify-between text-xs sm:text-sm text-gray-500 gap-2">
                       <span>المنتج × {quantity}</span>
-                      <span className="num">{(activePrice * quantity).toLocaleString()} دج</span>
+                      <span className="num shrink-0">{(activePrice * quantity).toLocaleString()} دج</span>
                     </div>
-                    <div className="flex justify-between text-sm text-gray-500">
+                    <div className="flex justify-between text-xs sm:text-sm text-gray-500 gap-2">
                       <span>الشحن</span>
-                      <span className="num">{currentShipping === 0 ? 'مجاني' : `${currentShipping.toLocaleString()} دج`}</span>
+                      <span className="num shrink-0">{currentShipping === 0 ? 'مجاني' : `${currentShipping.toLocaleString()} دج`}</span>
                     </div>
-                    <div className="flex justify-between pt-2 border-t border-gray-100">
-                      <span className="hfont text-lg font-bold text-gray-900">المجموع</span>
-                      <span className="hfont text-lg font-bold text-gray-900 num">{totalPrice.toLocaleString()} دج</span>
+                    <div className="flex justify-between pt-2 border-t border-gray-100 gap-2">
+                      <span className="hfont text-base sm:text-lg font-bold text-gray-900">المجموع</span>
+                      <span className="hfont text-base sm:text-lg font-bold text-gray-900 num shrink-0">{totalPrice.toLocaleString()} دج</span>
                     </div>
                   </div>
 
-                  <button type="submit" className={`w-full ${t.btnPrimary} !rounded-xl flex items-center justify-center gap-2 mt-2`}>
+                  <button type="submit" className={`w-full ${t.btnPrimary} !rounded-xl flex items-center justify-center gap-2 mt-2 !text-sm sm:!text-base !px-6 !py-4`}>
                     <Lock size={16}/>
                     تأكيد الطلب
                   </button>
-                  <p className="text-center text-xs text-gray-400 flex items-center justify-center gap-1.5 pt-1">
+                  <p className="text-center text-[11px] sm:text-xs text-gray-400 flex items-center justify-center gap-1.5 pt-1">
                     <Shield size={12}/> دفع آمن عند الاستلام
                   </p>
                 </form>
@@ -498,9 +502,9 @@ export default function AIThemeLandingPage({ p, storeName, orderForm, setOrderFo
       </section>
 
       {/* Footer */}
-      <footer className={`${t.footer} text-center py-10 px-4`}>
-        <div className={`hfont ${t.brand} mb-3`}>{storeName}</div>
-        <div className="text-xs">© {new Date().getFullYear()} — جميع الحقوق محفوظة</div>
+      <footer className={`${t.footer} text-center py-8 sm:py-10 px-4`}>
+        <div className={`hfont ${t.brand} mb-2 sm:mb-3 text-base sm:text-lg`}>{storeName}</div>
+        <div className="text-[10px] sm:text-xs">© {new Date().getFullYear()} — جميع الحقوق محفوظة</div>
       </footer>
     </div>
   );
