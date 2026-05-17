@@ -159,17 +159,17 @@ const templates = [
   { id: "minimal", name: "بسيط", icon: "🎯", desc: "مساحة بيضاء واسعة", preview: "from-slate-100 to-gray-200", tag: "" },
   { id: "dark", name: "داكن", icon: "🌙", desc: "خلفية داكنة فاخرة", preview: "from-slate-900 to-gray-900", tag: "ترند" },
   { id: "gradient", name: "متدرج", icon: "🌈", desc: "تدرجات لونية جذابة", preview: "from-emerald-400 to-cyan-500", tag: "" },
-  { id: "classic", name: "COD كلاسيكي", icon: "📦", desc: "تصميم COD تقليدي", preview: "from-amber-500 to-yellow-600", tag: "" },
   { id: "luxury", name: "فاخر", icon: "👑", desc: "تصميم ذهبي فاخر", preview: "from-amber-600 via-yellow-500 to-amber-700", tag: "جديد" },
   { id: "neon", name: "نيون", icon: "💜", desc: "ألوان نيون متوهجة", preview: "from-purple-600 via-pink-500 to-red-500", tag: "ترند" },
   { id: "tiktok", name: "تيك توك", icon: "🎵", desc: "مستوقى من TikTok Shop", preview: "from-gray-900 via-pink-600 to-cyan-400", tag: "🔥 ترند" },
-  { id: "instagram", name: "انستغرام", icon: "📸", desc: "ستايل انستغرام شوب", preview: "from-purple-500 via-pink-500 to-orange-400", tag: "ترند" },
   { id: "whatsapp", name: "واتساب", icon: "💬", desc: "للبيع عبر واتساب", preview: "from-green-500 to-green-700", tag: "شائع" },
-  { id: "flash-sale", name: "تخفيضات", icon: "⚡", desc: "عروض محدودة الوقت", preview: "from-red-600 via-red-500 to-orange-500", tag: "مبيعات" },
-  { id: "video-first", name: "فيديو أولاً", icon: "🎬", desc: "فيديو كخلفية رئيسية", preview: "from-slate-800 via-slate-700 to-slate-900", tag: "جديد" },
-  { id: "testimonial", name: "شهادات", icon: "⭐", desc: "يركز على آراء العملاء", preview: "from-sky-500 to-blue-600", tag: "" },
-  { id: "comparison", name: "مقارنة", icon: "⚖️", desc: "قبل وبعد", preview: "from-teal-500 to-emerald-600", tag: "ترند" },
   { id: "countdown", name: "عد تنازلي", icon: "⏳", desc: "عروض بوقت محدد", preview: "from-rose-600 to-pink-700", tag: "مبيعات" },
+  { id: "minimal_luxury", name: "أنيق وبسيط", icon: "✨", desc: "تصميم فاخر ونظيف", preview: "from-slate-100 to-white", tag: "AI جديد" },
+  { id: "dark_futuristic", name: "مستقبلي داكن", icon: "🚀", desc: "تأثيرات نيون وتقنية", preview: "from-indigo-900 to-black", tag: "AI جديد" },
+  { id: "soft_beauty", name: "ناعم وأنثوي", icon: "🎀", desc: "ألوان هادئة للجمال", preview: "from-rose-100 to-pink-50", tag: "AI جديد" },
+  { id: "viral_tiktok", name: "شائع وجذاب", icon: "📱", desc: "سريع وحيوي للتيك توك", preview: "from-zinc-900 to-black", tag: "AI جديد" },
+  { id: "organic_nature", name: "طبيعي وعضوي", icon: "🌿", desc: "ألوان ترابية للطبيعة", preview: "from-emerald-100 to-green-50", tag: "AI جديد" },
+  { id: "bold_sales", name: "آلة مبيعات", icon: "💰", desc: "عناوين واضحة لزيادة التحويل", preview: "from-red-100 to-orange-50", tag: "AI جديد" },
 ];
 
 const availableSections = [

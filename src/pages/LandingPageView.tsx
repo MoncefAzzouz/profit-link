@@ -969,7 +969,7 @@ const LandingPageView = () => {
   }
 
   // Handle other templates
-  if (p.template === "bold" || p.template === "minimal" || p.template === "dark") {
+  if (["bold", "minimal", "dark", "minimal_luxury", "dark_futuristic", "soft_beauty", "viral_tiktok", "organic_nature", "bold_sales"].includes(p.template)) {
     // These will use the modern layout but with different styling injected via p
     // For "dark", we force dark mode styles
     if (p.template === "dark") {
@@ -979,6 +979,49 @@ const LandingPageView = () => {
     if (p.template === "bold") {
       p.borderRadius = 0;
       p.fontFamily = "cairo";
+    }
+    // AI Templates Overrides
+    if (p.template === "minimal_luxury") {
+      p.backgroundColor = "#ffffff";
+      p.primaryColor = "#18181b";
+      p.borderRadius = 0;
+      p.shadowIntensity = "none";
+      p.fontFamily = "cairo";
+    }
+    if (p.template === "dark_futuristic") {
+      p.backgroundColor = "#030014";
+      p.primaryColor = "#4f46e5";
+      p.borderRadius = 12;
+      p.shadowIntensity = "xl";
+      p.fontFamily = "ibm-plex";
+    }
+    if (p.template === "soft_beauty") {
+      p.backgroundColor = "#fff1f2";
+      p.primaryColor = "#f43f5e";
+      p.borderRadius = 24;
+      p.shadowIntensity = "sm";
+      p.fontFamily = "tajawal";
+    }
+    if (p.template === "viral_tiktok") {
+      p.backgroundColor = "#ffffff";
+      p.primaryColor = "#22c55e";
+      p.borderRadius = 0;
+      p.shadowIntensity = "lg";
+      p.fontFamily = "cairo";
+    }
+    if (p.template === "organic_nature") {
+      p.backgroundColor = "#fafafa";
+      p.primaryColor = "#588157";
+      p.borderRadius = 24;
+      p.shadowIntensity = "md";
+      p.fontFamily = "almarai";
+    }
+    if (p.template === "bold_sales") {
+      p.backgroundColor = "#f3f4f6";
+      p.primaryColor = "#dc2626";
+      p.borderRadius = 4;
+      p.shadowIntensity = "md";
+      p.fontFamily = "changa";
     }
   }
 
