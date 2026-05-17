@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, lazy, Suspense, startTransition } from "react";
+import { useState, useEffect, useMemo, useRef, lazy, Suspense, startTransition } from "react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { Link, useNavigate, useLocation } from "react-router-dom";
@@ -336,6 +336,34 @@ const Dashboard = () => {
     });
   }, []);
   const [loadingOrders, setLoadingOrders] = useState(true);
+  const prevOrderCountRef = useRef<number | null>(null);
+
+  // Quick ascending two-tone chime via Web Audio API — no audio asset needed.
+  const playNewOrderSound = () => {
+    try {
+      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      const now = ctx.currentTime;
+      const tones = [880, 1320]; // A5 → E6
+      tones.forEach((freq, i) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0.0001, now + i * 0.15);
+        gain.gain.exponentialRampToValueAtTime(0.25, now + i * 0.15 + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + i * 0.15 + 0.18);
+        osc.connect(gain).connect(ctx.destination);
+        osc.start(now + i * 0.15);
+        osc.stop(now + i * 0.15 + 0.2);
+      });
+      setTimeout(() => ctx.close().catch(() => {}), 600);
+    } catch {
+      // ignore — sound is best-effort
+    }
+  };
+
   const [dashboardStats, setDashboardStats] = useState({
     totalRevenue: 0,
     totalOrders: 0,
@@ -431,11 +459,18 @@ const Dashboard = () => {
               quantity: o.quantity || 1
             }));
             setOrders(fetchedOrders);
-            
-            // Check for new orders
+
+            // Sound + badge when a new order arrives between polls
+            const newLen = json.data.length;
+            if (prevOrderCountRef.current !== null && newLen > prevOrderCountRef.current) {
+              playNewOrderSound();
+            }
+            prevOrderCountRef.current = newLen;
+
+            // Badge counter — based on what the user has last seen on the Orders tab
             const lastSeenCount = Number(localStorage.getItem(`last_orders_count_${user?.id}`) || 0);
-            if (json.data.length > lastSeenCount && activeTab !== 'orders') {
-              setNewOrdersCount(json.data.length - lastSeenCount);
+            if (newLen > lastSeenCount && activeTab !== 'orders') {
+              setNewOrdersCount(newLen - lastSeenCount);
             }
           }
         }
@@ -463,14 +498,32 @@ const Dashboard = () => {
     fetchStoreSettings();
     fetchWithdrawals();
     fetchLevels();
-    // Refresh interval
-    const interval = setInterval(() => {
+
+    const refetchHot = () => {
       fetchDashboardStats();
       fetchOrders();
+    };
+
+    // Poll every 10s so new orders surface within ~10s instead of 30s.
+    const interval = setInterval(() => {
+      refetchHot();
       fetchWithdrawals();
       fetchLevels();
-    }, 30000);
-    return () => clearInterval(interval);
+    }, 10000);
+
+    // Refetch immediately when the user brings the tab back into focus —
+    // no waiting for the next poll tick.
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') refetchHot();
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+    window.addEventListener('focus', refetchHot);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', onVisibility);
+      window.removeEventListener('focus', refetchHot);
+    };
   }, []);
 
   // Product filter states
