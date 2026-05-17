@@ -4,7 +4,7 @@ export interface StoreSettings {
   storeLogo: string;
   storeIntro: string;
   gridColumns: number;
-  templateId: "modern" | "minimal" | "bold" | "dark";
+  templateId: "luxury" | "modern" | "dark";
   primaryColor: string;
   fontFamily: "Cairo" | "Tajawal" | "IBM Plex Sans Arabic";
   hero: {

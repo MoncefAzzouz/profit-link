@@ -2133,40 +2133,138 @@ const Dashboard = () => {
                   </div>
 
                   {/* Template Selection Section */}
-                  <div className="bg-card rounded-[2.5rem] p-8 border border-border/50 shadow-sm space-y-6">
+                  <div className="bg-card rounded-[2.5rem] p-6 sm:p-8 border border-border/50 shadow-sm space-y-6">
                     <div className="flex items-center gap-3 border-b border-border pb-4">
                       <div className="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-600">
                         <Layers className="w-5 h-5" />
                       </div>
-                      <h3 className="text-xl font-bold">قالب المتجر</h3>
+                      <div>
+                        <h3 className="text-xl font-bold">قالب المتجر</h3>
+                        <p className="text-xs text-muted-foreground mt-0.5">اختر شكل واجهة متجرك — 3 قوالب مستوحاة من أفضل المتاجر العالمية</p>
+                      </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                       {[
-                        { id: "modern", label: "مودرن جلاس", desc: "شفافية وعصرية", color: "from-blue-500/20 to-purple-500/20" },
-                        { id: "minimal", label: "مينيمال", desc: "بسيط وأنيق", color: "from-gray-100 to-gray-200" },
-                        { id: "bold", label: "جريء وحيوي", desc: "ألوان قوية", color: "from-primary/20 to-primary/40" },
-                        { id: "dark", label: "كلاسيك داكن", desc: "فخامة وأناقة", color: "from-slate-800 to-slate-900" }
-                      ].map((tpl) => (
-                        <div
-                          key={tpl.id}
-                          onClick={() => setStoreSettings({ ...storeSettings, templateId: tpl.id as any })}
-                          className={`
-                            relative cursor-pointer p-4 rounded-2xl border-2 transition-all group
-                            ${storeSettings.templateId === tpl.id ? "border-primary bg-primary/5" : "border-border hover:border-primary/50 bg-muted/30"}
-                          `}
-                        >
-                          <div className={`aspect-video rounded-xl mb-3 bg-gradient-to-br ${tpl.color} flex items-center justify-center`}>
-                            {storeSettings.templateId === tpl.id && (
-                              <div className="bg-primary text-white p-1 rounded-full shadow-lg">
-                                <Check className="w-4 h-4" />
+                        {
+                          id: "luxury",
+                          label: "Hermès فاخر",
+                          tag: "Luxury",
+                          desc: "أناقة فرنسية، خطوط رفيعة وفسحات واسعة",
+                          inspired: "مستوحى من Hermès / Aesop",
+                          preview: (
+                            <div className="absolute inset-0 bg-[#FAFAF7] flex flex-col">
+                              <div className="px-3 py-2 flex items-center justify-between border-b border-[#0A0A0A]/10">
+                                <div className="text-[8px] tracking-[0.25em] uppercase font-serif text-[#0A0A0A]">MAISON</div>
+                                <div className="flex gap-1.5">
+                                  <div className="w-1 h-1 rounded-full bg-[#0A0A0A]/40"/>
+                                  <div className="w-1 h-1 rounded-full bg-[#0A0A0A]/40"/>
+                                  <div className="w-1 h-1 rounded-full bg-[#0A0A0A]/40"/>
+                                </div>
                               </div>
-                            )}
-                          </div>
-                          <p className={`font-bold text-sm ${storeSettings.templateId === tpl.id ? "text-primary" : "text-foreground"}`}>{tpl.label}</p>
-                          <p className="text-[10px] text-muted-foreground">{tpl.desc}</p>
-                        </div>
-                      ))}
+                              <div className="flex-1 px-3 py-3 flex flex-col gap-2">
+                                <div className="h-1.5 w-2/3 bg-[#0A0A0A]/80 rounded-sm"/>
+                                <div className="h-1 w-1/2 bg-[#0A0A0A]/30 rounded-sm"/>
+                                <div className="grid grid-cols-2 gap-1.5 mt-1.5 flex-1">
+                                  <div className="bg-[#F5F1E8] border border-[#0A0A0A]/8"/>
+                                  <div className="bg-[#E8E1D1] border border-[#0A0A0A]/8"/>
+                                </div>
+                              </div>
+                            </div>
+                          ),
+                        },
+                        {
+                          id: "modern",
+                          label: "Apple عصري",
+                          tag: "Modern",
+                          desc: "أبيض نظيف، شبكة منتجات بشحدات ناعمة",
+                          inspired: "مستوحى من Apple / Shopify",
+                          preview: (
+                            <div className="absolute inset-0 bg-white flex flex-col">
+                              <div className="px-3 py-2 flex items-center justify-between border-b border-slate-200/80">
+                                <div className="flex items-center gap-1.5">
+                                  <div className="w-3 h-3 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600"/>
+                                  <div className="h-1 w-6 bg-slate-700 rounded-sm"/>
+                                </div>
+                                <div className="w-8 h-2 rounded-full bg-blue-500"/>
+                              </div>
+                              <div className="flex-1 p-2 flex flex-col gap-1.5">
+                                <div className="h-3 w-3/4 bg-slate-800 rounded-sm"/>
+                                <div className="h-1 w-1/2 bg-slate-300 rounded-sm"/>
+                                <div className="grid grid-cols-3 gap-1 mt-1 flex-1">
+                                  <div className="bg-slate-100 rounded-md shadow-sm border border-slate-100"/>
+                                  <div className="bg-slate-100 rounded-md shadow-sm border border-slate-100"/>
+                                  <div className="bg-slate-100 rounded-md shadow-sm border border-slate-100"/>
+                                </div>
+                              </div>
+                            </div>
+                          ),
+                        },
+                        {
+                          id: "dark",
+                          label: "Linear داكن",
+                          tag: "Dark",
+                          desc: "خلفية داكنة عميقة بإضاءة بنفسجية",
+                          inspired: "مستوحى من Linear / Vercel",
+                          preview: (
+                            <div className="absolute inset-0 bg-[#06060F] flex flex-col overflow-hidden">
+                              <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(124,58,237,0.25),transparent_50%)] pointer-events-none"/>
+                              <div className="relative px-3 py-2 flex items-center justify-between border-b border-white/[0.08]">
+                                <div className="flex items-center gap-1.5">
+                                  <div className="w-3 h-3 rounded-md bg-gradient-to-br from-violet-500 to-indigo-600"/>
+                                  <div className="h-1 w-6 bg-white/70 rounded-sm"/>
+                                </div>
+                                <div className="w-7 h-2 rounded-full bg-gradient-to-r from-violet-500 to-cyan-400"/>
+                              </div>
+                              <div className="relative flex-1 p-2 flex flex-col gap-1.5">
+                                <div className="h-3 w-3/4 bg-white/90 rounded-sm"/>
+                                <div className="h-1 w-1/2 bg-violet-400/60 rounded-sm"/>
+                                <div className="grid grid-cols-3 gap-1 mt-1 flex-1">
+                                  <div className="bg-white/[0.04] rounded-md border border-white/[0.08]"/>
+                                  <div className="bg-white/[0.04] rounded-md border border-white/[0.08]"/>
+                                  <div className="bg-white/[0.04] rounded-md border border-white/[0.08]"/>
+                                </div>
+                              </div>
+                            </div>
+                          ),
+                        },
+                      ].map((tpl) => {
+                        const active = storeSettings.templateId === tpl.id;
+                        return (
+                          <button
+                            key={tpl.id}
+                            type="button"
+                            onClick={() => setStoreSettings({ ...storeSettings, templateId: tpl.id as any })}
+                            className={`group relative cursor-pointer rounded-2xl border-2 overflow-hidden text-right transition-all duration-300 ${
+                              active
+                                ? "border-primary shadow-lg shadow-primary/10 scale-[1.01]"
+                                : "border-border/60 hover:border-primary/40 hover:shadow-md"
+                            }`}
+                          >
+                            {/* Preview thumbnail */}
+                            <div className="relative aspect-[16/10] overflow-hidden">
+                              {tpl.preview}
+                              {active && (
+                                <div className="absolute top-2 right-2 bg-primary text-white rounded-full p-1 shadow-lg z-10">
+                                  <Check className="w-3 h-3" />
+                                </div>
+                              )}
+                              <div className="absolute top-2 left-2 z-10 px-2 py-0.5 rounded-full bg-white/95 backdrop-blur-sm border border-black/5 text-[9px] font-bold tracking-wider text-slate-700 uppercase">
+                                {tpl.tag}
+                              </div>
+                            </div>
+
+                            {/* Info */}
+                            <div className={`p-4 border-t border-border/40 ${active ? "bg-primary/5" : "bg-muted/20 group-hover:bg-muted/40"} transition-colors`}>
+                              <div className="flex items-center justify-between gap-2 mb-1">
+                                <p className={`font-bold text-sm ${active ? "text-primary" : "text-foreground"}`}>{tpl.label}</p>
+                              </div>
+                              <p className="text-[11px] text-muted-foreground leading-relaxed">{tpl.desc}</p>
+                              <p className="text-[10px] text-muted-foreground/70 mt-1.5 italic">{tpl.inspired}</p>
+                            </div>
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
 

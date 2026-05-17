@@ -136,18 +136,37 @@ const Storefront = () => {
     "أجهزة منزلية": Home
   };
 
+  const templateId = storeSettings.templateId;
+  const isLuxury = templateId === "luxury";
+  const isDarkTpl = templateId === "dark";
+
+  const templateShell =
+    isDarkTpl ? "bg-[#06060F] text-white dark"
+    : isLuxury ? "bg-[#FAFAF7] text-[#0A0A0A]"
+    : "bg-background text-foreground";
+
+  const templateBgOverlay =
+    isDarkTpl ? "bg-[radial-gradient(ellipse_at_top_right,rgba(124,58,237,0.18),transparent_50%),radial-gradient(ellipse_at_bottom_left,rgba(14,165,233,0.12),transparent_55%)]"
+    : isLuxury ? "bg-[radial-gradient(circle_at_70%_30%,rgba(160,133,82,0.08),transparent_60%)]"
+    : "";
+
+  const templateFontStack =
+    isLuxury ? `'Cormorant Garamond', ${storeSettings.fontFamily}, serif`
+    : `${storeSettings.fontFamily}, sans-serif`;
+
   return (
-    <div 
+    <div
       className={cn(
-        "min-h-screen transition-all duration-500",
-        storeSettings.templateId === "dark" ? "bg-slate-950 text-slate-100 dark" : "bg-background text-foreground"
-      )} 
+        "min-h-screen transition-all duration-500 relative",
+        templateShell
+      )}
       dir="rtl"
-      style={{ 
+      style={{
         "--store-primary": storeSettings.primaryColor,
-        fontFamily: storeSettings.fontFamily + ", sans-serif" 
+        fontFamily: templateFontStack
       } as React.CSSProperties}
     >
+      {templateBgOverlay && <div className={cn("pointer-events-none absolute inset-0", templateBgOverlay)} aria-hidden="true" />}
       {/* Top Welcome Bar */}
       {storeSettings.welcomeBarText && (
         <div 
