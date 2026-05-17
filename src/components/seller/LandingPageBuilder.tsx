@@ -27,6 +27,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { API_BASE_URL } from '@/config/api';
+import AIThemeLandingPage from "@/components/seller/AIThemeLandingPage";
+import { AI_TEMPLATE_IDS } from "@/utils/aiThemes";
 
 
 export interface BundlePack {
@@ -153,6 +155,12 @@ const defaultNewPage = (): LandingPageConfig => ({
 });
 
 const templates = [
+  { id: "minimal_luxury", name: "Hermès فاخر", icon: "🤍", desc: "أناقة فرنسية بتصميم سيرف", preview: "from-[#F5F1E8] via-[#FAFAF7] to-[#E8E1D1]", tag: "✨ AI Premium" },
+  { id: "dark_futuristic", name: "Linear داكن", icon: "🌌", desc: "زجاجي عصري بإضاءة بنفسجية", preview: "from-[#06060F] via-[#1F1B3D] to-[#06060F]", tag: "✨ AI Premium" },
+  { id: "soft_beauty", name: "Glossier جمال", icon: "🌸", desc: "وردي ناعم بلمسة فرنسية", preview: "from-[#F5E1DD] via-[#FDF8F4] to-[#E8B4B8]", tag: "✨ AI Premium" },
+  { id: "viral_tiktok", name: "Neobrutalism", icon: "⚡", desc: "ألوان جريئة بحدود عريضة", preview: "from-[#FFE600] via-[#FFF9E5] to-[#FF3D7F]", tag: "✨ AI Premium" },
+  { id: "organic_nature", name: "Aesop طبيعي", icon: "🌿", desc: "ألوان ترابية بأسلوب راقي", preview: "from-[#E8DFC9] via-[#F7F3EC] to-[#2A3A2A]", tag: "✨ AI Premium" },
+  { id: "bold_sales", name: "Athletic مبيعات", icon: "💎", desc: "داكن قوي للتحويلات العالية", preview: "from-[#0F0F10] via-[#DC2626] to-[#FBBF24]", tag: "✨ AI Premium" },
   { id: "original", name: "الأصلي", icon: "💎", desc: "تصميم واجهة المتجر الكلاسيكي", preview: "from-blue-600 to-indigo-800", tag: "الأساسي" },
   { id: "modern", name: "عصري", icon: "✨", desc: "تصميم نظيف وأنيق", preview: "from-violet-600 to-indigo-700", tag: "شائع" },
   { id: "bold", name: "جريء", icon: "🔥", desc: "ألوان قوية وملفتة", preview: "from-orange-500 to-red-600", tag: "" },
@@ -164,12 +172,6 @@ const templates = [
   { id: "tiktok", name: "تيك توك", icon: "🎵", desc: "مستوقى من TikTok Shop", preview: "from-gray-900 via-pink-600 to-cyan-400", tag: "🔥 ترند" },
   { id: "whatsapp", name: "واتساب", icon: "💬", desc: "للبيع عبر واتساب", preview: "from-green-500 to-green-700", tag: "شائع" },
   { id: "countdown", name: "عد تنازلي", icon: "⏳", desc: "عروض بوقت محدد", preview: "from-rose-600 to-pink-700", tag: "مبيعات" },
-  { id: "minimal_luxury", name: "Hermès فاخر", icon: "🤍", desc: "أناقة فرنسية بتصميم سيرف", preview: "from-[#F5F1E8] via-[#FAFAF7] to-[#E8E1D1]", tag: "✨ AI Premium" },
-  { id: "dark_futuristic", name: "Linear داكن", icon: "🌌", desc: "زجاجي عصري بإضاءة بنفسجية", preview: "from-[#06060F] via-[#1F1B3D] to-[#06060F]", tag: "✨ AI Premium" },
-  { id: "soft_beauty", name: "Glossier جمال", icon: "🌸", desc: "وردي ناعم بلمسة فرنسية", preview: "from-[#F5E1DD] via-[#FDF8F4] to-[#E8B4B8]", tag: "✨ AI Premium" },
-  { id: "viral_tiktok", name: "Neobrutalism", icon: "⚡", desc: "ألوان جريئة بحدود عريضة", preview: "from-[#FFE600] via-[#FFF9E5] to-[#FF3D7F]", tag: "✨ AI Premium" },
-  { id: "organic_nature", name: "Aesop طبيعي", icon: "🌿", desc: "ألوان ترابية بأسلوب راقي", preview: "from-[#E8DFC9] via-[#F7F3EC] to-[#2A3A2A]", tag: "✨ AI Premium" },
-  { id: "bold_sales", name: "Athletic مبيعات", icon: "💎", desc: "داكن قوي للتحويلات العالية", preview: "from-[#0F0F10] via-[#DC2626] to-[#FBBF24]", tag: "✨ AI Premium" },
 ];
 
 const availableSections = [
@@ -800,6 +802,33 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
   const renderPreview = (isMobile: boolean) => {
     const p = deferredEditingPage;
     if (!p) return null;
+
+    // AI premium templates — render the actual themed component so the live preview
+    // matches what the published page looks like.
+    if (AI_TEMPLATE_IDS.includes(p.template)) {
+      return (
+        <div className="h-full overflow-y-auto scrollbar-hide">
+          <AIThemeLandingPage
+            p={p}
+            storeName={p.productName || defaultStoreName}
+            orderForm={{ name: "", phone: "", wilaya: "", commune: "", address: "", deliveryType: "home" }}
+            setOrderForm={() => {}}
+            handleOrder={(e: React.FormEvent) => e.preventDefault()}
+            quantity={1}
+            setQuantity={() => {}}
+            wilayas={[]}
+            communes={[]}
+            shippingRate={{ home: 0, desk: 0 }}
+            selectedOffer={null}
+            setSelectedOffer={() => {}}
+            selectedBundleId={null}
+            setSelectedBundleId={() => {}}
+            orderSubmitted={false}
+            countdown={{ hours: 23, minutes: 45, seconds: 12 }}
+          />
+        </div>
+      );
+    }
 
     const tc = isDark(p.backgroundColor) ? "#ffffff" : "#0f172a";
     const stc = isDark(p.backgroundColor) ? "#94a3b8" : "#64748b";

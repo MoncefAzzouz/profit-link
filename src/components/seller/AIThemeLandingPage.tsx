@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { ShoppingCart, Star, Shield, Truck, Check, Clock, ChevronDown, Sparkles, ArrowLeft, Award, Lock, RotateCcw, Zap } from "lucide-react";
+import { ShoppingCart, Star, Shield, Truck, Check, Clock, ChevronDown, Sparkles, ArrowLeft, Award, Lock, RotateCcw, Zap, MapPin, Palette, Ruler } from "lucide-react";
 import { themeTokens, layoutTokens, AITemplateName } from "@/utils/aiThemeTokens";
 
 interface Props {
@@ -356,6 +356,48 @@ export default function AIThemeLandingPage({ p, storeName, orderForm, setOrderFo
                 </div>
               ) : (
                 <form onSubmit={handleOrder} className="space-y-4">
+                  {/* Color picker */}
+                  {p.availableColors && p.availableColors.length > 0 && (
+                    <div>
+                      <label className="flex items-center gap-1.5 text-[11px] font-bold mb-2 text-gray-700 uppercase tracking-wider">
+                        <Palette size={12}/> اختر اللون *
+                      </label>
+                      <div className="flex flex-wrap gap-2">
+                        {p.availableColors.map((color: string) => {
+                          const active = orderForm.selectedColor === color;
+                          return (
+                            <button key={color} type="button"
+                              onClick={() => setOrderForm((f: any) => ({ ...f, selectedColor: color }))}
+                              className={`px-4 py-2.5 rounded-xl text-sm font-bold border-2 transition-all ${active ? 'border-gray-900 bg-gray-900 text-white' : 'border-gray-200 bg-gray-50/50 text-gray-700 hover:border-gray-400'}`}>
+                              {color}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Size picker */}
+                  {p.availableSizes && p.availableSizes.length > 0 && (
+                    <div>
+                      <label className="flex items-center gap-1.5 text-[11px] font-bold mb-2 text-gray-700 uppercase tracking-wider">
+                        <Ruler size={12}/> اختر المقاس *
+                      </label>
+                      <div className="flex flex-wrap gap-2">
+                        {p.availableSizes.map((size: string) => {
+                          const active = orderForm.selectedSize === size;
+                          return (
+                            <button key={size} type="button"
+                              onClick={() => setOrderForm((f: any) => ({ ...f, selectedSize: size }))}
+                              className={`min-w-[52px] h-11 rounded-xl text-sm font-bold border-2 transition-all ${active ? 'border-gray-900 bg-gray-900 text-white' : 'border-gray-200 bg-gray-50/50 text-gray-700 hover:border-gray-400'}`}>
+                              {size}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
                   {[{ label:'الاسم الكامل', key:'name', type:'text', placeholder:'محمد أحمد' }, { label:'رقم الهاتف', key:'phone', type:'tel', placeholder:'0XXXXXXXXX' }].map(f => (
                     <div key={f.key}>
                       <label className={`block text-[11px] font-bold mb-1.5 text-gray-700 uppercase tracking-wider`}>{f.label}</label>
@@ -365,30 +407,50 @@ export default function AIThemeLandingPage({ p, storeName, orderForm, setOrderFo
                         className={`w-full border-2 border-gray-200 bg-gray-50/50 text-gray-900 focus:border-gray-900 focus:bg-white rounded-xl px-4 py-3.5 outline-none font-medium transition-all`}/>
                     </div>
                   ))}
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className={`block text-[11px] font-bold mb-1.5 text-gray-700 uppercase tracking-wider`}>الولاية</label>
-                      <div className="relative">
-                        <select value={orderForm.wilaya} onChange={e => setOrderForm((f: any) => ({...f, wilaya:e.target.value, commune:''}))} required
-                          className={`w-full border-2 border-gray-200 bg-gray-50/50 text-gray-900 focus:border-gray-900 focus:bg-white rounded-xl px-4 py-3.5 outline-none appearance-none font-medium transition-all`}>
-                          <option value="">اختر الولاية</option>
-                          {wilayas.map((w: any) => <option key={w.id||w.wilaya_id} value={w.id||w.wilaya_id}>{w.nom||w.wilaya_name}</option>)}
-                        </select>
-                        <ChevronDown className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none text-gray-400"/>
-                      </div>
-                    </div>
-                    <div>
-                      <label className={`block text-[11px] font-bold mb-1.5 text-gray-700 uppercase tracking-wider`}>البلدية</label>
-                      <div className="relative">
-                        <select value={orderForm.commune} onChange={e => setOrderForm((f: any) => ({...f, commune:e.target.value}))} required
-                          className={`w-full border-2 border-gray-200 bg-gray-50/50 text-gray-900 focus:border-gray-900 focus:bg-white rounded-xl px-4 py-3.5 outline-none appearance-none font-medium transition-all`}>
-                          <option value="">اختر البلدية</option>
-                          {communes.map((c: any, i: number) => <option key={i} value={c.nom||c.commune_name}>{c.nom||c.commune_name}</option>)}
-                        </select>
-                        <ChevronDown className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none text-gray-400"/>
-                      </div>
+
+                  <div>
+                    <label className={`block text-[11px] font-bold mb-1.5 text-gray-700 uppercase tracking-wider`}>الولاية</label>
+                    <div className="relative">
+                      <select value={orderForm.wilaya} onChange={e => setOrderForm((f: any) => ({...f, wilaya:e.target.value, commune:'', deliveryType: f.deliveryType || 'home'}))} required
+                        className={`w-full border-2 border-gray-200 bg-gray-50/50 text-gray-900 focus:border-gray-900 focus:bg-white rounded-xl px-4 py-3.5 outline-none appearance-none font-medium transition-all`}>
+                        <option value="">اختر الولاية</option>
+                        {wilayas.map((w: any) => <option key={w.id||w.wilaya_id} value={w.id||w.wilaya_id}>{w.nom||w.wilaya_name}</option>)}
+                      </select>
+                      <ChevronDown className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none text-gray-400"/>
                     </div>
                   </div>
+
+                  {/* Delivery type — Home / Desk */}
+                  <div>
+                    <label className={`block text-[11px] font-bold mb-2 text-gray-700 uppercase tracking-wider`}>نوع التوصيل</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button type="button"
+                        onClick={() => setOrderForm((f: any) => ({ ...f, deliveryType: 'home', commune: '' }))}
+                        className={`h-14 rounded-xl border-2 flex flex-col items-center justify-center gap-0.5 transition-all ${orderForm.deliveryType === 'home' ? 'border-gray-900 bg-gray-900 text-white' : 'border-gray-200 bg-gray-50/50 text-gray-700 hover:border-gray-400'}`}>
+                        <div className="flex items-center gap-1.5 text-sm font-bold"><Truck size={14}/> للمنزل</div>
+                        <span className="text-[10px] opacity-70 num">{shippingRate.home > 0 ? `${shippingRate.home.toLocaleString()} دج` : 'مجاني'}</span>
+                      </button>
+                      <button type="button"
+                        onClick={() => setOrderForm((f: any) => ({ ...f, deliveryType: 'desk', commune: '' }))}
+                        className={`h-14 rounded-xl border-2 flex flex-col items-center justify-center gap-0.5 transition-all ${orderForm.deliveryType === 'desk' ? 'border-gray-900 bg-gray-900 text-white' : 'border-gray-200 bg-gray-50/50 text-gray-700 hover:border-gray-400'}`}>
+                        <div className="flex items-center gap-1.5 text-sm font-bold"><MapPin size={14}/> ستوب ديسك</div>
+                        <span className="text-[10px] opacity-70 num">{shippingRate.desk > 0 ? `${shippingRate.desk.toLocaleString()} دج` : 'مجاني'}</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className={`block text-[11px] font-bold mb-1.5 text-gray-700 uppercase tracking-wider`}>البلدية</label>
+                    <div className="relative">
+                      <select value={orderForm.commune} onChange={e => setOrderForm((f: any) => ({...f, commune:e.target.value}))} required
+                        className={`w-full border-2 border-gray-200 bg-gray-50/50 text-gray-900 focus:border-gray-900 focus:bg-white rounded-xl px-4 py-3.5 outline-none appearance-none font-medium transition-all`}>
+                        <option value="">اختر البلدية</option>
+                        {communes.map((c: any, i: number) => <option key={i} value={c.nom||c.commune_name}>{c.nom||c.commune_name}</option>)}
+                      </select>
+                      <ChevronDown className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none text-gray-400"/>
+                    </div>
+                  </div>
+
                   <div>
                     <label className={`block text-[11px] font-bold mb-1.5 text-gray-700 uppercase tracking-wider`}>العنوان</label>
                     <input value={orderForm.address} onChange={e => setOrderForm((f: any) => ({...f, address:e.target.value}))} placeholder="الحي، الشارع، رقم البناية..." required
