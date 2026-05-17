@@ -81,6 +81,15 @@ export default function AIThemeLandingPage({ p, storeName, orderForm, setOrderFo
     bold_sales: 'text-3xl sm:text-4xl font-black uppercase tracking-tight',
   };
 
+  // Body-section ordering: CSS `order` reads from p.sections array so the user
+  // can drag sections in the editor to change render order. Unknown ids fall
+  // back to a high index so they appear at the end.
+  const sectionOrder = (id: string): number => {
+    const arr: string[] = p.sections || [];
+    const idx = arr.indexOf(id);
+    return idx === -1 ? 100 : idx;
+  };
+
   return (
     <div className={`${t.bg} ${t.textMain} ${t.font} min-h-screen overflow-x-hidden antialiased`} dir="rtl">
       <link href={`https://fonts.googleapis.com/css2?family=${primaryFont}&family=${secondaryFont}&display=swap`} rel="stylesheet" />
@@ -189,9 +198,12 @@ export default function AIThemeLandingPage({ p, storeName, orderForm, setOrderFo
         </div>
       </section>
 
+      {/* ───── Reorderable body sections (CSS-order driven by p.sections) ───── */}
+      <div className="flex flex-col w-full">
+
       {/* Features */}
       {p.sections?.includes('features') && p.features?.length > 0 && (
-        <section className={`py-14 sm:py-20 lg:py-24 px-4 sm:px-6 ${t.sectionWhite}`}>
+        <section style={{ order: sectionOrder('features') }} className={`py-14 sm:py-20 lg:py-24 px-4 sm:px-6 ${t.sectionWhite}`}>
           <div className="max-w-6xl mx-auto">
             <div className={`mb-9 sm:mb-14 ${isCentered?'text-center':''}`}>
               <div className={`inline-flex items-center gap-2 mb-3 sm:mb-4 ${t.accentBg}`}>
@@ -219,7 +231,7 @@ export default function AIThemeLandingPage({ p, storeName, orderForm, setOrderFo
 
       {/* Reviews */}
       {p.sections?.includes('reviews') && p.socialProof?.length > 0 && (
-        <section className={`py-14 sm:py-20 lg:py-24 px-4 sm:px-6 ${t.sectionLight}`}>
+        <section style={{ order: sectionOrder('reviews') }} className={`py-14 sm:py-20 lg:py-24 px-4 sm:px-6 ${t.sectionLight}`}>
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-9 sm:mb-14">
               <div className={`inline-flex items-center gap-2 mb-3 sm:mb-4 ${t.accentBg}`}>
@@ -259,7 +271,7 @@ export default function AIThemeLandingPage({ p, storeName, orderForm, setOrderFo
 
       {/* Bundles / Offers */}
       {(p.bundles?.length > 0 || p.hasMarketingOffers) && (
-        <section className={`py-12 sm:py-16 lg:py-20 px-4 sm:px-6 ${t.sectionWhite}`}>
+        <section style={{ order: sectionOrder('bundle') }} className={`py-12 sm:py-16 lg:py-20 px-4 sm:px-6 ${t.sectionWhite}`}>
           <div className="max-w-2xl mx-auto">
             <div className="text-center mb-7 sm:mb-10">
               <div className={`inline-flex items-center gap-2 mb-3 sm:mb-4 ${t.accentBg}`}>
@@ -293,7 +305,7 @@ export default function AIThemeLandingPage({ p, storeName, orderForm, setOrderFo
       )}
 
       {/* Order Form */}
-      <section id="order-form" className={`py-14 sm:py-20 lg:py-24 px-4 sm:px-6 ${t.checkoutBg} relative overflow-hidden`}>
+      <section id="order-form" style={{ order: sectionOrder('cta') }} className={`py-14 sm:py-20 lg:py-24 px-4 sm:px-6 ${t.checkoutBg} relative overflow-hidden`}>
         <div className={`max-w-5xl mx-auto relative`}>
           <div className="text-center mb-7 sm:mb-10">
             <div className={`inline-flex items-center gap-2 mb-3 sm:mb-4 ${t.accentBg}`}>
@@ -500,6 +512,9 @@ export default function AIThemeLandingPage({ p, storeName, orderForm, setOrderFo
           </div>
         </div>
       </section>
+
+      </div>
+      {/* ───── End reorderable body sections ───── */}
 
       {/* Footer */}
       <footer className={`${t.footer} text-center py-8 sm:py-10 px-4`}>

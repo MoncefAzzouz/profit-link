@@ -732,6 +732,17 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
     updatePage("sections", sections);
   };
 
+  const moveSection = (sectionId: string, direction: "up" | "down") => {
+    if (!editingPage) return;
+    const idx = editingPage.sections.indexOf(sectionId);
+    if (idx === -1) return;
+    const next = direction === "up" ? idx - 1 : idx + 1;
+    if (next < 0 || next >= editingPage.sections.length) return;
+    const sections = [...editingPage.sections];
+    [sections[idx], sections[next]] = [sections[next], sections[idx]];
+    updatePage("sections", sections);
+  };
+
   const deletePage = async (id: string) => {
     const token = localStorage.getItem("token");
     if (id.startsWith("lp-")) {
@@ -1380,17 +1391,18 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
     return (
       <div className="flex flex-col h-[calc(100vh-140px)] -m-4 sm:-m-6">
         {/* Editor header */}
-        <div className="bg-card border-b border-border p-3 flex items-center justify-between gap-3 shrink-0">
-          <div className="flex items-center gap-3">
-            <Button variant="outline" size="sm" onClick={() => setEditingPage(null)} className="rounded-xl gap-1.5">
-              <ChevronDown className="w-4 h-4 rotate-90" /> رجوع
+        <div className="bg-card border-b border-border px-2 py-2 sm:p-3 flex items-center justify-between gap-2 shrink-0">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+            <Button variant="outline" size="sm" onClick={() => setEditingPage(null)} className="rounded-xl gap-1 sm:gap-1.5 h-9 px-2 sm:px-3 shrink-0">
+              <ChevronDown className="w-4 h-4 rotate-90" />
+              <span className="hidden sm:inline">رجوع</span>
             </Button>
-            <div>
-              <h2 className="text-sm font-bold text-foreground leading-tight">{editingPage.productName}</h2>
-              <p className="text-[10px] text-muted-foreground">تعديل صفحة الهبوط</p>
+            <div className="min-w-0">
+              <h2 className="text-xs sm:text-sm font-bold text-foreground leading-tight truncate">{editingPage.productName}</h2>
+              <p className="text-[9px] sm:text-[10px] text-muted-foreground truncate">تعديل صفحة الهبوط</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
             <div className="hidden sm:flex items-center bg-muted rounded-lg p-0.5 mr-2">
               <button onClick={() => setPreviewDevice("desktop")}
                 className={`p-1.5 rounded-md transition-all ${previewDevice === "desktop" ? "bg-card shadow-sm text-primary" : "text-muted-foreground hover:text-foreground"}`}>
@@ -1401,20 +1413,21 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
                 <Smartphone className="w-4 h-4" />
               </button>
             </div>
-            <Button variant="outline" size="sm" onClick={() => viewPage(editingPage)} className="rounded-xl gap-1.5 hidden sm:flex">
+            <Button variant="outline" size="sm" onClick={() => viewPage(editingPage)} className="rounded-xl gap-1.5 hidden sm:flex h-9">
               <ExternalLink className="w-4 h-4" /> معاينة
             </Button>
-            <Button size="sm" onClick={() => publishPage(editingPage)} className="rounded-xl gap-1.5 bg-gradient-to-l from-primary to-primary/90 shadow-md">
-              <Zap className="w-4 h-4" /> <span className="hidden sm:inline">حفظ ونشر</span><span className="sm:hidden">نشر</span>
+            <Button size="sm" onClick={() => publishPage(editingPage)} className="rounded-xl gap-1 sm:gap-1.5 bg-gradient-to-l from-primary to-primary/90 shadow-md h-9 px-2.5 sm:px-3">
+              <Zap className="w-4 h-4" /> <span className="hidden sm:inline">حفظ ونشر</span><span className="sm:hidden text-xs">نشر</span>
             </Button>
             <Button
               variant={showConfig ? "secondary" : "default"}
               size="sm"
               onClick={() => setShowConfig(!showConfig)}
-              className="rounded-xl gap-1.5"
+              className="rounded-xl gap-1 sm:gap-1.5 h-9 px-2 sm:px-3"
+              title={showConfig ? "إخفاء الشريط" : "تعديل"}
             >
               {showConfig ? <EyeOff className="w-4 h-4" /> : <Edit className="w-4 h-4" />}
-              {showConfig ? "إخفاء الشريط" : "تعديل"}
+              <span className="hidden sm:inline">{showConfig ? "إخفاء الشريط" : "تعديل"}</span>
             </Button>
           </div>
         </div>
@@ -2165,30 +2178,76 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
               )}
 
               {/* ===== SECTIONS TAB ===== */}
-              {activeDesignTab === "sections" && (
+              {activeDesignTab === "sections" && (() => {
+                const activeOrdered = editingPage.sections
+                  .map(id => availableSections.find(s => s.id === id))
+                  .filter((s): s is typeof availableSections[number] => !!s);
+                const inactive = availableSections.filter(s => !editingPage.sections.includes(s.id));
+                const renderRows = [
+                  ...activeOrdered.map(s => ({ section: s, isActive: true })),
+                  ...inactive.map(s => ({ section: s, isActive: false })),
+                ];
+                return (
                 <div className="space-y-2">
-                  <p className="text-xs text-muted-foreground mb-3">فعّل أو عطّل الأقسام حسب حاجتك</p>
-                  {availableSections.map((section) => {
-                    const isActive = editingPage.sections.includes(section.id);
+                  <p className="text-xs text-muted-foreground mb-3">
+                    اسحب الأقسام لإعادة ترتيبها، أو فعّل/عطّل الأقسام حسب حاجتك. الأقسام المفعّلة تظهر في الأعلى بالترتيب الذي ستظهر به في الصفحة.
+                  </p>
+                  {renderRows.map(({ section, isActive }, rowIdx) => {
+                    const activeIdx = isActive ? editingPage.sections.indexOf(section.id) : -1;
+                    const isFirstInactive = !isActive && rowIdx === activeOrdered.length;
                     return (
                       <div key={section.id} className="space-y-2">
-                        <button
-                          onClick={() => toggleSection(section.id)}
-                          disabled={section.required}
-                          className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-all text-right ${isActive ? "border-primary bg-primary/5" : "border-border/50 hover:border-border"
-                            } ${section.required ? "opacity-60 cursor-not-allowed" : ""}`}
-                        >
-                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${isActive ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}>
-                            <section.icon className="w-4 h-4" />
+                        {isFirstInactive && (
+                          <div className="flex items-center gap-2 pt-3 pb-1">
+                            <div className="h-px flex-1 bg-border" />
+                            <span className="text-[10px] font-bold text-muted-foreground tracking-wider uppercase">أقسام للإضافة</span>
+                            <div className="h-px flex-1 bg-border" />
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-xs font-bold">{section.name}</p>
-                            <p className="text-[9px] text-muted-foreground truncate">{section.desc}</p>
-                          </div>
-                          <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${isActive ? "bg-primary border-primary text-white" : "border-border"}`}>
-                            {isActive && <Check className="w-3 h-3" />}
-                          </div>
-                        </button>
+                        )}
+                        <div className={`flex items-stretch gap-1.5 rounded-xl border transition-all ${isActive ? "border-primary bg-primary/5" : "border-border/50"}`}>
+                          {/* Reorder arrows (only for active sections) */}
+                          {isActive && (
+                            <div className="flex flex-col justify-center gap-0.5 pl-1">
+                              <button
+                                type="button"
+                                onClick={() => moveSection(section.id, "up")}
+                                disabled={activeIdx <= 0}
+                                title="نقل للأعلى"
+                                className="w-6 h-6 rounded-md flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                              >
+                                <ChevronUp className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => moveSection(section.id, "down")}
+                                disabled={activeIdx >= editingPage.sections.length - 1}
+                                title="نقل للأسفل"
+                                className="w-6 h-6 rounded-md flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                              >
+                                <ChevronDown className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          )}
+                          <button
+                            onClick={() => toggleSection(section.id)}
+                            disabled={section.required}
+                            className={`flex-1 flex items-center gap-3 p-3 rounded-xl text-right ${section.required ? "opacity-60 cursor-not-allowed" : ""}`}
+                          >
+                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${isActive ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}>
+                              <section.icon className="w-4 h-4" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-bold flex items-center gap-1.5">
+                                {section.name}
+                                {isActive && <span className="text-[9px] font-normal text-muted-foreground">#{activeIdx + 1}</span>}
+                              </p>
+                              <p className="text-[9px] text-muted-foreground truncate">{section.desc}</p>
+                            </div>
+                            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${isActive ? "bg-primary border-primary text-white" : "border-border"}`}>
+                              {isActive && <Check className="w-3 h-3" />}
+                            </div>
+                          </button>
+                        </div>
 
                         {isActive && section.id === "video" && (
                           <div className="p-3 border rounded-xl bg-muted/20 space-y-2 mt-2">
@@ -2394,7 +2453,8 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
                     );
                   })}
                 </div>
-              )}
+                );
+              })()}
 
             </div>
 
