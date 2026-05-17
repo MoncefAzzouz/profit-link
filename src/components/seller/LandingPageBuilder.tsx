@@ -164,12 +164,12 @@ const templates = [
   { id: "tiktok", name: "تيك توك", icon: "🎵", desc: "مستوقى من TikTok Shop", preview: "from-gray-900 via-pink-600 to-cyan-400", tag: "🔥 ترند" },
   { id: "whatsapp", name: "واتساب", icon: "💬", desc: "للبيع عبر واتساب", preview: "from-green-500 to-green-700", tag: "شائع" },
   { id: "countdown", name: "عد تنازلي", icon: "⏳", desc: "عروض بوقت محدد", preview: "from-rose-600 to-pink-700", tag: "مبيعات" },
-  { id: "minimal_luxury", name: "أنيق وبسيط", icon: "✨", desc: "تصميم فاخر ونظيف", preview: "from-slate-100 to-white", tag: "AI جديد" },
-  { id: "dark_futuristic", name: "مستقبلي داكن", icon: "🚀", desc: "تأثيرات نيون وتقنية", preview: "from-indigo-900 to-black", tag: "AI جديد" },
-  { id: "soft_beauty", name: "ناعم وأنثوي", icon: "🎀", desc: "ألوان هادئة للجمال", preview: "from-rose-100 to-pink-50", tag: "AI جديد" },
-  { id: "viral_tiktok", name: "شائع وجذاب", icon: "📱", desc: "سريع وحيوي للتيك توك", preview: "from-zinc-900 to-black", tag: "AI جديد" },
-  { id: "organic_nature", name: "طبيعي وعضوي", icon: "🌿", desc: "ألوان ترابية للطبيعة", preview: "from-emerald-100 to-green-50", tag: "AI جديد" },
-  { id: "bold_sales", name: "آلة مبيعات", icon: "💰", desc: "عناوين واضحة لزيادة التحويل", preview: "from-red-100 to-orange-50", tag: "AI جديد" },
+  { id: "minimal_luxury", name: "Hermès فاخر", icon: "🤍", desc: "أناقة فرنسية بتصميم سيرف", preview: "from-[#F5F1E8] via-[#FAFAF7] to-[#E8E1D1]", tag: "✨ AI Premium" },
+  { id: "dark_futuristic", name: "Linear داكن", icon: "🌌", desc: "زجاجي عصري بإضاءة بنفسجية", preview: "from-[#06060F] via-[#1F1B3D] to-[#06060F]", tag: "✨ AI Premium" },
+  { id: "soft_beauty", name: "Glossier جمال", icon: "🌸", desc: "وردي ناعم بلمسة فرنسية", preview: "from-[#F5E1DD] via-[#FDF8F4] to-[#E8B4B8]", tag: "✨ AI Premium" },
+  { id: "viral_tiktok", name: "Neobrutalism", icon: "⚡", desc: "ألوان جريئة بحدود عريضة", preview: "from-[#FFE600] via-[#FFF9E5] to-[#FF3D7F]", tag: "✨ AI Premium" },
+  { id: "organic_nature", name: "Aesop طبيعي", icon: "🌿", desc: "ألوان ترابية بأسلوب راقي", preview: "from-[#E8DFC9] via-[#F7F3EC] to-[#2A3A2A]", tag: "✨ AI Premium" },
+  { id: "bold_sales", name: "Athletic مبيعات", icon: "💎", desc: "داكن قوي للتحويلات العالية", preview: "from-[#0F0F10] via-[#DC2626] to-[#FBBF24]", tag: "✨ AI Premium" },
 ];
 
 const availableSections = [
