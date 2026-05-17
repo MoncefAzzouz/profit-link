@@ -145,7 +145,9 @@ router.get('/public/:storeName', async (req: Request, res: Response): Promise<an
       return res.status(404).json({ error: 'Store not found' });
     }
 
-    res.set('Cache-Control', 'public, max-age=60, stale-while-revalidate=300');
+    // Browser must revalidate every visit — the server-side TTL cache makes that cheap.
+    // Without this, affiliate edits (add to store, edit landing page) appear stuck for up to 60s.
+    res.set('Cache-Control', 'no-cache, must-revalidate');
     res.json({ data: payload.data });
   } catch (error) {
     console.error('Public store error:', error);
@@ -180,6 +182,9 @@ router.get('/pages/:id/public', async (req: Request, res: Response): Promise<any
         include: {
           product: {
             select: {
+              commission: true,
+              price: true,
+              originalPrice: true,
               hasMarketingOffers: true,
               marketingOffers: true
             }
@@ -187,14 +192,19 @@ router.get('/pages/:id/public', async (req: Request, res: Response): Promise<any
         }
       });
       if (!page) return null;
+      const product = (page as any).product;
       return {
         ...(page.pageConfig as any),
         id: page.id,
         productId: page.productId,
         ownerId: page.ownerId,
         status: page.status,
-        hasMarketingOffers: (page as any).product?.hasMarketingOffers || false,
-        marketingOffers: (page as any).product?.marketingOffers || []
+        // Authoritative values from Product table override pageConfig snapshot.
+        ...(product?.commission != null && { commission: product.commission }),
+        ...(product?.price != null && { price: product.price }),
+        ...(product?.originalPrice != null && { originalPrice: product.originalPrice }),
+        hasMarketingOffers: product?.hasMarketingOffers || false,
+        marketingOffers: product?.marketingOffers || []
       };
     });
 
@@ -208,7 +218,9 @@ router.get('/pages/:id/public', async (req: Request, res: Response): Promise<any
       data: { views: { increment: 1 } }
     }).catch(err => console.error('Failed to increment views', err));
 
-    res.set('Cache-Control', 'public, max-age=60, stale-while-revalidate=300');
+    // Browser must revalidate every visit — the server-side TTL cache makes that cheap.
+    // Without this, affiliate edits (add to store, edit landing page) appear stuck for up to 60s.
+    res.set('Cache-Control', 'no-cache, must-revalidate');
     res.json({ data });
   } catch (error) {
     console.error('Public landing page error:', error);
@@ -234,11 +246,12 @@ router.get('/product-page/:productId/:affiliateId', async (req: Request, res: Re
         page = await prisma.landingPage.findFirst({
           where: { productId, owner: { role: 'ADMIN' }, status: 'published' },
           orderBy: { updatedAt: 'desc' },
-          include: { product: { select: { hasMarketingOffers: true, marketingOffers: true } } }
+          include: { product: { select: { commission: true, price: true, originalPrice: true, hasMarketingOffers: true, marketingOffers: true } } }
         });
       }
 
       if (!page) return null;
+      const product = (page as any).product;
 
       return {
         pageId: page.id,
@@ -248,8 +261,12 @@ router.get('/product-page/:productId/:affiliateId', async (req: Request, res: Re
           productId: page.productId,
           ownerId: page.ownerId,
           status: page.status,
-          hasMarketingOffers: (page as any).product?.hasMarketingOffers || false,
-          marketingOffers: (page as any).product?.marketingOffers || []
+          // Authoritative values from Product table override pageConfig snapshot.
+          ...(product?.commission != null && { commission: product.commission }),
+          ...(product?.price != null && { price: product.price }),
+          ...(product?.originalPrice != null && { originalPrice: product.originalPrice }),
+          hasMarketingOffers: product?.hasMarketingOffers || false,
+          marketingOffers: product?.marketingOffers || []
         }
       };
     });
@@ -263,7 +280,9 @@ router.get('/product-page/:productId/:affiliateId', async (req: Request, res: Re
       data: { views: { increment: 1 } }
     }).catch(err => console.error('Failed to increment views', err));
 
-    res.set('Cache-Control', 'public, max-age=60, stale-while-revalidate=300');
+    // Browser must revalidate every visit — the server-side TTL cache makes that cheap.
+    // Without this, affiliate edits (add to store, edit landing page) appear stuck for up to 60s.
+    res.set('Cache-Control', 'no-cache, must-revalidate');
     res.json({ data: result.data });
   } catch (error) {
     console.error('Public product page lookup error:', error);
@@ -749,6 +768,7 @@ router.put('/products', authenticateToken, async (req: AuthRequest, res: Respons
             heroSubtitle: product.description || "أفضل جودة بأفضل سعر في السوق الجزائري",
             price: product.price,
             originalPrice: product.originalPrice,
+            commission: product.commission,
             category: product.category,
             heroImage: product.image,
             galleryImages: Array.isArray(product.images) && product.images.length > 0 ? product.images : [product.image],
