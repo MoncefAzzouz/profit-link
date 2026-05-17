@@ -2,6 +2,8 @@ import express, { Request, Response } from 'express';
 import cors from 'cors';
 import compression from 'compression';
 import dotenv from 'dotenv';
+import path from 'path';
+import fs from 'fs';
 import { prisma } from './db';
 
 import authRoutes from './routes/auth.routes';
@@ -43,9 +45,14 @@ app.use((req, res, next) => {
   next();
 });
 
-// Increased limits for large AI image payloads
-app.use(express.json({ limit: '100mb' }));
-app.use(express.urlencoded({ limit: '100mb', extended: true }));
+// JSON body limit — kept modest since images no longer travel inside JSON.
+app.use(express.json({ limit: '2mb' }));
+app.use(express.urlencoded({ limit: '2mb', extended: true }));
+
+// Static uploads directory — disk-backed images served with long cache.
+const UPLOAD_DIR = path.join(process.cwd(), 'uploads');
+fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+app.use('/uploads', express.static(UPLOAD_DIR, { maxAge: '30d', immutable: true }));
 
 // Main API Routes
 app.use('/api/auth', authRoutes);

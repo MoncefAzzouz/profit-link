@@ -22,8 +22,9 @@ router.post('/register', async (req: Request, res: Response): Promise<any> => {
       return res.status(400).json({ error: 'Email already in use' });
     }
 
-    // Hash password
-    const saltRounds = 10;
+    // Hash password — bcrypt(8) is ~4x faster than (10) on a 1 vCPU box.
+    // Existing (10)-hashed users continue to log in fine; bcrypt embeds the cost in the hash.
+    const saltRounds = 8;
     const passwordHash = await bcrypt.hash(password, saltRounds);
 
     // Create user
@@ -127,7 +128,7 @@ router.post('/seed-admin', async (req: Request, res: Response): Promise<any> => 
       return res.json({ message: 'Admin already exists — role updated to ADMIN' });
     }
 
-    const passwordHash = await bcrypt.hash(password, 10);
+    const passwordHash = await bcrypt.hash(password, 8);
     await prisma.user.create({
       data: { email, passwordHash, name, role: 'ADMIN' }
     });
