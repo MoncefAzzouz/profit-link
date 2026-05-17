@@ -1347,7 +1347,8 @@ const Dashboard = () => {
                             </Button>
                             <Button
                               variant="outline"
-                              className="w-full text-xs font-bold gap-2 hover:bg-primary hover:text-white transition-colors"
+                              disabled={!product.hasLandingPage}
+                              className="w-full text-xs font-bold gap-2 hover:bg-primary hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-foreground"
                               onClick={() => {
                                 setProductToEditLandingPage(product);
                                 startTransition(() => {
@@ -1391,7 +1392,7 @@ const Dashboard = () => {
                                 setTimeout(() => setCopiedId(null), 2000);
                               }}
                             >
-                              {copiedId === product.id ? <Check className="w-4 h-4 text-green-500" /> : (!product.hasLandingPage ? <Loader2 className="w-4 h-4 animate-spin" /> : <Copy className="w-4 h-4" />)}
+                              {copiedId === product.id ? <Check className="w-4 h-4 text-green-500" /> : (!product.hasLandingPage ? null : <Copy className="w-4 h-4" />)}
                               {copiedId === product.id ? "تم النسخ" : (!product.hasLandingPage ? "بانتظار صفحة الهبوط" : "نسخ الرابط")}
                             </Button>
                           </div>
