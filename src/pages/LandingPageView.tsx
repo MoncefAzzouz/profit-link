@@ -27,6 +27,7 @@ export interface BundlePack {
   name: string;
   image: string;
   price: number;
+  commission?: number;
 }
 
 interface LandingPageConfig {
@@ -342,7 +343,7 @@ const LandingPageView = () => {
 
     const selectedBundle = p.bundles?.find(b => b.id === selectedBundleId);
     let activePrice = selectedBundle ? selectedBundle.price : p.price;
-    let activeCommission = p.commission || 500;
+    let activeCommission = p.commission ?? 0;
     let selectedSizeLabel = orderForm.selectedSize;
 
     if (selectedOffer) {
@@ -350,6 +351,7 @@ const LandingPageView = () => {
       activeCommission = selectedOffer.commission;
       selectedSizeLabel = orderForm.selectedSize ? `${orderForm.selectedSize} - ${selectedOffer.name}` : selectedOffer.name;
     } else if (selectedBundle) {
+      if (selectedBundle.commission != null) activeCommission = selectedBundle.commission;
       selectedSizeLabel = orderForm.selectedSize ? `${orderForm.selectedSize} - ${selectedBundle.name}` : selectedBundle.name;
     }
 

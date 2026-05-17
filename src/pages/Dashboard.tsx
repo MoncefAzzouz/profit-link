@@ -2486,7 +2486,14 @@ const Dashboard = () => {
                 type="number"
                 placeholder="أدخل المبلغ..."
                 value={withdrawAmount}
-                onChange={(e) => setWithdrawAmount(e.target.value)}
+                onChange={(e) => {
+                  let val = e.target.value;
+                  if (Number(val) > dashboardStats.totalRevenue) {
+                    val = dashboardStats.totalRevenue.toString();
+                    toast({ title: "تنبيه", description: "لا يمكنك سحب مبلغ أكبر من الرصيد القابل للسحب", variant: "destructive" });
+                  }
+                  setWithdrawAmount(val);
+                }}
                 className="rounded-xl h-12 text-lg font-bold"
               />
               <p className="text-[11px] text-muted-foreground">الرصيد القابل للسحب: {dashboardStats.totalRevenue.toLocaleString()} دج</p>
