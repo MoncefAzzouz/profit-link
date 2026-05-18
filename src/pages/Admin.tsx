@@ -1810,20 +1810,20 @@ const Admin = () => {
 
 
           {activeTab === "orders" && (
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
               {/* Filters */}
-              <div className="dash-card p-4 flex flex-wrap gap-3">
-                <div className="relative flex-1 min-w-[200px]">
+              <div className="dash-card p-3 sm:p-4 flex flex-col sm:flex-row sm:flex-wrap gap-2.5 sm:gap-3">
+                <div className="relative flex-1 min-w-0 sm:min-w-[200px]">
                   <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
                     placeholder="ابحث عن طلبية..."
                     value={orderSearch}
                     onChange={(e) => setOrderSearch(e.target.value)}
-                    className="pr-10"
+                    className="pr-10 h-11"
                   />
                 </div>
                 <Select value={orderStatus} onValueChange={setOrderStatus}>
-                  <SelectTrigger className="w-[160px]">
+                  <SelectTrigger className="w-full sm:w-[160px] h-11">
                     <Filter className="w-4 h-4 ml-2" />
                     <SelectValue placeholder="الحالة" />
                   </SelectTrigger>
@@ -1838,8 +1838,8 @@ const Admin = () => {
                 </Select>
               </div>
 
-              {/* Orders Table */}
-              <div className="dash-card overflow-hidden">
+              {/* Orders Table — desktop only */}
+              <div className="dash-card overflow-hidden hidden lg:block">
                 <div className="overflow-x-auto">
                   <table className="w-full">
                     <thead className="bg-slate-100/95 dark:bg-slate-800/60 border-b border-border/50">
@@ -1967,6 +1967,129 @@ const Admin = () => {
                     </tbody>
                   </table>
                 </div>
+              </div>
+
+              {/* Mobile/Tablet Card View */}
+              <div className="lg:hidden space-y-3">
+                {isFetchingOrders ? (
+                  <div className="dash-card p-10 flex flex-col items-center gap-3">
+                    <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+                    <p className="text-muted-foreground text-sm animate-pulse">جاري جلب الطلبيات...</p>
+                  </div>
+                ) : filteredOrders.length === 0 ? (
+                  <div className="dash-card p-10 text-center text-muted-foreground">
+                    <ShoppingCart className="w-12 h-12 mx-auto mb-3 opacity-20" />
+                    <p className="text-sm">لا توجد طلبيات مطابقة للبحث</p>
+                  </div>
+                ) : (
+                  filteredOrders.map((order) => {
+                    const status = (statusConfig as any)[order.status.toLowerCase()] || statusConfig.pending;
+                    const productName = order.product?.name || order.productName || "منتج غير معروف";
+                    const affiliateName = order.affiliate?.name || order.affiliateName || "مسوّق غير معروف";
+                    const canShip = (order.status === "PENDING" || order.status === "CONFIRMED" || order.status === "pending" || order.status === "confirmed") && !order.trackingNumber;
+                    const canExpedite = order.trackingNumber && (order.status === "SHIPPED" || order.status === "shipped");
+                    return (
+                      <div key={order.id} className="dash-card p-4 space-y-3">
+                        {/* Header: product + status */}
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0 flex-1">
+                            <p className="font-bold text-sm text-foreground line-clamp-1">{productName}</p>
+                            <p className="text-[10px] text-muted-foreground font-mono mt-0.5">{order.id.slice(0, 8)}</p>
+                          </div>
+                          <span className={`shrink-0 inline-flex px-2.5 py-1 rounded-full text-[10px] font-bold ${status.color}`}>
+                            {status.label}
+                          </span>
+                        </div>
+
+                        {(order.selectedColor || order.selectedSize) && (
+                          <div className="flex flex-wrap gap-1.5">
+                            {order.selectedColor && (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-primary/10 text-primary border border-primary/20">
+                                اللون: {order.selectedColor}
+                              </span>
+                            )}
+                            {order.selectedSize && (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-secondary/10 text-secondary border border-secondary/20">
+                                المقاس: {order.selectedSize}
+                              </span>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Customer + affiliate */}
+                        <div className="grid grid-cols-2 gap-3 pt-2 border-t border-border/50 text-xs">
+                          <div className="space-y-0.5 min-w-0">
+                            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wide">الزبون</p>
+                            <p className="font-bold text-foreground truncate">{order.customerName}</p>
+                            <p className="text-[10px] text-muted-foreground font-mono truncate">{order.customerPhone}</p>
+                          </div>
+                          <div className="space-y-0.5 min-w-0">
+                            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wide">المسوّق</p>
+                            <Badge variant="secondary" className="bg-primary/5 text-primary border-none rounded-lg text-[10px] truncate max-w-full">
+                              {affiliateName}
+                            </Badge>
+                          </div>
+                        </div>
+
+                        {/* Address */}
+                        <div className="pt-2 border-t border-border/50 text-xs">
+                          <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wide mb-1">عنوان التوصيل</p>
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <div className="min-w-0">
+                              <p className="font-bold text-foreground">{getWilayaName(order.wilaya)}</p>
+                              <p className="text-[10px] text-muted-foreground">{order.commune || "لم يتم تحديد البلدية"}</p>
+                            </div>
+                            <span className={`shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${order.stopDesk === 1 ? "bg-amber-100 text-amber-700" : "bg-blue-100 text-blue-700"}`}>
+                              {order.stopDesk === 1 ? "Stop Desk" : "Home Delivery"}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Amount + actions */}
+                        <div className="flex items-center justify-between gap-3 pt-2 border-t border-border/50">
+                          <div className="min-w-0">
+                            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wide">المبلغ</p>
+                            <p className="font-bold text-foreground text-sm">{order.totalAmount.toLocaleString()} دج</p>
+                            <p className="text-[10px] text-secondary font-bold">عمولة: {order.commissionAmount.toLocaleString()} دج</p>
+                          </div>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <Button size="icon" variant="outline" className="w-9 h-9 text-green-600 border-green-200 hover:bg-green-50" onClick={() => handleWhatsAppConfirm(order)} title="تأكيد عبر واتساب">
+                              <MessageSquare className="w-4 h-4" />
+                            </Button>
+                            {canShip && (
+                              <Button
+                                size="sm"
+                                className="h-9 px-3 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold gap-1.5"
+                                disabled={processingOrderId === order.id}
+                                onClick={() => handleAndersonShip(order)}
+                              >
+                                {processingOrderId === order.id ? (
+                                  <motion.span animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }} className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full inline-block" />
+                                ) : (
+                                  <><Truck className="w-3.5 h-3.5" /> شحن</>
+                                )}
+                              </Button>
+                            )}
+                            {canExpedite && (
+                              <Button
+                                size="sm"
+                                className="h-9 px-3 rounded-lg bg-primary hover:bg-primary/90 text-white text-xs font-bold gap-1.5"
+                                disabled={processingOrderId === order.id}
+                                onClick={() => handleAndersonExpedite(order)}
+                              >
+                                {processingOrderId === order.id ? (
+                                  <motion.span animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }} className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full inline-block" />
+                                ) : (
+                                  <><Check className="w-3.5 h-3.5" /> تأكيد</>
+                                )}
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
               </div>
             </div>
           )}
