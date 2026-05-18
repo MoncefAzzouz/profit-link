@@ -42,6 +42,9 @@ async function main() {
       status: true,
       isVisible: true,
       hasLandingPage: true,
+      price: true,
+      stock: true,
+      category: true,
       createdAt: true,
     },
   });
@@ -53,6 +56,7 @@ async function main() {
   for (const p of products) {
     console.log(`  - ${p.id}  | ${p.name}`);
     console.log(`      status=${p.status}  isVisible=${p.isVisible}  hasLandingPage=${p.hasLandingPage}`);
+    console.log(`      price=${p.price} دج  stock=${p.stock}  category=${p.category}`);
   }
 
   // 3) Affiliate's storeProductIds (the IDs the affiliate added to their store)
@@ -71,7 +75,12 @@ async function main() {
     if (!storeProductIds.includes(p.id)) reasons.push("not in affiliate's storeProductIds (affiliate hasn't added it to store)");
 
     if (reasons.length === 0) {
-      console.log(`  ✓ ${p.name} should appear on /store/${user.storeName ?? user.id}`);
+      console.log(`  ✓ ${p.name} passes all backend checks for /store/${user.storeName ?? user.id}`);
+      if (p.price > 20000) {
+        console.log(`    ⚠️  But price=${p.price} دج may exceed the storefront's client-side price filter cap (was 20,000).`);
+        console.log(`        After deploying the latest Storefront.tsx, the slider auto-expands to the max product price.`);
+      }
+      console.log(`    ⚠️  The /store/public endpoint caches results in memory (withCache). Restart the backend or wait the TTL if recently changed.`);
     } else {
       console.log(`  ✗ ${p.name} is hidden because:`);
       for (const r of reasons) console.log(`      • ${r}`);
