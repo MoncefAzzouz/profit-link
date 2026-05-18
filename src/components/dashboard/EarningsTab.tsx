@@ -23,10 +23,10 @@ const EarningsTab: React.FC<EarningsTabProps> = ({
       <div className="grid md:grid-cols-3 gap-6">
         {[
           {
-            label: "الإيرادات الإجمالية",
+            label: "الأرباح المسلّمة",
             value: `${dashboardStats.totalRevenue.toLocaleString()} دج`,
             color: "text-foreground",
-            sub: "إجمالي المبيعات المحققة",
+            sub: "أرباح من طلبيات تم تسليمها",
             icon: Wallet,
           },
           {

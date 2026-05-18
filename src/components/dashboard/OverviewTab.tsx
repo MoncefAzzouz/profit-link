@@ -45,7 +45,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
         >
           <div className="flex items-center justify-between">
             <div className="min-w-0">
-              <p className="text-muted-foreground text-[10px] md:text-sm font-bold truncate">إجمالي الأرباح</p>
+              <p className="text-muted-foreground text-[10px] md:text-sm font-bold truncate">الأرباح المسلّمة</p>
               <p className="text-xl md:text-3xl font-black text-foreground mt-1 truncate">
                 {dashboardStats.totalRevenue.toLocaleString()}
               </p>

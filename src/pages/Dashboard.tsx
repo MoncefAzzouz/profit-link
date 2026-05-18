@@ -9,7 +9,7 @@ import {
   Calendar, Filter, Search, SlidersHorizontal, Store, Sparkles,
   Heart, Download, PlusCircle, User, Phone, MapPin, PackagePlus, MessageSquare, Plus, Trash2, Maximize2, LayoutTemplate,
   Save, Globe, Facebook, Instagram, Palette, Layers,
-  Image as ImageIcon, ShieldCheck, CreditCard, Type, MessageCircle, Gift, Loader2
+  Image as ImageIcon, ShieldCheck, CreditCard, Type, MessageCircle, Gift, Loader2, AlertTriangle
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -591,6 +591,15 @@ const Dashboard = () => {
   const currentLevelInfo = useMemo(() => {
     return getLevelInfo(dashboardStats.confirmedOrders, dbLevels);
   }, [dashboardStats.confirmedOrders, dbLevels]);
+
+  // Withdrawable balance = delivered earnings - already-requested withdrawals (pending or approved).
+  // Backend enforces this on POST /finance/withdraw; we mirror it client-side so the UI is honest.
+  const withdrawableBalance = useMemo(() => {
+    const reserved = withdrawals
+      .filter((w: any) => w.status === "pending" || w.status === "approved")
+      .reduce((sum: number, w: any) => sum + Number(w.amount || 0), 0);
+    return Math.max(0, dashboardStats.totalRevenue - reserved);
+  }, [withdrawals, dashboardStats.totalRevenue]);
 
   // Shipping filter states
   const [shippingSearch, setShippingSearch] = useState("");
@@ -1212,6 +1221,31 @@ const Dashboard = () => {
                 <div className="absolute -right-20 -top-20 w-[400px] h-[400px] bg-secondary/30 rounded-full blur-[120px] opacity-50" />
                 <div className="absolute -left-20 -bottom-20 w-[400px] h-[400px] bg-primary/30 rounded-full blur-[120px] opacity-50" />
               </motion.div>
+
+              {/* Pending-landing-page banner — products in store but not yet publicly visible */}
+              {(() => {
+                const hiddenCount = products.filter(p => storeProducts.has(p.id) && !p.hasLandingPage).length;
+                if (hiddenCount === 0) return null;
+                return (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="sticky top-2 z-30 bg-amber-50 dark:bg-amber-950/40 border-2 border-amber-300/60 dark:border-amber-700/50 rounded-2xl p-4 md:p-5 flex items-start gap-3 shadow-md"
+                  >
+                    <div className="w-10 h-10 rounded-xl bg-amber-500/15 text-amber-600 flex items-center justify-center shrink-0">
+                      <AlertTriangle className="w-5 h-5" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm md:text-base font-bold text-amber-900 dark:text-amber-200">
+                        <b>{hiddenCount}</b> من منتجاتك لا تظهر في متجرك العام لأن الإدارة لم تنشر صفحة الهبوط بعد
+                      </p>
+                      <p className="text-xs text-amber-800/80 dark:text-amber-300/80 mt-1 leading-relaxed">
+                        ستظهر هذه المنتجات تلقائياً في متجرك بمجرد قيام الإدارة بنشر صفحة الهبوط لها. لا حاجة لأي إجراء من طرفك.
+                      </p>
+                    </div>
+                  </motion.div>
+                );
+              })()}
 
               {/* Store Products Section */}
               <div className="space-y-6">
@@ -2579,6 +2613,30 @@ const Dashboard = () => {
           </DialogHeader>
 
           <div className="space-y-4 py-4">
+            {/* Earnings breakdown */}
+            <div className="rounded-xl border border-border/60 bg-muted/30 p-3 space-y-2 text-xs">
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">الأرباح المسلّمة</span>
+                <span className="font-bold text-foreground">{dashboardStats.totalRevenue.toLocaleString()} دج</span>
+              </div>
+              {dashboardStats.pendingEarnings > 0 && (
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">الأرباح المعلّقة <span className="text-[10px] opacity-70">(تصبح متاحة عند التسليم)</span></span>
+                  <span className="font-bold text-amber-600">{dashboardStats.pendingEarnings.toLocaleString()} دج</span>
+                </div>
+              )}
+              {dashboardStats.totalRevenue - withdrawableBalance > 0 && (
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">سحوبات قيد المعالجة</span>
+                  <span className="font-bold text-foreground">−{(dashboardStats.totalRevenue - withdrawableBalance).toLocaleString()} دج</span>
+                </div>
+              )}
+              <div className="flex items-center justify-between pt-2 border-t border-border/60">
+                <span className="font-bold text-foreground">الرصيد القابل للسحب</span>
+                <span className="font-black text-emerald-600">{withdrawableBalance.toLocaleString()} دج</span>
+              </div>
+            </div>
+
             <div className="space-y-2">
               <Label className="text-sm font-semibold">المبلغ المطلوب (دج)</Label>
               <Input
@@ -2587,15 +2645,20 @@ const Dashboard = () => {
                 value={withdrawAmount}
                 onChange={(e) => {
                   let val = e.target.value;
-                  if (Number(val) > dashboardStats.totalRevenue) {
-                    val = dashboardStats.totalRevenue.toString();
+                  if (Number(val) > withdrawableBalance) {
+                    val = withdrawableBalance.toString();
                     toast({ title: "تنبيه", description: "لا يمكنك سحب مبلغ أكبر من الرصيد القابل للسحب", variant: "destructive" });
                   }
                   setWithdrawAmount(val);
                 }}
                 className="rounded-xl h-12 text-lg font-bold"
+                disabled={withdrawableBalance <= 0}
               />
-              <p className="text-[11px] text-muted-foreground">الرصيد القابل للسحب: {dashboardStats.totalRevenue.toLocaleString()} دج</p>
+              {withdrawableBalance <= 0 && dashboardStats.pendingEarnings > 0 && (
+                <p className="text-[11px] text-amber-600 font-medium">
+                  أرباحك ما زالت معلّقة. ستصبح قابلة للسحب بعد تأكيد تسليم الطلبات.
+                </p>
+              )}
             </div>
 
             <div className="space-y-2">
