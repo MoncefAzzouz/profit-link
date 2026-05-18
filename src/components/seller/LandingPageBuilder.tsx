@@ -259,7 +259,7 @@ const mockLandingPages: LandingPageConfig[] = [
   },
 ];
 
-const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: any }) => {
+const LandingPageBuilder = ({ initialProductToEdit, onBack }: { initialProductToEdit?: any; onBack?: () => void }) => {
   const { toast } = useToast();
   const [pages, setPages] = useState<LandingPageConfig[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -1393,7 +1393,7 @@ const LandingPageBuilder = ({ initialProductToEdit }: { initialProductToEdit?: a
         {/* Editor header */}
         <div className="bg-card border-b border-border px-2 py-2 sm:p-3 flex items-center justify-between gap-2 shrink-0">
           <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
-            <Button variant="outline" size="sm" onClick={() => setEditingPage(null)} className="rounded-xl gap-1 sm:gap-1.5 h-9 px-2 sm:px-3 shrink-0">
+            <Button variant="outline" size="sm" onClick={() => { setEditingPage(null); onBack?.(); }} className="rounded-xl gap-1 sm:gap-1.5 h-9 px-2 sm:px-3 shrink-0">
               <ChevronDown className="w-4 h-4 rotate-90" />
               <span className="hidden sm:inline">رجوع</span>
             </Button>

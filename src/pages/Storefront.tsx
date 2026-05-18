@@ -53,7 +53,7 @@ const Storefront = () => {
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("الكل");
-  const [selectedPriceRange, setSelectedPriceRange] = useState([0, 20000]); // Max price from slider
+  const [selectedPriceRange, setSelectedPriceRange] = useState<[number, number]>([0, 1_000_000]); // Effective max derived from products once loaded
   const [sortBy, setSortBy] = useState("default");
   const [showFilters, setShowFilters] = useState(false);
   const [stockFilter, setStockFilter] = useState("all");
@@ -106,6 +106,26 @@ const Storefront = () => {
     if (storeName) fetchStore();
     fetchCategories();
   }, [storeName, toast]);
+
+  // Round up to a nice slider cap based on the most expensive product in this store.
+  const maxPrice = useMemo(() => {
+    if (!products.length) return 1_000_000;
+    const max = Math.max(...products.map(p => Number(p.price) || 0));
+    if (max <= 0) return 20_000;
+    const step = max > 100_000 ? 10_000 : max > 50_000 ? 5_000 : max > 20_000 ? 1_000 : 500;
+    return Math.ceil(max / step) * step;
+  }, [products]);
+
+  // Once products load, expand the price-range upper bound so nothing is hidden by default.
+  useEffect(() => {
+    setSelectedPriceRange(prev => {
+      const [lo, hi] = prev;
+      if (hi >= maxPrice) return prev;
+      // Only auto-expand if the user hasn't manually narrowed it (still at the default 1M sentinel)
+      if (hi === 1_000_000 || hi === 20_000) return [lo, maxPrice];
+      return prev;
+    });
+  }, [maxPrice]);
 
   const filteredProducts = useMemo(() => {
     return products
@@ -534,6 +554,7 @@ const Storefront = () => {
                     categoryIcons={categoryIcons}
                     dbCategories={dbCategories}
                     activeCategories={activeCategories}
+                    maxPrice={maxPrice}
                    />
                 </div>
               </SheetContent>
@@ -559,7 +580,7 @@ const Storefront = () => {
           {/* Desktop Filter Sidebar */}
           <aside className="hidden lg:block w-72 shrink-0 space-y-8 sticky top-24 h-fit">
             <div className="bg-card rounded-[2rem] p-8 border border-border/50 shadow-sm space-y-8">
-               <FilterContent 
+               <FilterContent
                 selectedCategory={selectedCategory}
                 setSelectedCategory={setSelectedCategory}
                 selectedPriceRange={selectedPriceRange}
@@ -569,15 +590,16 @@ const Storefront = () => {
                 categoryIcons={categoryIcons}
                 dbCategories={dbCategories}
                 activeCategories={activeCategories}
+                maxPrice={maxPrice}
                />
-               
-               <Button 
-                variant="ghost" 
+
+               <Button
+                variant="ghost"
                 className="w-full text-destructive hover:text-destructive hover:bg-destructive/10 rounded-xl mt-4"
                 onClick={() => {
                   setSearchQuery("");
                   setSelectedCategory("الكل");
-                  setSelectedPriceRange([0, 20000]);
+                  setSelectedPriceRange([0, maxPrice]);
                   setStockFilter("all");
                 }}
               >
@@ -649,7 +671,7 @@ const Storefront = () => {
                   onClick={() => {
                     setSearchQuery("");
                     setSelectedCategory("الكل");
-                    setSelectedPriceRange([0, 20000]);
+                    setSelectedPriceRange([0, maxPrice]);
                   }}
                 >
                   إعادة ضبط الفلاتر
@@ -759,13 +781,14 @@ export default Storefront;
 
 // --- Sub-components ---
 
-const FilterContent = ({ 
-  selectedCategory, setSelectedCategory, 
+const FilterContent = ({
+  selectedCategory, setSelectedCategory,
   selectedPriceRange, setSelectedPriceRange,
   stockFilter, setStockFilter,
   categoryIcons,
   dbCategories,
-  activeCategories
+  activeCategories,
+  maxPrice = 20000,
 }: any) => {
   return (
     <div className="space-y-10">
@@ -812,16 +835,16 @@ const FilterContent = ({
           </span>
         </div>
         <Slider
-          defaultValue={[0, 20000]}
-          max={20000}
-          step={500}
+          defaultValue={[0, maxPrice]}
+          max={maxPrice}
+          step={Math.max(500, Math.round(maxPrice / 200))}
           value={selectedPriceRange}
           onValueChange={setSelectedPriceRange}
           className="py-4"
         />
         <div className="flex justify-between text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
           <span>0 دج</span>
-          <span>20,000+ دج</span>
+          <span>{maxPrice.toLocaleString()}+ دج</span>
         </div>
       </div>
 

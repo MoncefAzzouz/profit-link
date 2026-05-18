@@ -186,6 +186,8 @@ const Dashboard = () => {
   const [shippingRates, setShippingRates] = useState<ShippingRate[]>([]);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [productToEditLandingPage, setProductToEditLandingPage] = useState<any>(null);
+  // Track which tab launched the landing-page editor so رجوع returns there
+  const [landingEditorOriginTab, setLandingEditorOriginTab] = useState<Tab>("landing_pages");
   const [dbCategories, setDbCategories] = useState<any[]>([]);
   const [newOrdersCount, setNewOrdersCount] = useState(0);
   const [newProductsCount, setNewProductsCount] = useState(0);
@@ -1230,7 +1232,7 @@ const Dashboard = () => {
                   <motion.div
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="sticky top-2 z-30 bg-amber-50 dark:bg-amber-950/40 border-2 border-amber-300/60 dark:border-amber-700/50 rounded-2xl p-4 md:p-5 flex items-start gap-3 shadow-md"
+                    className="bg-amber-50 dark:bg-amber-950/40 border-2 border-amber-300/60 dark:border-amber-700/50 rounded-2xl p-4 md:p-5 flex items-start gap-3 shadow-md"
                   >
                     <div className="w-10 h-10 rounded-xl bg-amber-500/15 text-amber-600 flex items-center justify-center shrink-0">
                       <AlertTriangle className="w-5 h-5" />
@@ -1385,6 +1387,7 @@ const Dashboard = () => {
                               className="w-full text-xs font-bold gap-2 hover:bg-primary hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-foreground"
                               onClick={() => {
                                 setProductToEditLandingPage(product);
+                                setLandingEditorOriginTab("my_store");
                                 startTransition(() => {
                                   setActiveTab("landing_pages");
                                 });
@@ -1526,7 +1529,16 @@ const Dashboard = () => {
           {/* Landing Pages Tab */}
           {activeTab === "landing_pages" && (
             <div className="space-y-6">
-              <LandingPageBuilder initialProductToEdit={productToEditLandingPage} />
+              <LandingPageBuilder
+                initialProductToEdit={productToEditLandingPage}
+                onBack={() => {
+                  if (landingEditorOriginTab !== "landing_pages") {
+                    setProductToEditLandingPage(null);
+                    startTransition(() => setActiveTab(landingEditorOriginTab));
+                    setLandingEditorOriginTab("landing_pages");
+                  }
+                }}
+              />
             </div>
           )}
 
