@@ -28,6 +28,7 @@ interface OrdersTabProps {
   clearFilters: () => void;
   statusConfig: Record<string, any>;
   processingOrderId: string | null;
+  expeditedOrderIds?: Set<string>;
   handleWhatsAppConfirm: (order: any) => void;
   handleAndersonShip: (order: any) => void;
   handleAndersonExpedite: (order: any) => void;
@@ -53,6 +54,7 @@ const OrdersTab: React.FC<OrdersTabProps> = ({
   clearFilters,
   statusConfig,
   processingOrderId,
+  expeditedOrderIds,
   handleWhatsAppConfirm,
   handleAndersonShip,
   handleAndersonExpedite,
@@ -255,22 +257,28 @@ const OrdersTab: React.FC<OrdersTabProps> = ({
                                 {isProcessing ? "" : "شحن"}
                               </Button>
                             )}
-                            {order.trackingNumber && order.status === "shipped" && (
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="h-9 px-4 rounded-xl border-2 font-black text-xs border-primary text-primary hover:bg-primary hover:text-white shadow-sm"
-                                disabled={isProcessing}
-                                onClick={() => handleAndersonExpedite(order)}
-                              >
-                                {isProcessing ? (
-                                  <motion.span animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }} className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full inline-block" />
-                                ) : (
-                                  <Check className="w-3.5 h-3.5 ml-1.5" />
-                                )}
-                                {isProcessing ? "" : "تأكيد"}
-                              </Button>
-                            )}
+                            {order.trackingNumber && order.status === "shipped" && (() => {
+                              const isExpedited = !!expeditedOrderIds?.has(order.id);
+                              return (
+                                <Button
+                                  size="sm"
+                                  className={`h-9 px-4 rounded-xl border-2 font-black text-xs shadow-sm ${
+                                    isExpedited
+                                      ? "bg-emerald-50 border-emerald-200 text-emerald-700 cursor-not-allowed"
+                                      : "bg-primary border-primary text-white hover:bg-primary/90"
+                                  }`}
+                                  disabled={isProcessing || isExpedited}
+                                  onClick={() => handleAndersonExpedite(order)}
+                                >
+                                  {isProcessing ? (
+                                    <motion.span animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }} className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full inline-block" />
+                                  ) : (
+                                    <Check className="w-3.5 h-3.5 ml-1.5" />
+                                  )}
+                                  {isProcessing ? "" : isExpedited ? "تم التأكيد" : "تأكيد"}
+                                </Button>
+                              );
+                            })()}
                           </div>
                         </td>
                       </tr>
@@ -382,20 +390,27 @@ const OrdersTab: React.FC<OrdersTabProps> = ({
                         {isProcessing ? "جاري..." : "شحن الآن"}
                       </Button>
                     )}
-                    {order.trackingNumber && order.status === "shipped" && (
-                      <Button
-                        className="flex-1 h-11 rounded-xl border-2 font-black text-xs border-primary text-primary hover:bg-primary hover:text-white"
-                        disabled={isProcessing}
-                        onClick={() => handleAndersonExpedite(order)}
-                      >
-                        {isProcessing ? (
-                          <motion.span animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }} className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full inline-block" />
-                        ) : (
-                          <Check className="w-4 h-4" />
-                        )}
-                        تأكيد الشحن
-                      </Button>
-                    )}
+                    {order.trackingNumber && order.status === "shipped" && (() => {
+                      const isExpedited = !!expeditedOrderIds?.has(order.id);
+                      return (
+                        <Button
+                          className={`flex-1 h-11 rounded-xl font-black text-xs gap-2 shadow-md ${
+                            isExpedited
+                              ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-100 cursor-not-allowed shadow-emerald-100"
+                              : "bg-primary text-white hover:bg-primary/90 shadow-primary/20"
+                          }`}
+                          disabled={isProcessing || isExpedited}
+                          onClick={() => handleAndersonExpedite(order)}
+                        >
+                          {isProcessing ? (
+                            <motion.span animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }} className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full inline-block" />
+                          ) : (
+                            <Check className="w-4 h-4" />
+                          )}
+                          {isExpedited ? "تم التأكيد" : "تأكيد الشحن"}
+                        </Button>
+                      );
+                    })()}
                   </div>
                 </div>
               );

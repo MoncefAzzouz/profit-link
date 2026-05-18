@@ -552,6 +552,15 @@ const Dashboard = () => {
   const [isDateToOpen, setIsDateToOpen] = useState(false);
 
   const [processingOrderId, setProcessingOrderId] = useState<string | null>(null);
+  // Orders for which the affiliate has already pressed تأكيد in Ecotrack — survives reload.
+  const [expeditedOrderIds, setExpeditedOrderIds] = useState<Set<string>>(() => {
+    try {
+      const raw = localStorage.getItem("expedited_order_ids");
+      return raw ? new Set(JSON.parse(raw)) : new Set();
+    } catch {
+      return new Set();
+    }
+  });
 
   // Withdrawal states
   const [withdrawalDialogOpen, setWithdrawalDialogOpen] = useState(false);
@@ -819,6 +828,12 @@ const Dashboard = () => {
           description: "تمت معالجة الطلب في Ecotrack."
         });
         setOrders(orders.map(o => o.id === order.id ? { ...o, status: "shipped" } as any : o));
+        setExpeditedOrderIds(prev => {
+          const next = new Set(prev);
+          next.add(order.id);
+          try { localStorage.setItem("expedited_order_ids", JSON.stringify([...next])); } catch {}
+          return next;
+        });
       } else {
         throw new Error(res.error || "Failed to expedite order");
       }
@@ -1563,6 +1578,7 @@ const Dashboard = () => {
               clearFilters={clearFilters}
               statusConfig={statusConfig}
               processingOrderId={processingOrderId}
+              expeditedOrderIds={expeditedOrderIds}
               handleWhatsAppConfirm={handleWhatsAppConfirm}
               handleAndersonShip={handleAndersonShip}
               handleAndersonExpedite={handleAndersonExpedite}
