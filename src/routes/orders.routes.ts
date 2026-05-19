@@ -8,9 +8,11 @@ const router = Router();
 // POST /api/orders (Public: Triggered by Landing Page checkout)
 router.post('/', async (req: Request, res: Response) => {
   try {
-    const { 
-      productId, affiliateId, customerName, customerPhone, 
-      wilaya, address, quantity, totalAmount, commissionAmount,
+    // Note: commissionAmount from req.body is intentionally ignored — commission
+    // is always computed server-side from product.price/product.commission below.
+    const {
+      productId, affiliateId, customerName, customerPhone,
+      wilaya, address, quantity, totalAmount,
       commune, shippingFee, stopDesk, selectedColor, selectedSize, selectedOffer
     } = req.body;
 
@@ -59,19 +61,36 @@ router.post('/', async (req: Request, res: Response) => {
       return res.status(404).json({ error: `Affiliate ${affiliateId} not found. Please use your real ID from the dashboard.` });
     }
 
+    // ─── Commission calculation (server-side, ignore client-sent commissionAmount) ───
+    // base = admin's per-unit commission × quantity
+    // bonus = any amount the affiliate added on top of the admin's base price × quantity
+    // Items in cart total = totalAmount - shippingFee (because totalAmount may include shipping).
+    const qty = quantity || 1;
+    const shippingFeeNum = parseFloat(String(shippingFee || 0));
+    const totalAmountNum = parseFloat(String(totalAmount)) || 0;
+    const itemsTotal = Math.max(0, totalAmountNum - shippingFeeNum);
+    const adminUnitPrice = Number(product.price) || 0;
+    const adminUnitCommission = Number(product.commission) || 0;
+    const adminBaseRevenue = adminUnitPrice * qty;
+
+    const baseCommission = adminUnitCommission * qty;
+    const markupBonus = Math.max(0, itemsTotal - adminBaseRevenue);
+    const finalCommission = baseCommission + markupBonus;
+
     const order = await prisma.order.create({
       data: {
         productId,
         affiliateId,
         customerName,
         customerPhone,
-        wilaya, 
+        wilaya,
         address: address || "",
-        quantity: quantity || 1,
-        totalAmount: parseFloat(String(totalAmount)),
-        commissionAmount: parseFloat(String(commissionAmount || product.commission || 0)),
+        quantity: qty,
+        totalAmount: totalAmountNum,
+        commissionAmount: finalCommission,
+        commissionBonus: markupBonus,
         commune: commune || "",
-        shippingFee: parseFloat(String(shippingFee || 0)),
+        shippingFee: shippingFeeNum,
         stopDesk: parseInt(String(stopDesk || 0)),
         selectedColor: selectedColor || null,
         selectedSize: selectedSize || null,

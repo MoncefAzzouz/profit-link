@@ -141,6 +141,7 @@ model Order {
   quantity         Int    @default(1)
   totalAmount      Float
   commissionAmount Float
+  commissionBonus  Float @default(0) // Extra commission earned when the affiliate raised the landing-page price above the admin's base price.
 
   status         OrderStatus @default(PENDING)
   trackingNumber String? // For delivery API

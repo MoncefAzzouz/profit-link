@@ -447,7 +447,7 @@ router.get('/pages/:id', authenticateToken, async (req: AuthRequest, res: Respon
       where: { id: String(id) },
       include: {
         owner: { select: { id: true, name: true, storeName: true } },
-        product: { select: { hasMarketingOffers: true, marketingOffers: true } }
+        product: { select: { hasMarketingOffers: true, marketingOffers: true, price: true, commission: true } }
       }
     });
 
@@ -465,7 +465,10 @@ router.get('/pages/:id', authenticateToken, async (req: AuthRequest, res: Respon
       pageConfig: {
         ...(page.pageConfig as any),
         hasMarketingOffers: (page as any).product?.hasMarketingOffers || false,
-        marketingOffers: (page as any).product?.marketingOffers || []
+        marketingOffers: (page as any).product?.marketingOffers || [],
+        // Admin-authoritative price & commission — the affiliate cannot price below basePrice.
+        basePrice: (page as any).product?.price ?? 0,
+        baseCommission: (page as any).product?.commission ?? 0
       }
     };
 
