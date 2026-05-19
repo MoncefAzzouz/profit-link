@@ -2620,49 +2620,9 @@ const Admin = () => {
           {/* Shipping Tab */}
           {activeTab === "shipping" && (
             <div className="space-y-8">
-              <div className="flex flex-col lg:flex-row gap-8">
-                {/* Algeria Map Illustration */}
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="lg:w-1/3 bg-card rounded-[2.5rem] p-8 shadow-sm border border-border/50 flex flex-col items-center justify-center relative overflow-hidden"
-                >
-                  <div className="relative z-10 w-full h-full flex flex-col items-center">
-                    <h3 className="text-xl font-bold text-foreground mb-6 self-start">تغطية التوصيل عبر الوطن</h3>
-                    <div className="w-full aspect-[4/5] relative">
-                      {/* Stylized SVG Map of Algeria */}
-                      <svg viewBox="0 0 400 500" className="w-full h-full drop-shadow-2xl">
-                        <path
-                          d="M150,50 L250,50 L300,100 L350,150 L350,250 L300,350 L250,450 L100,450 L50,350 L50,150 L100,100 Z"
-                          className="fill-primary/10 stroke-primary/30 stroke-2"
-                        />
-                        {/* Highlights (North) */}
-                        <path d="M150,50 L250,50 L300,100 L350,150 L250,150 L150,150 Z" className="fill-secondary/20 hover:fill-secondary/40 transition-colors cursor-pointer" />
-                        {/* Cities dots */}
-                        <circle cx="200" cy="80" r="5" className="fill-secondary animate-pulse" /> {/* Algiers */}
-                        <circle cx="120" cy="120" r="4" className="fill-primary" /> {/* Oran */}
-                        <circle cx="280" cy="110" r="4" className="fill-primary" /> {/* Constantine */}
-                      </svg>
-                      
-                      <div className="absolute bottom-4 right-4 bg-background/80 backdrop-blur-sm p-4 rounded-2xl border border-border/50 shadow-lg" dir="rtl">
-                        <div className="flex items-center gap-2 mb-2">
-                          <div className="w-3 h-3 rounded-full bg-secondary" />
-                          <span className="text-xs font-bold">توصيل سريع (24-48 ساعة)</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <div className="w-3 h-3 rounded-full bg-primary/40" />
-                          <span className="text-xs font-bold">توصيل عادي (3-7 أيام)</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  {/* Decorative backgrounds */}
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl" />
-                  <div className="absolute bottom-0 left-0 w-32 h-32 bg-secondary/5 rounded-full blur-3xl" />
-                </motion.div>
-
+              <div className="flex flex-col gap-8">
                 {/* Pricing Summary */}
-                <div className="lg:w-2/3 space-y-6" dir="rtl">
+                <div className="w-full space-y-6" dir="rtl">
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div className="bg-gradient-to-br from-primary to-navy-900 text-white rounded-3xl p-6 shadow-xl">
                       <div className="flex items-center gap-4 mb-4">

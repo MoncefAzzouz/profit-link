@@ -64,12 +64,13 @@ import EarningsTab from "@/components/dashboard/EarningsTab";
 
 type Tab = "overview" | "products" | "my_store" | "my_store_edit" | "favorites" | "landing_pages" | "orders" | "earnings" | "withdrawals" | "levels" | "shipping" | "support";
 
-const orderStatusPieData = [
-  { name: "مسلّمة", value: 812, color: "hsl(160, 84%, 39%)" },
-  { name: "قيد التوصيل", value: 64, color: "hsl(262, 83%, 58%)" },
-  { name: "معلّقة", value: 23, color: "hsl(45, 93%, 47%)" },
-  { name: "ملغاة", value: 45, color: "hsl(0, 84%, 60%)" },
-];
+// Pie-chart colors used in the Earnings tab (data itself is computed from real orders).
+const ORDER_STATUS_COLORS = {
+  delivered: "hsl(160, 84%, 39%)",
+  shipped: "hsl(262, 83%, 58%)",
+  pending: "hsl(45, 93%, 47%)",
+  cancelled: "hsl(0, 84%, 60%)",
+} as const;
 
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
@@ -602,6 +603,25 @@ const Dashboard = () => {
   const currentLevelInfo = useMemo(() => {
     return getLevelInfo(dashboardStats.confirmedOrders, dbLevels);
   }, [dashboardStats.confirmedOrders, dbLevels]);
+
+  // Real status distribution for the Earnings-tab pie chart (was fake static data).
+  // Maps every order's status into the 4 chart buckets the UI displays.
+  const orderStatusPieData = useMemo(() => {
+    let delivered = 0, shipped = 0, pending = 0, cancelled = 0;
+    for (const o of orders) {
+      const s = String(o.status || "").toLowerCase();
+      if (s === "delivered") delivered++;
+      else if (s === "shipped") shipped++;
+      else if (s === "cancelled") cancelled++;
+      else pending++; // pending + confirmed both count as "معلّقة" here
+    }
+    return [
+      { name: "مسلّمة", value: delivered, color: ORDER_STATUS_COLORS.delivered },
+      { name: "قيد التوصيل", value: shipped, color: ORDER_STATUS_COLORS.shipped },
+      { name: "معلّقة", value: pending, color: ORDER_STATUS_COLORS.pending },
+      { name: "ملغاة", value: cancelled, color: ORDER_STATUS_COLORS.cancelled },
+    ];
+  }, [orders]);
 
   // Withdrawable balance = delivered earnings - already-requested withdrawals (pending or approved).
   // Backend enforces this on POST /finance/withdraw; we mirror it client-side so the UI is honest.
@@ -1713,46 +1733,9 @@ const Dashboard = () => {
           {/* Shipping Tab */}
           {activeTab === "shipping" && (
             <div className="space-y-8">
-              <div className="flex flex-col lg:flex-row gap-6 sm:gap-8">
-                {/* Algeria Map Illustration */}
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="lg:w-1/3 bg-card rounded-[2rem] sm:rounded-[2.5rem] p-6 sm:p-8 shadow-sm border border-border/50 flex flex-col items-center justify-center relative overflow-hidden"
-                >
-                  <div className="relative z-10 w-full h-full flex flex-col items-center">
-                    <h3 className="text-lg sm:text-xl font-bold text-foreground mb-4 sm:mb-6 self-start">تغطية التوصيل عبر الوطن</h3>
-                    <div className="w-full aspect-[4/5] relative">
-                      {/* Stylized SVG Map of Algeria */}
-                      <svg viewBox="0 0 400 500" className="w-full h-full drop-shadow-2xl">
-                        <path
-                          d="M150,50 L250,50 L300,100 L350,150 L350,250 L300,350 L250,450 L100,450 L50,350 L50,150 L100,100 Z"
-                          className="fill-primary/10 stroke-primary/30 stroke-2"
-                        />
-                        <path d="M150,50 L250,50 L300,100 L350,150 L250,150 L150,150 Z" className="fill-secondary/20 hover:fill-secondary/40 transition-colors cursor-pointer" />
-                        <circle cx="200" cy="80" r="5" className="fill-secondary animate-pulse" />
-                        <circle cx="120" cy="120" r="4" className="fill-primary" />
-                        <circle cx="280" cy="110" r="4" className="fill-primary" />
-                      </svg>
-
-                      <div className="absolute bottom-2 right-2 sm:bottom-4 sm:right-4 bg-background/80 backdrop-blur-sm p-3 sm:p-4 rounded-xl sm:rounded-2xl border border-border/50 shadow-lg">
-                        <div className="flex items-center gap-2 mb-1.5 sm:mb-2">
-                          <div className="w-2.5 h-2.5 rounded-full bg-secondary" />
-                          <span className="text-[10px] sm:text-xs font-bold">توصيل سريع (24-48 ساعة)</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <div className="w-2.5 h-2.5 rounded-full bg-primary/40" />
-                          <span className="text-[10px] sm:text-xs font-bold">توصيل عادي (3-7 أيام)</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl" />
-                  <div className="absolute bottom-0 left-0 w-32 h-32 bg-secondary/5 rounded-full blur-3xl" />
-                </motion.div>
-
+              <div className="flex flex-col gap-6 sm:gap-8">
                 {/* Pricing Summary */}
-                <div className="lg:w-2/3 space-y-6">
+                <div className="w-full space-y-6">
                   <div className="bg-card rounded-[2rem] sm:rounded-3xl p-6 sm:p-8 border border-border/50 shadow-sm relative overflow-hidden">
                     <div className="relative z-10">
                       <h4 className="text-lg sm:text-xl font-bold text-foreground mb-4 flex items-center gap-2">
@@ -2542,63 +2525,6 @@ const Dashboard = () => {
                           className="w-5 h-5 accent-emerald-500 cursor-pointer border-border rounded"
                         />
                       </Label>
-                    </div>
-                  </div>
-
-                  {/* Trust Badges (USPs) Section */}
-                  <div className="bg-card rounded-[2.5rem] p-8 border border-border/50 shadow-sm space-y-6">
-                    <div className="flex items-center justify-between border-b border-border pb-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-600">
-                          <ShieldCheck className="w-5 h-5" />
-                        </div>
-                        <h3 className="text-xl font-bold">شعارات الثقة (USPs)</h3>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Label className="text-xs text-muted-foreground">تفعيل</Label>
-                        <input
-                          type="checkbox"
-                          checked={storeSettings.usp?.enabled ?? true}
-                          onChange={(e) => setStoreSettings({ ...storeSettings, usp: { ...storeSettings.usp, enabled: e.target.checked } })}
-                          className="w-5 h-5 accent-primary cursor-pointer border-border rounded"
-                        />
-                      </div>
-                    </div>
-
-                    <div className={`space-y-4 transition-opacity ${(!storeSettings.usp?.enabled) ? "opacity-50 pointer-events-none" : ""}`}>
-                      <p className="text-xs text-muted-foreground mb-4">هذه الشعارات تظهر تحت قسم الواجهة الرئيسي وتزيد من ثقة العملاء.</p>
-                      {storeSettings.usp?.items.map((item, index) => (
-                        <div key={index} className="flex gap-2">
-                          <Select
-                            value={item.icon}
-                            onValueChange={(v) => {
-                              const newItems = [...storeSettings.usp.items];
-                              newItems[index].icon = v;
-                              setStoreSettings({ ...storeSettings, usp: { ...storeSettings.usp, items: newItems } });
-                            }}
-                          >
-                            <SelectTrigger className="w-[120px] bg-muted/30 border-none rounded-xl h-11">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="Truck">سيارة التوصيل</SelectItem>
-                              <SelectItem value="ShieldCheck">درع الحماية</SelectItem>
-                              <SelectItem value="CreditCard">بطاقة بنك</SelectItem>
-                              <SelectItem value="Package">صندوق</SelectItem>
-                              <SelectItem value="Heart">قلب</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <Input
-                            value={item.text}
-                            onChange={(e) => {
-                              const newItems = [...storeSettings.usp.items];
-                              newItems[index].text = e.target.value;
-                              setStoreSettings({ ...storeSettings, usp: { ...storeSettings.usp, items: newItems } });
-                            }}
-                            className="h-11 rounded-xl bg-muted/30 border-none px-4 flex-1"
-                          />
-                        </div>
-                      ))}
                     </div>
                   </div>
 
