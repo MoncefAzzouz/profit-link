@@ -75,6 +75,7 @@ model Product {
   name          String
   description   String
   adText        String? // Ad copy text
+  notes         String? // Admin-only notes shown to affiliates in their dashboard product zoom (usage instructions, internal notes, etc.)
   price         Float // Selling price
   originalPrice Float // Fake discount price
   commission    Float // Affiliate commission
