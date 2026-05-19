@@ -9,7 +9,7 @@ import {
   Calendar, Filter, Search, SlidersHorizontal, Store, Sparkles,
   Heart, Download, PlusCircle, User, Phone, MapPin, PackagePlus, MessageSquare, Plus, Trash2, Maximize2, LayoutTemplate,
   Save, Globe, Facebook, Instagram, Palette, Layers,
-  Image as ImageIcon, ShieldCheck, CreditCard, Type, MessageCircle, Gift, Loader2, AlertTriangle
+  Image as ImageIcon, ShieldCheck, CreditCard, Type, MessageCircle, Gift, Loader2, AlertTriangle, Edit
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -313,6 +313,37 @@ const Dashboard = () => {
     };
     fetchStoreProducts();
 
+    // Fetch the affiliate's landing pages so /dashboard/متجري can overlay each product
+    // card with the price the affiliate actually picked in their editor.
+    const fetchLandingPageCustomizations = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+      try {
+        const res = await fetch(`${API_BASE_URL}/store/pages?limit=200`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const json = await res.json();
+          if (json.data && Array.isArray(json.data)) {
+            const map = new Map<string, { price: number; originalPrice: number | null; pageId: string }>();
+            for (const p of json.data) {
+              if (p.productId && typeof p.price === "number") {
+                map.set(p.productId, {
+                  price: p.price,
+                  originalPrice: typeof p.originalPrice === "number" ? p.originalPrice : null,
+                  pageId: p.id,
+                });
+              }
+            }
+            setPageCustomPrices(map);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to fetch landing page customizations', err);
+      }
+    };
+    fetchLandingPageCustomizations();
+
     // Fetch saved favorites from backend
     const fetchFavorites = async () => {
       const token = localStorage.getItem("token");
@@ -574,6 +605,9 @@ const Dashboard = () => {
   // Product Redesign States
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [storeProducts, setStoreProducts] = useState<Set<string>>(new Set());
+  // Affiliate's landing-page price customizations, keyed by productId.
+  // Used in /dashboard/متجري to overlay the admin's base price with the affiliate's chosen price.
+  const [pageCustomPrices, setPageCustomPrices] = useState<Map<string, { price: number; originalPrice: number | null; pageId: string }>>(new Map());
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
   const [isOrderDialogOpen, setIsOrderDialogOpen] = useState(false);
@@ -1405,10 +1439,33 @@ const Dashboard = () => {
                         </div>
                         <div className="p-4">
                           <h4 className="font-bold text-foreground line-clamp-1 mb-2">{product.name}</h4>
-                          <div className="flex justify-between items-center mb-3">
-                            <span className="text-primary font-bold">{product.price.toLocaleString()} دج</span>
-                            <span className="text-xs text-secondary font-bold">ربحك: {product.commission.toLocaleString()} دج</span>
-                          </div>
+                          {(() => {
+                            const custom = pageCustomPrices.get(product.id);
+                            const effectivePrice = custom?.price ?? product.price;
+                            const markup = Math.max(0, effectivePrice - product.price);
+                            const totalCommission = (product.commission || 0) + markup;
+                            const hasMarkup = markup > 0;
+                            return (
+                              <>
+                                <div className="flex justify-between items-center mb-1.5 flex-wrap gap-1">
+                                  <div className="flex items-baseline gap-1.5">
+                                    <span className="text-primary font-bold">{effectivePrice.toLocaleString()} دج</span>
+                                    {hasMarkup && (
+                                      <span className="text-[10px] text-muted-foreground line-through">{product.price.toLocaleString()} دج</span>
+                                    )}
+                                  </div>
+                                  <span className="text-xs text-secondary font-bold">ربحك: {totalCommission.toLocaleString()} دج</span>
+                                </div>
+                                {hasMarkup && (
+                                  <div className="flex items-center gap-1.5 mb-3 text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5 w-fit">
+                                    <Edit className="w-2.5 h-2.5" />
+                                    سعر مخصّص (+{markup.toLocaleString()} دج)
+                                  </div>
+                                )}
+                                {!hasMarkup && <div className="mb-3" />}
+                              </>
+                            );
+                          })()}
                           <div className="flex flex-col gap-2">
                             <Button
                               onClick={() => openOrderForm(product)}
