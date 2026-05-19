@@ -361,6 +361,9 @@ router.get('/pages', authenticateToken, async (req: AuthRequest, res: Response) 
         productName: config?.productName || p.product?.name || "بدون اسم",
         template: config?.template || "modern",
         sections: config?.sections || [],
+        // Affiliate's customized prices — used in /dashboard/متجري to overlay the admin's base price.
+        price: typeof config?.price === "number" ? config.price : null,
+        originalPrice: typeof config?.originalPrice === "number" ? config.originalPrice : null,
       };
     });
 
