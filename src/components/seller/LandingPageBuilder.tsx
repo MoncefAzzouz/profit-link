@@ -1592,13 +1592,56 @@ const LandingPageBuilder = ({ initialProductToEdit, onBack }: { initialProductTo
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1.5">
                       <Label className="text-[10px] font-bold opacity-70">السعر (دج)</Label>
-                      <Input type="number" value={editingPage.price} onChange={(e) => updatePage("price", parseInt(e.target.value) || 0)} className="rounded-xl h-8 text-xs" />
+                      <Input
+                        type="number"
+                        value={editingPage.price}
+                        min={isAdmin ? undefined : ((editingPage as any).basePrice || 0)}
+                        onChange={(e) => {
+                          let v = parseInt(e.target.value) || 0;
+                          const floor = (editingPage as any).basePrice || 0;
+                          if (!isAdmin && floor > 0 && v < floor) v = floor;
+                          updatePage("price", v);
+                        }}
+                        className="rounded-xl h-8 text-xs"
+                      />
                     </div>
                     <div className="space-y-1.5">
                       <Label className="text-[10px] font-bold opacity-70">السعر الأصلي</Label>
                       <Input type="number" disabled={!isAdmin} value={editingPage.originalPrice} onChange={(e) => updatePage("originalPrice", parseInt(e.target.value) || 0)} className="rounded-xl h-8 text-xs" />
                     </div>
                   </div>
+                  {/* Markup hint — only for affiliates (non-admin) */}
+                  {!isAdmin && ((editingPage as any).basePrice || 0) > 0 && (() => {
+                    const basePrice = (editingPage as any).basePrice || 0;
+                    const baseCommission = (editingPage as any).baseCommission || 0;
+                    const markup = Math.max(0, (editingPage.price || 0) - basePrice);
+                    const totalCommission = baseCommission + markup;
+                    return (
+                      <div className="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200/70 dark:border-emerald-800/40 rounded-xl p-3 space-y-1.5 text-[11px]">
+                        <div className="flex items-center justify-between">
+                          <span className="text-emerald-800 dark:text-emerald-300 font-bold">السعر الأدنى (إدارة)</span>
+                          <span className="font-black text-emerald-900 dark:text-emerald-200">{basePrice.toLocaleString()} دج</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-emerald-800 dark:text-emerald-300 font-bold">عمولتك الأساسية</span>
+                          <span className="font-black text-emerald-900 dark:text-emerald-200">{baseCommission.toLocaleString()} دج</span>
+                        </div>
+                        {markup > 0 && (
+                          <div className="flex items-center justify-between text-red-600 dark:text-red-400 font-black border-t border-emerald-200/60 pt-1.5">
+                            <span>+ ربحك من رفع السعر</span>
+                            <span>+{markup.toLocaleString()} دج</span>
+                          </div>
+                        )}
+                        <div className="flex items-center justify-between border-t border-emerald-200/60 pt-1.5">
+                          <span className="font-black text-emerald-900 dark:text-emerald-200">إجمالي عمولتك</span>
+                          <span className="font-black text-emerald-900 dark:text-emerald-200">{totalCommission.toLocaleString()} دج</span>
+                        </div>
+                        <p className="text-[9px] text-emerald-700/80 dark:text-emerald-300/70 pt-1 leading-relaxed">
+                          ارفع السعر فوق هذا الحد ليذهب الفرق إليك مباشرة. لا يمكنك البيع بأقل من السعر الأدنى المحدد من قبل الإدارة.
+                        </p>
+                      </div>
+                    );
+                  })()}
                   <div className="space-y-2">
                     <Label className="text-xs font-bold opacity-70">التصنيف</Label>
                     <Input disabled={!isAdmin} value={editingPage.category} onChange={(e) => updatePage("category", e.target.value)} className="rounded-xl h-9 text-sm" />

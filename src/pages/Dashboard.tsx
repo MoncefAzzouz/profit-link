@@ -454,6 +454,7 @@ const Dashboard = () => {
               status: o.status.toLowerCase(),
               amount: o.totalAmount || 0,
               commission: o.commissionAmount || 0,
+              commissionBonus: o.commissionBonus || 0,
               date: new Date(o.createdAt).toLocaleDateString('ar-DZ'),
               trackingNumber: o.trackingNumber,
               selectedColor: o.selectedColor,

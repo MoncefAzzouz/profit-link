@@ -229,7 +229,16 @@ const OrdersTab: React.FC<OrdersTabProps> = ({
                             {status.label}
                           </span>
                         </td>
-                        <td className="p-5 font-black text-sm text-secondary">{order.commission.toLocaleString()} دج</td>
+                        <td className="p-5 font-black text-sm">
+                          {order.commissionBonus > 0 ? (
+                            <div className="flex flex-col leading-tight">
+                              <span className="text-secondary">{(order.commission - order.commissionBonus).toLocaleString()} دج</span>
+                              <span className="text-[10px] font-black text-red-600">+ {order.commissionBonus.toLocaleString()} دج <span className="opacity-70 font-bold">رفع سعر</span></span>
+                            </div>
+                          ) : (
+                            <span className="text-secondary">{order.commission.toLocaleString()} دج</span>
+                          )}
+                        </td>
                         <td className="p-5 text-[11px] font-bold text-muted-foreground">{order.date}</td>
                         <td className="p-5">
                           <div className="flex items-center gap-2">
@@ -326,7 +335,14 @@ const OrdersTab: React.FC<OrdersTabProps> = ({
                     </div>
                     <div className="space-y-1">
                       <p className="text-[10px] text-muted-foreground font-black uppercase tracking-wider">العمولة</p>
-                      <p className="font-black text-sm text-secondary">{order.commission.toLocaleString()} دج</p>
+                      {order.commissionBonus > 0 ? (
+                        <div className="flex flex-col leading-tight">
+                          <p className="font-black text-sm text-secondary">{(order.commission - order.commissionBonus).toLocaleString()} دج</p>
+                          <p className="text-[10px] font-black text-red-600">+ {order.commissionBonus.toLocaleString()} دج <span className="opacity-70 font-bold">رفع سعر</span></p>
+                        </div>
+                      ) : (
+                        <p className="font-black text-sm text-secondary">{order.commission.toLocaleString()} دج</p>
+                      )}
                     </div>
                   </div>
 
