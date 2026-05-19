@@ -488,24 +488,30 @@ const LandingPageBuilder = ({ initialProductToEdit, onBack }: { initialProductTo
                 availableSizes: Array.isArray(raw.availableSizes) ? raw.availableSizes : def.availableSizes,
               };
 
-              // Sync with the latest product data (in case admin updated prices, images, or variants)
+              // For an existing saved page, the affiliate's saved values are the source of truth.
+              // Fall back to product data only when the saved page has no value yet.
+              // Variants stay admin-driven so the catalogue dictates what's orderable.
               const updatedPage = {
                 ...fullPage,
-                productName: initialProductToEdit.name || fullPage.productName,
-                price: initialProductToEdit.price || fullPage.price,
-                originalPrice: initialProductToEdit.originalPrice || fullPage.originalPrice,
-                heroImage: initialProductToEdit.image || fullPage.heroImage,
-                galleryImages: initialProductToEdit.images && initialProductToEdit.images.length > 0 
-                  ? initialProductToEdit.images 
-                  : (initialProductToEdit.image ? [initialProductToEdit.image] : fullPage.galleryImages),
-                category: initialProductToEdit.category || fullPage.category,
-                heroSubtitle: initialProductToEdit.description || fullPage.heroSubtitle,
-                // Sync variants
+                productName: fullPage.productName || initialProductToEdit.name,
+                price: fullPage.price ?? initialProductToEdit.price,
+                originalPrice: fullPage.originalPrice ?? initialProductToEdit.originalPrice,
+                heroImage: fullPage.heroImage || initialProductToEdit.image,
+                galleryImages: (fullPage.galleryImages && fullPage.galleryImages.length > 0)
+                  ? fullPage.galleryImages
+                  : (initialProductToEdit.images?.length
+                      ? initialProductToEdit.images
+                      : (initialProductToEdit.image ? [initialProductToEdit.image] : [])),
+                category: fullPage.category || initialProductToEdit.category,
+                heroSubtitle: fullPage.heroSubtitle || initialProductToEdit.description,
+                // Variants — admin-driven
                 availableColors: initialProductToEdit.hasColors ? (initialProductToEdit.availableColors || []) : [],
                 availableSizes: initialProductToEdit.hasSizes ? (initialProductToEdit.availableSizes || []) : [],
-                showFreeShipping: initialProductToEdit.showFreeShipping !== undefined ? initialProductToEdit.showFreeShipping : fullPage.showFreeShipping,
-                beforeAfterImages: initialProductToEdit.hasBeforeAfter ? { before: initialProductToEdit.beforeImage, after: initialProductToEdit.afterImage } : fullPage.beforeAfterImages,
-                sections: initialProductToEdit.hasBeforeAfter && !fullPage.sections.includes("before-after") 
+                showFreeShipping: fullPage.showFreeShipping ?? initialProductToEdit.showFreeShipping ?? false,
+                beforeAfterImages: initialProductToEdit.hasBeforeAfter
+                  ? { before: initialProductToEdit.beforeImage, after: initialProductToEdit.afterImage }
+                  : fullPage.beforeAfterImages,
+                sections: initialProductToEdit.hasBeforeAfter && !fullPage.sections.includes("before-after")
                   ? [...fullPage.sections.slice(0, 4), "before-after", ...fullPage.sections.slice(4)]
                   : fullPage.sections
               };
