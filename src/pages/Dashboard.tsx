@@ -2866,6 +2866,24 @@ const Dashboard = () => {
                   </div>
                 )}
 
+                {/* Admin-authored notes — only visible here, not on public store or landing pages */}
+                {selectedProduct.notes && selectedProduct.notes.trim() && (
+                  <div className="space-y-2 sm:space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h4 className="font-bold text-xs sm:text-sm flex items-center gap-2 text-amber-700">
+                        <AlertTriangle className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                        ملاحظات من الإدارة
+                      </h4>
+                      <span className="text-[9px] sm:text-[10px] font-bold text-amber-600 bg-amber-100 border border-amber-200 px-2 py-0.5 rounded-full">
+                        خاصة بك
+                      </span>
+                    </div>
+                    <div className="bg-amber-50 dark:bg-amber-950/30 p-4 sm:p-5 rounded-xl sm:rounded-2xl border-2 border-amber-200/70 dark:border-amber-800/40 text-[11px] sm:text-sm leading-relaxed text-amber-900 dark:text-amber-200 whitespace-pre-wrap">
+                      {selectedProduct.notes}
+                    </div>
+                  </div>
+                )}
+
                 <div className="space-y-2 sm:space-y-3">
                   <div className="flex items-center justify-between">
                     <h4 className="font-bold text-xs sm:text-sm flex items-center gap-2">

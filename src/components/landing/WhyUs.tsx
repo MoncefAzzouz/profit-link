@@ -1,10 +1,10 @@
 import { motion } from "framer-motion";
-import { 
-  Truck, 
-  Gift, 
-  ShieldCheck, 
-  MapPin, 
-  Wallet, 
+import {
+  Truck,
+  Gift,
+  ShieldCheck,
+  MapPin,
+  Wallet,
   HeadphonesIcon,
   CheckCircle2
 } from "lucide-react";
@@ -107,12 +107,12 @@ const WhyUs = () => {
           <div className="relative bg-gradient-to-r from-primary via-navy-800 to-primary rounded-3xl p-8 md:p-12 overflow-hidden">
             {/* Background Pattern */}
             <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:40px_40px]" />
-            
+
             <div className="relative z-10 text-center">
               <h3 className="text-2xl md:text-3xl font-bold text-white mb-6">
                 كل ما تحتاجه للنجاح متوفر
               </h3>
-              
+
               <div className="flex flex-wrap justify-center gap-4">
                 {["بدون رأس مال", "بدون مخزون", "بدون خبرة سابقة", "أرباح مضمونة"].map((item, index) => (
                   <div

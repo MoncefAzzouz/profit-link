@@ -18,7 +18,7 @@ const Navbar = () => {
     if (saved) {
       setSettings(JSON.parse(saved));
     }
-    
+
     const handleScroll = () => setIsScrolled(window.scrollY > 24);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
@@ -31,8 +31,8 @@ const Navbar = () => {
         animate={{ y: 0 }}
         transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
         className={cn(
-           "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
-           "bg-white/75 backdrop-blur-xl shadow-soft border-b border-border/60",
+          "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
+          "bg-white/75 backdrop-blur-xl shadow-soft border-b border-border/60",
         )}
       >
         <div className="container mx-auto px-4">

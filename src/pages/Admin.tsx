@@ -417,6 +417,7 @@ const Admin = () => {
   const [productFormData, setProductFormData] = useState<any>({
     name: "",
     description: "",
+    notes: "",
     adText: "",
     price: 0,
     originalPrice: 0,
@@ -897,6 +898,7 @@ const Admin = () => {
     setProductFormData({
       name: "",
       description: "",
+      notes: "",
       adText: "",
       price: 0,
       originalPrice: 0,
@@ -953,6 +955,7 @@ const Admin = () => {
       const payload = {
         name: productFormData.name,
         description: productFormData.description,
+        notes: productFormData.notes || null,
         price: productFormData.price,
         originalPrice: productFormData.originalPrice,
         wholesalePrice: productFormData.wholesalePrice,
@@ -3669,12 +3672,34 @@ const Admin = () => {
 
                 <div className="space-y-2">
                   <Label className="font-bold text-sm">وصف المنتج (مميزات)</Label>
-                  <Textarea 
-                    value={productFormData.description} 
-                    onChange={e => setProductFormData({...productFormData, description: e.target.value})} 
-                    placeholder="اشرح مميزات المنتج التقنية..." 
+                  <Textarea
+                    value={productFormData.description}
+                    onChange={e => setProductFormData({...productFormData, description: e.target.value})}
+                    placeholder="اشرح مميزات المنتج التقنية..."
                     className="min-h-[100px] rounded-xl bg-muted/30 border-none p-4"
                   />
+                </div>
+
+                {/* Admin-only notes — shown to affiliates in the dashboard product zoom (not on the public store) */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label className="font-bold text-sm flex items-center gap-2">
+                      <MessageSquare className="w-4 h-4 text-amber-600" />
+                      ملاحظات للمسوّقين
+                    </Label>
+                    <span className="text-[10px] text-amber-600 font-bold bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
+                      خاصة بلوحة المسوّق فقط
+                    </span>
+                  </div>
+                  <Textarea
+                    value={productFormData.notes || ""}
+                    onChange={e => setProductFormData({...productFormData, notes: e.target.value})}
+                    placeholder="تعليمات الاستخدام، نصائح بيع، تفاصيل خاصة... تظهر فقط عند تكبير المنتج في لوحة المسوّق"
+                    className="min-h-[100px] rounded-xl bg-amber-50/30 border-2 border-amber-100 p-4 focus-visible:border-amber-400"
+                  />
+                  <p className="text-[11px] text-muted-foreground">
+                    هذه الملاحظات لا تظهر في المتجر العام ولا في صفحات الهبوط — يراها المسوّق فقط عند فتح تفاصيل المنتج في لوحته.
+                  </p>
                 </div>
               </div>
 
