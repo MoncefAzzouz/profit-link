@@ -272,7 +272,7 @@ const LandingPageBuilder = ({ initialProductToEdit, onBack }: { initialProductTo
   const affiliateUser = userStr ? JSON.parse(userStr) : null;
   const isAdmin = affiliateUser?.role?.toUpperCase() === "ADMIN";
   const defaultStoreName = affiliateUser?.storeName || "متجري";
-  const [activeDesignTab, setActiveDesignTab] = useState<"magic" | "content" | "template" | "colors" | "sections">(isAdmin ? "magic" : "content");
+  const [activeDesignTab, setActiveDesignTab] = useState<"magic" | "sections" | "theme" | "settings">(isAdmin ? "magic" : "sections");
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const lastHandledProductId = useRef<string | null>(null);
   const [isFetchingDetails, setIsFetchingDetails] = useState<string | null>(null);
@@ -516,7 +516,7 @@ const LandingPageBuilder = ({ initialProductToEdit, onBack }: { initialProductTo
                   : fullPage.sections
               };
               setEditingPage(updatedPage);
-              setActiveDesignTab("content");
+              setActiveDesignTab("sections");
             }
           } catch (err) {
             console.error("Failed to fetch full page for editing", err);
@@ -588,7 +588,7 @@ const LandingPageBuilder = ({ initialProductToEdit, onBack }: { initialProductTo
             const newPages = [newPage, ...pages];
             savePagesLocally(newPages);
             setEditingPage(newPage);
-            setActiveDesignTab("content");
+            setActiveDesignTab("sections");
           } catch (err) {
             console.error("Failed to fetch admin template:", err);
           }
@@ -661,7 +661,7 @@ const LandingPageBuilder = ({ initialProductToEdit, onBack }: { initialProductTo
       setIsAiGenerating(false);
       setAiProgressStep(0);
       setUploadedAiImage(null);
-      setActiveDesignTab("content");
+      setActiveDesignTab("sections");
       toast({ title: "✨ سحر الـ AI مكتمل!", description: "تم بناء صفحتك وتوليد الصور وتنسيق الألوان بنجاح." });
 
     } catch (error) {
@@ -1453,10 +1453,9 @@ const LandingPageBuilder = ({ initialProductToEdit, onBack }: { initialProductTo
               <div className="flex bg-muted rounded-xl p-0.5 gap-0.5">
                 {([
                   ...(isAdmin ? [{ id: "magic" as const, label: "سحر الـ AI", icon: Sparkles }] : []),
-                  { id: "content" as const, label: "المحتوى", icon: Type },
-                  { id: "template" as const, label: "القوالب", icon: LayoutTemplate },
-                  { id: "colors" as const, label: "الألوان", icon: Palette },
                   { id: "sections" as const, label: "الأقسام", icon: Layers },
+                  { id: "theme" as const, label: "المظهر", icon: Palette },
+                  { id: "settings" as const, label: "الإعدادات", icon: Settings2 },
                 ]).map(tab => (
                   <button
                     key={tab.id}
@@ -1591,8 +1590,8 @@ const LandingPageBuilder = ({ initialProductToEdit, onBack }: { initialProductTo
                 </div>
               )}
 
-              {/* ===== CONTENT TAB ===== */}
-              {activeDesignTab === "content" && (
+              {/* ===== SECTIONS TAB: content fields ===== */}
+              {activeDesignTab === "sections" && (
                 <div className="space-y-4">
 
                   <div className="grid grid-cols-2 gap-3">
@@ -2098,7 +2097,8 @@ const LandingPageBuilder = ({ initialProductToEdit, onBack }: { initialProductTo
               )}
 
               {/* ===== TEMPLATES TAB ===== */}
-              {activeDesignTab === "template" && (
+              {/* ===== THEME TAB: templates ===== */}
+              {activeDesignTab === "theme" && (
                 <div className="space-y-4">
                   <p className="text-xs text-muted-foreground">اختر قالباً ترند يناسب منتجك</p>
                   <div className="grid grid-cols-2 gap-2">
@@ -2153,7 +2153,8 @@ const LandingPageBuilder = ({ initialProductToEdit, onBack }: { initialProductTo
               )}
 
               {/* ===== COLORS TAB ===== */}
-              {activeDesignTab === "colors" && (
+              {/* ===== THEME TAB: colors ===== */}
+              {activeDesignTab === "theme" && (
                 <div className="space-y-5">
                   <div className="space-y-2">
                     <Label className="text-xs font-bold opacity-70">اللون الأساسي</Label>
@@ -2504,6 +2505,68 @@ const LandingPageBuilder = ({ initialProductToEdit, onBack }: { initialProductTo
                 </div>
                 );
               })()}
+
+              {/* ===== SETTINGS TAB ===== */}
+              {activeDesignTab === "settings" && (
+                <div className="space-y-6">
+                  {/* Preview device */}
+                  <div className="space-y-2">
+                    <Label className="text-xs font-bold opacity-70 flex items-center gap-1.5">
+                      <Monitor className="w-3.5 h-3.5" /> وضع المعاينة
+                    </Label>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setPreviewDevice("desktop")}
+                        className={`flex-1 py-2.5 rounded-xl border-2 text-xs font-bold transition-all flex items-center justify-center gap-2 ${previewDevice === "desktop" ? "border-primary bg-primary/5 text-primary" : "border-border/50 text-muted-foreground hover:border-border"}`}
+                      >
+                        <Monitor className="w-4 h-4" /> حاسوب
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPreviewDevice("mobile")}
+                        className={`flex-1 py-2.5 rounded-xl border-2 text-xs font-bold transition-all flex items-center justify-center gap-2 ${previewDevice === "mobile" ? "border-primary bg-primary/5 text-primary" : "border-border/50 text-muted-foreground hover:border-border"}`}
+                      >
+                        <Smartphone className="w-4 h-4" /> هاتف
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Page direction (informational — RTL is enforced globally) */}
+                  <div className="space-y-2">
+                    <Label className="text-xs font-bold opacity-70">اتجاه الصفحة</Label>
+                    <div className="flex items-center justify-between p-4 bg-muted/30 rounded-xl">
+                      <span className="text-sm font-bold">RTL — من اليمين إلى اليسار</span>
+                      <span className="text-[10px] font-bold text-muted-foreground bg-background border border-border/60 px-2 py-1 rounded-full">افتراضي</span>
+                    </div>
+                  </div>
+
+                  {/* Pro tip */}
+                  <div className="p-5 bg-amber-50 dark:bg-amber-950/30 border border-amber-200/70 dark:border-amber-800/40 rounded-2xl space-y-2">
+                    <h4 className="font-black text-amber-900 dark:text-amber-200 text-sm">نصيحة احترافية 💡</h4>
+                    <p className="text-[11px] text-amber-800/90 dark:text-amber-300/80 leading-relaxed">
+                      أكثر من 80% من زبائنك يفتحون الصفحة عبر الهاتف. تحقّق دائماً من العرض في وضع "هاتف" قبل النشر.
+                    </p>
+                  </div>
+
+                  {/* Advanced (placeholder) */}
+                  <div className="space-y-3 border-t border-border/50 pt-5 opacity-50 pointer-events-none">
+                    <Label className="text-xs font-bold opacity-70 uppercase tracking-wider">إعدادات متقدمة (قريباً)</Label>
+                    <div className="flex items-center justify-between p-3 bg-muted/30 rounded-xl">
+                      <span className="text-xs font-bold">تتبع بكسل (Pixel)</span>
+                      <div className="w-9 h-5 bg-muted rounded-full relative">
+                        <div className="absolute left-0.5 top-0.5 w-4 h-4 bg-background rounded-full shadow-sm" />
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between p-3 bg-muted/30 rounded-xl">
+                      <span className="text-xs font-bold">إضافة CSS مخصّص</span>
+                      <div className="w-9 h-5 bg-muted rounded-full relative">
+                        <div className="absolute left-0.5 top-0.5 w-4 h-4 bg-background rounded-full shadow-sm" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
 
             </div>
 
