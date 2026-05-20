@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useDeferredValue, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, Reorder } from "framer-motion";
 import {
   Layout, Palette, Type, Image, Eye, EyeOff, Edit, Save, Plus, Trash2,
   ChevronDown, ChevronUp, Sparkles, Monitor, Smartphone,
@@ -273,6 +273,8 @@ const LandingPageBuilder = ({ initialProductToEdit, onBack }: { initialProductTo
   const isAdmin = affiliateUser?.role?.toUpperCase() === "ADMIN";
   const defaultStoreName = affiliateUser?.storeName || "متجري";
   const [activeDesignTab, setActiveDesignTab] = useState<"magic" | "sections" | "theme" | "settings">(isAdmin ? "magic" : "sections");
+  // When non-null, the الأقسام tab shows the editor for THIS section instead of the list.
+  const [editingSectionId, setEditingSectionId] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const lastHandledProductId = useRef<string | null>(null);
   const [isFetchingDetails, setIsFetchingDetails] = useState<string | null>(null);
@@ -516,7 +518,7 @@ const LandingPageBuilder = ({ initialProductToEdit, onBack }: { initialProductTo
                   : fullPage.sections
               };
               setEditingPage(updatedPage);
-              setActiveDesignTab("sections");
+              setActiveDesignTab("sections"); setEditingSectionId(null);
             }
           } catch (err) {
             console.error("Failed to fetch full page for editing", err);
@@ -588,7 +590,7 @@ const LandingPageBuilder = ({ initialProductToEdit, onBack }: { initialProductTo
             const newPages = [newPage, ...pages];
             savePagesLocally(newPages);
             setEditingPage(newPage);
-            setActiveDesignTab("sections");
+            setActiveDesignTab("sections"); setEditingSectionId(null);
           } catch (err) {
             console.error("Failed to fetch admin template:", err);
           }
@@ -661,7 +663,7 @@ const LandingPageBuilder = ({ initialProductToEdit, onBack }: { initialProductTo
       setIsAiGenerating(false);
       setAiProgressStep(0);
       setUploadedAiImage(null);
-      setActiveDesignTab("sections");
+      setActiveDesignTab("sections"); setEditingSectionId(null);
       toast({ title: "✨ سحر الـ AI مكتمل!", description: "تم بناء صفحتك وتوليد الصور وتنسيق الألوان بنجاح." });
 
     } catch (error) {
@@ -1590,511 +1592,691 @@ const LandingPageBuilder = ({ initialProductToEdit, onBack }: { initialProductTo
                 </div>
               )}
 
-              {/* ===== SECTIONS TAB: content fields ===== */}
-              {activeDesignTab === "sections" && (
-                <div className="space-y-4">
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1.5">
-                      <Label className="text-[10px] font-bold opacity-70">السعر (دج)</Label>
-                      <Input
-                        type="number"
-                        value={editingPage.price}
-                        min={isAdmin ? undefined : ((editingPage as any).basePrice || 0)}
-                        onChange={(e) => {
-                          let v = parseInt(e.target.value) || 0;
-                          const floor = (editingPage as any).basePrice || 0;
-                          if (!isAdmin && floor > 0 && v < floor) v = floor;
-                          updatePage("price", v);
-                        }}
-                        className="rounded-xl h-8 text-xs"
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label className="text-[10px] font-bold opacity-70">السعر الأصلي</Label>
-                      <Input type="number" disabled={!isAdmin} value={editingPage.originalPrice} onChange={(e) => updatePage("originalPrice", parseInt(e.target.value) || 0)} className="rounded-xl h-8 text-xs" />
-                    </div>
-                  </div>
-                  {/* Markup hint — only for affiliates (non-admin) */}
-                  {!isAdmin && ((editingPage as any).basePrice || 0) > 0 && (() => {
-                    const basePrice = (editingPage as any).basePrice || 0;
-                    const baseCommission = (editingPage as any).baseCommission || 0;
-                    const markup = Math.max(0, (editingPage.price || 0) - basePrice);
-                    const totalCommission = baseCommission + markup;
-                    return (
-                      <div className="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200/70 dark:border-emerald-800/40 rounded-xl p-3 space-y-1.5 text-[11px]">
-                        <div className="flex items-center justify-between">
-                          <span className="text-emerald-800 dark:text-emerald-300 font-bold">السعر الأدنى (إدارة)</span>
-                          <span className="font-black text-emerald-900 dark:text-emerald-200">{basePrice.toLocaleString()} دج</span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-emerald-800 dark:text-emerald-300 font-bold">عمولتك الأساسية</span>
-                          <span className="font-black text-emerald-900 dark:text-emerald-200">{baseCommission.toLocaleString()} دج</span>
-                        </div>
-                        {markup > 0 && (
-                          <div className="flex items-center justify-between text-red-600 dark:text-red-400 font-black border-t border-emerald-200/60 pt-1.5">
-                            <span>+ ربحك من رفع السعر</span>
-                            <span>+{markup.toLocaleString()} دج</span>
-                          </div>
-                        )}
-                        <div className="flex items-center justify-between border-t border-emerald-200/60 pt-1.5">
-                          <span className="font-black text-emerald-900 dark:text-emerald-200">إجمالي عمولتك</span>
-                          <span className="font-black text-emerald-900 dark:text-emerald-200">{totalCommission.toLocaleString()} دج</span>
-                        </div>
-                        <p className="text-[9px] text-emerald-700/80 dark:text-emerald-300/70 pt-1 leading-relaxed">
-                          ارفع السعر فوق هذا الحد ليذهب الفرق إليك مباشرة. لا يمكنك البيع بأقل من السعر الأدنى المحدد من قبل الإدارة.
-                        </p>
-                      </div>
-                    );
-                  })()}
-                  <div className="space-y-2">
-                    <Label className="text-xs font-bold opacity-70">التصنيف</Label>
-                    <Input disabled={!isAdmin} value={editingPage.category} onChange={(e) => updatePage("category", e.target.value)} className="rounded-xl h-9 text-sm" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-xs font-bold opacity-70">العنوان الرئيسي</Label>
-                    <Input value={editingPage.heroTitle} onChange={(e) => updatePage("heroTitle", e.target.value)} className="rounded-xl h-9 text-sm" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-xs font-bold opacity-70">العنوان الفرعي</Label>
-                    <Textarea value={editingPage.heroSubtitle} onChange={(e) => updatePage("heroSubtitle", e.target.value)} className="rounded-xl text-sm" rows={2} />
-                  </div>
-                  <div className="space-y-4 p-4 bg-muted/20 rounded-2xl border border-dashed border-border">
-                    <Label className="text-xs font-bold opacity-70 block mb-2">صورة الواجهة (Banner)</Label>
-                    <div 
-                      className="relative aspect-video rounded-xl bg-background border-2 border-dashed border-primary/20 flex flex-col items-center justify-center cursor-pointer hover:bg-primary/5 transition-all group overflow-hidden"
-                      onClick={() => {
-                        const input = document.createElement('input');
-                        input.type = 'file';
-                        input.accept = 'image/*';
-                        input.onchange = (e: any) => {
-                          const file = e.target.files?.[0];
-                          if (file) {
-                            const reader = new FileReader();
-                            reader.onloadend = () => {
-                              updatePage("heroImage", reader.result as string);
-                            };
-                            reader.readAsDataURL(file);
-                          }
-                        };
-                        input.click();
-                      }}
+              {/* ===== SECTIONS TAB — list + per-section editor ===== */}
+              {activeDesignTab === "sections" && (editingSectionId ? (
+                /* ── EDITOR MODE ── */
+                <div className="space-y-4 animate-in fade-in duration-200">
+                  {/* Sticky sub-header */}
+                  <div className="flex items-center justify-between border-b border-border pb-3 -mx-4 px-4 -mt-4 pt-4 sticky top-0 bg-card z-10">
+                    <button
+                      onClick={() => setEditingSectionId(null)}
+                      className="p-2 hover:bg-muted rounded-lg transition-colors"
+                      title="رجوع للقائمة"
                     >
-                      {editingPage.heroImage ? (
-                        <>
-                          <img src={editingPage.heroImage} alt="Banner" className="absolute inset-0 w-full h-full object-cover" />
-                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                            <Upload className="w-6 h-6 text-white" />
-                          </div>
-                        </>
-                      ) : (
-                        <>
-                          <Upload className="w-6 h-6 text-primary/40 group-hover:text-primary transition-colors mb-2" />
-                          <span className="text-[10px] font-bold text-muted-foreground">اضغط لرفع صورة</span>
-                        </>
-                      )}
-                    </div>
+                      <ArrowRight className="w-4 h-4" />
+                    </button>
+                    <span className="font-black text-xs uppercase tracking-widest text-foreground">
+                      تعديل {availableSections.find(s => s.id === editingSectionId)?.name || editingSectionId}
+                    </span>
+                    <button
+                      onClick={() => setEditingSectionId(null)}
+                      className="px-3 py-1.5 bg-primary text-primary-foreground rounded-lg text-[10px] font-black shadow-sm"
+                    >
+                      تم
+                    </button>
                   </div>
 
-                  <div className="space-y-4 p-4 bg-muted/20 rounded-2xl border border-dashed border-border">
-                    <Label className="text-xs font-bold opacity-70 block mb-2">صور المعرض (Gallery)</Label>
-                    <div className="grid grid-cols-3 gap-2">
-                      {(editingPage.galleryImages || []).map((img, idx) => (
-                        <div key={idx} className="relative aspect-square rounded-xl bg-background border border-border group overflow-hidden">
-                          <img src={img} alt={`Gallery ${idx}`} className="w-full h-full object-cover" />
-                          <button
-                            className="absolute top-1 right-1 w-6 h-6 bg-black/50 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive"
-                            onClick={() => {
-                              const newGallery = [...editingPage.galleryImages];
-                              newGallery.splice(idx, 1);
-                              updatePage("galleryImages", newGallery);
-                            }}
-                          >
-                            <Trash2 className="w-3 h-3" />
-                          </button>
+                  {/* HERO editor */}
+                  {editingSectionId === "hero" && (
+                    <div className="space-y-4">
+                      {isAdmin && (
+                        <div className="space-y-2">
+                          <Label className="text-xs font-bold opacity-70">التصنيف</Label>
+                          <Input value={editingPage.category} onChange={(e) => updatePage("category", e.target.value)} className="rounded-xl h-9 text-sm" />
                         </div>
-                      ))}
-                      <div 
-                        className="relative aspect-square rounded-xl bg-background border-2 border-dashed border-primary/20 flex flex-col items-center justify-center cursor-pointer hover:bg-primary/5 transition-all group"
-                        onClick={() => {
-                          const input = document.createElement('input');
-                          input.type = 'file';
-                          input.accept = 'image/*';
-                          input.multiple = true;
-                          input.onchange = (e: any) => {
-                            const files = Array.from(e.target.files) as File[];
-                            if (files.length > 0) {
-                              const readers = files.map(file => {
-                                return new Promise<string>((resolve) => {
+                      )}
+                      <div className="space-y-2">
+                        <Label className="text-xs font-bold opacity-70">العنوان الرئيسي</Label>
+                        <Input value={editingPage.heroTitle} onChange={(e) => updatePage("heroTitle", e.target.value)} className="rounded-xl h-9 text-sm" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-xs font-bold opacity-70">العنوان الفرعي</Label>
+                        <Textarea value={editingPage.heroSubtitle} onChange={(e) => updatePage("heroSubtitle", e.target.value)} className="rounded-xl text-sm" rows={2} />
+                      </div>
+                      <div className="space-y-4 p-4 bg-muted/20 rounded-2xl border border-dashed border-border">
+                        <Label className="text-xs font-bold opacity-70 block mb-2">صورة الواجهة (Banner)</Label>
+                        <div
+                          className="relative aspect-video rounded-xl bg-background border-2 border-dashed border-primary/20 flex flex-col items-center justify-center cursor-pointer hover:bg-primary/5 transition-all group overflow-hidden"
+                          onClick={() => {
+                            const input = document.createElement('input');
+                            input.type = 'file';
+                            input.accept = 'image/*';
+                            input.onchange = (e: any) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                const reader = new FileReader();
+                                reader.onloadend = () => updatePage("heroImage", reader.result as string);
+                                reader.readAsDataURL(file);
+                              }
+                            };
+                            input.click();
+                          }}
+                        >
+                          {editingPage.heroImage ? (
+                            <>
+                              <img src={editingPage.heroImage} alt="Banner" className="absolute inset-0 w-full h-full object-cover" />
+                              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                                <Upload className="w-6 h-6 text-white" />
+                              </div>
+                            </>
+                          ) : (
+                            <>
+                              <Upload className="w-6 h-6 text-primary/40 group-hover:text-primary transition-colors mb-2" />
+                              <span className="text-[10px] font-bold text-muted-foreground">اضغط لرفع صورة</span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* CTA editor (price + variants + cta text) */}
+                  {editingSectionId === "cta" && (
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label className="text-xs font-bold opacity-70">نص زر الشراء</Label>
+                        <Input value={editingPage.ctaText} onChange={(e) => updatePage("ctaText", e.target.value)} className="rounded-xl h-9 text-sm" />
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1.5">
+                          <Label className="text-[10px] font-bold opacity-70">السعر (دج)</Label>
+                          <Input
+                            type="number"
+                            value={editingPage.price}
+                            min={isAdmin ? undefined : ((editingPage as any).basePrice || 0)}
+                            onChange={(e) => {
+                              let v = parseInt(e.target.value) || 0;
+                              const floor = (editingPage as any).basePrice || 0;
+                              if (!isAdmin && floor > 0 && v < floor) v = floor;
+                              updatePage("price", v);
+                            }}
+                            className="rounded-xl h-9 text-sm"
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label className="text-[10px] font-bold opacity-70">السعر الأصلي</Label>
+                          <Input type="number" disabled={!isAdmin} value={editingPage.originalPrice} onChange={(e) => updatePage("originalPrice", parseInt(e.target.value) || 0)} className="rounded-xl h-9 text-sm" />
+                        </div>
+                      </div>
+                      {/* Markup helper */}
+                      {!isAdmin && ((editingPage as any).basePrice || 0) > 0 && (() => {
+                        const basePrice = (editingPage as any).basePrice || 0;
+                        const baseCommission = (editingPage as any).baseCommission || 0;
+                        const markup = Math.max(0, (editingPage.price || 0) - basePrice);
+                        const totalCommission = baseCommission + markup;
+                        return (
+                          <div className="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200/70 dark:border-emerald-800/40 rounded-xl p-3 space-y-1.5 text-[11px]">
+                            <div className="flex items-center justify-between">
+                              <span className="text-emerald-800 dark:text-emerald-300 font-bold">السعر الأدنى (إدارة)</span>
+                              <span className="font-black text-emerald-900 dark:text-emerald-200">{basePrice.toLocaleString()} دج</span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <span className="text-emerald-800 dark:text-emerald-300 font-bold">عمولتك الأساسية</span>
+                              <span className="font-black text-emerald-900 dark:text-emerald-200">{baseCommission.toLocaleString()} دج</span>
+                            </div>
+                            {markup > 0 && (
+                              <div className="flex items-center justify-between text-red-600 dark:text-red-400 font-black border-t border-emerald-200/60 pt-1.5">
+                                <span>+ ربحك من رفع السعر</span>
+                                <span>+{markup.toLocaleString()} دج</span>
+                              </div>
+                            )}
+                            <div className="flex items-center justify-between border-t border-emerald-200/60 pt-1.5">
+                              <span className="font-black text-emerald-900 dark:text-emerald-200">إجمالي عمولتك</span>
+                              <span className="font-black text-emerald-900 dark:text-emerald-200">{totalCommission.toLocaleString()} دج</span>
+                            </div>
+                            <p className="text-[9px] text-emerald-700/80 dark:text-emerald-300/70 pt-1 leading-relaxed">
+                              ارفع السعر فوق هذا الحد ليذهب الفرق إليك مباشرة. لا يمكنك البيع بأقل من السعر الأدنى المحدد من قبل الإدارة.
+                            </p>
+                          </div>
+                        );
+                      })()}
+                      {/* Variants */}
+                      <div className="space-y-4 pt-4 border-t border-border">
+                        <h4 className="text-xs font-black flex items-center gap-2">
+                          <Palette className="w-4 h-4 text-primary" /> خيارات المنتج (الألوان والمقاسات)
+                        </h4>
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-bold opacity-60">الألوان المتاحة</Label>
+                          <div className="flex gap-2">
+                            <Input
+                              placeholder="أضف لون..."
+                              className="rounded-xl h-9 text-xs"
+                              id="new-color-input"
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  const val = e.currentTarget.value.trim();
+                                  if (val) {
+                                    updatePage("availableColors", [...(editingPage.availableColors || []), val]);
+                                    e.currentTarget.value = "";
+                                  }
+                                }
+                              }}
+                            />
+                            <Button size="sm" variant="secondary" className="h-9 px-3 rounded-xl text-[10px] font-bold"
+                              onClick={() => {
+                                const input = document.getElementById("new-color-input") as HTMLInputElement;
+                                if (input?.value.trim()) {
+                                  updatePage("availableColors", [...(editingPage.availableColors || []), input.value.trim()]);
+                                  input.value = "";
+                                }
+                              }}>إضافة</Button>
+                          </div>
+                          <div className="flex flex-wrap gap-1.5 mt-2">
+                            {(editingPage.availableColors || []).map((color, idx) => (
+                              <Badge key={idx} variant="secondary" className="gap-1 px-2 py-1 rounded-lg text-[10px] font-bold">
+                                {color}
+                                <X className="w-3 h-3 cursor-pointer" onClick={() => updatePage("availableColors", editingPage.availableColors!.filter((_, i) => i !== idx))} />
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-bold opacity-60">المقاسات المتاحة</Label>
+                          <div className="flex gap-2">
+                            <Input
+                              placeholder="أضف مقاس..."
+                              className="rounded-xl h-9 text-xs"
+                              id="new-size-input"
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  const val = e.currentTarget.value.trim();
+                                  if (val) {
+                                    updatePage("availableSizes", [...(editingPage.availableSizes || []), val]);
+                                    e.currentTarget.value = "";
+                                  }
+                                }
+                              }}
+                            />
+                            <Button size="sm" variant="secondary" className="h-9 px-3 rounded-xl text-[10px] font-bold"
+                              onClick={() => {
+                                const input = document.getElementById("new-size-input") as HTMLInputElement;
+                                if (input?.value.trim()) {
+                                  updatePage("availableSizes", [...(editingPage.availableSizes || []), input.value.trim()]);
+                                  input.value = "";
+                                }
+                              }}>إضافة</Button>
+                          </div>
+                          <div className="flex flex-wrap gap-1.5 mt-2">
+                            {(editingPage.availableSizes || []).map((size, idx) => (
+                              <Badge key={idx} variant="secondary" className="gap-1 px-2 py-1 rounded-lg text-[10px] font-bold">
+                                {size}
+                                <X className="w-3 h-3 cursor-pointer" onClick={() => updatePage("availableSizes", editingPage.availableSizes!.filter((_, i) => i !== idx))} />
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* URGENCY-BAR editor */}
+                  {editingSectionId === "urgency-bar" && (
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label className="text-xs font-bold opacity-70">نص الاستعجال</Label>
+                        <Input value={editingPage.urgencyText} onChange={(e) => updatePage("urgencyText", e.target.value)} className="rounded-xl h-9 text-sm" />
+                      </div>
+                      <div className="flex items-center justify-between p-3 bg-primary/5 rounded-2xl border border-primary/10">
+                        <div className="space-y-0.5">
+                          <Label className="text-xs font-bold">توصيل مجاني</Label>
+                          <p className="text-[10px] text-muted-foreground">يظهر نص "شحن مجاني" في شريط الاستعجال</p>
+                        </div>
+                        <Switch checked={editingPage.showFreeShipping} onCheckedChange={(checked) => updatePage("showFreeShipping", checked)} />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* GALLERY editor */}
+                  {editingSectionId === "gallery" && (
+                    <div className="space-y-4 p-4 bg-muted/20 rounded-2xl border border-dashed border-border">
+                      <Label className="text-xs font-bold opacity-70 block mb-2">صور المعرض (Gallery)</Label>
+                      <div className="grid grid-cols-3 gap-2">
+                        {(editingPage.galleryImages || []).map((img, idx) => (
+                          <div key={idx} className="relative aspect-square rounded-xl bg-background border border-border group overflow-hidden">
+                            <img src={img} alt={`Gallery ${idx}`} className="w-full h-full object-cover" />
+                            <button
+                              className="absolute top-1 right-1 w-6 h-6 bg-black/50 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive"
+                              onClick={() => {
+                                const newGallery = [...editingPage.galleryImages];
+                                newGallery.splice(idx, 1);
+                                updatePage("galleryImages", newGallery);
+                              }}
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </button>
+                          </div>
+                        ))}
+                        <div
+                          className="relative aspect-square rounded-xl bg-background border-2 border-dashed border-primary/20 flex flex-col items-center justify-center cursor-pointer hover:bg-primary/5 transition-all group"
+                          onClick={() => {
+                            const input = document.createElement('input');
+                            input.type = 'file';
+                            input.accept = 'image/*';
+                            input.multiple = true;
+                            input.onchange = (e: any) => {
+                              const files = Array.from(e.target.files) as File[];
+                              if (files.length > 0) {
+                                const readers = files.map(file => new Promise<string>((resolve) => {
                                   const reader = new FileReader();
                                   reader.onloadend = () => resolve(reader.result as string);
                                   reader.readAsDataURL(file);
+                                }));
+                                Promise.all(readers).then(results => {
+                                  updatePage("galleryImages", [...(editingPage.galleryImages || []), ...results]);
                                 });
-                              });
-                              Promise.all(readers).then(results => {
-                                updatePage("galleryImages", [...(editingPage.galleryImages || []), ...results]);
-                              });
+                              }
+                            };
+                            input.click();
+                          }}
+                        >
+                          <Upload className="w-5 h-5 text-primary/40 group-hover:text-primary transition-colors mb-1" />
+                          <span className="text-[9px] font-bold text-muted-foreground text-center">اضف<br/>صورة</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* VIDEO editor */}
+                  {editingSectionId === "video" && (
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-bold">فيديو المنتج (تحميل ملف)</Label>
+                      <div
+                        className="relative aspect-video rounded-xl bg-background border-2 border-dashed border-primary/20 flex flex-col items-center justify-center cursor-pointer hover:bg-primary/5 transition-all overflow-hidden group"
+                        onClick={() => {
+                          const input = document.createElement('input');
+                          input.type = 'file';
+                          input.accept = 'video/*';
+                          input.onchange = (e: any) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              const reader = new FileReader();
+                              reader.onloadend = () => updatePage("videoUrl", reader.result as string);
+                              reader.readAsDataURL(file);
                             }
                           };
                           input.click();
                         }}
                       >
-                        <Upload className="w-5 h-5 text-primary/40 group-hover:text-primary transition-colors mb-1" />
-                        <span className="text-[9px] font-bold text-muted-foreground text-center">اضف<br/>صورة</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-4 p-4 bg-muted/30 rounded-2xl border border-border">
-                    <div className="space-y-2">
-                      <Label className="text-xs font-bold opacity-70">التصنيف</Label>
-                      <Input 
-                        disabled={!isAdmin} 
-                        value={editingPage.category} 
-                        onChange={(e) => updatePage("category", e.target.value)} 
-                        className="rounded-xl h-9 text-sm bg-background" 
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-xs font-bold opacity-70">العنوان الرئيسي</Label>
-                      <Input 
-                        value={editingPage.heroTitle} 
-                        onChange={(e) => updatePage("heroTitle", e.target.value)} 
-                        className="rounded-xl h-9 text-sm bg-background" 
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-xs font-bold opacity-70">الوصف (العنوان الفرعي)</Label>
-                      <Textarea 
-                        value={editingPage.heroSubtitle} 
-                        onChange={(e) => updatePage("heroSubtitle", e.target.value)} 
-                        className="rounded-xl text-sm bg-background" 
-                        rows={3} 
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-4 p-4 bg-muted/20 rounded-2xl border border-dashed border-border">
-                    <Label className="text-xs font-bold opacity-70 block mb-2">شعار المتجر (Logo)</Label>
-                    <div 
-                      className="relative w-20 h-20 mx-auto rounded-xl bg-background border-2 border-dashed border-primary/20 flex flex-col items-center justify-center cursor-pointer hover:bg-primary/5 transition-all group overflow-hidden"
-                      onClick={() => {
-                        const input = document.createElement('input');
-                        input.type = 'file';
-                        input.accept = 'image/*';
-                        input.onchange = (e: any) => {
-                          const file = e.target.files?.[0];
-                          if (file) {
-                            const reader = new FileReader();
-                            reader.onloadend = () => {
-                              updatePage("logo", reader.result as string);
-                            };
-                            reader.readAsDataURL(file);
-                          }
-                        };
-                        input.click();
-                      }}
-                    >
-                      {editingPage.logo ? (
-                        <>
-                          <img src={editingPage.logo} alt="Logo" className="absolute inset-0 w-full h-full object-contain p-2" />
-                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                            <Upload className="w-4 h-4 text-white" />
+                        {editingPage.videoUrl ? (
+                          <video src={editingPage.videoUrl} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="flex flex-col items-center gap-2">
+                            <Upload className="w-5 h-5 text-primary/40 group-hover:text-primary transition-colors" />
+                            <span className="text-[10px] text-muted-foreground">اضغط لرفع فيديو</span>
                           </div>
-                        </>
-                      ) : (
-                        <>
-                          <Upload className="w-5 h-5 text-primary/40 group-hover:text-primary transition-colors mb-1" />
-                          <span className="text-[9px] font-bold text-muted-foreground">رفع شعار</span>
-                        </>
+                        )}
+                        {editingPage.videoUrl && (
+                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <Upload className="w-6 h-6 text-white" />
+                          </div>
+                        )}
+                      </div>
+                      {editingPage.videoUrl && (
+                        <Button variant="ghost" size="sm" className="w-full h-7 text-[10px] text-destructive hover:bg-destructive/5"
+                          onClick={() => updatePage("videoUrl", "")}>حذف الفيديو</Button>
                       )}
                     </div>
-                  </div>
+                  )}
 
-                  <div className="space-y-2">
-                    <Label className="text-xs font-bold opacity-70">نص زر الشراء</Label>
-                    <Input value={editingPage.ctaText} onChange={(e) => updatePage("ctaText", e.target.value)} className="rounded-xl h-9 text-sm" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-xs font-bold opacity-70">نص الاستعجال</Label>
-                    <Input value={editingPage.urgencyText} onChange={(e) => updatePage("urgencyText", e.target.value)} className="rounded-xl h-9 text-sm" />
-                  </div>
-
-                  {/* Free Delivery Toggle */}
-                  <div className="flex items-center justify-between p-3 bg-primary/5 rounded-2xl border border-primary/10">
-                    <div className="space-y-0.5">
-                      <Label className="text-xs font-bold">توصيل مجاني</Label>
-                      <p className="text-[10px] text-muted-foreground">تفعيل التوصيل المجاني لكل الولايات</p>
-                    </div>
-                    <Switch
-                      checked={editingPage.showFreeShipping}
-                      onCheckedChange={(checked) => updatePage("showFreeShipping", checked)}
-                    />
-                  </div>
-
-                  {/* Before & After Images */}
-                  <div className="space-y-4 p-4 bg-amber-500/5 rounded-2xl border border-amber-500/10">
-                    <Label className="text-xs font-bold flex items-center gap-2">
-                      <Image className="w-4 h-4 text-amber-600" /> صور قبل وبعد
-                    </Label>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="space-y-2">
-                        <Label className="text-[10px] text-muted-foreground">صورة قبل (Before)</Label>
-                        <div 
-                          className="relative aspect-square rounded-xl bg-background border-2 border-dashed border-primary/20 flex flex-col items-center justify-center cursor-pointer hover:bg-primary/5 transition-all overflow-hidden group"
-                          onClick={() => {
-                            const input = document.createElement('input');
-                            input.type = 'file';
-                            input.accept = 'image/*';
-                            input.onchange = (e: any) => {
-                              const file = e.target.files?.[0];
-                              if (file) {
-                                const reader = new FileReader();
-                                reader.onloadend = () => {
-                                  updatePage("beforeAfterImages", { ...editingPage.beforeAfterImages, before: reader.result as string });
-                                };
-                                reader.readAsDataURL(file);
-                              }
-                            };
-                            input.click();
-                          }}
-                        >
-                          {editingPage.beforeAfterImages?.before ? (
-                            <img src={editingPage.beforeAfterImages.before} className="w-full h-full object-cover" />
-                          ) : (
-                            <Upload className="w-4 h-4 text-primary/40 group-hover:text-primary transition-colors" />
-                          )}
+                  {/* BEFORE-AFTER editor */}
+                  {editingSectionId === "before-after" && (
+                    <div className="space-y-4 p-4 bg-amber-500/5 rounded-2xl border border-amber-500/10">
+                      <Label className="text-xs font-bold flex items-center gap-2">
+                        <Image className="w-4 h-4 text-amber-600" /> صور قبل وبعد
+                      </Label>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-2">
+                          <Label className="text-[10px] text-muted-foreground">صورة قبل</Label>
+                          <div
+                            className="relative aspect-square rounded-xl bg-background border-2 border-dashed border-primary/20 flex flex-col items-center justify-center cursor-pointer hover:bg-primary/5 transition-all overflow-hidden group"
+                            onClick={() => {
+                              const input = document.createElement('input');
+                              input.type = 'file';
+                              input.accept = 'image/*';
+                              input.onchange = (e: any) => {
+                                const file = e.target.files?.[0];
+                                if (file) {
+                                  const reader = new FileReader();
+                                  reader.onloadend = () => updatePage("beforeAfterImages", { ...editingPage.beforeAfterImages, before: reader.result as string });
+                                  reader.readAsDataURL(file);
+                                }
+                              };
+                              input.click();
+                            }}
+                          >
+                            {editingPage.beforeAfterImages?.before ? (
+                              <img src={editingPage.beforeAfterImages.before} className="w-full h-full object-cover" />
+                            ) : (
+                              <Upload className="w-4 h-4 text-primary/40 group-hover:text-primary transition-colors" />
+                            )}
+                          </div>
                         </div>
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-[10px] text-muted-foreground">صورة بعد (After)</Label>
-                        <div 
-                          className="relative aspect-square rounded-xl bg-background border-2 border-dashed border-primary/20 flex flex-col items-center justify-center cursor-pointer hover:bg-primary/5 transition-all overflow-hidden group"
-                          onClick={() => {
-                            const input = document.createElement('input');
-                            input.type = 'file';
-                            input.accept = 'image/*';
-                            input.onchange = (e: any) => {
-                              const file = e.target.files?.[0];
-                              if (file) {
-                                const reader = new FileReader();
-                                reader.onloadend = () => {
-                                  updatePage("beforeAfterImages", { ...editingPage.beforeAfterImages, after: reader.result as string });
-                                };
-                                reader.readAsDataURL(file);
-                              }
-                            };
-                            input.click();
-                          }}
-                        >
-                          {editingPage.beforeAfterImages?.after ? (
-                            <img src={editingPage.beforeAfterImages.after} className="w-full h-full object-cover" />
-                          ) : (
-                            <Upload className="w-4 h-4 text-primary/40 group-hover:text-primary transition-colors" />
-                          )}
+                        <div className="space-y-2">
+                          <Label className="text-[10px] text-muted-foreground">صورة بعد</Label>
+                          <div
+                            className="relative aspect-square rounded-xl bg-background border-2 border-dashed border-primary/20 flex flex-col items-center justify-center cursor-pointer hover:bg-primary/5 transition-all overflow-hidden group"
+                            onClick={() => {
+                              const input = document.createElement('input');
+                              input.type = 'file';
+                              input.accept = 'image/*';
+                              input.onchange = (e: any) => {
+                                const file = e.target.files?.[0];
+                                if (file) {
+                                  const reader = new FileReader();
+                                  reader.onloadend = () => updatePage("beforeAfterImages", { ...editingPage.beforeAfterImages, after: reader.result as string });
+                                  reader.readAsDataURL(file);
+                                }
+                              };
+                              input.click();
+                            }}
+                          >
+                            {editingPage.beforeAfterImages?.after ? (
+                              <img src={editingPage.beforeAfterImages.after} className="w-full h-full object-cover" />
+                            ) : (
+                              <Upload className="w-4 h-4 text-primary/40 group-hover:text-primary transition-colors" />
+                            )}
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
+                  )}
 
-                  {/* Features */}
-
-                  <div className="space-y-2">
-                    <Label className="text-xs font-bold opacity-70">المميزات</Label>
-                    {(editingPage.features || []).map((feature, idx) => (
-                      <div key={idx} className="flex gap-2">
-                        <Input value={feature} onChange={(e) => {
-                          const nf = [...editingPage.features]; nf[idx] = e.target.value;
-                          updatePage("features", nf);
-                        }} className="rounded-xl h-8 text-xs flex-1" />
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10"
-                          onClick={() => updatePage("features", editingPage.features.filter((_, i) => i !== idx))}>
-                          <Trash2 className="w-3 h-3" />
-                        </Button>
-                      </div>
-                    ))}
-                    <Button variant="outline" size="sm" className="w-full rounded-xl border-dashed h-8 text-xs gap-1"
-                      onClick={() => updatePage("features", [...editingPage.features, "ميزة جديدة"])}>
-                      <Plus className="w-3 h-3" /> إضافة
-                    </Button>
-                  </div>
-
-                  {/* Trust Badges */}
-                  <div className="space-y-2">
-                    <Label className="text-xs font-bold opacity-70">شارات الثقة</Label>
-                    {(editingPage.trustBadges || []).map((badge, idx) => (
-                      <div key={idx} className="flex gap-2">
-                        <Input value={badge} onChange={(e) => {
-                          const nb = [...editingPage.trustBadges]; nb[idx] = e.target.value;
-                          updatePage("trustBadges", nb);
-                        }} className="rounded-xl h-8 text-xs flex-1" />
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10"
-                          onClick={() => updatePage("trustBadges", editingPage.trustBadges.filter((_, i) => i !== idx))}>
-                          <Trash2 className="w-3 h-3" />
-                        </Button>
-                      </div>
-                    ))}
-                    <Button variant="outline" size="sm" className="w-full rounded-xl border-dashed h-8 text-xs gap-1"
-                      onClick={() => updatePage("trustBadges", [...editingPage.trustBadges, "شارة جديدة"])}>
-                      <Plus className="w-3 h-3" /> إضافة
-                    </Button>
-                  </div>
-
-                  {/* Reviews */}
-                  <div className="space-y-2">
-                    <Label className="text-xs font-bold opacity-70">آراء العملاء</Label>
-                    {(editingPage.socialProof || []).map((review, idx) => (
-                      <div key={idx} className="p-2 border border-border rounded-xl space-y-1.5">
-                        <div className="flex gap-2">
-                          <Input value={review.name} onChange={(e) => {
-                            const nr = [...editingPage.socialProof]; nr[idx] = { ...nr[idx], name: e.target.value };
-                            updatePage("socialProof", nr);
-                          }} placeholder="الاسم" className="rounded-lg h-7 text-[10px] flex-1" />
-                          <Select value={String(review.rating)} onValueChange={(v) => {
-                            const nr = [...editingPage.socialProof]; nr[idx] = { ...nr[idx], rating: parseInt(v) };
-                            updatePage("socialProof", nr);
-                          }}>
-                            <SelectTrigger className="w-16 h-7 text-[10px] rounded-lg"><SelectValue /></SelectTrigger>
-                            <SelectContent>
-                              {[5, 4, 3].map(r => <SelectItem key={r} value={String(r)}>{"⭐".repeat(r)}</SelectItem>)}
-                            </SelectContent>
-                          </Select>
-                          <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive"
-                            onClick={() => updatePage("socialProof", editingPage.socialProof.filter((_, i) => i !== idx))}>
+                  {/* FEATURES editor */}
+                  {editingSectionId === "features" && (
+                    <div className="space-y-2">
+                      <Label className="text-xs font-bold opacity-70">المميزات</Label>
+                      {(editingPage.features || []).map((feature, idx) => (
+                        <div key={idx} className="flex gap-2">
+                          <Input value={feature} onChange={(e) => {
+                            const nf = [...editingPage.features]; nf[idx] = e.target.value;
+                            updatePage("features", nf);
+                          }} className="rounded-xl h-8 text-xs flex-1" />
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10"
+                            onClick={() => updatePage("features", editingPage.features.filter((_, i) => i !== idx))}>
                             <Trash2 className="w-3 h-3" />
                           </Button>
                         </div>
-                        <Input value={review.text} onChange={(e) => {
-                          const nr = [...editingPage.socialProof]; nr[idx] = { ...nr[idx], text: e.target.value };
-                          updatePage("socialProof", nr);
-                        }} placeholder="نص المراجعة" className="rounded-lg h-7 text-[10px]" />
-                      </div>
-                    ))}
-                    <Button variant="outline" size="sm" className="w-full rounded-xl border-dashed h-8 text-xs gap-1"
-                      onClick={() => updatePage("socialProof", [...editingPage.socialProof, { name: "عميل جديد", text: "تجربة ممتازة", rating: 5 }])}>
-                      <Plus className="w-3 h-3" /> إضافة رأي
-                    </Button>
-                  </div>
+                      ))}
+                      <Button variant="outline" size="sm" className="w-full rounded-xl border-dashed h-8 text-xs gap-1"
+                        onClick={() => updatePage("features", [...editingPage.features, "ميزة جديدة"])}>
+                        <Plus className="w-3 h-3" /> إضافة ميزة
+                      </Button>
+                    </div>
+                  )}
 
-                  {/* FAQ */}
-                  <div className="space-y-2">
-                    <Label className="text-xs font-bold opacity-70">الأسئلة الشائعة</Label>
-                    {(editingPage.faqItems || []).map((faq, idx) => (
-                      <div key={idx} className="p-2 border border-border rounded-xl space-y-1.5">
-                        <div className="flex gap-2">
-                          <Input value={faq.q} onChange={(e) => {
-                            const nf = [...editingPage.faqItems]; nf[idx] = { ...nf[idx], q: e.target.value };
+                  {/* TRUST-BADGES editor */}
+                  {editingSectionId === "trust-badges" && (
+                    <div className="space-y-2">
+                      <Label className="text-xs font-bold opacity-70">شارات الثقة</Label>
+                      {(editingPage.trustBadges || []).map((badge, idx) => (
+                        <div key={idx} className="flex gap-2">
+                          <Input value={badge} onChange={(e) => {
+                            const nb = [...editingPage.trustBadges]; nb[idx] = e.target.value;
+                            updatePage("trustBadges", nb);
+                          }} className="rounded-xl h-8 text-xs flex-1" />
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10"
+                            onClick={() => updatePage("trustBadges", editingPage.trustBadges.filter((_, i) => i !== idx))}>
+                            <Trash2 className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      ))}
+                      <Button variant="outline" size="sm" className="w-full rounded-xl border-dashed h-8 text-xs gap-1"
+                        onClick={() => updatePage("trustBadges", [...editingPage.trustBadges, "شارة جديدة"])}>
+                        <Plus className="w-3 h-3" /> إضافة شارة
+                      </Button>
+                    </div>
+                  )}
+
+                  {/* REVIEWS editor */}
+                  {editingSectionId === "reviews" && (
+                    <div className="space-y-2">
+                      <Label className="text-xs font-bold opacity-70">آراء العملاء</Label>
+                      {(editingPage.socialProof || []).map((review, idx) => (
+                        <div key={idx} className="p-2 border border-border rounded-xl space-y-1.5">
+                          <div className="flex gap-2">
+                            <Input value={review.name} onChange={(e) => {
+                              const nr = [...editingPage.socialProof]; nr[idx] = { ...nr[idx], name: e.target.value };
+                              updatePage("socialProof", nr);
+                            }} placeholder="الاسم" className="rounded-lg h-7 text-[10px] flex-1" />
+                            <Select value={String(review.rating)} onValueChange={(v) => {
+                              const nr = [...editingPage.socialProof]; nr[idx] = { ...nr[idx], rating: parseInt(v) };
+                              updatePage("socialProof", nr);
+                            }}>
+                              <SelectTrigger className="w-16 h-7 text-[10px] rounded-lg"><SelectValue /></SelectTrigger>
+                              <SelectContent>
+                                {[5, 4, 3].map(r => <SelectItem key={r} value={String(r)}>{"⭐".repeat(r)}</SelectItem>)}
+                              </SelectContent>
+                            </Select>
+                            <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive"
+                              onClick={() => updatePage("socialProof", editingPage.socialProof.filter((_, i) => i !== idx))}>
+                              <Trash2 className="w-3 h-3" />
+                            </Button>
+                          </div>
+                          <Input value={review.text} onChange={(e) => {
+                            const nr = [...editingPage.socialProof]; nr[idx] = { ...nr[idx], text: e.target.value };
+                            updatePage("socialProof", nr);
+                          }} placeholder="نص المراجعة" className="rounded-lg h-7 text-[10px]" />
+                        </div>
+                      ))}
+                      <Button variant="outline" size="sm" className="w-full rounded-xl border-dashed h-8 text-xs gap-1"
+                        onClick={() => updatePage("socialProof", [...editingPage.socialProof, { name: "عميل جديد", text: "تجربة ممتازة", rating: 5 }])}>
+                        <Plus className="w-3 h-3" /> إضافة رأي
+                      </Button>
+                    </div>
+                  )}
+
+                  {/* FAQ editor */}
+                  {editingSectionId === "faq" && (
+                    <div className="space-y-2">
+                      <Label className="text-xs font-bold opacity-70">الأسئلة الشائعة</Label>
+                      {(editingPage.faqItems || []).map((faq, idx) => (
+                        <div key={idx} className="p-2 border border-border rounded-xl space-y-1.5">
+                          <div className="flex gap-2">
+                            <Input value={faq.q} onChange={(e) => {
+                              const nf = [...editingPage.faqItems]; nf[idx] = { ...nf[idx], q: e.target.value };
+                              updatePage("faqItems", nf);
+                            }} placeholder="السؤال" className="rounded-lg h-7 text-[10px] flex-1" />
+                            <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive"
+                              onClick={() => updatePage("faqItems", editingPage.faqItems.filter((_, i) => i !== idx))}>
+                              <Trash2 className="w-3 h-3" />
+                            </Button>
+                          </div>
+                          <Input value={faq.a} onChange={(e) => {
+                            const nf = [...editingPage.faqItems]; nf[idx] = { ...nf[idx], a: e.target.value };
                             updatePage("faqItems", nf);
-                          }} placeholder="السؤال" className="rounded-lg h-7 text-[10px] flex-1" />
-                          <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive"
-                            onClick={() => updatePage("faqItems", editingPage.faqItems.filter((_, i) => i !== idx))}>
-                            <Trash2 className="w-3 h-3" />
-                          </Button>
+                          }} placeholder="الإجابة" className="rounded-lg h-7 text-[10px]" />
                         </div>
-                        <Input value={faq.a} onChange={(e) => {
-                          const nf = [...editingPage.faqItems]; nf[idx] = { ...nf[idx], a: e.target.value };
-                          updatePage("faqItems", nf);
-                        }} placeholder="الإجابة" className="rounded-lg h-7 text-[10px]" />
+                      ))}
+                      <Button variant="outline" size="sm" className="w-full rounded-xl border-dashed h-8 text-xs gap-1"
+                        onClick={() => updatePage("faqItems", [...editingPage.faqItems, { q: "سؤال جديد؟", a: "الإجابة هنا" }])}>
+                        <Plus className="w-3 h-3" /> إضافة سؤال
+                      </Button>
+                    </div>
+                  )}
+
+                  {/* BUNDLE editor */}
+                  {editingSectionId === "bundle" && (
+                    <div className="space-y-3">
+                      <Label className="text-xs font-bold opacity-70">حزم العرض</Label>
+                      {(editingPage.bundles || []).map((bundle, idx) => (
+                        <div key={bundle.id || idx} className="p-2 border rounded-lg bg-background space-y-2 relative group">
+                          <Button variant="ghost" size="icon" className="absolute top-1 left-1 h-6 w-6 text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={() => {
+                              const newBundles = [...editingPage.bundles!];
+                              newBundles.splice(idx, 1);
+                              updatePage("bundles", newBundles);
+                            }}>
+                            <X className="w-3 h-3" />
+                          </Button>
+                          <div className="grid grid-cols-[3rem_1fr] gap-2 items-center">
+                            <div
+                              className="w-12 h-12 rounded-md bg-muted border-2 border-dashed border-primary/20 flex items-center justify-center cursor-pointer hover:bg-primary/5 transition-all overflow-hidden"
+                              onClick={() => {
+                                const input = document.createElement('input');
+                                input.type = 'file';
+                                input.accept = 'image/*';
+                                input.onchange = (e: any) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) {
+                                    const reader = new FileReader();
+                                    reader.onloadend = () => {
+                                      const newBundles = [...editingPage.bundles!];
+                                      newBundles[idx].image = reader.result as string;
+                                      updatePage("bundles", newBundles);
+                                    };
+                                    reader.readAsDataURL(file);
+                                  }
+                                };
+                                input.click();
+                              }}
+                            >
+                              {bundle.image ? <img src={bundle.image} className="w-full h-full object-cover" /> : <Upload className="w-3 h-3 text-primary/40" />}
+                            </div>
+                            <div className="space-y-1.5">
+                              <Input value={bundle.name} onChange={(e) => {
+                                const newBundles = [...editingPage.bundles!];
+                                newBundles[idx].name = e.target.value;
+                                updatePage("bundles", newBundles);
+                              }} placeholder="اسم الحزمة" className="h-6 text-[10px] rounded" />
+                              <div className="flex items-center gap-2">
+                                <Label className="text-[9px] shrink-0">السعر (دج):</Label>
+                                <Input type="number" value={bundle.price} onChange={(e) => {
+                                  const newBundles = [...editingPage.bundles!];
+                                  newBundles[idx].price = parseInt(e.target.value) || 0;
+                                  updatePage("bundles", newBundles);
+                                }} className="h-6 text-[10px] rounded" />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                      <Button variant="outline" size="sm" className="w-full rounded-xl border-dashed h-8 text-xs gap-1"
+                        onClick={() => {
+                          const newBundle: BundlePack = {
+                            id: `bundle-${Date.now()}`,
+                            name: `حزمة ${(editingPage.bundles?.length || 0) + 1}`,
+                            image: "",
+                            price: editingPage.price * ((editingPage.bundles?.length || 0) + 1)
+                          };
+                          updatePage("bundles", [...(editingPage.bundles || []), newBundle]);
+                        }}>
+                        <Plus className="w-3 h-3" /> إضافة حزمة
+                      </Button>
+                    </div>
+                  )}
+
+                  {/* Toggle-only sections: no fields */}
+                  {!["hero","cta","urgency-bar","gallery","video","before-after","features","trust-badges","reviews","faq","bundle"].includes(editingSectionId) && (
+                    <div className="p-5 bg-muted/30 rounded-2xl text-center space-y-2">
+                      <div className="w-12 h-12 rounded-full bg-primary/10 text-primary flex items-center justify-center mx-auto">
+                        <Check className="w-5 h-5" />
                       </div>
-                    ))}
-                    <Button variant="outline" size="sm" className="w-full rounded-xl border-dashed h-8 text-xs gap-1"
-                      onClick={() => updatePage("faqItems", [...editingPage.faqItems, { q: "سؤال جديد؟", a: "الإجابة هنا" }])}>
-                      <Plus className="w-3 h-3" /> إضافة سؤال
-                    </Button>
+                      <p className="text-xs font-bold text-foreground">هذا القسم مفعّل تلقائياً</p>
+                      <p className="text-[10px] text-muted-foreground leading-relaxed max-w-[260px] mx-auto">
+                        لا يحتوي على إعدادات إضافية. يمكنك إخفاؤه من قائمة الأقسام إذا لم تكن تحتاجه.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                /* ── LIST MODE ── */
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between px-1">
+                    <h3 className="font-black text-sm uppercase tracking-wider text-muted-foreground">
+                      قائمة مكونات الصفحة
+                    </h3>
+                    <span className="text-[9px] font-bold text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+                      {editingPage.sections.length} قسم
+                    </span>
                   </div>
+                  <p className="text-[10px] text-muted-foreground leading-relaxed px-1">
+                    💡 اضغط على قسم لتعديله، اسحبه لإعادة الترتيب، أو اضغط على 👁 لإخفائه.
+                  </p>
 
-                  {/* Variants (Colors/Sizes) */}
-                  <div className="space-y-4 pt-4 border-t border-border">
-                    <h4 className="text-xs font-black flex items-center gap-2">
-                      <Palette className="w-4 h-4 text-primary" /> خيارات المنتج (الألوان والمقاسات)
-                    </h4>
-                    
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-bold opacity-60">الألوان المتاحة</Label>
-                      <div className="flex gap-2">
-                        <Input 
-                          placeholder="أضف لون..." 
-                          className="rounded-xl h-9 text-xs" 
-                          id="new-color-input"
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                              const val = e.currentTarget.value.trim();
-                              if (val) {
-                                updatePage("availableColors", [...(editingPage.availableColors || []), val]);
-                                e.currentTarget.value = "";
-                              }
-                            }
-                          }}
-                        />
-                        <Button 
-                          size="sm" 
-                          variant="secondary" 
-                          className="h-9 px-3 rounded-xl text-[10px] font-bold"
-                          onClick={() => {
-                            const input = document.getElementById("new-color-input") as HTMLInputElement;
-                            if (input?.value.trim()) {
-                              updatePage("availableColors", [...(editingPage.availableColors || []), input.value.trim()]);
-                              input.value = "";
-                            }
-                          }}
+                  <Reorder.Group
+                    axis="y"
+                    values={editingPage.sections}
+                    onReorder={(newIds: string[]) => updatePage("sections", newIds)}
+                    className="space-y-2"
+                  >
+                    {editingPage.sections.map((id) => {
+                      const sec = availableSections.find(s => s.id === id);
+                      if (!sec) return null;
+                      return (
+                        <Reorder.Item
+                          key={id}
+                          value={id}
+                          className="bg-card border-2 border-border rounded-2xl p-3 flex items-center gap-2 hover:border-primary/60 transition-all cursor-grab active:cursor-grabbing active:shadow-xl active:scale-[1.02] active:z-50 active:border-primary"
+                          whileDrag={{ scale: 1.03, boxShadow: "0 10px 30px rgba(0,0,0,0.15)" }}
                         >
-                          إضافة
-                        </Button>
-                      </div>
-                      <div className="flex flex-wrap gap-1.5 mt-2">
-                        {(editingPage.availableColors || []).map((color, idx) => (
-                          <Badge key={idx} variant="secondary" className="gap-1 px-2 py-1 rounded-lg text-[10px] font-bold">
-                            {color}
-                            <X className="w-3 h-3 cursor-pointer" onClick={() => updatePage("availableColors", editingPage.availableColors!.filter((_, i) => i !== idx))} />
-                          </Badge>
+                          <GripVertical className="w-4 h-4 text-muted-foreground/40 shrink-0 pointer-events-none" />
+                          <button
+                            type="button"
+                            onClick={() => setEditingSectionId(id)}
+                            className="flex-1 flex items-center gap-2 text-right min-w-0"
+                          >
+                            <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-primary/10 text-primary">
+                              <sec.icon className="w-4 h-4" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-bold truncate">{sec.name}</p>
+                              <p className="text-[9px] text-muted-foreground">
+                                {sec.required ? "أساسي" : "مفعّل"}
+                              </p>
+                            </div>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); if (!sec.required) toggleSection(id); }}
+                            disabled={sec.required}
+                            className={`p-1.5 rounded-lg transition-colors shrink-0 ${sec.required ? "text-muted-foreground/30 cursor-not-allowed" : "text-primary hover:bg-primary/10"}`}
+                            title={sec.required ? "قسم أساسي - لا يمكن إخفاؤه" : "إخفاء القسم"}
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                          </button>
+                        </Reorder.Item>
+                      );
+                    })}
+                  </Reorder.Group>
+
+                  {/* Inactive sections — pickable to add */}
+                  {(() => {
+                    const inactive = availableSections.filter(s => !editingPage.sections.includes(s.id));
+                    if (inactive.length === 0) return null;
+                    return (
+                      <div className="space-y-2 pt-4 border-t border-border">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Plus className="w-3.5 h-3.5 text-muted-foreground" />
+                          <span className="text-[10px] font-bold text-muted-foreground tracking-wider uppercase">أقسام للإضافة</span>
+                        </div>
+                        {inactive.map(sec => (
+                          <button
+                            key={sec.id}
+                            type="button"
+                            onClick={() => toggleSection(sec.id)}
+                            className="w-full flex items-center gap-3 p-3 rounded-xl border border-dashed border-border hover:border-primary hover:bg-primary/5 transition-all text-right"
+                          >
+                            <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-muted text-muted-foreground">
+                              <sec.icon className="w-4 h-4" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-bold">{sec.name}</p>
+                              <p className="text-[9px] text-muted-foreground truncate">{sec.desc}</p>
+                            </div>
+                            <Plus className="w-4 h-4 text-muted-foreground shrink-0" />
+                          </button>
                         ))}
                       </div>
-                    </div>
+                    );
+                  })()}
 
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-bold opacity-60">المقاسات المتاحة</Label>
-                      <div className="flex gap-2">
-                        <Input 
-                          placeholder="أضف مقاس..." 
-                          className="rounded-xl h-9 text-xs" 
-                          id="new-size-input"
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                              const val = e.currentTarget.value.trim();
-                              if (val) {
-                                updatePage("availableSizes", [...(editingPage.availableSizes || []), val]);
-                                e.currentTarget.value = "";
-                              }
-                            }
-                          }}
-                        />
-                        <Button 
-                          size="sm" 
-                          variant="secondary" 
-                          className="h-9 px-3 rounded-xl text-[10px] font-bold"
-                          onClick={() => {
-                            const input = document.getElementById("new-size-input") as HTMLInputElement;
-                            if (input?.value.trim()) {
-                              updatePage("availableSizes", [...(editingPage.availableSizes || []), input.value.trim()]);
-                              input.value = "";
-                            }
-                          }}
-                        >
-                          إضافة
-                        </Button>
-                      </div>
-                      <div className="flex flex-wrap gap-1.5 mt-2">
-                        {(editingPage.availableSizes || []).map((size, idx) => (
-                          <Badge key={idx} variant="secondary" className="gap-1 px-2 py-1 rounded-lg text-[10px] font-bold">
-                            {size}
-                            <X className="w-3 h-3 cursor-pointer" onClick={() => updatePage("availableSizes", editingPage.availableSizes!.filter((_, i) => i !== idx))} />
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
+                  <div className="p-3 bg-primary/5 rounded-xl border border-primary/10">
+                    <p className="text-[10px] text-primary/80 leading-relaxed">
+                      💡 الأقسام الأساسية لا يمكن إخفاؤها للحفاظ على هيكل الصفحة.
+                    </p>
                   </div>
                 </div>
-              )}
+              ))}
 
               {/* ===== TEMPLATES TAB ===== */}
               {/* ===== THEME TAB: templates ===== */}
@@ -2227,284 +2409,6 @@ const LandingPageBuilder = ({ initialProductToEdit, onBack }: { initialProductTo
                 </div>
               )}
 
-              {/* ===== SECTIONS TAB ===== */}
-              {activeDesignTab === "sections" && (() => {
-                const activeOrdered = editingPage.sections
-                  .map(id => availableSections.find(s => s.id === id))
-                  .filter((s): s is typeof availableSections[number] => !!s);
-                const inactive = availableSections.filter(s => !editingPage.sections.includes(s.id));
-                const renderRows = [
-                  ...activeOrdered.map(s => ({ section: s, isActive: true })),
-                  ...inactive.map(s => ({ section: s, isActive: false })),
-                ];
-                return (
-                <div className="space-y-2">
-                  <p className="text-xs text-muted-foreground mb-3">
-                    اسحب الأقسام لإعادة ترتيبها، أو فعّل/عطّل الأقسام حسب حاجتك. الأقسام المفعّلة تظهر في الأعلى بالترتيب الذي ستظهر به في الصفحة.
-                  </p>
-                  {renderRows.map(({ section, isActive }, rowIdx) => {
-                    const activeIdx = isActive ? editingPage.sections.indexOf(section.id) : -1;
-                    const isFirstInactive = !isActive && rowIdx === activeOrdered.length;
-                    return (
-                      <div key={section.id} className="space-y-2">
-                        {isFirstInactive && (
-                          <div className="flex items-center gap-2 pt-3 pb-1">
-                            <div className="h-px flex-1 bg-border" />
-                            <span className="text-[10px] font-bold text-muted-foreground tracking-wider uppercase">أقسام للإضافة</span>
-                            <div className="h-px flex-1 bg-border" />
-                          </div>
-                        )}
-                        <div className={`flex items-stretch gap-1.5 rounded-xl border transition-all ${isActive ? "border-primary bg-primary/5" : "border-border/50"}`}>
-                          {/* Reorder arrows (only for active sections) */}
-                          {isActive && (
-                            <div className="flex flex-col justify-center gap-0.5 pl-1">
-                              <button
-                                type="button"
-                                onClick={() => moveSection(section.id, "up")}
-                                disabled={activeIdx <= 0}
-                                title="نقل للأعلى"
-                                className="w-6 h-6 rounded-md flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-                              >
-                                <ChevronUp className="w-3.5 h-3.5" />
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => moveSection(section.id, "down")}
-                                disabled={activeIdx >= editingPage.sections.length - 1}
-                                title="نقل للأسفل"
-                                className="w-6 h-6 rounded-md flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-                              >
-                                <ChevronDown className="w-3.5 h-3.5" />
-                              </button>
-                            </div>
-                          )}
-                          <button
-                            onClick={() => toggleSection(section.id)}
-                            disabled={section.required}
-                            className={`flex-1 flex items-center gap-3 p-3 rounded-xl text-right ${section.required ? "opacity-60 cursor-not-allowed" : ""}`}
-                          >
-                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${isActive ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}>
-                              <section.icon className="w-4 h-4" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-xs font-bold flex items-center gap-1.5">
-                                {section.name}
-                                {isActive && <span className="text-[9px] font-normal text-muted-foreground">#{activeIdx + 1}</span>}
-                              </p>
-                              <p className="text-[9px] text-muted-foreground truncate">{section.desc}</p>
-                            </div>
-                            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${isActive ? "bg-primary border-primary text-white" : "border-border"}`}>
-                              {isActive && <Check className="w-3 h-3" />}
-                            </div>
-                          </button>
-                        </div>
-
-                        {isActive && section.id === "video" && (
-                          <div className="p-3 border rounded-xl bg-muted/20 space-y-2 mt-2">
-                            <Label className="text-[10px] font-bold">فيديو المنتج (تحميل ملف)</Label>
-                            <div
-                              className="relative aspect-video rounded-xl bg-background border-2 border-dashed border-primary/20 flex flex-col items-center justify-center cursor-pointer hover:bg-primary/5 transition-all overflow-hidden group"
-                              onClick={() => {
-                                const input = document.createElement('input');
-                                input.type = 'file';
-                                input.accept = 'video/*';
-                                input.onchange = (e: any) => {
-                                  const file = e.target.files?.[0];
-                                  if (file) {
-                                    const reader = new FileReader();
-                                    reader.onloadend = () => {
-                                      updatePage("videoUrl", reader.result as string);
-                                    };
-                                    reader.readAsDataURL(file);
-                                  }
-                                };
-                                input.click();
-                              }}
-                            >
-                              {editingPage.videoUrl ? (
-                                <video src={editingPage.videoUrl} className="w-full h-full object-cover" />
-                              ) : (
-                                <div className="flex flex-col items-center gap-2">
-                                  <Upload className="w-5 h-5 text-primary/40 group-hover:text-primary transition-colors" />
-                                  <span className="text-[10px] text-muted-foreground">اضغط لرفع فيديو</span>
-                                </div>
-                              )}
-                              {editingPage.videoUrl && (
-                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                  <Upload className="w-6 h-6 text-white" />
-                                </div>
-                              )}
-                            </div>
-                            {editingPage.videoUrl && (
-                              <Button 
-                                variant="ghost" 
-                                size="sm" 
-                                className="w-full h-7 text-[10px] text-destructive hover:bg-destructive/5"
-                                onClick={() => updatePage("videoUrl", "")}
-                              >
-                                حذف الفيديو
-                              </Button>
-                            )}
-                          </div>
-                        )}
-
-                        {isActive && section.id === "before-after" && (
-                          <div className="p-3 border rounded-xl bg-muted/20 space-y-3 mt-2 grid grid-cols-2 gap-3">
-                            <div className="space-y-1">
-                              <Label className="text-[10px] font-bold">صورة (قبل)</Label>
-                              <div
-                                className="relative aspect-square rounded-xl bg-background border-2 border-dashed border-primary/20 flex flex-col items-center justify-center cursor-pointer hover:bg-primary/5 transition-all overflow-hidden group"
-                                onClick={() => {
-                                  const input = document.createElement('input');
-                                  input.type = 'file';
-                                  input.accept = 'image/*';
-                                  input.onchange = (e: any) => {
-                                    const file = e.target.files?.[0];
-                                    if (file) {
-                                      const reader = new FileReader();
-                                      reader.onloadend = () => {
-                                        updatePage("beforeAfterImages", { ...editingPage.beforeAfterImages, before: reader.result as string });
-                                      };
-                                      reader.readAsDataURL(file);
-                                    }
-                                  };
-                                  input.click();
-                                }}
-                              >
-                                {editingPage.beforeAfterImages?.before ? (
-                                  <img src={editingPage.beforeAfterImages.before} className="w-full h-full object-cover" />
-                                ) : (
-                                  <Upload className="w-4 h-4 text-primary/40 group-hover:text-primary transition-colors" />
-                                )}
-                              </div>
-                            </div>
-                            <div className="space-y-1">
-                              <Label className="text-[10px] font-bold">صورة (بعد)</Label>
-                              <div
-                                className="relative aspect-square rounded-xl bg-background border-2 border-dashed border-primary/20 flex flex-col items-center justify-center cursor-pointer hover:bg-primary/5 transition-all overflow-hidden group"
-                                onClick={() => {
-                                  const input = document.createElement('input');
-                                  input.type = 'file';
-                                  input.accept = 'image/*';
-                                  input.onchange = (e: any) => {
-                                    const file = e.target.files?.[0];
-                                    if (file) {
-                                      const reader = new FileReader();
-                                      reader.onloadend = () => {
-                                        updatePage("beforeAfterImages", { ...editingPage.beforeAfterImages, after: reader.result as string });
-                                      };
-                                      reader.readAsDataURL(file);
-                                    }
-                                  };
-                                  input.click();
-                                }}
-                              >
-                                {editingPage.beforeAfterImages?.after ? (
-                                  <img src={editingPage.beforeAfterImages.after} className="w-full h-full object-cover" />
-                                ) : (
-                                  <Upload className="w-4 h-4 text-primary/40 group-hover:text-primary transition-colors" />
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        )}
-
-                        {isActive && section.id === "bundle" && (
-                          <div className="p-3 border rounded-xl bg-muted/20 space-y-3 mt-2">
-                            {(editingPage.bundles || []).map((bundle, idx) => (
-                              <div key={bundle.id || idx} className="p-2 border rounded-lg bg-background space-y-2 relative group">
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="absolute top-1 left-1 h-6 w-6 text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
-                                  onClick={() => {
-                                    const newBundles = [...editingPage.bundles!];
-                                    newBundles.splice(idx, 1);
-                                    updatePage("bundles", newBundles);
-                                  }}
-                                >
-                                  <X className="w-3 h-3" />
-                                </Button>
-                                <div className="grid grid-cols-[3rem_1fr] gap-2 items-center">
-                                  <div
-                                    className="w-12 h-12 rounded-md bg-muted border-2 border-dashed border-primary/20 flex items-center justify-center cursor-pointer hover:bg-primary/5 transition-all overflow-hidden"
-                                    onClick={() => {
-                                      const input = document.createElement('input');
-                                      input.type = 'file';
-                                      input.accept = 'image/*';
-                                      input.onchange = (e: any) => {
-                                        const file = e.target.files?.[0];
-                                        if (file) {
-                                          const reader = new FileReader();
-                                          reader.onloadend = () => {
-                                            const newBundles = [...editingPage.bundles!];
-                                            newBundles[idx].image = reader.result as string;
-                                            updatePage("bundles", newBundles);
-                                          };
-                                          reader.readAsDataURL(file);
-                                        }
-                                      };
-                                      input.click();
-                                    }}
-                                  >
-                                    {bundle.image ? (
-                                      <img src={bundle.image} className="w-full h-full object-cover" />
-                                    ) : (
-                                      <Upload className="w-3 h-3 text-primary/40" />
-                                    )}
-                                  </div>
-                                  <div className="space-y-1.5">
-                                    <Input
-                                      value={bundle.name}
-                                      onChange={(e) => {
-                                        const newBundles = [...editingPage.bundles!];
-                                        newBundles[idx].name = e.target.value;
-                                        updatePage("bundles", newBundles);
-                                      }}
-                                      placeholder="اسم الحزمة (مثال: قطعتين)"
-                                      className="h-6 text-[10px] rounded"
-                                    />
-                                    <div className="flex items-center gap-2">
-                                      <Label className="text-[9px] shrink-0">السعر (دج):</Label>
-                                      <Input
-                                        type="number"
-                                        value={bundle.price}
-                                        onChange={(e) => {
-                                          const newBundles = [...editingPage.bundles!];
-                                          newBundles[idx].price = parseInt(e.target.value) || 0;
-                                          updatePage("bundles", newBundles);
-                                        }}
-                                        className="h-6 text-[10px] rounded"
-                                      />
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                            ))}
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="w-full rounded-xl border-dashed h-8 text-xs gap-1"
-                              onClick={() => {
-                                const newBundle: BundlePack = {
-                                  id: `bundle-${Date.now()}`,
-                                  name: `حزمة ${(editingPage.bundles?.length || 0) + 1}`,
-                                  image: "",
-                                  price: editingPage.price * ((editingPage.bundles?.length || 0) + 1)
-                                };
-                                updatePage("bundles", [...(editingPage.bundles || []), newBundle]);
-                              }}
-                            >
-                              <Plus className="w-3 h-3" /> إضافة حزمة
-                            </Button>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-                );
-              })()}
 
               {/* ===== SETTINGS TAB ===== */}
               {activeDesignTab === "settings" && (
