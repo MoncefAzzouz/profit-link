@@ -467,12 +467,26 @@ const LandingPageBuilder = ({ initialProductToEdit, onBack }: { initialProductTo
           setIsFetchingDetails(existingPage.id);
           try {
             const token = localStorage.getItem("token");
-            const res = await fetch(`${API_BASE_URL}/store/pages/${existingPage.id}`, {
-              headers: { 'Authorization': `Bearer ${token}` }
-            });
+            // Fetch the affiliate's own page AND the admin's default in parallel.
+            // The admin page is used as a fallback when the affiliate's draft is still on the
+            // auto-generated default template ("original") and hasn't been published yet — that
+            // way the live builder matches what معاينة (the public preview) actually serves.
+            const [res, adminRes] = await Promise.all([
+              fetch(`${API_BASE_URL}/store/pages/${existingPage.id}`, { headers: { 'Authorization': `Bearer ${token}` } }),
+              fetch(`${API_BASE_URL}/store/pages/admin-default/${initialProductToEdit.id}`, { headers: { 'Authorization': `Bearer ${token}` } }).catch(() => null),
+            ]);
             const json = await res.json();
+            const adminJson = adminRes && adminRes.ok ? await adminRes.json() : null;
+            const adminConfig = adminJson?.data?.pageConfig || adminJson?.data || null;
             if (res.ok && json.data) {
-              const raw = json.data.pageConfig || json.data;
+              let raw = json.data.pageConfig || json.data;
+              // ─── Heuristic: affiliate's draft is "uncustomized" if it's a draft AND
+              // still on the auto-default template. In that case, swap in admin's pageConfig
+              // as the base so the live builder reflects admin's actual design.
+              const isUncustomized = (json.data.status === 'draft') && (raw?.template === 'original' || !raw?.template) && !isAdmin;
+              if (isUncustomized && adminConfig && adminConfig.template) {
+                raw = { ...raw, ...adminConfig };
+              }
               const def = defaultNewPage();
               const fullPage: LandingPageConfig = {
                 ...def,
@@ -1210,10 +1224,10 @@ const LandingPageBuilder = ({ initialProductToEdit, onBack }: { initialProductTo
           </button>
         </div>
 
-        <div className="p-4 sm:p-6 space-y-8">
+        <div className="p-4 sm:p-6 flex flex-col gap-8">
           {/* Hero Section */}
           {(p.sections || []).includes("hero") && (
-            <div className={`${!isMobile && p.heroLayout === "split" ? "grid grid-cols-2 gap-8 items-center" : "space-y-6"}`}>
+            <div style={{ order: (p.sections || []).indexOf("hero") }} className={`${!isMobile && p.heroLayout === "split" ? "grid grid-cols-2 gap-8 items-center" : "space-y-6"}`}>
               <div className={`relative overflow-hidden bg-muted shadow-lg ${p.imageStyle === "circle" ? "rounded-full aspect-square max-w-[320px] mx-auto" : p.imageStyle === "blob" ? "rounded-[30%_70%_70%_30%/30%_30%_70%_70%]" : p.imageStyle === "sharp" ? "" : ""}`}
                 style={{ borderRadius: p.imageStyle === "rounded" ? br : undefined, aspectRatio: p.imageStyle === "circle" ? "1" : "4/3" }}>
                 {p.heroImage ? (
@@ -1254,7 +1268,7 @@ const LandingPageBuilder = ({ initialProductToEdit, onBack }: { initialProductTo
 
           {/* Social Proof Numbers */}
           {(p.sections || []).includes("social-proof") && (
-            <div className="grid grid-cols-3 gap-3 text-center">
+            <div style={{ order: (p.sections || []).indexOf("social-proof") }} className="grid grid-cols-3 gap-3 text-center">
               {[
                 { icon: Users, val: "2,340+", label: "مشتري" },
                 { icon: Star, val: "4.9/5", label: "تقييم" },
@@ -1271,7 +1285,7 @@ const LandingPageBuilder = ({ initialProductToEdit, onBack }: { initialProductTo
 
           {/* Gallery Section */}
           {(p.sections || []).includes("gallery") && p.galleryImages && p.galleryImages.length > 0 && (
-            <div className="space-y-4" dir="rtl">
+            <div style={{ order: (p.sections || []).indexOf("gallery") }} className="space-y-4" dir="rtl">
               <h3 className="text-base font-bold flex items-center gap-2">
                 <Camera className="w-5 h-5" style={{ color: p.primaryColor }} /> صور المنتج
               </h3>
@@ -1287,7 +1301,7 @@ const LandingPageBuilder = ({ initialProductToEdit, onBack }: { initialProductTo
 
           {/* Features */}
           {(p.sections || []).includes("features") && (
-            <div className="space-y-4" dir="rtl">
+            <div style={{ order: (p.sections || []).indexOf("features") }} className="space-y-4" dir="rtl">
               <h3 className="text-base font-bold flex items-center gap-2">
                 <Star className="w-5 h-5" style={{ color: p.primaryColor }} /> لماذا هذا المنتج؟
               </h3>
@@ -1306,7 +1320,7 @@ const LandingPageBuilder = ({ initialProductToEdit, onBack }: { initialProductTo
 
           {/* Video */}
           {(p.sections || []).includes("video") && (
-            <div className="relative aspect-video rounded-2xl overflow-hidden bg-muted flex items-center justify-center shadow-lg" style={{ borderRadius: br }}>
+            <div className="relative aspect-video rounded-2xl overflow-hidden bg-muted flex items-center justify-center shadow-lg" style={{ borderRadius: br, order: (p.sections || []).indexOf("video") }}>
               <div className="w-16 h-16 rounded-full flex items-center justify-center shadow-2xl" style={{ backgroundColor: p.primaryColor }}>
                 <Play className="w-7 h-7 text-white fill-white ml-1" />
               </div>
@@ -1316,7 +1330,7 @@ const LandingPageBuilder = ({ initialProductToEdit, onBack }: { initialProductTo
 
           {/* Reviews */}
           {(p.sections || []).includes("reviews") && (
-            <div className="space-y-4" dir="rtl">
+            <div style={{ order: (p.sections || []).indexOf("reviews") }} className="space-y-4" dir="rtl">
               <h3 className="text-base font-bold flex items-center gap-2">
                 <MessageSquare className="w-5 h-5" style={{ color: p.primaryColor }} /> آراء العملاء
               </h3>
@@ -1343,7 +1357,7 @@ const LandingPageBuilder = ({ initialProductToEdit, onBack }: { initialProductTo
 
           {/* Shipping Info */}
           {(p.sections || []).includes("shipping") && (
-            <div className="p-5 rounded-2xl border bg-card shadow-sm space-y-4" dir="rtl" style={{ borderColor: isDark(p.backgroundColor) ? "#334155" : "#e2e8f0", borderRadius: br }}>
+            <div className="p-5 rounded-2xl border bg-card shadow-sm space-y-4" dir="rtl" style={{ borderColor: isDark(p.backgroundColor) ? "#334155" : "#e2e8f0", borderRadius: br, order: (p.sections || []).indexOf("shipping") }}>
               <h3 className="text-base font-bold flex items-center gap-2">
                 <Truck className="w-5 h-5" style={{ color: p.primaryColor }} /> معلومات التوصيل
               </h3>
@@ -1365,12 +1379,14 @@ const LandingPageBuilder = ({ initialProductToEdit, onBack }: { initialProductTo
 
           {/* CTA Form */}
           {(p.sections || []).includes("cta") && (
-            <OrderForm />
+            <div style={{ order: (p.sections || []).indexOf("cta") }}>
+              <OrderForm />
+            </div>
           )}
 
           {/* Trust Badges Footer */}
           {(p.sections || []).includes("trust-badges") && (
-            <div className="grid grid-cols-2 gap-3 pb-8">
+            <div style={{ order: (p.sections || []).indexOf("trust-badges") }} className="grid grid-cols-2 gap-3 pb-8">
               {(p.trustBadges || []).slice(0, 4).map((badge, i) => {
                 const icons = [Shield, Truck, Award, Check];
                 const Icon = icons[i % icons.length];
