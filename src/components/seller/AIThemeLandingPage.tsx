@@ -90,34 +90,41 @@ export default function AIThemeLandingPage({ p, storeName, orderForm, setOrderFo
     return idx === -1 ? 100 : idx;
   };
 
+  // Sections in p.sections that we know how to render & reorder via CSS order.
+  // Header/footer stay fixed (header: sticky, footer: always last).
+  const sections: string[] = p.sections || [];
+  const isSectionOn = (id: string) => sections.includes(id);
+
   return (
-    <div className={`${t.bg} ${t.textMain} ${t.font} min-h-screen overflow-x-hidden antialiased`} dir="rtl">
+    <div className={`${t.bg} ${t.textMain} ${t.font} min-h-screen overflow-x-hidden antialiased flex flex-col`} dir="rtl">
       <link href={`https://fonts.googleapis.com/css2?family=${primaryFont}&family=${secondaryFont}&display=swap`} rel="stylesheet" />
       <style>{`.hfont{font-family:${hFont};} .num{font-variant-numeric:tabular-nums;}`}</style>
 
-      {/* Announcement / Promo bar */}
-      <div className={`${t.promo} text-center px-3 sm:px-4 flex items-center justify-center gap-2 sm:gap-3 flex-wrap relative overflow-hidden text-[10px] sm:text-xs`}>
-        <Clock size={11} className="opacity-80 shrink-0"/>
-        <span>العرض ينتهي خلال</span>
-        <span className="num font-mono">{pad(countdown.hours)}:{pad(countdown.minutes)}:{pad(countdown.seconds)}</span>
-        {p.showFreeShipping && (
-          <>
-            <span className="opacity-60">•</span>
-            <span>شحن مجاني</span>
-          </>
-        )}
-      </div>
-
-      {/* Header */}
-      <header className={`${t.header} sticky top-0 z-50 px-4 sm:px-8 lg:px-10 py-3.5 sm:py-5 flex justify-between items-center gap-3`}>
+      {/* Header — always pinned to top (sticky) */}
+      <header style={{ order: -1000 }} className={`${t.header} sticky top-0 z-50 px-4 sm:px-8 lg:px-10 py-3.5 sm:py-5 flex justify-between items-center gap-3`}>
         <div className={`${t.brand} hfont truncate text-base sm:text-xl lg:text-2xl`}>{storeName}</div>
         <button onClick={() => document.getElementById('order-form')?.scrollIntoView({ behavior:'smooth' })} className={`${t.btnSecondary} shrink-0 !text-[10px] sm:!text-xs whitespace-nowrap`}>
           {p.ctaText || "اطلب الآن"}
         </button>
       </header>
 
-      {/* Hero */}
-      <section className={`px-4 sm:px-6 py-12 sm:py-20 lg:py-28 ${t.heroBg} relative overflow-hidden`}>
+      {/* Announcement / Promo bar — reorderable via sections array (urgency-bar) */}
+      {isSectionOn("urgency-bar") && (
+        <div style={{ order: sectionOrder("urgency-bar") }} className={`${t.promo} text-center px-3 sm:px-4 flex items-center justify-center gap-2 sm:gap-3 flex-wrap relative overflow-hidden text-[10px] sm:text-xs`}>
+          <Clock size={11} className="opacity-80 shrink-0"/>
+          <span>العرض ينتهي خلال</span>
+          <span className="num font-mono">{pad(countdown.hours)}:{pad(countdown.minutes)}:{pad(countdown.seconds)}</span>
+          {p.showFreeShipping && (
+            <>
+              <span className="opacity-60">•</span>
+              <span>شحن مجاني</span>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* Hero — reorderable */}
+      <section style={{ order: sectionOrder("hero") }} className={`px-4 sm:px-6 py-12 sm:py-20 lg:py-28 ${t.heroBg} relative overflow-hidden`}>
         <div className={`absolute inset-0 ${t.heroBlob} pointer-events-none`}/>
         <div className={`max-w-6xl mx-auto relative ${l.heroWrap}`}>
           {/* Text */}
@@ -179,8 +186,9 @@ export default function AIThemeLandingPage({ p, storeName, orderForm, setOrderFo
         </div>
       </section>
 
-      {/* Trust strip */}
-      <section className={`${t.sectionLight} border-y ${isDarkTheme?'border-white/[0.06]':'border-black/[0.06]'} py-6 sm:py-8`}>
+      {/* Trust strip — reorderable, gated by trust-badges section toggle */}
+      {isSectionOn("trust-badges") && (
+      <section style={{ order: sectionOrder("trust-badges") }} className={`${t.sectionLight} border-y ${isDarkTheme?'border-white/[0.06]':'border-black/[0.06]'} py-6 sm:py-8`}>
         <div className="max-w-6xl mx-auto px-4 grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
           {[
             { icon: Truck, label: 'توصيل لكل الولايات' },
@@ -197,9 +205,7 @@ export default function AIThemeLandingPage({ p, storeName, orderForm, setOrderFo
           ))}
         </div>
       </section>
-
-      {/* ───── Reorderable body sections (CSS-order driven by p.sections) ───── */}
-      <div className="flex flex-col w-full">
+      )}
 
       {/* Features */}
       {p.sections?.includes('features') && p.features?.length > 0 && (
@@ -513,11 +519,8 @@ export default function AIThemeLandingPage({ p, storeName, orderForm, setOrderFo
         </div>
       </section>
 
-      </div>
-      {/* ───── End reorderable body sections ───── */}
-
-      {/* Footer */}
-      <footer className={`${t.footer} text-center py-8 sm:py-10 px-4`}>
+      {/* Footer — pinned to bottom */}
+      <footer style={{ order: 1000 }} className={`${t.footer} text-center py-8 sm:py-10 px-4`}>
         <div className={`hfont ${t.brand} mb-2 sm:mb-3 text-base sm:text-lg`}>{storeName}</div>
         <div className="text-[10px] sm:text-xs">© {new Date().getFullYear()} — جميع الحقوق محفوظة</div>
       </footer>
