@@ -3068,7 +3068,7 @@ const Dashboard = () => {
 
                     {selectedProduct.availableSizes?.length > 0 && (
                       <div className="space-y-2">
-                        <Label className="flex items-center gap-2 text-sm font-bold ml-1">المقاس</Label>
+                        <Label className="flex items-center gap-2 text-sm font-bold ml-1">العرض</Label>
                         <div className="flex flex-wrap gap-2">
                           {selectedProduct.availableSizes.map((size: string) => (
                             <button
@@ -3242,7 +3242,7 @@ const Dashboard = () => {
                         return;
                       }
                       if (selectedProduct.availableSizes?.length > 0 && !orderFormData.selectedSize) {
-                        toast({ title: "تنبيه", description: "يرجى اختيار المقاس المطلوب", variant: "destructive" });
+                        toast({ title: "تنبيه", description: "يرجى اختيار العرض المطلوب", variant: "destructive" });
                         return;
                       }
 

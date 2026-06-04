@@ -1892,7 +1892,7 @@ const Admin = () => {
                                     )}
                                     {order.selectedSize && (
                                       <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-secondary/10 text-secondary border border-secondary/20">
-                                        المقاس: {order.selectedSize}
+                                        العرض: {order.selectedSize}
                                       </span>
                                     )}
                                   </div>
@@ -2013,7 +2013,7 @@ const Admin = () => {
                             )}
                             {order.selectedSize && (
                               <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-secondary/10 text-secondary border border-secondary/20">
-                                المقاس: {order.selectedSize}
+                                العرض: {order.selectedSize}
                               </span>
                             )}
                           </div>

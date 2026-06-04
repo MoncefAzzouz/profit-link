@@ -203,7 +203,7 @@ const OrdersTab: React.FC<OrdersTabProps> = ({
                                 )}
                                 {order.selectedSize && (
                                   <span className="inline-flex items-center px-2 py-0.5 rounded-lg text-[9px] font-black bg-secondary/10 text-secondary border border-secondary/20">
-                                    المقاس: {order.selectedSize}
+                                    العرض: {order.selectedSize}
                                   </span>
                                 )}
                               </div>
