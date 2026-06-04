@@ -37,25 +37,43 @@ router.get('/communes', async (req: Request, res: Response) => {
 });
 
 // GET /api/delivery/rates
-router.get('/rates', (req: Request, res: Response) => {
-  const { wilaya_id } = req.query;
+router.get('/rates', async (req: Request, res: Response) => {
+  try {
+    const { wilaya_id } = req.query;
 
-  if (!wilaya_id) {
-    return res.json({ data: DEFAULT_RATES });
-  }
-
-  const id = String(wilaya_id);
-  let rate = DEFAULT_RATES[id];
-
-  if (!rate) {
-    if (southWilayas.includes(id)) {
-      rate = DEFAULT_RATES["south"];
-    } else {
-      rate = DEFAULT_RATES["default"];
+    if (!wilaya_id) {
+      return res.json({ data: DEFAULT_RATES });
     }
-  }
 
-  res.json({ data: rate });
+    const feesResponse = await EcotrackService.getFees();
+    const fees = feesResponse?.livraison || [];
+    const fee = fees.find((f: any) => String(f.wilaya_id) === String(wilaya_id));
+
+    if (fee) {
+      return res.json({
+        data: {
+          home: parseInt(fee.tarif || "600"),
+          desk: parseInt(fee.tarif_stopdesk || "400")
+        }
+      });
+    }
+
+    const id = String(wilaya_id);
+    let rate = DEFAULT_RATES[id];
+
+    if (!rate) {
+      if (southWilayas.includes(id)) {
+        rate = DEFAULT_RATES["south"];
+      } else {
+        rate = DEFAULT_RATES["default"];
+      }
+    }
+
+    res.json({ data: rate });
+  } catch (error) {
+    console.error('Error fetching rates:', error);
+    res.status(500).json({ error: 'Failed to fetch shipping rates' });
+  }
 });
 
 // GET /api/delivery/all-rates (Combines wilayas and fees for the dashboard)
