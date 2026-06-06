@@ -41,6 +41,7 @@ const productListSelect = {
   affiliatePrice: true,
   hasMarketingOffers: true,
   marketingOffers: true,
+  hasAffiliateGift: true,
   hasLandingPage: true,
   createdAt: true,
 } as const;
@@ -211,7 +212,7 @@ router.get('/all', authenticateToken, requireAdmin, async (req: AuthRequest, res
 // POST /api/products (Admin: Create new product)
 router.post('/', authenticateToken, requireAdmin, async (req: AuthRequest, res: Response): Promise<any> => {
   try {
-    const { name, description, notes, adText, price, originalPrice, commission, category, images, videoUrl, stock, isVisible, isTrend, isFeatured, features, wholesalePrice, affiliatePrice, hasColors, availableColors, hasSizes, availableSizes, showFreeShipping, hasBeforeAfter, beforeImage, afterImage, hasMarketingOffers, marketingOffers, hasLandingPage } = req.body;
+    const { name, description, notes, adText, price, originalPrice, commission, category, images, videoUrl, stock, isVisible, isTrend, isFeatured, features, wholesalePrice, affiliatePrice, hasColors, availableColors, hasSizes, availableSizes, showFreeShipping, hasBeforeAfter, beforeImage, afterImage, hasMarketingOffers, marketingOffers, hasLandingPage, hasAffiliateGift } = req.body;
     const image: string | undefined = req.body.image;
 
     if (!name || !price || !commission || !category) {
@@ -247,6 +248,7 @@ router.post('/', authenticateToken, requireAdmin, async (req: AuthRequest, res: 
         beforeImage: beforeImage || null,
         afterImage: afterImage || null,
         hasMarketingOffers: hasMarketingOffers || false,
+        hasAffiliateGift: hasAffiliateGift || false,
         marketingOffers: marketingOffers || [],
         hasLandingPage: hasLandingPage || false
       }
@@ -309,7 +311,7 @@ router.post('/', authenticateToken, requireAdmin, async (req: AuthRequest, res: 
 router.put('/:id', authenticateToken, requireAdmin, async (req: AuthRequest, res: Response): Promise<any> => {
   try {
     const { id } = req.params;
-    const { name, description, notes, adText, price, originalPrice, commission, category, images, videoUrl, stock, isVisible, isTrend, isFeatured, features, status, wholesalePrice, affiliatePrice, hasColors, availableColors, hasSizes, availableSizes, showFreeShipping, hasBeforeAfter, beforeImage, afterImage, hasMarketingOffers, marketingOffers, hasLandingPage } = req.body;
+    const { name, description, notes, adText, price, originalPrice, commission, category, images, videoUrl, stock, isVisible, isTrend, isFeatured, features, status, wholesalePrice, affiliatePrice, hasColors, availableColors, hasSizes, availableSizes, showFreeShipping, hasBeforeAfter, beforeImage, afterImage, hasMarketingOffers, marketingOffers, hasLandingPage, hasAffiliateGift } = req.body;
     const image: string | undefined = req.body.image;
 
     const product = await prisma.product.update({
@@ -343,6 +345,7 @@ router.put('/:id', authenticateToken, requireAdmin, async (req: AuthRequest, res
         ...(beforeImage !== undefined && { beforeImage }),
         ...(afterImage !== undefined && { afterImage }),
         ...(hasMarketingOffers !== undefined && { hasMarketingOffers }),
+        ...(hasAffiliateGift !== undefined && { hasAffiliateGift }),
         ...(marketingOffers !== undefined && { marketingOffers }),
         ...(hasLandingPage !== undefined && { hasLandingPage })
       }
@@ -540,6 +543,7 @@ router.post('/:id/generate-ai-landing-page', authenticateToken, requireAdmin, as
       showFreeShipping: product.showFreeShipping,
       beforeAfterImages: product.hasBeforeAfter ? { before: product.beforeImage, after: product.afterImage } : { before: "", after: "" },
       hasMarketingOffers: product.hasMarketingOffers,
+      hasAffiliateGift: product.hasAffiliateGift,
       marketingOffers: product.hasMarketingOffers ? product.marketingOffers : []
     };
 

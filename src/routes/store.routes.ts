@@ -186,6 +186,7 @@ router.get('/pages/:id/public', async (req: Request, res: Response): Promise<any
               price: true,
               originalPrice: true,
               hasMarketingOffers: true,
+              hasAffiliateGift: true,
               marketingOffers: true
             }
           }
@@ -204,6 +205,7 @@ router.get('/pages/:id/public', async (req: Request, res: Response): Promise<any
         ...(product?.price != null && { price: product.price }),
         ...(product?.originalPrice != null && { originalPrice: product.originalPrice }),
         hasMarketingOffers: product?.hasMarketingOffers || false,
+        hasAffiliateGift: product?.hasAffiliateGift || false,
         marketingOffers: product?.marketingOffers || []
       };
     });
@@ -239,14 +241,14 @@ router.get('/product-page/:productId/:affiliateId', async (req: Request, res: Re
       let page = await prisma.landingPage.findFirst({
         where: { productId, ownerId: affiliateId, status: 'published' },
         orderBy: { updatedAt: 'desc' },
-        include: { product: { select: { hasMarketingOffers: true, marketingOffers: true } } }
+        include: { product: { select: { hasMarketingOffers: true, marketingOffers: true, hasAffiliateGift: true } } }
       });
 
       if (!page) {
         page = await prisma.landingPage.findFirst({
           where: { productId, owner: { role: 'ADMIN' }, status: 'published' },
           orderBy: { updatedAt: 'desc' },
-          include: { product: { select: { commission: true, price: true, originalPrice: true, hasMarketingOffers: true, marketingOffers: true } } }
+          include: { product: { select: { commission: true, price: true, originalPrice: true, hasMarketingOffers: true, marketingOffers: true, hasAffiliateGift: true } } }
         });
       }
 
@@ -266,6 +268,7 @@ router.get('/product-page/:productId/:affiliateId', async (req: Request, res: Re
           ...(product?.price != null && { price: product.price }),
           ...(product?.originalPrice != null && { originalPrice: product.originalPrice }),
           hasMarketingOffers: product?.hasMarketingOffers || false,
+          hasAffiliateGift: product?.hasAffiliateGift || false,
           marketingOffers: product?.marketingOffers || []
         }
       };
@@ -450,7 +453,7 @@ router.get('/pages/:id', authenticateToken, async (req: AuthRequest, res: Respon
       where: { id: String(id) },
       include: {
         owner: { select: { id: true, name: true, storeName: true } },
-        product: { select: { hasMarketingOffers: true, marketingOffers: true, price: true, commission: true } }
+        product: { select: { hasMarketingOffers: true, marketingOffers: true, price: true, commission: true, hasAffiliateGift: true } }
       }
     });
 
@@ -468,6 +471,7 @@ router.get('/pages/:id', authenticateToken, async (req: AuthRequest, res: Respon
       pageConfig: {
         ...(page.pageConfig as any),
         hasMarketingOffers: (page as any).product?.hasMarketingOffers || false,
+        hasAffiliateGift: (page as any).product?.hasAffiliateGift || false,
         marketingOffers: (page as any).product?.marketingOffers || [],
         // Admin-authoritative price & commission — the affiliate cannot price below basePrice.
         basePrice: (page as any).product?.price ?? 0,
