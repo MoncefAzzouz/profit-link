@@ -2125,46 +2125,7 @@ const Dashboard = () => {
                           className="min-h-[100px] rounded-xl bg-muted/30 border-none p-4"
                         />
                       </div>
-                    </div>
-                  </div>
 
-                  {/* Hero Banner Manager Section */}
-                  <div className="bg-card rounded-[2.5rem] p-8 border border-border/50 shadow-sm space-y-6">
-                    <div className="flex items-center justify-between border-b border-border pb-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-600">
-                          <ImageIcon className="w-5 h-5" />
-                        </div>
-                        <h3 className="text-xl font-bold">قسم الواجهة (Hero)</h3>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Label className="text-xs text-muted-foreground">تفعيل</Label>
-                        <input
-                          type="checkbox"
-                          checked={storeSettings.hero?.enabled ?? true}
-                          onChange={(e) => setStoreSettings({ ...storeSettings, hero: { ...storeSettings.hero, enabled: e.target.checked } })}
-                          className="w-5 h-5 accent-primary cursor-pointer border-border rounded"
-                        />
-                      </div>
-                    </div>
-
-                    <div className={`space-y-4 transition-opacity ${(!storeSettings.hero?.enabled) ? "opacity-50 pointer-events-none" : ""}`}>
-                      <div className="space-y-2">
-                        <Label className="text-sm font-bold pr-1">العنوان الرئيسي</Label>
-                        <Input
-                          value={storeSettings.hero?.title || ""}
-                          onChange={(e) => setStoreSettings({ ...storeSettings, hero: { ...storeSettings.hero, title: e.target.value } })}
-                          className="h-11 rounded-xl bg-muted/30 border-none px-4"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-sm font-bold pr-1">العنوان الفرعي</Label>
-                        <Input
-                          value={storeSettings.hero?.subtitle || ""}
-                          onChange={(e) => setStoreSettings({ ...storeSettings, hero: { ...storeSettings.hero, subtitle: e.target.value } })}
-                          className="h-11 rounded-xl bg-muted/30 border-none px-4"
-                        />
-                      </div>
                       <div className="space-y-2">
                         <Label className="text-sm font-bold pr-1">صورة الواجهة (Banner)</Label>
                         <div className="w-full">

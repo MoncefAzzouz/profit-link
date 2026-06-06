@@ -332,7 +332,7 @@ const Storefront = () => {
 
       {/* Modern Hero Section */}
       {(storeSettings.hero?.enabled || storeSettings.storeName || storeSettings.storeLogo) && (
-        <div className="relative h-[400px] lg:h-[600px] flex items-center justify-center overflow-hidden">
+        <div className="relative min-h-[400px] lg:min-h-[600px] py-16 md:py-20 flex items-center justify-center overflow-hidden">
            <motion.div 
             initial={{ scale: 1.1 }}
             animate={{ scale: 1 }}
@@ -411,41 +411,12 @@ const Storefront = () => {
                 </motion.p>
              )}
 
-             {/* Divider */}
-             {(storeSettings.hero?.title || storeSettings.hero?.subtitle) && (storeSettings.storeName || storeSettings.storeIntro) && (
-               <div className={cn("mb-8 opacity-80", tpl.heroDivider)} />
-             )}
-
-             {/* Hero Subtitles/Promos */}
-             {storeSettings.hero?.title && (
-               <motion.h2
-                 initial={{ opacity: 0, y: 30 }}
-                 whileInView={{ opacity: 1, y: 0 }}
-                 viewport={{ once: true }}
-                 transition={{ duration: 0.8, delay: 0.3 }}
-                 className={cn("text-white mb-4 drop-shadow-xl text-3xl md:text-5xl", tpl.heroTitle)}
-               >
-                 {storeSettings.hero.title}
-               </motion.h2>
-             )}
-
-             {storeSettings.hero?.subtitle && (
-               <motion.p
-                 initial={{ opacity: 0, y: 20 }}
-                 whileInView={{ opacity: 1, y: 0 }}
-                 viewport={{ once: true }}
-                 transition={{ duration: 0.8, delay: 0.4 }}
-                 className={cn("max-w-3xl mx-auto drop-shadow-md text-base md:text-xl", tpl.heroSubtitle)}
-               >
-                 {storeSettings.hero.subtitle}
-               </motion.p>
-             )}
              <motion.div
                initial={{ opacity: 0, scale: 0.9 }}
                whileInView={{ opacity: 1, scale: 1 }}
                viewport={{ once: true }}
                transition={{ duration: 0.5, delay: 0.4 }}
-               className="mt-12"
+               className="mt-8 md:mt-12"
              >
                 <button
                   className={cn("inline-flex items-center gap-3 transition-all", tpl.heroBtn)}
