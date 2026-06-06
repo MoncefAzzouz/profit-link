@@ -73,9 +73,22 @@ router.post('/', async (req: Request, res: Response) => {
     const adminUnitCommission = Number(product.commission) || 0;
     const adminBaseRevenue = adminUnitPrice * qty;
 
-    const baseCommission = adminUnitCommission * qty;
-    const markupBonus = Math.max(0, itemsTotal - adminBaseRevenue);
-    const finalCommission = baseCommission + markupBonus;
+    // If the customer picked a marketing offer, the affiliate earns that offer's
+    // admin-configured commission (looked up server-side from product.marketingOffers,
+    // not trusted from the client). Offers are fixed-price, so there's no markup bonus.
+    const offers = Array.isArray(product.marketingOffers) ? (product.marketingOffers as any[]) : [];
+    const chosenOffer = selectedOffer ? offers.find((o: any) => o?.name === selectedOffer) : null;
+
+    let baseCommission: number, markupBonus: number, finalCommission: number;
+    if (chosenOffer) {
+      baseCommission = (Number(chosenOffer.commission) || 0) * qty;
+      markupBonus = 0;
+      finalCommission = baseCommission;
+    } else {
+      baseCommission = adminUnitCommission * qty;
+      markupBonus = Math.max(0, itemsTotal - adminBaseRevenue);
+      finalCommission = baseCommission + markupBonus;
+    }
 
     const order = await prisma.order.create({
       data: {
