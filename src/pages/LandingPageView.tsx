@@ -636,12 +636,122 @@ const LandingPageView = () => {
                     </div>
                   )}
 
+                  {p.sections.includes("bundle") && p.bundles && p.bundles.length > 0 && !p.hasMarketingOffers && (
+                    <div className="space-y-3 pt-2 text-right">
+                      <label className="text-sm font-bold opacity-70">عروض الحزم (اختياري)</label>
+                      <div className="grid grid-cols-1 gap-3">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedBundleId(null);
+                            setQuantity(1);
+                          }}
+                          className={`flex items-center justify-between p-3 rounded-xl border-2 transition-all ${
+                            selectedBundleId === null
+                              ? "border-primary bg-primary/5 ring-1 ring-primary/20"
+                              : "border-muted bg-muted/20 hover:border-muted-foreground/30"
+                          }`}
+                        >
+                          <span className="font-bold text-sm">المنتج الأساسي (قطعة واحدة)</span>
+                          <span className="font-black" style={{ color: p.primaryColor }}>{p.price.toLocaleString()} دج</span>
+                        </button>
+
+                        {p.bundles.map((bundle) => (
+                          <button
+                            key={bundle.id}
+                            type="button"
+                            onClick={() => {
+                              setSelectedBundleId(bundle.id);
+                              setQuantity(1);
+                            }}
+                            className={`flex items-center gap-3 p-3 rounded-xl border-2 transition-all ${
+                              selectedBundleId === bundle.id
+                                ? "border-primary bg-primary/5 ring-1 ring-primary/20"
+                                : "border-muted bg-muted/20 hover:border-muted-foreground/30"
+                            }`}
+                          >
+                            {bundle.image && (
+                              <img src={bundle.image} alt={bundle.name} className="w-12 h-12 rounded-lg object-cover border" />
+                            )}
+                            <div className="flex-1 text-right">
+                              <p className="font-bold text-sm">{bundle.name}</p>
+                            </div>
+                            <div className="text-left shrink-0">
+                              <span className="font-black text-lg block" style={{ color: p.primaryColor }}>{bundle.price.toLocaleString()} دج</span>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Marketing Offers */}
+                  {p.hasMarketingOffers && p.marketingOffers && p.marketingOffers.length > 0 && (
+                    <div className="space-y-3 pt-2 text-right">
+                      <label className="text-sm font-bold opacity-70 flex items-center gap-2">
+                        <Gift className="w-4 h-4" style={{ color: p.primaryColor }} /> العروض التسويقية
+                      </label>
+                      <div className="grid grid-cols-1 gap-3">
+                        {/* Standard Offer */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedOffer(null);
+                            setQuantity(1);
+                          }}
+                          className={`flex items-center justify-between p-3 rounded-xl border-2 transition-all ${
+                            selectedOffer === null
+                              ? "border-primary bg-primary/5 ring-1 ring-primary/20"
+                              : "border-muted bg-card hover:border-primary/30"
+                          }`}
+                          style={{ borderColor: selectedOffer === null ? p.primaryColor : undefined }}
+                        >
+                          <div className="space-y-1">
+                            <p className="font-bold text-sm flex items-center gap-2">
+                              {selectedOffer === null && <Check className="w-4 h-4" style={{ color: p.primaryColor }} />}
+                              قطعة واحدة (عرض عادي)
+                            </p>
+                            <p className="text-xs text-muted-foreground line-through">{p.originalPrice.toLocaleString()} دج</p>
+                          </div>
+                          <p className="font-black text-lg" style={{ color: p.primaryColor }}>{p.price.toLocaleString()} دج</p>
+                        </button>
+
+                        {/* Custom Offers */}
+                        {p.marketingOffers.map((offer: any, idx: number) => (
+                          <button
+                            key={idx}
+                            type="button"
+                            onClick={() => {
+                              setSelectedOffer(offer);
+                              setQuantity(1);
+                            }}
+                            className={`flex items-center justify-between p-3 rounded-xl border-2 transition-all ${
+                              selectedOffer === offer
+                                ? "border-primary bg-primary/5 ring-1 ring-primary/20"
+                                : "border-muted bg-card hover:border-primary/30"
+                            }`}
+                            style={{ borderColor: selectedOffer === offer ? p.primaryColor : undefined }}
+                          >
+                            <div className="space-y-1">
+                              <p className="font-bold text-sm flex items-center gap-2">
+                                {selectedOffer === offer && <Check className="w-4 h-4" style={{ color: p.primaryColor }} />}
+                                {offer.name}
+                              </p>
+                              <p className="text-xs text-muted-foreground line-through">{offer.originalPrice.toLocaleString()} دج</p>
+                            </div>
+                            <p className="font-black text-lg" style={{ color: p.primaryColor }}>{offer.price.toLocaleString()} دج</p>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   <div className="space-y-2">
 
                     <label className="text-sm font-bold opacity-70">الاسم الكامل *</label>
-                    <Input 
-                      placeholder="أدخل اسمك الكامل" 
-                      value={orderForm.name} 
+                    <Input
+                      placeholder="أدخل اسمك الكامل"
+                      value={orderForm.name}
                       onChange={e => setOrderForm(f => ({ ...f, name: e.target.value }))}
                       className="h-12 rounded-xl"
                     />
@@ -737,116 +847,6 @@ const LandingPageView = () => {
                       className="h-12 rounded-xl"
                     />
                   </div>
-
-                  {p.sections.includes("bundle") && p.bundles && p.bundles.length > 0 && !p.hasMarketingOffers && (
-                    <div className="space-y-3 pt-2 text-right">
-                      <label className="text-sm font-bold opacity-70">عروض الحزم (اختياري)</label>
-                      <div className="grid grid-cols-1 gap-3">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setSelectedBundleId(null);
-                            setQuantity(1);
-                          }}
-                          className={`flex items-center justify-between p-3 rounded-xl border-2 transition-all ${
-                            selectedBundleId === null 
-                              ? "border-primary bg-primary/5 ring-1 ring-primary/20" 
-                              : "border-muted bg-muted/20 hover:border-muted-foreground/30"
-                          }`}
-                        >
-                          <span className="font-bold text-sm">المنتج الأساسي (قطعة واحدة)</span>
-                          <span className="font-black" style={{ color: p.primaryColor }}>{p.price.toLocaleString()} دج</span>
-                        </button>
-                        
-                        {p.bundles.map((bundle) => (
-                          <button
-                            key={bundle.id}
-                            type="button"
-                            onClick={() => {
-                              setSelectedBundleId(bundle.id);
-                              setQuantity(1);
-                            }}
-                            className={`flex items-center gap-3 p-3 rounded-xl border-2 transition-all ${
-                              selectedBundleId === bundle.id 
-                                ? "border-primary bg-primary/5 ring-1 ring-primary/20" 
-                                : "border-muted bg-muted/20 hover:border-muted-foreground/30"
-                            }`}
-                          >
-                            {bundle.image && (
-                              <img src={bundle.image} alt={bundle.name} className="w-12 h-12 rounded-lg object-cover border" />
-                            )}
-                            <div className="flex-1 text-right">
-                              <p className="font-bold text-sm">{bundle.name}</p>
-                            </div>
-                            <div className="text-left shrink-0">
-                              <span className="font-black text-lg block" style={{ color: p.primaryColor }}>{bundle.price.toLocaleString()} دج</span>
-                            </div>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Marketing Offers */}
-                  {p.hasMarketingOffers && p.marketingOffers && p.marketingOffers.length > 0 && (
-                    <div className="space-y-3 pt-2 text-right">
-                      <label className="text-sm font-bold opacity-70 flex items-center gap-2">
-                        <Gift className="w-4 h-4" style={{ color: p.primaryColor }} /> العروض التسويقية
-                      </label>
-                      <div className="grid grid-cols-1 gap-3">
-                        {/* Standard Offer */}
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setSelectedOffer(null);
-                            setQuantity(1);
-                          }}
-                          className={`flex items-center justify-between p-3 rounded-xl border-2 transition-all ${
-                            selectedOffer === null 
-                              ? "border-primary bg-primary/5 ring-1 ring-primary/20" 
-                              : "border-muted bg-card hover:border-primary/30"
-                          }`}
-                          style={{ borderColor: selectedOffer === null ? p.primaryColor : undefined }}
-                        >
-                          <div className="space-y-1">
-                            <p className="font-bold text-sm flex items-center gap-2">
-                              {selectedOffer === null && <Check className="w-4 h-4" style={{ color: p.primaryColor }} />}
-                              قطعة واحدة (عرض عادي)
-                            </p>
-                            <p className="text-xs text-muted-foreground line-through">{p.originalPrice.toLocaleString()} دج</p>
-                          </div>
-                          <p className="font-black text-lg" style={{ color: p.primaryColor }}>{p.price.toLocaleString()} دج</p>
-                        </button>
-
-                        {/* Custom Offers */}
-                        {p.marketingOffers.map((offer: any, idx: number) => (
-                          <button
-                            key={idx}
-                            type="button"
-                            onClick={() => {
-                              setSelectedOffer(offer);
-                              setQuantity(1);
-                            }}
-                            className={`flex items-center justify-between p-3 rounded-xl border-2 transition-all ${
-                              selectedOffer === offer 
-                                ? "border-primary bg-primary/5 ring-1 ring-primary/20" 
-                                : "border-muted bg-card hover:border-primary/30"
-                            }`}
-                            style={{ borderColor: selectedOffer === offer ? p.primaryColor : undefined }}
-                          >
-                            <div className="space-y-1">
-                              <p className="font-bold text-sm flex items-center gap-2">
-                                {selectedOffer === offer && <Check className="w-4 h-4" style={{ color: p.primaryColor }} />}
-                                {offer.name}
-                              </p>
-                              <p className="text-xs text-muted-foreground line-through">{offer.originalPrice.toLocaleString()} دج</p>
-                            </div>
-                            <p className="font-black text-lg" style={{ color: p.primaryColor }}>{offer.price.toLocaleString()} دج</p>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
 
                   <div className="flex items-center justify-between p-4 bg-muted/50 rounded-xl border border-border/50">
                     <span className="font-bold">الكمية</span>

@@ -344,41 +344,6 @@ export default function AIThemeLandingPage({ p, storeName, orderForm, setOrderFo
         </section>
       )}
 
-      {/* Bundles / Offers */}
-      {(p.bundles?.length > 0 || p.hasMarketingOffers) && (
-        <section style={{ order: sectionOrder('bundle') }} className={`py-12 sm:py-16 lg:py-20 px-4 sm:px-6 ${t.sectionWhite}`}>
-          <div className="max-w-2xl mx-auto">
-            <div className="text-center mb-7 sm:mb-10">
-              <div className={`inline-flex items-center gap-2 mb-3 sm:mb-4 ${t.accentBg}`}>
-                <Sparkles size={12}/> عروض خاصة
-              </div>
-              <h3 className={`hfont ${sectionTitleCls[p.template]}`}>اختر عرضك</h3>
-            </div>
-            <div className="space-y-2.5 sm:space-y-3">
-              <button type="button" onClick={() => { setSelectedBundleId(null); setSelectedOffer(null); setQuantity(1); }}
-                className={`w-full flex justify-between items-center gap-3 p-4 sm:p-5 transition-all duration-300 ${t.featCard} font-bold text-right ${!selectedBundleId && !selectedOffer ? `${t.accentBg} ring-2 ring-current/10` : t.card}`}>
-                <span className="text-sm sm:text-base">المنتج الأساسي</span>
-                <span className="num text-sm sm:text-base shrink-0">{p.price.toLocaleString()} دج</span>
-              </button>
-              {p.bundles?.map((b: any) => (
-                <button key={b.id} type="button" onClick={() => { setSelectedBundleId(b.id); setSelectedOffer(null); setQuantity(1); }}
-                  className={`w-full flex justify-between items-center gap-3 p-4 sm:p-5 transition-all duration-300 ${t.featCard} font-bold text-right ${selectedBundleId===b.id ? `${t.accentBg} ring-2 ring-current/10` : t.card}`}>
-                  <span className="text-sm sm:text-base">{b.name}</span>
-                  <span className="num text-sm sm:text-base shrink-0">{b.price.toLocaleString()} دج</span>
-                </button>
-              ))}
-              {p.marketingOffers?.map((o: any, i: number) => (
-                <button key={i} type="button" onClick={() => { setSelectedOffer(o); setSelectedBundleId(null); setQuantity(1); }}
-                  className={`w-full flex justify-between items-center gap-3 p-4 sm:p-5 transition-all duration-300 ${t.featCard} font-bold text-right ${selectedOffer===o ? `${t.accentBg} ring-2 ring-current/10` : t.card}`}>
-                  <span className="text-sm sm:text-base">{o.name}</span>
-                  <span className="num text-sm sm:text-base shrink-0">{o.price.toLocaleString()} دج</span>
-                </button>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
       {/* Order Form */}
       <section id="order-form" style={{ order: sectionOrder('cta') }} className={`py-14 sm:py-20 lg:py-24 px-4 sm:px-6 ${t.checkoutBg} relative overflow-hidden`}>
         <div className={`max-w-5xl mx-auto relative`}>
@@ -485,6 +450,36 @@ export default function AIThemeLandingPage({ p, storeName, orderForm, setOrderFo
                             </button>
                           );
                         })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Offer picker — linked into the form, shown before the name field */}
+                  {(p.bundles?.length > 0 || (p.hasMarketingOffers && p.marketingOffers?.length > 0)) && (
+                    <div>
+                      <label className="flex items-center gap-1.5 text-[11px] font-bold mb-2 text-gray-700 uppercase tracking-wider">
+                        <Sparkles size={12}/> عروض خاصة — اختر عرضك
+                      </label>
+                      <div className="space-y-2">
+                        <button type="button" onClick={() => { setSelectedBundleId(null); setSelectedOffer(null); setQuantity(1); }}
+                          className={`w-full flex justify-between items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-bold border-2 transition-all ${!selectedBundleId && !selectedOffer ? 'border-gray-900 bg-gray-900 text-white' : 'border-gray-200 bg-gray-50/50 text-gray-700 hover:border-gray-400'}`}>
+                          <span>المنتج الأساسي</span>
+                          <span className="num shrink-0">{p.price.toLocaleString()} دج</span>
+                        </button>
+                        {p.bundles?.map((b: any) => (
+                          <button key={b.id} type="button" onClick={() => { setSelectedBundleId(b.id); setSelectedOffer(null); setQuantity(1); }}
+                            className={`w-full flex justify-between items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-bold border-2 transition-all ${selectedBundleId===b.id ? 'border-gray-900 bg-gray-900 text-white' : 'border-gray-200 bg-gray-50/50 text-gray-700 hover:border-gray-400'}`}>
+                            <span>{b.name}</span>
+                            <span className="num shrink-0">{b.price.toLocaleString()} دج</span>
+                          </button>
+                        ))}
+                        {p.marketingOffers?.map((o: any, i: number) => (
+                          <button key={i} type="button" onClick={() => { setSelectedOffer(o); setSelectedBundleId(null); setQuantity(1); }}
+                            className={`w-full flex justify-between items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-bold border-2 transition-all ${selectedOffer===o ? 'border-gray-900 bg-gray-900 text-white' : 'border-gray-200 bg-gray-50/50 text-gray-700 hover:border-gray-400'}`}>
+                            <span>{o.name}</span>
+                            <span className="num shrink-0">{o.price.toLocaleString()} دج</span>
+                          </button>
+                        ))}
                       </div>
                     </div>
                   )}
