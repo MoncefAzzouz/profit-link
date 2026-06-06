@@ -955,7 +955,7 @@ const LandingPageBuilder = ({ initialProductToEdit, onBack }: { initialProductTo
           </div>
 
           <div className="space-y-1.5">
-            <Label className="text-[11px] font-bold opacity-70">العنوان بالتفصيل *</Label>
+            <Label className="text-[11px] font-bold opacity-70">العنوان بالتفصيل (اختياري)</Label>
             <div className="h-10 rounded-xl border px-3 flex items-center text-xs bg-muted/20" style={{ borderColor: isDark(p.backgroundColor) ? "#334155" : "#e2e8f0" }}>
               البلدية، الحي، الشارع...
             </div>

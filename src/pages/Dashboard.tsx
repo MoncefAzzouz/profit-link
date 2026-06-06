@@ -2850,6 +2850,14 @@ const Dashboard = () => {
                   </div>
                 )}
 
+                {selectedProduct.hasAffiliateGift && (
+                  <div className="bg-purple-500/10 p-3 sm:p-4 rounded-xl sm:rounded-2xl border border-purple-500/20 text-center">
+                    <p className="text-xs sm:text-sm text-purple-700 font-black leading-tight flex items-center justify-center gap-2">
+                      <Gift className="w-4 h-4" /> هذا المنتج يحتوي على هدية خاصة بالمسوق عند بيعه
+                    </p>
+                  </div>
+                )}
+
                 {/* Admin-authored notes — only visible here, not on public store or landing pages */}
                 {selectedProduct.notes && selectedProduct.notes.trim() && (
                   <div className="space-y-2 sm:space-y-3">
@@ -3170,7 +3178,7 @@ const Dashboard = () => {
 
                 <div className="space-y-2">
                   <Label className="flex items-center gap-2 text-sm font-bold ml-1">
-                    <MapPin className="w-4 h-4 text-primary" /> العنوان بالتفصيل
+                    <MapPin className="w-4 h-4 text-primary" /> العنوان بالتفصيل (اختياري)
                   </Label>
                   <Input
                     placeholder="رقم المنزل، الشارع، البلدية..."
@@ -3227,7 +3235,7 @@ const Dashboard = () => {
                   <Button
                     className="flex-1 h-16 rounded-[1.5rem] bg-secondary text-secondary-foreground font-black text-xl shadow-xl shadow-secondary/20 hover:scale-[1.02] active:scale-95 transition-all"
                     onClick={async () => {
-                      if (!orderFormData.firstName || !orderFormData.lastName || !orderFormData.phone || !orderFormData.address || !orderFormData.wilaya || !orderFormData.commune) {
+                      if (!orderFormData.firstName || !orderFormData.lastName || !orderFormData.phone || !orderFormData.wilaya || !orderFormData.commune) {
                         toast({ title: "يرجى ملء كافة البيانات الأساسية", description: "تأكد من اختيار البلدية واللقب", variant: "destructive" });
                         return;
                       }

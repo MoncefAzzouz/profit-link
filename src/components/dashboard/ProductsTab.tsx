@@ -228,6 +228,13 @@ const ProductsTab: React.FC<ProductsTabProps> = ({
                     </p>
                   </div>
                 )}
+                {product.hasAffiliateGift && (
+                  <div className="bg-purple-500/10 p-1.5 sm:p-2 rounded-lg sm:rounded-xl border border-purple-500/20 text-center mt-1">
+                    <p className="text-[8px] sm:text-[10px] text-purple-700 font-black leading-tight">
+                      🎁 هذا المنتج يحتوي على هدية خاصة بالمسوق عند بيعه
+                    </p>
+                  </div>
+                )}
 
                 <div className="mt-auto pt-2">
                   <Button

@@ -223,7 +223,7 @@ const ProductPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.name || !formData.phone || !formData.wilaya || !formData.commune || !formData.address) {
+    if (!formData.name || !formData.phone || !formData.wilaya || !formData.commune) {
       toast({
         title: "خطأ",
         description: "يرجى ملء جميع الحقول الأساسية",
@@ -728,7 +728,7 @@ const ProductPage = () => {
                 </div>
 
                 <div>
-                  <Label htmlFor="address">العنوان بالتفصيل *</Label>
+                  <Label htmlFor="address">العنوان بالتفصيل (اختياري)</Label>
                   <Input
                     id="address"
                     value={formData.address}

@@ -321,8 +321,8 @@ const LandingPageView = () => {
 
   const handleOrder = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!orderForm.name || !orderForm.phone || !orderForm.wilaya || !orderForm.commune || !orderForm.address) {
-      toast({ title: "⚠️ يرجى ملء جميع الحقول الإجبارية بما في ذلك العنوان", variant: "destructive" });
+    if (!orderForm.name || !orderForm.phone || !orderForm.wilaya || !orderForm.commune) {
+      toast({ title: "⚠️ يرجى ملء جميع الحقول الإجبارية", variant: "destructive" });
       return;
     }
 
@@ -712,7 +712,7 @@ const LandingPageView = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-sm font-bold opacity-70">العنوان بالتفصيل *</label>
+                    <label className="text-sm font-bold opacity-70">العنوان بالتفصيل (اختياري)</label>
                     <Input 
                       placeholder="البلدية، الحي، الشارع..." 
                       value={orderForm.address} 
@@ -1676,7 +1676,7 @@ const LandingPageView = () => {
                     </div>
 
                     <div className="space-y-2">
-                      <label className="text-sm font-bold opacity-70">العنوان بالتفصيل *</label>
+                      <label className="text-sm font-bold opacity-70">العنوان بالتفصيل (اختياري)</label>
                       <Input 
                         placeholder="البلدية، الحي، الشارع..." 
                         value={orderForm.address} 

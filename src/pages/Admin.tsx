@@ -441,6 +441,7 @@ const Admin = () => {
     hasBeforeAfter: false,
     beforeImage: "",
     hasMarketingOffers: false,
+    hasAffiliateGift: false,
     marketingOffers: [],
     afterImage: ""
   });
@@ -920,6 +921,7 @@ const Admin = () => {
       beforeImage: "",
       afterImage: "",
       hasMarketingOffers: false,
+      hasAffiliateGift: false,
       marketingOffers: []
     });
 
@@ -940,6 +942,7 @@ const Admin = () => {
       beforeImage: product.beforeImage || "",
       afterImage: product.afterImage || "",
       hasMarketingOffers: !!product.hasMarketingOffers,
+      hasAffiliateGift: !!product.hasAffiliateGift,
       marketingOffers: product.marketingOffers || []
     });
 
@@ -979,6 +982,7 @@ const Admin = () => {
         beforeImage: productFormData.hasBeforeAfter ? productFormData.beforeImage : null,
         afterImage: productFormData.hasBeforeAfter ? productFormData.afterImage : null,
         hasMarketingOffers: productFormData.hasMarketingOffers,
+        hasAffiliateGift: productFormData.hasAffiliateGift,
         marketingOffers: productFormData.hasMarketingOffers ? productFormData.marketingOffers : []
       };
 
@@ -3174,7 +3178,10 @@ const Admin = () => {
 
                 {/* Variants Management */}
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="flex items-center justify-between p-4 bg-primary/5 rounded-2xl border border-primary/10">
+                  
+                  {/* Colors */}
+                  <div className={`space-y-4 ${productFormData.hasColors ? 'col-span-2' : 'col-span-1'}`}>
+                    <div className="flex items-center justify-between p-4 bg-primary/5 rounded-2xl border border-primary/10">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
                         <Palette className="w-4 h-4 text-primary" />
@@ -3187,7 +3194,72 @@ const Admin = () => {
                       onCheckedChange={v => setProductFormData({...productFormData, hasColors: v})}
                     />
                   </div>
-                  <div className="flex items-center justify-between p-4 bg-secondary/5 rounded-2xl border border-secondary/10">
+                    {productFormData.hasColors && (
+                  <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="space-y-3 p-5 bg-primary/5 rounded-3xl border border-primary/10">
+                    <Label className="font-bold text-sm flex items-center gap-2">
+                      <Palette className="w-4 h-4 text-primary" /> تحديد الألوان المتاحة لهذا المنتج
+                    </Label>
+                    <div className="flex gap-2">
+                      <Input 
+                        placeholder="أضف لون" 
+                        value={newColorInput}
+                        onChange={(e) => setNewColorInput(e.target.value)}
+                        className="h-11 rounded-xl bg-white border-primary/10 px-4"
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            const val = newColorInput.trim();
+                            if (val && !productFormData.availableColors.includes(val)) {
+                                setProductFormData((prev: any) => ({
+                                  ...prev,
+                                  availableColors: [...prev.availableColors, val]
+                                }));
+                              setNewColorInput("");
+                            }
+                          }
+                        }}
+                      />
+                      <Button 
+                        type="button"
+                        onClick={() => {
+                          const val = newColorInput.trim();
+                          if (val && !productFormData.availableColors.includes(val)) {
+                                setProductFormData((prev: any) => ({
+                                  ...prev,
+                                  availableColors: [...prev.availableColors, val]
+                                }));
+                            setNewColorInput("");
+                          }
+                        }}
+                        className="h-11 rounded-xl px-4 bg-primary hover:bg-primary/90"
+                      >
+                        إضافة
+                      </Button>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {productFormData.availableColors.map((color: string) => (
+                        <Badge key={color} variant="secondary" className="gap-2 px-4 py-2 rounded-xl bg-white border-primary/10 text-primary font-bold shadow-sm">
+                          {color}
+                          <X 
+                            className="w-3.5 h-3.5 cursor-pointer hover:text-destructive transition-colors" 
+                            onClick={() => setProductFormData({
+                              ...productFormData,
+                              availableColors: productFormData.availableColors.filter((c: string) => c !== color)
+                            })} 
+                          />
+                        </Badge>
+                      ))}
+                      {productFormData.availableColors.length === 0 && (
+                        <p className="text-[10px] text-muted-foreground opacity-60">أضف الألوان التي تريد عرضها في المتجر</p>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+                  </div>
+
+                  {/* Sizes */}
+                  <div className={`space-y-4 ${productFormData.hasSizes ? 'col-span-2' : 'col-span-1'}`}>
+                    <div className="flex items-center justify-between p-4 bg-secondary/5 rounded-2xl border border-secondary/10">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-lg bg-secondary/10 flex items-center justify-center">
                         <SlidersHorizontal className="w-4 h-4 text-secondary" />
@@ -3200,7 +3272,112 @@ const Admin = () => {
                       onCheckedChange={v => setProductFormData({...productFormData, hasSizes: v})}
                     />
                   </div>
-                  <div className="flex items-center justify-between p-4 bg-emerald-500/5 rounded-2xl border border-emerald-500/10 col-span-2">
+                    {productFormData.hasSizes && (
+                  <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4 p-5 bg-secondary/5 rounded-3xl border border-secondary/10">
+                    <div className="flex items-center justify-between">
+                      <Label className="font-bold text-sm flex items-center gap-2">
+                        <SlidersHorizontal className="w-4 h-4 text-secondary" /> اختيار المقاسات
+                      </Label>
+                      <Select 
+                        value={productFormData.sizeType}
+                        onValueChange={(v) => setProductFormData({ ...productFormData, sizeType: v, availableSizes: [] })}
+                      >
+                        <SelectTrigger className="w-32 h-9 rounded-lg bg-white border-secondary/10 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent dir="rtl">
+                          <SelectItem value="clothing">ملابس</SelectItem>
+                          <SelectItem value="shoes">أحذية</SelectItem>
+                          <SelectItem value="custom">مخصص</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {productFormData.sizeType === "custom" ? (
+                      <div className="space-y-3">
+                        <div className="flex gap-2">
+                          <Input 
+                            placeholder="أضف مقاس مخصص" 
+                            value={newSizeInput}
+                            onChange={(e) => setNewSizeInput(e.target.value)}
+                            className="h-11 rounded-xl bg-white border-secondary/10 px-4"
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault();
+                                const val = newSizeInput.trim();
+                                if (val && !productFormData.availableSizes.includes(val)) {
+                                  setProductFormData((prev: any) => ({
+                                    ...prev,
+                                    availableSizes: [...prev.availableSizes, val]
+                                  }));
+                                  setNewSizeInput("");
+                                }
+                              }
+                            }}
+                          />
+                          <Button 
+                            type="button"
+                            onClick={() => {
+                              const val = newSizeInput.trim();
+                              if (val && !productFormData.availableSizes.includes(val)) {
+                                setProductFormData((prev: any) => ({
+                                  ...prev,
+                                  availableSizes: [...prev.availableSizes, val]
+                                }));
+                                setNewSizeInput("");
+                              }
+                            }}
+                            className="h-11 rounded-xl px-4 bg-secondary hover:bg-secondary/90"
+                          >
+                            إضافة
+                          </Button>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {productFormData.availableSizes.map((size: string) => (
+                            <Badge key={size} variant="secondary" className="gap-2 px-4 py-2 rounded-xl bg-white border-secondary/10 text-secondary font-bold shadow-sm">
+                              {size}
+                              <X 
+                                className="w-3.5 h-3.5 cursor-pointer hover:text-destructive transition-colors" 
+                                onClick={() => setProductFormData({
+                                  ...productFormData,
+                                  availableSizes: productFormData.availableSizes.filter((s: string) => s !== size)
+                                })} 
+                              />
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex flex-wrap gap-2">
+                        {(productFormData.sizeType === 'clothing' 
+                          ? ['S', 'M', 'L', 'XL', 'XXL', 'XXXL'] 
+                          : ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45']
+                        ).map((size) => (
+                          <Button
+                            key={size}
+                            type="button"
+                            variant={productFormData.availableSizes.includes(size) ? "secondary" : "outline"}
+                            size="sm"
+                            onClick={() => {
+                              const sizes = productFormData.availableSizes.includes(size)
+                                ? productFormData.availableSizes.filter((s: string) => s !== size)
+                                : [...productFormData.availableSizes, size];
+                              setProductFormData({ ...productFormData, availableSizes: sizes });
+                            }}
+                            className="h-10 min-w-[48px] rounded-xl font-bold shadow-sm"
+                          >
+                            {size}
+                          </Button>
+                        ))}
+                      </div>
+                    )}
+                  </motion.div>
+                )}
+                  </div>
+
+                  {/* Free Shipping */}
+                  <div className="col-span-2">
+                    <div className="flex items-center justify-between p-4 bg-emerald-500/5 rounded-2xl border border-emerald-500/10">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center">
                         <Truck className="w-4 h-4 text-emerald-600" />
@@ -3213,7 +3390,27 @@ const Admin = () => {
                       onCheckedChange={v => setProductFormData({...productFormData, showFreeShipping: v})}
                     />
                   </div>
-                  <div className="flex items-center justify-between p-4 bg-orange-500/5 rounded-2xl border border-orange-500/10 col-span-2">
+                  </div>
+
+                  {/* Affiliate Gift */}
+                  <div className="col-span-2">
+                    <div className="flex items-center justify-between p-4 bg-purple-500/5 rounded-2xl border border-purple-500/10">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center">
+                          <Gift className="w-4 h-4 text-purple-600" />
+                        </div>
+                        <Label className="font-bold text-sm cursor-pointer" htmlFor="hasAffiliateGift">هذا المنتج يحتوي على هدية خاصة بالمسوق عند بيعه</Label>
+                      </div>
+                      <Switch 
+                        id="hasAffiliateGift"
+                        checked={productFormData.hasAffiliateGift}
+                        onCheckedChange={v => setProductFormData({...productFormData, hasAffiliateGift: v})}
+                      />
+                    </div>
+                  </div>
+                  {/* Marketing Offers */}
+                  <div className="col-span-2 space-y-4">
+                    <div className="flex items-center justify-between p-4 bg-orange-500/5 rounded-2xl border border-orange-500/10">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-lg bg-orange-500/10 flex items-center justify-center">
                         <Gift className="w-4 h-4 text-orange-600" />
@@ -3226,22 +3423,7 @@ const Admin = () => {
                       onCheckedChange={v => setProductFormData({...productFormData, hasMarketingOffers: v})}
                     />
                   </div>
-                  <div className="flex items-center justify-between p-4 bg-amber-500/5 rounded-2xl border border-amber-500/10 col-span-2">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center">
-                        <SplitSquareHorizontal className="w-4 h-4 text-amber-600" />
-                      </div>
-                      <Label className="font-bold text-sm cursor-pointer" htmlFor="hasBeforeAfter">ميزة قبل وبعد (Before & After)</Label>
-                    </div>
-                    <Switch 
-                      id="hasBeforeAfter"
-                      checked={productFormData.hasBeforeAfter}
-                      onCheckedChange={v => setProductFormData({...productFormData, hasBeforeAfter: v})}
-                    />
-                  </div>
-                </div>
-
-                {productFormData.hasMarketingOffers && (
+                    {productFormData.hasMarketingOffers && (
                   <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4 p-5 bg-orange-500/5 rounded-3xl border border-orange-500/10">
                     <div className="flex items-center justify-between">
                       <Label className="font-bold text-sm flex items-center gap-2 text-orange-700">
@@ -3357,8 +3539,24 @@ const Admin = () => {
                     </div>
                   </motion.div>
                 )}
+                  </div>
 
-                {productFormData.hasBeforeAfter && (
+                  {/* Before After */}
+                  <div className="col-span-2 space-y-4">
+                    <div className="flex items-center justify-between p-4 bg-amber-500/5 rounded-2xl border border-amber-500/10">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center">
+                        <SplitSquareHorizontal className="w-4 h-4 text-amber-600" />
+                      </div>
+                      <Label className="font-bold text-sm cursor-pointer" htmlFor="hasBeforeAfter">ميزة قبل وبعد (Before & After)</Label>
+                    </div>
+                    <Switch 
+                      id="hasBeforeAfter"
+                      checked={productFormData.hasBeforeAfter}
+                      onCheckedChange={v => setProductFormData({...productFormData, hasBeforeAfter: v})}
+                    />
+                  </div>
+                    {productFormData.hasBeforeAfter && (
                   <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4 p-5 bg-amber-500/5 rounded-3xl border border-amber-500/10">
                     <Label className="font-bold text-sm flex items-center gap-2">
                       <SplitSquareHorizontal className="w-4 h-4 text-amber-600" /> صور قبل وبعد
@@ -3463,172 +3661,8 @@ const Admin = () => {
                     </div>
                   </motion.div>
                 )}
-
-                {productFormData.hasColors && (
-                  <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="space-y-3 p-5 bg-primary/5 rounded-3xl border border-primary/10">
-                    <Label className="font-bold text-sm flex items-center gap-2">
-                      <Palette className="w-4 h-4 text-primary" /> تحديد الألوان المتاحة لهذا المنتج
-                    </Label>
-                    <div className="flex gap-2">
-                      <Input 
-                        placeholder="أضف لون" 
-                        value={newColorInput}
-                        onChange={(e) => setNewColorInput(e.target.value)}
-                        className="h-11 rounded-xl bg-white border-primary/10 px-4"
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
-                            e.preventDefault();
-                            const val = newColorInput.trim();
-                            if (val && !productFormData.availableColors.includes(val)) {
-                                setProductFormData((prev: any) => ({
-                                  ...prev,
-                                  availableColors: [...prev.availableColors, val]
-                                }));
-                              setNewColorInput("");
-                            }
-                          }
-                        }}
-                      />
-                      <Button 
-                        type="button"
-                        onClick={() => {
-                          const val = newColorInput.trim();
-                          if (val && !productFormData.availableColors.includes(val)) {
-                                setProductFormData((prev: any) => ({
-                                  ...prev,
-                                  availableColors: [...prev.availableColors, val]
-                                }));
-                            setNewColorInput("");
-                          }
-                        }}
-                        className="h-11 rounded-xl px-4 bg-primary hover:bg-primary/90"
-                      >
-                        إضافة
-                      </Button>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {productFormData.availableColors.map((color: string) => (
-                        <Badge key={color} variant="secondary" className="gap-2 px-4 py-2 rounded-xl bg-white border-primary/10 text-primary font-bold shadow-sm">
-                          {color}
-                          <X 
-                            className="w-3.5 h-3.5 cursor-pointer hover:text-destructive transition-colors" 
-                            onClick={() => setProductFormData({
-                              ...productFormData,
-                              availableColors: productFormData.availableColors.filter((c: string) => c !== color)
-                            })} 
-                          />
-                        </Badge>
-                      ))}
-                      {productFormData.availableColors.length === 0 && (
-                        <p className="text-[10px] text-muted-foreground opacity-60">أضف الألوان التي تريد عرضها في المتجر</p>
-                      )}
-                    </div>
-                  </motion.div>
-                )}
-
-                {productFormData.hasSizes && (
-                  <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4 p-5 bg-secondary/5 rounded-3xl border border-secondary/10">
-                    <div className="flex items-center justify-between">
-                      <Label className="font-bold text-sm flex items-center gap-2">
-                        <SlidersHorizontal className="w-4 h-4 text-secondary" /> اختيار المقاسات
-                      </Label>
-                      <Select 
-                        value={productFormData.sizeType}
-                        onValueChange={(v) => setProductFormData({ ...productFormData, sizeType: v, availableSizes: [] })}
-                      >
-                        <SelectTrigger className="w-32 h-9 rounded-lg bg-white border-secondary/10 text-xs">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent dir="rtl">
-                          <SelectItem value="clothing">ملابس</SelectItem>
-                          <SelectItem value="shoes">أحذية</SelectItem>
-                          <SelectItem value="custom">مخصص</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    {productFormData.sizeType === "custom" ? (
-                      <div className="space-y-3">
-                        <div className="flex gap-2">
-                          <Input 
-                            placeholder="أضف مقاس مخصص" 
-                            value={newSizeInput}
-                            onChange={(e) => setNewSizeInput(e.target.value)}
-                            className="h-11 rounded-xl bg-white border-secondary/10 px-4"
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') {
-                                e.preventDefault();
-                                const val = newSizeInput.trim();
-                                if (val && !productFormData.availableSizes.includes(val)) {
-                                  setProductFormData((prev: any) => ({
-                                    ...prev,
-                                    availableSizes: [...prev.availableSizes, val]
-                                  }));
-                                  setNewSizeInput("");
-                                }
-                              }
-                            }}
-                          />
-                          <Button 
-                            type="button"
-                            onClick={() => {
-                              const val = newSizeInput.trim();
-                              if (val && !productFormData.availableSizes.includes(val)) {
-                                setProductFormData((prev: any) => ({
-                                  ...prev,
-                                  availableSizes: [...prev.availableSizes, val]
-                                }));
-                                setNewSizeInput("");
-                              }
-                            }}
-                            className="h-11 rounded-xl px-4 bg-secondary hover:bg-secondary/90"
-                          >
-                            إضافة
-                          </Button>
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                          {productFormData.availableSizes.map((size: string) => (
-                            <Badge key={size} variant="secondary" className="gap-2 px-4 py-2 rounded-xl bg-white border-secondary/10 text-secondary font-bold shadow-sm">
-                              {size}
-                              <X 
-                                className="w-3.5 h-3.5 cursor-pointer hover:text-destructive transition-colors" 
-                                onClick={() => setProductFormData({
-                                  ...productFormData,
-                                  availableSizes: productFormData.availableSizes.filter((s: string) => s !== size)
-                                })} 
-                              />
-                            </Badge>
-                          ))}
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="flex flex-wrap gap-2">
-                        {(productFormData.sizeType === 'clothing' 
-                          ? ['S', 'M', 'L', 'XL', 'XXL', 'XXXL'] 
-                          : ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45']
-                        ).map((size) => (
-                          <Button
-                            key={size}
-                            type="button"
-                            variant={productFormData.availableSizes.includes(size) ? "secondary" : "outline"}
-                            size="sm"
-                            onClick={() => {
-                              const sizes = productFormData.availableSizes.includes(size)
-                                ? productFormData.availableSizes.filter((s: string) => s !== size)
-                                : [...productFormData.availableSizes, size];
-                              setProductFormData({ ...productFormData, availableSizes: sizes });
-                            }}
-                            className="h-10 min-w-[48px] rounded-xl font-bold shadow-sm"
-                          >
-                            {size}
-                          </Button>
-                        ))}
-                      </div>
-                    )}
-                  </motion.div>
-                )}
-
-
+                  </div>
+                </div>
 
                 <div className="space-y-2">
                   <Label className="font-bold text-sm">وصف المنتج (مميزات)</Label>
