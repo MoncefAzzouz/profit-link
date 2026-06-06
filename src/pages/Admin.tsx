@@ -430,6 +430,9 @@ const Admin = () => {
   const [products, setProducts] = useState<any[]>([]);
   const [isProductDialogOpen, setIsProductDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<any | null>(null);
+  // Product main media: either images OR a video, not both
+  const [mediaType, setMediaType] = useState<"images" | "video">("images");
+  const [isUploadingVideo, setIsUploadingVideo] = useState(false);
   const [productToEditLandingPage, setProductToEditLandingPage] = useState<any>(null);
   const [generatingAiProductId, setGeneratingAiProductId] = useState<string | null>(null);
   const [aiProgressStep, setAiProgressStep] = useState(0);
@@ -953,12 +956,14 @@ const Admin = () => {
       marketingOffers: []
     });
 
+    setMediaType("images");
     setIsProductDialogOpen(true);
   };
 
 
   const handleOpenEditProduct = (product: any) => {
     setEditingProduct(product);
+    setMediaType(product.videoUrl ? "video" : "images");
     setProductFormData({ 
       ...product,
       hasColors: !!product.hasColors,
@@ -996,6 +1001,7 @@ const Admin = () => {
         stock: productFormData.stock,
         image: productFormData.image,
         images: productFormData.images,
+        videoUrl: productFormData.videoUrl || null,
         isVisible: productFormData.isVisible,
         isTrend: productFormData.isTrend,
         isFeatured: productFormData.isFeatured,
@@ -3884,7 +3890,88 @@ const Admin = () => {
                  </div>
 
                  <div className="space-y-2">
-                    <Label className="font-bold text-sm">صور المنتج (حد أقصى 10 صور)</Label>
+                    <Label className="font-bold text-sm">وسائط المنتج</Label>
+                    {/* Choose either images OR a video — not both */}
+                    <div className="flex gap-2 mb-3">
+                      <button
+                        type="button"
+                        onClick={() => { setMediaType("images"); setProductFormData({ ...productFormData, videoUrl: "" }); }}
+                        className={`flex-1 h-11 rounded-xl text-xs font-black border-2 flex items-center justify-center gap-2 transition-all ${mediaType === "images" ? "border-primary bg-primary/5 text-primary" : "border-border bg-muted/30 text-muted-foreground"}`}
+                      >
+                        <ImageIcon className="w-4 h-4" /> صور
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setMediaType("video"); setProductFormData({ ...productFormData, images: [], image: "" }); }}
+                        className={`flex-1 h-11 rounded-xl text-xs font-black border-2 flex items-center justify-center gap-2 transition-all ${mediaType === "video" ? "border-primary bg-primary/5 text-primary" : "border-border bg-muted/30 text-muted-foreground"}`}
+                      >
+                        <Video className="w-4 h-4" /> فيديو
+                      </button>
+                    </div>
+
+                    {mediaType === "video" ? (
+                      <div className="space-y-2">
+                        {productFormData.videoUrl ? (
+                          <div className="relative group rounded-xl overflow-hidden bg-black border border-border">
+                            <video src={productFormData.videoUrl} className="w-full max-h-72 object-contain" controls playsInline />
+                            <button
+                              type="button"
+                              onClick={() => setProductFormData({ ...productFormData, videoUrl: "" })}
+                              className="absolute top-2 right-2 bg-destructive text-white rounded-full p-1.5 shadow-lg"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
+                        ) : (
+                          <label className="cursor-pointer flex flex-col items-center justify-center gap-2 rounded-xl bg-muted/30 border-2 border-dashed border-border hover:bg-muted/50 transition-colors py-10">
+                            {isUploadingVideo ? (
+                              <>
+                                <Loader2 className="w-6 h-6 text-primary animate-spin" />
+                                <span className="text-xs text-muted-foreground font-bold">جارٍ رفع الفيديو...</span>
+                              </>
+                            ) : (
+                              <>
+                                <Upload className="w-6 h-6 text-muted-foreground" />
+                                <span className="text-xs text-muted-foreground font-bold">رفع فيديو من جهازك</span>
+                                <span className="text-[10px] text-muted-foreground/60">MP4, WebM, MOV — حد أقصى 50MB</span>
+                              </>
+                            )}
+                            <input
+                              type="file"
+                              accept="video/*"
+                              className="hidden"
+                              disabled={isUploadingVideo}
+                              onChange={async (e) => {
+                                const file = e.target.files?.[0];
+                                if (!file) return;
+                                const token = localStorage.getItem("token");
+                                const fd = new FormData();
+                                fd.append("video", file);
+                                setIsUploadingVideo(true);
+                                try {
+                                  const res = await fetch(`${API_BASE_URL}/upload/video`, {
+                                    method: "POST",
+                                    headers: { "Authorization": `Bearer ${token}` },
+                                    body: fd,
+                                  });
+                                  const json = await res.json();
+                                  if (res.ok && json.url) {
+                                    setProductFormData({ ...productFormData, videoUrl: json.url, images: [], image: "" });
+                                    toast({ title: "تم رفع الفيديو بنجاح ✅" });
+                                  } else {
+                                    throw new Error(json.error || "Upload failed");
+                                  }
+                                } catch (err: any) {
+                                  toast({ title: "خطأ في رفع الفيديو", description: err.message, variant: "destructive" });
+                                } finally {
+                                  setIsUploadingVideo(false);
+                                }
+                              }}
+                            />
+                          </label>
+                        )}
+                      </div>
+                    ) : (
                     <div className="grid grid-cols-3 gap-2">
                       {productFormData.images && productFormData.images.map((img: string, idx: number) => (
                         <div key={idx} className="relative group aspect-square rounded-xl overflow-hidden bg-muted/30 border border-border">
@@ -3942,6 +4029,7 @@ const Admin = () => {
                         </label>
                       )}
                     </div>
+                    )}
                  </div>
 
                   <div className="pt-4 border-t border-border">
