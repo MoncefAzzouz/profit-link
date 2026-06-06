@@ -12,6 +12,12 @@ enum Role {
   AFFILIATE
 }
 
+enum UserStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 enum OrderStatus {
   PENDING
   CONFIRMED
@@ -42,6 +48,11 @@ model User {
   role         Role    @default(AFFILIATE)
   tier         String  @default("المستوى 1 - مبتدئ")
 
+  // Join-request approval. Existing users default to APPROVED so they keep
+  // logging in; new sign-ups are created as PENDING until an admin approves.
+  status        UserStatus @default(APPROVED)
+  questionnaire Json? // Seller qualification quiz answers submitted at sign-up
+
   // Financial
   walletBalance Float @default(0.0)
 
@@ -56,6 +67,7 @@ model User {
 
   @@index([role])
   @@index([storeName])
+  @@index([status])
 }
 
 model AffiliateLevel {

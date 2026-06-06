@@ -10,7 +10,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'super-secret-default-key-change-in
 // POST /api/auth/register
 router.post('/register', async (req: Request, res: Response): Promise<any> => {
   try {
-    const { email, password, name, phone, wilaya, ccp, storeName } = req.body;
+    const { email, password, name, phone, wilaya, ccp, storeName, questionnaire } = req.body;
 
     if (!email || !password || !name) {
       return res.status(400).json({ error: 'Missing required fields' });
@@ -27,7 +27,8 @@ router.post('/register', async (req: Request, res: Response): Promise<any> => {
     const saltRounds = 8;
     const passwordHash = await bcrypt.hash(password, saltRounds);
 
-    // Create user
+    // New sign-ups start as PENDING — an admin must approve the join request
+    // before they can log in. The qualification quiz answers are stored for review.
     const user = await prisma.user.create({
       data: {
         email,
@@ -37,16 +38,16 @@ router.post('/register', async (req: Request, res: Response): Promise<any> => {
         wilaya,
         ccp,
         storeName,
+        status: 'PENDING',
+        questionnaire: questionnaire ?? undefined,
       },
     });
 
-    // Generate JWT
-    const token = jwt.sign({ userId: user.id, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
-
+    // No token is issued yet — the account is pending review.
     res.status(201).json({
-      message: 'User registered successfully',
-      token,
-      user: { id: user.id, email: user.email, name: user.name, role: user.role, tier: user.tier, storeName: user.storeName },
+      pending: true,
+      message: 'تم استلام طلبك بنجاح. ستتم مراجعته من طرف الإدارة وسيتم إعلامك بالنتيجة.',
+      user: { id: user.id, email: user.email, name: user.name, status: user.status },
     });
   } catch (error: any) {
     console.error('Registration Error:', error);
@@ -73,6 +74,16 @@ router.post('/login', async (req: Request, res: Response): Promise<any> => {
     const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
     if (!isPasswordValid) {
       return res.status(401).json({ error: 'Invalid email or password' });
+    }
+
+    // Block accounts that are not yet approved (admins bypass this gate).
+    if (user.role !== 'ADMIN') {
+      if (user.status === 'PENDING') {
+        return res.status(403).json({ error: 'حسابك قيد المراجعة من طرف الإدارة. سيتم إعلامك عند تفعيله.', status: 'PENDING' });
+      }
+      if (user.status === 'REJECTED') {
+        return res.status(403).json({ error: 'نعتذر، لم يتم قبول طلب انضمامك.', status: 'REJECTED' });
+      }
     }
 
     // Generate JWT

@@ -168,4 +168,60 @@ router.get('/affiliates', authenticateToken, requireAdmin, async (req: AuthReque
   }
 });
 
+// GET /api/admin/join-requests (Pending sign-ups awaiting approval, with quiz answers)
+router.get('/join-requests', authenticateToken, requireAdmin, async (req: AuthRequest, res: Response): Promise<any> => {
+  try {
+    const status = (req.query.status as string)?.toUpperCase();
+    const where = status && ['PENDING', 'APPROVED', 'REJECTED'].includes(status)
+      ? { status: status as any }
+      : { status: 'PENDING' as any };
+
+    const users = await prisma.user.findMany({
+      where: { ...where, role: 'AFFILIATE' },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        wilaya: true,
+        storeName: true,
+        ccp: true,
+        status: true,
+        questionnaire: true,
+        createdAt: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    res.json({ data: users });
+  } catch (error) {
+    console.error('Error fetching join requests:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// PATCH /api/admin/join-requests/:id (Approve or reject a pending sign-up)
+router.patch('/join-requests/:id', authenticateToken, requireAdmin, async (req: AuthRequest, res: Response): Promise<any> => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body; // 'APPROVED' or 'REJECTED'
+
+    const next = String(status || '').toUpperCase();
+    if (!['APPROVED', 'REJECTED', 'PENDING'].includes(next)) {
+      return res.status(400).json({ error: 'Invalid status' });
+    }
+
+    const user = await prisma.user.update({
+      where: { id: id as string },
+      data: { status: next as any },
+      select: { id: true, name: true, email: true, status: true },
+    });
+
+    res.json({ message: `Join request ${next.toLowerCase()}`, data: user });
+  } catch (error) {
+    console.error('Error updating join request:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
 export default router;
