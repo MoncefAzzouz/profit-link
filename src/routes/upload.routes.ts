@@ -28,6 +28,23 @@ const upload = multer({
   }
 });
 
+const VIDEO_MIME_EXT: Record<string, string> = {
+  'video/mp4': 'mp4',
+  'video/webm': 'webm',
+  'video/quicktime': 'mov',
+  'video/x-matroska': 'mkv',
+  'video/ogg': 'ogv',
+};
+
+const uploadVideo = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 50 * 1024 * 1024 }, // 50MB
+  fileFilter: (_req, file, cb) => {
+    if (file.mimetype.startsWith('video/')) cb(null, true);
+    else cb(new Error('Only video files are allowed'));
+  }
+});
+
 function publicBaseUrl(req: AuthRequest): string {
   if (process.env.PUBLIC_BASE_URL) return process.env.PUBLIC_BASE_URL.replace(/\/$/, '');
   const proto = (req.headers['x-forwarded-proto'] as string) || req.protocol || 'https';
@@ -57,6 +74,30 @@ router.post('/image', authenticateToken, requireAdmin, upload.single('image'), a
   } catch (error) {
     console.error('Error uploading image:', error);
     res.status(500).json({ error: 'Failed to upload image' });
+  }
+});
+
+// POST /api/upload/video (Admin: Upload product video → returns CDN-style URL)
+router.post('/video', authenticateToken, requireAdmin, uploadVideo.single('video'), async (req: AuthRequest, res: Response): Promise<any> => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No video file provided' });
+    }
+
+    const ext = VIDEO_MIME_EXT[req.file.mimetype] || 'mp4';
+    const hash = crypto.createHash('sha1').update(req.file.buffer).digest('hex');
+    const filename = `${hash}.${ext}`;
+    const filepath = path.join(UPLOAD_DIR, filename);
+
+    if (!fs.existsSync(filepath)) {
+      fs.writeFileSync(filepath, req.file.buffer);
+    }
+
+    const url = `${publicBaseUrl(req)}/uploads/${filename}`;
+    res.json({ message: 'Video uploaded successfully', url });
+  } catch (error) {
+    console.error('Error uploading video:', error);
+    res.status(500).json({ error: 'Failed to upload video' });
   }
 });
 
