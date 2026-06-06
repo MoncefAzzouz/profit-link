@@ -29,6 +29,10 @@ import { useToast } from "@/hooks/use-toast";
 import { API_BASE_URL } from '@/config/api';
 import AIThemeLandingPage from "@/components/seller/AIThemeLandingPage";
 import ProductDescriptionSection from "@/components/seller/ProductDescriptionSection";
+import {
+  SocialProofStats, GallerySection, BeforeAfterSection,
+  CountdownSection, GuaranteeSection, FaqSection,
+} from "@/components/seller/LandingSections";
 import { AI_TEMPLATE_IDS } from "@/utils/aiThemes";
 
 
@@ -1224,6 +1228,13 @@ const LandingPageBuilder = ({ initialProductToEdit, onBack }: { initialProductTo
                     className="!py-4 !px-0 mt-4"
                   />
                 )}
+
+                {/* Extra toggleable sections (shared components) */}
+                {(p.sections || []).includes("social-proof") && <SocialProofStats p={p} className="!px-0 !pb-0 mt-4" />}
+                {(p.sections || []).includes("gallery") && <GallerySection p={p} className="!px-0 !pb-0 mt-4" />}
+                {(p.sections || []).includes("before-after") && <BeforeAfterSection p={p} className="!px-0 !pb-0 mt-4" />}
+                {(p.sections || []).includes("countdown") && <CountdownSection p={p} className="!px-0 !pb-0 mt-4" />}
+                {(p.sections || []).includes("guarantee") && <GuaranteeSection p={p} className="!px-0 !pb-0 mt-4" />}
               </div>
             </div>
           </div>
@@ -1403,6 +1414,28 @@ const LandingPageBuilder = ({ initialProductToEdit, onBack }: { initialProductTo
                   <p className="text-xs leading-relaxed opacity-80">{review.text}</p>
                 </div>
               ))}
+            </div>
+          )}
+
+          {/* Extra toggleable sections (shared components) */}
+          {(p.sections || []).includes("before-after") && (
+            <div style={{ order: (p.sections || []).indexOf("before-after") }}>
+              <BeforeAfterSection p={p} className="!px-0 !pb-0" />
+            </div>
+          )}
+          {(p.sections || []).includes("countdown") && (
+            <div style={{ order: (p.sections || []).indexOf("countdown") }}>
+              <CountdownSection p={p} className="!px-0 !pb-0" />
+            </div>
+          )}
+          {(p.sections || []).includes("guarantee") && (
+            <div style={{ order: (p.sections || []).indexOf("guarantee") }}>
+              <GuaranteeSection p={p} className="!px-0 !pb-0" />
+            </div>
+          )}
+          {(p.sections || []).includes("faq") && (
+            <div style={{ order: (p.sections || []).indexOf("faq") }}>
+              <FaqSection p={p} className="!px-0 !pb-0" />
             </div>
           )}
 

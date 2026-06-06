@@ -14,6 +14,10 @@ import { API_BASE_URL } from '@/config/api';
 import AIThemeLandingPage from '@/components/seller/AIThemeLandingPage';
 import ProductDescriptionSection from '@/components/seller/ProductDescriptionSection';
 import PurchaseNotificationPopup from '@/components/seller/PurchaseNotificationPopup';
+import {
+  UrgencyBar, SocialProofStats, GallerySection, VideoSection, BeforeAfterSection,
+  TrustBadgesSection, CountdownSection, GuaranteeSection, ShippingSection, FaqSection, StickyCtaBar,
+} from '@/components/seller/LandingSections';
 import { AI_TEMPLATE_IDS } from '@/utils/aiThemes';
 
 
@@ -475,6 +479,8 @@ const LandingPageView = () => {
       <div className="min-h-screen overflow-x-hidden w-full max-w-[100vw]" style={{ backgroundColor: p.backgroundColor, fontFamily: p.fontFamily, color: tc }} dir="rtl">
         <link href={`https://fonts.googleapis.com/css2?family=${p.fontFamily === "cairo" ? "Cairo" : p.fontFamily === "tajawal" ? "Tajawal" : p.fontFamily === "almarai" ? "Almarai" : p.fontFamily === "changa" ? "Changa" : p.fontFamily === "ibm-plex" ? "IBM+Plex+Sans+Arabic" : p.fontFamily === "noto-kufi" ? "Noto+Kufi+Arabic" : "Readex+Pro"}:wght@400;600;700;800;900&display=swap`} rel="stylesheet" />
         
+        {p.sections.includes("urgency-bar") && <UrgencyBar p={p} />}
+
         {/* Sticky Header */}
         <header className="sticky top-0 z-50 bg-card/80 backdrop-blur-xl border-b border-border">
           <div className="container mx-auto px-4 py-4 flex items-center justify-between">
@@ -990,9 +996,19 @@ const LandingPageView = () => {
                   </div>
                 </div>
               )}
+
+              {/* Extra sections — work in every template via shared components */}
+              {p.sections.includes("social-proof") && <SocialProofStats p={p} className="!px-0 pt-8 !pb-0" />}
+              {p.sections.includes("gallery") && <GallerySection p={p} className="!px-0 pt-8 !pb-0" />}
+              {p.sections.includes("trust-badges") && <TrustBadgesSection p={p} className="!px-0 pt-8 !pb-0" />}
+              {p.sections.includes("countdown") && <CountdownSection p={p} className="!px-0 pt-8 !pb-0" />}
+              {p.sections.includes("guarantee") && <GuaranteeSection p={p} className="!px-0 pt-8 !pb-0" />}
+              {p.sections.includes("shipping") && <ShippingSection p={p} className="!px-0 pt-8 !pb-0" />}
             </motion.div>
           </div>
         </div>
+
+        {p.sections.includes("sticky-cta") && <StickyCtaBar p={p} />}
 
         <PurchaseNotificationPopup
           enabled={p.sections.includes("notification-popup")}
@@ -1825,6 +1841,8 @@ const LandingPageView = () => {
       {/* Social Proof Notification Popup */}
       <AnimatePresence>
       </AnimatePresence>
+
+      {p.sections.includes("sticky-cta") && <StickyCtaBar p={p} />}
 
       <PurchaseNotificationPopup
         enabled={p.sections.includes("notification-popup")}

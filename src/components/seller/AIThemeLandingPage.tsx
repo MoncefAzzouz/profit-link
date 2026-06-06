@@ -3,6 +3,10 @@ import { ShoppingCart, Star, Shield, Truck, Check, Clock, ChevronDown, Sparkles,
 import { themeTokens, layoutTokens, AITemplateName } from "@/utils/aiThemeTokens";
 import ProductDescriptionSection from "@/components/seller/ProductDescriptionSection";
 import PurchaseNotificationPopup from "@/components/seller/PurchaseNotificationPopup";
+import {
+  SocialProofStats, GallerySection, VideoSection, BeforeAfterSection,
+  CountdownSection, GuaranteeSection, ShippingSection, FaqSection, StickyCtaBar,
+} from "@/components/seller/LandingSections";
 
 interface Props {
   p: any; storeName: string;
@@ -255,6 +259,48 @@ export default function AIThemeLandingPage({ p, storeName, orderForm, setOrderFo
               className="!py-0"
             />
           </div>
+        </section>
+      )}
+
+      {/* Extra sections — shared components so every toggle works on AI themes too */}
+      {isSectionOn("social-proof") && (
+        <section style={{ order: sectionOrder("social-proof") }} className="py-4">
+          <SocialProofStats p={p} dark={isDarkTheme} accent={p.primaryColor} />
+        </section>
+      )}
+      {isSectionOn("gallery") && (
+        <section style={{ order: sectionOrder("gallery") }} className="py-4">
+          <GallerySection p={p} dark={isDarkTheme} accent={p.primaryColor} />
+        </section>
+      )}
+      {isSectionOn("video") && (
+        <section style={{ order: sectionOrder("video") }} className="py-4">
+          <VideoSection p={p} dark={isDarkTheme} accent={p.primaryColor} />
+        </section>
+      )}
+      {isSectionOn("before-after") && (
+        <section style={{ order: sectionOrder("before-after") }} className="py-4">
+          <BeforeAfterSection p={p} dark={isDarkTheme} accent={p.primaryColor} />
+        </section>
+      )}
+      {isSectionOn("countdown") && (
+        <section style={{ order: sectionOrder("countdown") }} className="py-4">
+          <CountdownSection p={p} dark={isDarkTheme} accent={p.primaryColor} />
+        </section>
+      )}
+      {isSectionOn("guarantee") && (
+        <section style={{ order: sectionOrder("guarantee") }} className="py-4">
+          <GuaranteeSection p={p} dark={isDarkTheme} accent={p.primaryColor} />
+        </section>
+      )}
+      {isSectionOn("shipping") && (
+        <section style={{ order: sectionOrder("shipping") }} className="py-4">
+          <ShippingSection p={p} dark={isDarkTheme} accent={p.primaryColor} />
+        </section>
+      )}
+      {isSectionOn("faq") && (
+        <section style={{ order: sectionOrder("faq") }} className="py-4">
+          <FaqSection p={p} dark={isDarkTheme} accent={p.primaryColor} />
         </section>
       )}
 
@@ -547,6 +593,8 @@ export default function AIThemeLandingPage({ p, storeName, orderForm, setOrderFo
         <div className={`hfont ${t.brand} mb-2 sm:mb-3 text-base sm:text-lg`}>{storeName}</div>
         <div className="text-[10px] sm:text-xs">© {new Date().getFullYear()} — جميع الحقوق محفوظة</div>
       </footer>
+
+      {!disablePopups && isSectionOn("sticky-cta") && <StickyCtaBar p={p} accent={p.primaryColor} />}
 
       <PurchaseNotificationPopup
         enabled={!disablePopups && p.sections?.includes("notification-popup")}
