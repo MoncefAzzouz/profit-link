@@ -861,6 +861,7 @@ const LandingPageBuilder = ({ initialProductToEdit, onBack }: { initialProductTo
       return (
         <div className="h-full overflow-y-auto scrollbar-hide">
           <AIThemeLandingPage
+            disablePopups
             p={p}
             storeName={p.productName || defaultStoreName}
             orderForm={{ name: "", phone: "", wilaya: "", commune: "", address: "", deliveryType: "home" }}

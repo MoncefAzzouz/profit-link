@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { ShoppingCart, Star, Shield, Truck, Check, Clock, ChevronDown, Sparkles, ArrowLeft, Award, Lock, RotateCcw, Zap, MapPin, Palette, Ruler } from "lucide-react";
 import { themeTokens, layoutTokens, AITemplateName } from "@/utils/aiThemeTokens";
 import ProductDescriptionSection from "@/components/seller/ProductDescriptionSection";
+import PurchaseNotificationPopup from "@/components/seller/PurchaseNotificationPopup";
 
 interface Props {
   p: any; storeName: string;
@@ -14,6 +15,8 @@ interface Props {
   selectedBundleId: string | null; setSelectedBundleId: (id: string | null) => void;
   orderSubmitted: boolean;
   countdown: { hours: number; minutes: number; seconds: number };
+  /** When true, suppress the floating purchase popup (used in the builder preview). */
+  disablePopups?: boolean;
 }
 
 const pad = (n: number) => String(n).padStart(2, "0");
@@ -37,7 +40,7 @@ const SECONDARY_FONT_MAP: Record<string,string> = {
   bold_sales:'Changa:wght@500;700;800',
 };
 
-export default function AIThemeLandingPage({ p, storeName, orderForm, setOrderForm, handleOrder, quantity, setQuantity, wilayas, communes, shippingRate, selectedOffer, setSelectedOffer, selectedBundleId, setSelectedBundleId, orderSubmitted, countdown }: Props) {
+export default function AIThemeLandingPage({ p, storeName, orderForm, setOrderForm, handleOrder, quantity, setQuantity, wilayas, communes, shippingRate, selectedOffer, setSelectedOffer, selectedBundleId, setSelectedBundleId, orderSubmitted, countdown, disablePopups }: Props) {
   const t = themeTokens[p.template as AITemplateName];
   const l = layoutTokens[p.template as AITemplateName];
   if (!t || !l) return null;
@@ -544,6 +547,11 @@ export default function AIThemeLandingPage({ p, storeName, orderForm, setOrderFo
         <div className={`hfont ${t.brand} mb-2 sm:mb-3 text-base sm:text-lg`}>{storeName}</div>
         <div className="text-[10px] sm:text-xs">© {new Date().getFullYear()} — جميع الحقوق محفوظة</div>
       </footer>
+
+      <PurchaseNotificationPopup
+        enabled={!disablePopups && p.sections?.includes("notification-popup")}
+        accentColor={p.primaryColor}
+      />
     </div>
   );
 }

@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { API_BASE_URL } from '@/config/api';
 import AIThemeLandingPage from '@/components/seller/AIThemeLandingPage';
 import ProductDescriptionSection from '@/components/seller/ProductDescriptionSection';
+import PurchaseNotificationPopup from '@/components/seller/PurchaseNotificationPopup';
 import { AI_TEMPLATE_IDS } from '@/utils/aiThemes';
 
 
@@ -992,6 +993,11 @@ const LandingPageView = () => {
             </motion.div>
           </div>
         </div>
+
+        <PurchaseNotificationPopup
+          enabled={p.sections.includes("notification-popup")}
+          accentColor={p.primaryColor}
+        />
       </div>
     );
   }
@@ -1818,28 +1824,12 @@ const LandingPageView = () => {
 
       {/* Social Proof Notification Popup */}
       <AnimatePresence>
-        {showNotification && p.sections.includes("notification-popup") && (
-          <motion.div 
-            initial={{ x: -300, opacity: 0 }} 
-            animate={{ x: 0, opacity: 1 }} 
-            exit={{ x: -300, opacity: 0 }}
-            className="fixed bottom-6 right-6 z-50 p-4 border rounded-2xl flex items-center gap-3 shadow-2xl max-w-xs"
-            style={{ 
-              borderColor: isDark(p.backgroundColor) ? "#334155" : "#e2e8f0", 
-              borderRadius: br, 
-              backgroundColor: isDark(p.backgroundColor) ? "#1e293b" : "#ffffff" 
-            }}
-          >
-            <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0" style={{ backgroundColor: `${p.primaryColor}15` }}>
-              <ShoppingCart className="w-6 h-6" style={{ color: p.primaryColor }} />
-            </div>
-            <div>
-              <p className="text-sm font-bold" style={{ color: tc }}>{notificationNames[Math.floor(Math.random() * notificationNames.length)]}</p>
-              <p className="text-xs" style={{ color: stc }}>اشترى هذا المنتج منذ {Math.floor(Math.random() * 10) + 1} دقائق</p>
-            </div>
-          </motion.div>
-        )}
       </AnimatePresence>
+
+      <PurchaseNotificationPopup
+        enabled={p.sections.includes("notification-popup")}
+        accentColor={p.primaryColor}
+      />
 
       {/* Custom CSS */}
       {p.customCss && <style>{p.customCss}</style>}
