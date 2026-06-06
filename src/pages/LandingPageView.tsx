@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { API_BASE_URL } from '@/config/api';
 import AIThemeLandingPage from '@/components/seller/AIThemeLandingPage';
+import ProductDescriptionSection from '@/components/seller/ProductDescriptionSection';
 import { AI_TEMPLATE_IDS } from '@/utils/aiThemes';
 
 
@@ -87,6 +88,15 @@ interface LandingPageConfig {
   bundles?: BundlePack[];
   hasMarketingOffers?: boolean;
   marketingOffers?: any;
+  // Product description section ("شرح ووصف المنتج")
+  descriptionMode?: "text" | "images";
+  descriptionTitle?: string;
+  descriptionContent?: string;
+  descriptionTextAlign?: "right" | "center" | "left";
+  descriptionShowPoints?: boolean;
+  descriptionImages?: string[];
+  descriptionTextColor?: string;
+  descriptionAccentColor?: string;
 }
 
 const defaultStoreName = "متجري";
@@ -924,6 +934,22 @@ const LandingPageView = () => {
                 </div>
               )}
 
+              {p.sections.includes("description") && (
+                <div className="pt-8" id="description">
+                  <ProductDescriptionSection
+                    mode={p.descriptionMode}
+                    title={p.descriptionTitle}
+                    content={p.descriptionContent}
+                    textAlign={p.descriptionTextAlign}
+                    showPoints={p.descriptionShowPoints}
+                    images={p.descriptionImages}
+                    textColor={p.descriptionTextColor}
+                    accentColor={p.descriptionAccentColor || p.primaryColor}
+                    className="!py-0 !px-0"
+                  />
+                </div>
+              )}
+
               {p.sections.includes("reviews") && (
                 <div className="space-y-6 pt-8" id="reviews">
                   <h2 className="text-2xl font-bold border-r-4 border-primary pr-3">آراء العملاء</h2>
@@ -1198,6 +1224,23 @@ const LandingPageView = () => {
                 </div>
               </div>
             </div>
+          </motion.div>
+        )}
+
+        {/* Product Description */}
+        {p.sections.includes("description") && (
+          <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}
+            className="pb-8" id="description">
+            <ProductDescriptionSection
+              mode={p.descriptionMode}
+              title={p.descriptionTitle}
+              content={p.descriptionContent}
+              textAlign={p.descriptionTextAlign}
+              showPoints={p.descriptionShowPoints}
+              images={p.descriptionImages}
+              textColor={p.descriptionTextColor}
+              accentColor={p.descriptionAccentColor || p.primaryColor}
+            />
           </motion.div>
         )}
 

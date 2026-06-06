@@ -28,6 +28,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { API_BASE_URL } from '@/config/api';
 import AIThemeLandingPage from "@/components/seller/AIThemeLandingPage";
+import ProductDescriptionSection from "@/components/seller/ProductDescriptionSection";
 import { AI_TEMPLATE_IDS } from "@/utils/aiThemes";
 
 
@@ -93,6 +94,15 @@ interface LandingPageConfig {
   bundles?: BundlePack[];
   hasMarketingOffers?: boolean;
   marketingOffers?: any[];
+  // Product description section ("شرح ووصف المنتج") — text or images mode
+  descriptionMode?: "text" | "images";
+  descriptionTitle?: string;
+  descriptionContent?: string;
+  descriptionTextAlign?: "right" | "center" | "left";
+  descriptionShowPoints?: boolean;
+  descriptionImages?: string[];
+  descriptionTextColor?: string;
+  descriptionAccentColor?: string;
 }
 
 
@@ -151,7 +161,15 @@ const defaultNewPage = (): LandingPageConfig => ({
   pixels: { facebook: "", tiktok: "", snapchat: "" },
   galleryImages: [],
   availableColors: [],
-  availableSizes: []
+  availableSizes: [],
+  descriptionMode: "text",
+  descriptionTitle: "لماذا تختار هذا المنتج؟",
+  descriptionContent: "جودة عالية ومواد متينة\nتصميم عصري وأنيق\nمناسب للاستخدام اليومي",
+  descriptionTextAlign: "right",
+  descriptionShowPoints: true,
+  descriptionImages: [],
+  descriptionTextColor: "#1a1a1a",
+  descriptionAccentColor: "#10b981"
 });
 
 const templates = [
@@ -181,6 +199,7 @@ const availableSections = [
   { id: "video", name: "فيديو المنتج", icon: Play, desc: "عرض فيديو توضيحي" },
   { id: "gallery", name: "معرض الصور", icon: Camera, desc: "صور متعددة للمنتج" },
   { id: "before-after", name: "قبل وبعد", icon: Ratio, desc: "مقارنة قبل وبعد الاستخدام" },
+  { id: "description", name: "شرح ووصف المنتج", icon: AlignLeft, desc: "وصف نصي أو صور شرح المنتج" },
   { id: "social-proof", name: "إثبات اجتماعي", icon: Users, desc: "عدد المشترين والتقييمات" },
   { id: "reviews", name: "آراء العملاء", icon: MessageSquare, desc: "تقييمات ومراجعات" },
   { id: "trust-badges", name: "شارات الثقة", icon: Shield, desc: "شارات الأمان والضمان" },
@@ -1190,6 +1209,20 @@ const LandingPageBuilder = ({ initialProductToEdit, onBack }: { initialProductTo
                     <p className="text-[9px] opacity-70">توصيل مجاني لجميع الولايات، الدفع عند الاستلام</p>
                   </div>
                 )}
+
+                {(p.sections || []).includes("description") && (
+                  <ProductDescriptionSection
+                    mode={p.descriptionMode}
+                    title={p.descriptionTitle}
+                    content={p.descriptionContent}
+                    textAlign={p.descriptionTextAlign}
+                    showPoints={p.descriptionShowPoints}
+                    images={p.descriptionImages}
+                    textColor={p.descriptionTextColor}
+                    accentColor={p.descriptionAccentColor || p.primaryColor}
+                    className="!py-4 !px-0 mt-4"
+                  />
+                )}
               </div>
             </div>
           </div>
@@ -1315,6 +1348,23 @@ const LandingPageBuilder = ({ initialProductToEdit, onBack }: { initialProductTo
                   </div>
                 ))}
               </div>
+            </div>
+          )}
+
+          {/* Product Description */}
+          {(p.sections || []).includes("description") && (
+            <div style={{ order: (p.sections || []).indexOf("description") }}>
+              <ProductDescriptionSection
+                mode={p.descriptionMode}
+                title={p.descriptionTitle}
+                content={p.descriptionContent}
+                textAlign={p.descriptionTextAlign}
+                showPoints={p.descriptionShowPoints}
+                images={p.descriptionImages}
+                textColor={p.descriptionTextColor}
+                accentColor={p.descriptionAccentColor || p.primaryColor}
+                className="!py-2 !px-0"
+              />
             </div>
           )}
 
@@ -1997,6 +2047,148 @@ const LandingPageBuilder = ({ initialProductToEdit, onBack }: { initialProductTo
                     </div>
                   )}
 
+                  {/* DESCRIPTION editor */}
+                  {editingSectionId === "description" && (
+                    <div className="space-y-4">
+                      {/* Mode toggle: text vs images */}
+                      <div className="space-y-2">
+                        <Label className="text-xs font-bold opacity-70">وضع الوصف</Label>
+                        <div className="flex gap-2">
+                          <Button
+                            type="button"
+                            variant={(editingPage.descriptionMode || "text") === "text" ? "default" : "outline"}
+                            size="sm"
+                            className="flex-1 rounded-xl h-9 text-xs font-bold"
+                            onClick={() => updatePage("descriptionMode", "text")}
+                          >
+                            نصوص (Text)
+                          </Button>
+                          <Button
+                            type="button"
+                            variant={editingPage.descriptionMode === "images" ? "default" : "outline"}
+                            size="sm"
+                            className="flex-1 rounded-xl h-9 text-xs font-bold"
+                            onClick={() => updatePage("descriptionMode", "images")}
+                          >
+                            صور (Images)
+                          </Button>
+                        </div>
+                      </div>
+
+                      {(editingPage.descriptionMode || "text") === "text" ? (
+                        <div className="space-y-4">
+                          <div className="space-y-2">
+                            <Label className="text-[10px] font-bold opacity-70">عنوان الوصف</Label>
+                            <Input
+                              value={editingPage.descriptionTitle || ""}
+                              onChange={(e) => updatePage("descriptionTitle", e.target.value)}
+                              className="rounded-xl h-9 text-xs text-right"
+                              placeholder="مثلاً: لماذا تختار هذا المنتج؟"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-[10px] font-bold opacity-70">محتوى الوصف (كل سطر = نقطة)</Label>
+                            <Textarea
+                              value={editingPage.descriptionContent || ""}
+                              onChange={(e) => updatePage("descriptionContent", e.target.value)}
+                              className="rounded-xl text-xs text-right min-h-[110px]"
+                              placeholder={"اكتب كل ميزة في سطر..."}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-[10px] font-bold opacity-70">المحاذاة</Label>
+                            <div className="flex gap-1">
+                              {(["left", "center", "right"] as const).map((align) => (
+                                <button
+                                  key={align}
+                                  type="button"
+                                  onClick={() => updatePage("descriptionTextAlign", align)}
+                                  className={`flex-1 p-2 rounded-lg border text-[10px] font-black transition-all ${(editingPage.descriptionTextAlign || "right") === align ? "bg-primary text-primary-foreground border-primary" : "bg-muted/40 text-muted-foreground border-border"}`}
+                                >
+                                  {align === "left" ? "يسار" : align === "center" ? "وسط" : "يمين"}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                          <div className="flex items-center justify-between p-3 bg-muted/30 rounded-xl">
+                            <Label className="text-[10px] font-bold">إظهار كنقاط (بطاقات)</Label>
+                            <Switch
+                              checked={editingPage.descriptionShowPoints ?? true}
+                              onCheckedChange={(v) => updatePage("descriptionShowPoints", v)}
+                            />
+                          </div>
+                          <div className="grid grid-cols-2 gap-3">
+                            <div className="space-y-1">
+                              <Label className="text-[10px] font-bold opacity-70">لون النص</Label>
+                              <input
+                                type="color"
+                                value={editingPage.descriptionTextColor || "#1a1a1a"}
+                                onChange={(e) => updatePage("descriptionTextColor", e.target.value)}
+                                className="w-full h-9 rounded-lg border border-border cursor-pointer"
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-[10px] font-bold opacity-70">لون التمييز</Label>
+                              <input
+                                type="color"
+                                value={editingPage.descriptionAccentColor || "#10b981"}
+                                onChange={(e) => updatePage("descriptionAccentColor", e.target.value)}
+                                className="w-full h-9 rounded-lg border border-border cursor-pointer"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="space-y-4 p-4 bg-muted/20 rounded-2xl border border-dashed border-border">
+                          <Label className="text-xs font-bold opacity-70 block mb-2">صور شرح المنتج (عرض كامل العرض)</Label>
+                          <div className="grid grid-cols-2 gap-2">
+                            {(editingPage.descriptionImages || []).map((img, idx) => (
+                              <div key={idx} className="relative aspect-video rounded-xl bg-background border border-border group overflow-hidden">
+                                <img src={img} alt={`Description ${idx}`} className="w-full h-full object-cover" />
+                                <button
+                                  className="absolute top-1 right-1 w-6 h-6 bg-black/50 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive"
+                                  onClick={() => {
+                                    const next = [...(editingPage.descriptionImages || [])];
+                                    next.splice(idx, 1);
+                                    updatePage("descriptionImages", next);
+                                  }}
+                                >
+                                  <Trash2 className="w-3 h-3" />
+                                </button>
+                              </div>
+                            ))}
+                            <div
+                              className="relative aspect-video rounded-xl bg-background border-2 border-dashed border-primary/20 flex flex-col items-center justify-center cursor-pointer hover:bg-primary/5 transition-all group"
+                              onClick={() => {
+                                const input = document.createElement('input');
+                                input.type = 'file';
+                                input.accept = 'image/*';
+                                input.multiple = true;
+                                input.onchange = (e: any) => {
+                                  const files = Array.from(e.target.files) as File[];
+                                  if (files.length > 0) {
+                                    const readers = files.map(file => new Promise<string>((resolve) => {
+                                      const reader = new FileReader();
+                                      reader.onloadend = () => resolve(reader.result as string);
+                                      reader.readAsDataURL(file);
+                                    }));
+                                    Promise.all(readers).then(results => {
+                                      updatePage("descriptionImages", [...(editingPage.descriptionImages || []), ...results]);
+                                    });
+                                  }
+                                };
+                                input.click();
+                              }}
+                            >
+                              <Upload className="w-5 h-5 text-primary/40 group-hover:text-primary transition-colors mb-1" />
+                              <span className="text-[9px] font-bold text-muted-foreground text-center">اضف<br/>صورة</span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                   {/* FEATURES editor */}
                   {editingSectionId === "features" && (
                     <div className="space-y-2">
@@ -2182,7 +2374,7 @@ const LandingPageBuilder = ({ initialProductToEdit, onBack }: { initialProductTo
                   )}
 
                   {/* Toggle-only sections: no fields */}
-                  {!["hero","cta","urgency-bar","gallery","video","before-after","features","trust-badges","reviews","faq","bundle"].includes(editingSectionId) && (
+                  {!["hero","cta","urgency-bar","gallery","video","before-after","description","features","trust-badges","reviews","faq","bundle"].includes(editingSectionId) && (
                     <div className="p-5 bg-muted/30 rounded-2xl text-center space-y-2">
                       <div className="w-12 h-12 rounded-full bg-primary/10 text-primary flex items-center justify-center mx-auto">
                         <Check className="w-5 h-5" />

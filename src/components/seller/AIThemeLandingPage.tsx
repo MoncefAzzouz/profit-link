@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { ShoppingCart, Star, Shield, Truck, Check, Clock, ChevronDown, Sparkles, ArrowLeft, Award, Lock, RotateCcw, Zap, MapPin, Palette, Ruler } from "lucide-react";
 import { themeTokens, layoutTokens, AITemplateName } from "@/utils/aiThemeTokens";
+import ProductDescriptionSection from "@/components/seller/ProductDescriptionSection";
 
 interface Props {
   p: any; storeName: string;
@@ -231,6 +232,25 @@ export default function AIThemeLandingPage({ p, storeName, orderForm, setOrderFo
                 </motion.div>
               ))}
             </div>
+          </div>
+        </section>
+      )}
+
+      {/* Product Description ("شرح ووصف المنتج") */}
+      {p.sections?.includes('description') && (
+        <section style={{ order: sectionOrder('description') }} className={`px-4 sm:px-6 ${p.descriptionMode === 'images' ? '' : `py-10 sm:py-16 ${t.sectionWhite}`}`}>
+          <div className="max-w-5xl mx-auto">
+            <ProductDescriptionSection
+              mode={p.descriptionMode}
+              title={p.descriptionTitle}
+              content={p.descriptionContent}
+              textAlign={p.descriptionTextAlign}
+              showPoints={p.descriptionShowPoints}
+              images={p.descriptionImages}
+              textColor={p.descriptionTextColor}
+              accentColor={p.descriptionAccentColor || p.primaryColor}
+              className="!py-0"
+            />
           </div>
         </section>
       )}
