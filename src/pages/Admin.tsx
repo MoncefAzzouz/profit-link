@@ -6,7 +6,7 @@ import {
 
   Settings, Menu, X, TrendingUp, CheckCircle, XCircle,
   Truck, Clock, Eye, Edit, Ban, Search, Filter, Plus, Trophy, Sparkles,
-  BarChart3, ChevronLeft, AlertTriangle, SlidersHorizontal, Store, UserPlus, Check, MapPin, CreditCard,
+  BarChart3, ChevronLeft, ChevronRight, ListChecks, AlertTriangle, SlidersHorizontal, Store, UserPlus, Check, MapPin, CreditCard,
   Video, Star, EyeOff, Trash2, Upload, FileText, Film, Image as ImageIcon, User, LayoutTemplate, Layers, LogOut, MessageSquare, SplitSquareHorizontal, Gift, Loader2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/select";
 import { mockProducts, Product } from "@/data/mockProducts";
 import { mockAffiliates, mockAdminStats, mockAllOrders, mockSellers, mockWithdrawalRequests, WithdrawalRequest, mockJoinRequests, JoinRequest } from "@/data/mockAdminData";
+import { QuizAnswer, scoreAnswers } from "@/data/sellerQuiz";
 import { wilayas } from "@/data/mockAffiliateData";
 import { ShippingRate, shippingRegions } from "@/data/mockShippingData";
 import { LandingSettings, defaultLandingSettings } from "@/data/landingSettings";
@@ -135,9 +136,11 @@ const Admin = () => {
   const [sellerStatus, setSellerStatus] = useState("all");
   const [withdrawalSearch, setWithdrawalSearch] = useState("");
   const [withdrawalStatus, setWithdrawalStatus] = useState("all");
-  const [joinRequests, setJoinRequests] = useState<JoinRequest[]>(mockJoinRequests);
+  const [joinRequests, setJoinRequests] = useState<any[]>([]);
   const [joinSearch, setJoinSearch] = useState("");
   const [joinRole, setJoinRole] = useState("all");
+  const [selectedJoinId, setSelectedJoinId] = useState<string | null>(null);
+  const [joinActionId, setJoinActionId] = useState<string | null>(null);
   const [shippingSearch, setShippingSearch] = useState("");
   const [shippingRatesData, setShippingRatesData] = useState<any[]>([]);
   const [isFetchingShipping, setIsFetchingShipping] = useState(false);
@@ -267,6 +270,22 @@ const Admin = () => {
       console.error('Failed to fetch affiliates', err);
     } finally {
       setIsFetchingAffiliates(false);
+    }
+  };
+
+  const fetchJoinRequests = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    try {
+      const res = await fetch(`${API_BASE_URL}/admin/join-requests`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setJoinRequests(data.data || []);
+      }
+    } catch (err) {
+      console.error('Failed to fetch join requests', err);
     }
   };
 
@@ -512,10 +531,8 @@ const Admin = () => {
   };
 
   useEffect(() => {
-    // Load persisted requests
-    const persistedReqs = JSON.parse(localStorage.getItem("admin_join_requests") || "[]");
-    const uniqueReqs = [...persistedReqs, ...mockJoinRequests].filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
-    setJoinRequests(uniqueReqs);
+    // Load pending join requests from the backend
+    fetchJoinRequests();
 
     // Fetch products from backend
     fetchProducts();
@@ -733,33 +750,44 @@ const Admin = () => {
   }, [productSearch, productCategory, productPriceRange, productSort, productStockFilter, products]);
 
   const filteredJoinRequests = useMemo(() => {
+    const q = joinSearch.trim();
     return joinRequests.filter((req) => {
-      const matchesSearch = req.name.includes(joinSearch) || req.email.includes(joinSearch) || req.phone.includes(joinSearch);
-      const matchesRole = joinRole === "all" || req.role === joinRole;
-      return matchesSearch && matchesRole;
+      if (!q) return true;
+      return (req.name || "").includes(q) || (req.email || "").includes(q) || (req.phone || "").includes(q);
     });
-  }, [joinRequests, joinSearch, joinRole]);
+  }, [joinRequests, joinSearch]);
 
-  const handleApproveJoin = (id: string) => {
-    setJoinRequests(prev => {
-      const updated = prev.filter(r => r.id !== id);
-      // Persist to localStorage (only the ones not in mock data ideally, but for simulation let's just save the current ones minus mocks if we want, or just filter localStorage)
-      const persisted = JSON.parse(localStorage.getItem("admin_join_requests") || "[]");
-      localStorage.setItem("admin_join_requests", JSON.stringify(persisted.filter((r: any) => r.id !== id)));
-      return updated;
-    });
-    toast({ title: "تم قبول الطلب بنجاح ✅", description: "تم تفعيل حساب المستخدم وإرسال بريد إلكتروني له." });
+  const updateJoinStatus = async (id: string, status: "APPROVED" | "REJECTED") => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    setJoinActionId(id);
+    try {
+      const res = await fetch(`${API_BASE_URL}/admin/join-requests/${id}`, {
+        method: "PATCH",
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ status })
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "تعذّر تحديث الطلب");
+      }
+      // Remove from the pending list and close the detail view if open
+      setJoinRequests(prev => prev.filter(r => r.id !== id));
+      setSelectedJoinId(prev => (prev === id ? null : prev));
+      if (status === "APPROVED") {
+        toast({ title: "تم قبول الطلب بنجاح ✅", description: "أصبح بإمكان المستخدم تسجيل الدخول والبدء." });
+      } else {
+        toast({ title: "تم رفض الطلب", variant: "destructive" });
+      }
+    } catch (e: any) {
+      toast({ title: "خطأ", description: e.message, variant: "destructive" });
+    } finally {
+      setJoinActionId(null);
+    }
   };
 
-  const handleRejectJoin = (id: string) => {
-    setJoinRequests(prev => {
-      const updated = prev.filter(r => r.id !== id);
-      const persisted = JSON.parse(localStorage.getItem("admin_join_requests") || "[]");
-      localStorage.setItem("admin_join_requests", JSON.stringify(persisted.filter((r: any) => r.id !== id)));
-      return updated;
-    });
-    toast({ title: "تم رفض الطلب", variant: "destructive" });
-  };
+  const handleApproveJoin = (id: string) => updateJoinStatus(id, "APPROVED");
+  const handleRejectJoin = (id: string) => updateJoinStatus(id, "REJECTED");
 
   // Category CRUD Handlers
   const handleOpenAddCategory = () => {
@@ -1703,7 +1731,93 @@ const Admin = () => {
               </div>
             );
           })()}          {/* Join Requests Tab */}
-          {activeTab === "join_requests" && (
+          {activeTab === "join_requests" && (() => {
+            const detail = selectedJoinId ? joinRequests.find(r => r.id === selectedJoinId) : null;
+
+            // ───── Detail view: applicant's quiz answers + score (not a table) ─────
+            if (detail) {
+              const answers: QuizAnswer[] = Array.isArray(detail.questionnaire) ? detail.questionnaire : [];
+              const score = scoreAnswers(answers);
+              const levelStyle: Record<string, string> = {
+                good: "bg-green-100 text-green-700 border-green-200",
+                mid: "bg-amber-100 text-amber-700 border-amber-200",
+                bad: "bg-red-100 text-red-700 border-red-200",
+              };
+              const levelLabel: Record<string, string> = { good: "✅ ممتاز", mid: "⚠️ متوسط", bad: "❌ ضعيف" };
+              const scoreColor = score.percent >= 70 ? "text-green-600" : score.percent >= 40 ? "text-amber-600" : "text-red-600";
+              return (
+                <div className="space-y-6">
+                  <div className="flex items-center gap-3">
+                    <Button variant="outline" size="icon" className="rounded-xl" onClick={() => setSelectedJoinId(null)}>
+                      <ChevronRight className="w-5 h-5" />
+                    </Button>
+                    <div>
+                      <h2 className="text-xl font-black">{detail.name}</h2>
+                      <p className="text-xs text-muted-foreground font-mono">{detail.email} · {detail.phone}</p>
+                    </div>
+                  </div>
+
+                  {/* Applicant summary + score */}
+                  <div className="dash-card p-5 grid sm:grid-cols-2 gap-4">
+                    <div className="space-y-2 text-sm">
+                      <p className="flex items-center gap-2"><MapPin className="w-4 h-4 text-muted-foreground" /> {detail.wilaya || "—"}</p>
+                      {detail.storeName && <p className="flex items-center gap-2 text-secondary font-bold"><Store className="w-4 h-4" /> {detail.storeName}</p>}
+                      {detail.ccp && <p className="flex items-center gap-2 font-mono text-muted-foreground"><CreditCard className="w-4 h-4" /> {detail.ccp}</p>}
+                      <p className="text-xs text-muted-foreground">{detail.createdAt ? new Date(detail.createdAt).toLocaleDateString("ar") : ""}</p>
+                    </div>
+                    <div className="flex flex-col items-center justify-center rounded-2xl bg-muted/40 p-4">
+                      <p className={`text-4xl font-black ${scoreColor}`}>{score.percent}%</p>
+                      <p className="text-xs text-muted-foreground font-bold mt-1">نتيجة التأهيل ({score.points}/{score.max})</p>
+                    </div>
+                  </div>
+
+                  {/* Answers */}
+                  <div className="dash-card p-5 space-y-4">
+                    <h3 className="font-black text-sm flex items-center gap-2"><ListChecks className="w-4 h-4 text-secondary" /> إجابات الأسئلة</h3>
+                    {answers.length === 0 ? (
+                      <p className="text-sm text-muted-foreground py-6 text-center">لم يقم المستخدم بالإجابة عن الأسئلة.</p>
+                    ) : (
+                      <div className="space-y-4">
+                        {answers.map((a, i) => (
+                          <div key={i} className="border-b border-border/50 last:border-0 pb-4 last:pb-0">
+                            <p className="font-bold text-sm mb-2"><span className="text-secondary">{i + 1}.</span> {a.q}</p>
+                            <div className="flex items-center justify-between gap-3 flex-wrap">
+                              <p className="text-sm text-foreground/80 flex-1">{a.answer || "—"}</p>
+                              <span className={`text-[11px] font-bold px-2.5 py-1 rounded-full border ${levelStyle[a.level] || levelStyle.bad}`}>
+                                {levelLabel[a.level] || levelLabel.bad}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Decision */}
+                  <div className="flex gap-3 justify-end">
+                    <Button
+                      variant="outline"
+                      className="h-11 px-6 rounded-xl gap-2 border-destructive/20 text-destructive hover:bg-destructive/5 hover:text-destructive"
+                      disabled={joinActionId === detail.id}
+                      onClick={() => handleRejectJoin(detail.id)}
+                    >
+                      <X className="w-4 h-4" /> رفض الطلب
+                    </Button>
+                    <Button
+                      variant="hero"
+                      className="bg-secondary hover:bg-secondary/90 h-11 px-6 rounded-xl gap-2 shadow-lg shadow-secondary/20"
+                      disabled={joinActionId === detail.id}
+                      onClick={() => handleApproveJoin(detail.id)}
+                    >
+                      <Check className="w-4 h-4" /> قبول وتفعيل الحساب
+                    </Button>
+                  </div>
+                </div>
+              );
+            }
+
+            // ───── List view ─────
+            return (
             <div className="space-y-6">
               {/* Filters */}
               <div className="dash-card p-4 flex flex-wrap gap-3">
@@ -1716,17 +1830,6 @@ const Admin = () => {
                     className="pr-10"
                   />
                 </div>
-                <Select value={joinRole} onValueChange={setJoinRole}>
-                  <SelectTrigger className="w-[160px]">
-                    <Filter className="w-4 h-4 ml-2" />
-                    <SelectValue placeholder="النوع" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">الكل</SelectItem>
-                    <SelectItem value="affiliate">مسوّق</SelectItem>
-                    <SelectItem value="seller">بائع</SelectItem>
-                  </SelectContent>
-                </Select>
               </div>
 
               {/* Join Requests Table */}
@@ -1736,7 +1839,6 @@ const Admin = () => {
                     <thead className="bg-slate-100/95 dark:bg-slate-800/60 border-b border-border/50">
                       <tr>
                         <th className="text-right p-4 font-semibold text-foreground">الاسم</th>
-                        <th className="text-right p-4 font-semibold text-foreground">النوع</th>
                         <th className="text-right p-4 font-semibold text-foreground">الموقع / النشاط</th>
                         <th className="text-right p-4 font-semibold text-foreground">التاريخ</th>
                         <th className="text-right p-4 font-semibold text-foreground">إجراءات</th>
@@ -1744,7 +1846,7 @@ const Admin = () => {
                     </thead>
                     <tbody className="divide-y divide-border">
                       {filteredJoinRequests.map((req) => (
-                        <tr key={req.id} className="hover:bg-muted/50 transition-colors">
+                        <tr key={req.id} className="hover:bg-muted/50 transition-colors cursor-pointer" onClick={() => setSelectedJoinId(req.id)}>
                           <td className="p-4">
                             <div>
                               <p className="font-bold text-foreground">{req.name}</p>
@@ -1753,35 +1855,33 @@ const Admin = () => {
                             </div>
                           </td>
                           <td className="p-4">
-                            <span className={`inline-flex px-3 py-1 rounded-full text-xs font-bold ${req.role === "affiliate" ? "bg-blue-100 text-blue-700" : "bg-purple-100 text-purple-700"
-                              }`}>
-                              {req.role === "affiliate" ? "مسوّق" : "بائع"}
-                            </span>
-                          </td>
-                          <td className="p-4">
                             <div className="space-y-0.5">
                               <p className="text-sm font-medium text-foreground flex items-center gap-1.5">
                                 <MapPin className="w-3.5 h-3.5 text-muted-foreground" /> {req.wilaya}
                               </p>
-                              {req.role === "seller" && (
+                              {req.storeName && (
                                 <p className="text-xs text-secondary font-bold flex items-center gap-1.5">
                                   <Store className="w-3.5 h-3.5" /> {req.storeName}
                                 </p>
                               )}
-                              {req.role === "affiliate" && (
-                                <p className="text-[10px] text-muted-foreground font-mono flex items-center gap-1.5">
-                                  <CreditCard className="w-3.5 h-3.5" /> {req.ccp}
-                                </p>
-                              )}
                             </div>
                           </td>
-                          <td className="p-4 text-sm text-muted-foreground font-medium">{req.date}</td>
+                          <td className="p-4 text-sm text-muted-foreground font-medium">{req.createdAt ? new Date(req.createdAt).toLocaleDateString("ar") : ""}</td>
                           <td className="p-4 text-left">
-                            <div className="flex gap-2 justify-end">
+                            <div className="flex gap-2 justify-end" onClick={(e) => e.stopPropagation()}>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-9 px-4 rounded-xl gap-2"
+                                onClick={() => setSelectedJoinId(req.id)}
+                              >
+                                <ListChecks className="w-4 h-4" /> عرض الإجابات
+                              </Button>
                               <Button
                                 size="sm"
                                 variant="hero"
                                 className="bg-secondary hover:bg-secondary/90 h-9 px-4 rounded-xl gap-2 shadow-lg shadow-secondary/20"
+                                disabled={joinActionId === req.id}
                                 onClick={() => handleApproveJoin(req.id)}
                               >
                                 <Check className="w-4 h-4" /> قبول
@@ -1790,6 +1890,7 @@ const Admin = () => {
                                 size="sm"
                                 variant="outline"
                                 className="h-9 px-4 rounded-xl gap-2 border-destructive/20 text-destructive hover:bg-destructive/5 hover:text-destructive hover:border-destructive/30"
+                                disabled={joinActionId === req.id}
                                 onClick={() => handleRejectJoin(req.id)}
                               >
                                 <X className="w-4 h-4" /> رفض
@@ -1813,7 +1914,8 @@ const Admin = () => {
                 )}
               </div>
             </div>
-          )}
+            );
+          })()}
 
 
           {activeTab === "orders" && (

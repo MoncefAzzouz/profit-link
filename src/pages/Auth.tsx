@@ -1,9 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
-import { 
-  Mail, Lock, User, Phone, ArrowRight, Eye, EyeOff, Sparkles, 
-  MapPin, Store, CreditCard, ChevronLeft, ChevronRight, CheckCircle2, Shield
+import {
+  Mail, Lock, User, Phone, ArrowRight, Eye, EyeOff, Sparkles,
+  MapPin, Store, CreditCard, ChevronLeft, ChevronRight, CheckCircle2, Shield, ListChecks, Clock
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { API_BASE_URL } from '@/config/api';
+import { sellerQuiz, shuffle, QuizAnswer } from "@/data/sellerQuiz";
 
 
 const wilayas = [
@@ -35,8 +36,11 @@ const wilayas = [
 const registerSteps = [
   { id: 1, title: "الهوية", sub: "بيانات حسابك الأساسية" },
   { id: 2, title: "الملف الشخصي", sub: "معلومات التواصل والنشاط" },
-  { id: 3, title: "البيانات المالية", sub: "طريقة استلام أرباحك" }
+  { id: 3, title: "البيانات المالية", sub: "طريقة استلام أرباحك" },
+  { id: 4, title: "أسئلة التأهيل", sub: "أجب عن الأسئلة التالية" }
 ];
+
+const LAST_STEP = registerSteps.length - 1; // quiz is the final step
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -45,6 +49,11 @@ const Auth = () => {
   const [step, setStep] = useState(0);
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [submitted, setSubmitted] = useState(false); // pending-review screen after sign-up
+  // selected option label per question id
+  const [quizAnswers, setQuizAnswers] = useState<Record<number, string>>({});
+  // Shuffle each question's options once per mount so the correct answer isn't always in the same spot.
+  const shuffledQuiz = useMemo(() => sellerQuiz.map(q => ({ ...q, options: shuffle(q.options) })), []);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -80,7 +89,12 @@ const Auth = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!isLogin && step < 2) {
+    // Advance through registration steps until the final (quiz) step.
+    if (!isLogin && step < LAST_STEP) {
+      if (step === 0 && formData.password !== formData.confirmPassword) {
+        toast({ title: "خطأ", description: "كلمتا المرور غير متطابقتين", variant: "destructive" });
+        return;
+      }
       setStep(step + 1);
       return;
     }
@@ -90,6 +104,11 @@ const Auth = () => {
         toast({ title: "خطأ", description: "كلمتا المرور غير متطابقتين", variant: "destructive" });
         return;
       }
+      // Require every qualification question to be answered.
+      if (Object.keys(quizAnswers).length < sellerQuiz.length) {
+        toast({ title: "أكمل الأسئلة", description: "يرجى الإجابة عن جميع أسئلة التأهيل قبل الإرسال.", variant: "destructive" });
+        return;
+      }
     }
 
     setIsLoading(true);
@@ -97,17 +116,24 @@ const Auth = () => {
     try {
       const endpoint = isLogin ? '/login' : '/register';
       const url = `${API_BASE_URL}/auth${endpoint}`;
-      
-      const payload = isLogin 
+
+      const questionnaire: QuizAnswer[] = shuffledQuiz.map(q => {
+        const answer = quizAnswers[q.id];
+        const opt = q.options.find(o => o.label === answer);
+        return { q: q.question, answer: answer || "", level: opt?.level || "bad" };
+      });
+
+      const payload = isLogin
         ? { email: formData.email, password: formData.password }
-        : { 
-            email: formData.email, 
+        : {
+            email: formData.email,
             password: formData.password,
             name: `${formData.firstName} ${formData.lastName}`,
             phone: formData.phone,
             wilaya: formData.wilaya,
             ccp: formData.ccp,
-            storeName: formData.storeName
+            storeName: formData.storeName,
+            questionnaire
           };
 
       const response = await fetch(url, {
@@ -122,7 +148,13 @@ const Auth = () => {
         throw new Error(data.error || "حدث خطأ غير متوقع");
       }
 
-      // Save token and user info
+      // Registration no longer logs the user in — the account is pending review.
+      if (!isLogin) {
+        setSubmitted(true);
+        return;
+      }
+
+      // Save token and user info (login only)
       localStorage.setItem("token", data.token);
       localStorage.setItem("affiliate_user", JSON.stringify({
         id: data.user.id,
@@ -135,11 +167,7 @@ const Auth = () => {
         ccp: data.user.ccp || formData.ccp
       }));
 
-      toast({
-        title: isLogin ? "مرحباً بك مجدداً! 👋" : "تم إنشاء حسابك بنجاح! 🎉",
-        description: isLogin ? "تم تسجيل الدخول بنجاح" : "ابدأ الآن في اختيار المنتجات والربح"
-      });
-      // Redirect based on role
+      toast({ title: "مرحباً بك مجدداً! 👋", description: "تم تسجيل الدخول بنجاح" });
       if (data.user.role === "ADMIN" || data.user.role === "admin") {
         navigate("/admin");
       } else {
@@ -148,7 +176,7 @@ const Auth = () => {
 
     } catch (error: any) {
       toast({
-        title: "فشل الدخول",
+        title: isLogin ? "فشل الدخول" : "تعذّر إرسال الطلب",
         description: error.message,
         variant: "destructive"
       });
@@ -156,6 +184,41 @@ const Auth = () => {
       setIsLoading(false);
     }
   };
+
+  if (submitted) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background font-cairo p-6" dir="rtl">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          className="w-full max-w-[520px] bg-card border border-border/60 rounded-[2rem] p-8 sm:p-12 text-center shadow-2xl"
+        >
+          <div className="w-20 h-20 rounded-3xl bg-secondary/10 flex items-center justify-center mx-auto mb-6">
+            <Clock className="w-10 h-10 text-secondary" />
+          </div>
+          <h2 className="text-2xl sm:text-3xl font-black mb-4">تم استلام طلبك بنجاح! 🎉</h2>
+          <p className="text-muted-foreground font-bold leading-relaxed mb-8">
+            ستقوم الإدارة بمراجعة طلب انضمامك وإجاباتك، وسيتم الرد عليك قريباً.
+            بمجرد قبول طلبك ستتمكن من تسجيل الدخول والبدء.
+          </p>
+          <div className="p-4 rounded-2xl bg-muted/40 border border-border/50 flex items-center gap-3 mb-8 text-right">
+            <Shield className="w-5 h-5 text-primary shrink-0" />
+            <p className="text-xs font-bold opacity-70 leading-relaxed">
+              لا حاجة لإعادة التسجيل. سيتم تفعيل حسابك تلقائياً بعد الموافقة.
+            </p>
+          </div>
+          <Button
+            variant="hero"
+            size="lg"
+            className="w-full rounded-2xl h-14 font-black"
+            onClick={() => { setSubmitted(false); setIsLogin(true); setStep(0); }}
+          >
+            العودة لتسجيل الدخول
+          </Button>
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col lg:flex-row bg-background font-cairo" dir="rtl">
@@ -411,6 +474,52 @@ const Auth = () => {
                         </div>
                       </div>
                     )}
+
+                    {step === 3 && (
+                      <div className="space-y-5">
+                        <div className="flex items-center gap-3 p-4 rounded-2xl bg-secondary/5 border border-secondary/15">
+                          <div className="w-10 h-10 rounded-xl bg-secondary/10 flex items-center justify-center shrink-0">
+                            <ListChecks className="w-5 h-5 text-secondary" />
+                          </div>
+                          <p className="text-xs font-bold leading-relaxed opacity-80">
+                            أجب بصدق عن الأسئلة التالية. تساعدنا إجاباتك في تقييم طلبك وقبوله.
+                          </p>
+                        </div>
+
+                        <div className="space-y-6">
+                          {shuffledQuiz.map((q, idx) => (
+                            <div key={q.id} className="space-y-3">
+                              <p className="font-black text-sm leading-relaxed">
+                                <span className="text-secondary">{idx + 1}.</span> {q.question}
+                              </p>
+                              <div className="space-y-2">
+                                {q.options.map((opt) => {
+                                  const selected = quizAnswers[q.id] === opt.label;
+                                  return (
+                                    <button
+                                      type="button"
+                                      key={opt.label}
+                                      onClick={() => setQuizAnswers(prev => ({ ...prev, [q.id]: opt.label }))}
+                                      className={`w-full text-right flex items-center gap-3 p-3.5 rounded-2xl border-2 transition-all ${selected ? "border-primary bg-primary/5" : "border-border/60 bg-muted/30 hover:border-primary/30"}`}
+                                    >
+                                      <span className={`w-5 h-5 rounded-full border-2 shrink-0 flex items-center justify-center ${selected ? "border-primary" : "border-muted-foreground/40"}`}>
+                                        {selected && <span className="w-2.5 h-2.5 rounded-full bg-primary" />}
+                                      </span>
+                                      <span className="text-xs font-bold leading-relaxed flex-1">{opt.label}</span>
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+
+                        <div className="flex items-center justify-between px-1 text-[11px] font-bold text-muted-foreground">
+                          <span>تمت الإجابة عن {Object.keys(quizAnswers).length} من {sellerQuiz.length}</span>
+                          <Shield className="w-4 h-4 text-primary" />
+                        </div>
+                      </div>
+                    )}
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -438,8 +547,8 @@ const Auth = () => {
                     <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }} className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full" />
                   ) : (
                     <>
-                      {isLogin ? "تسجيل الدخول" : (step < 2 ? "الخطوة التالية" : "إنشاء حسابي الآن")}
-                      {!isLogin && step < 2 && <ChevronLeft className="w-4 h-4 ml-1" />}
+                      {isLogin ? "تسجيل الدخول" : (step < LAST_STEP ? "الخطوة التالية" : "إنشاء حسابي الآن")}
+                      {!isLogin && step < LAST_STEP && <ChevronLeft className="w-4 h-4 ml-1" />}
                     </>
                   )}
                 </Button>
