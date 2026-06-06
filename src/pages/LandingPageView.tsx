@@ -394,7 +394,8 @@ const LandingPageView = () => {
           shippingFee: currentShipping,
           stopDesk: orderForm.deliveryType === "desk" ? 1 : 0,
           selectedColor: orderForm.selectedColor,
-          selectedSize: selectedSizeLabel
+          selectedSize: selectedSizeLabel,
+          selectedOffer: selectedOffer?.name ?? null
         })
 
       });
