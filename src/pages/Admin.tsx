@@ -640,7 +640,7 @@ const Admin = () => {
     { id: "categories" as Tab, label: "التصنيفات", icon: Layers },
     { id: "affiliates" as Tab, label: "المسوّقين", icon: Users },
 
-    { id: "join_requests" as Tab, label: "طلبات الانضمام", icon: UserPlus },
+    { id: "join_requests" as Tab, label: "طلبات الانضمام", icon: UserPlus, badge: joinRequests.length },
     { id: "orders" as Tab, label: "الطلبيات", icon: ShoppingCart, badge: newOrdersCount },
     { id: "withdrawals" as Tab, label: "طلبات السحب", icon: Wallet },
     { id: "levels" as Tab, label: "المستويات", icon: Trophy },
@@ -1838,9 +1838,9 @@ const Admin = () => {
                 </div>
               </div>
 
-              {/* Join Requests Table */}
+              {/* Join Requests — table on desktop, cards on mobile */}
               <div className="dash-card overflow-hidden">
-                <div className="overflow-x-auto">
+                <div className="hidden md:block overflow-x-auto">
                   <table className="w-full">
                     <thead className="bg-slate-100/95 dark:bg-slate-800/60 border-b border-border/50">
                       <tr>
@@ -1907,6 +1907,64 @@ const Admin = () => {
                       ))}
                     </tbody>
                   </table>
+                </div>
+
+                {/* Mobile cards */}
+                <div className="md:hidden divide-y divide-border">
+                  {filteredJoinRequests.map((req) => (
+                    <div
+                      key={req.id}
+                      className="p-4 space-y-3 active:bg-muted/40 transition-colors"
+                      onClick={() => setSelectedJoinId(req.id)}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="font-bold text-foreground truncate">{req.name}</p>
+                          <p className="text-xs text-muted-foreground font-mono truncate">{req.email}</p>
+                          <p className="text-[10px] text-muted-foreground">{req.phone}</p>
+                        </div>
+                        <span className="text-[10px] text-muted-foreground shrink-0">{req.createdAt ? new Date(req.createdAt).toLocaleDateString("ar") : ""}</span>
+                      </div>
+                      <div className="space-y-0.5">
+                        <p className="text-sm font-medium text-foreground flex items-center gap-1.5">
+                          <MapPin className="w-3.5 h-3.5 text-muted-foreground" /> {req.wilaya}
+                        </p>
+                        {req.storeName && (
+                          <p className="text-xs text-secondary font-bold flex items-center gap-1.5">
+                            <Store className="w-3.5 h-3.5" /> {req.storeName}
+                          </p>
+                        )}
+                      </div>
+                      <div className="grid grid-cols-3 gap-2" onClick={(e) => e.stopPropagation()}>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-9 rounded-xl gap-1.5 text-xs px-2"
+                          onClick={() => setSelectedJoinId(req.id)}
+                        >
+                          <ListChecks className="w-4 h-4" /> الإجابات
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="hero"
+                          className="bg-secondary hover:bg-secondary/90 h-9 rounded-xl gap-1.5 text-xs px-2 shadow-lg shadow-secondary/20"
+                          disabled={joinActionId === req.id}
+                          onClick={() => handleApproveJoin(req.id)}
+                        >
+                          <Check className="w-4 h-4" /> قبول
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-9 rounded-xl gap-1.5 text-xs px-2 border-destructive/20 text-destructive hover:bg-destructive/5 hover:text-destructive hover:border-destructive/30"
+                          disabled={joinActionId === req.id}
+                          onClick={() => handleRejectJoin(req.id)}
+                        >
+                          <X className="w-4 h-4" /> رفض
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
                 </div>
 
                 {filteredJoinRequests.length === 0 && (
