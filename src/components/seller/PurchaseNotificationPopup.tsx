@@ -56,18 +56,19 @@ export default function PurchaseNotificationPopup({
     if (!enabled) return;
 
     const runCycle = () => {
-      // pick a fresh random buyer + time, then show for 5s
+      // pick a fresh random buyer + time, then show for ~5s
       setBuyer(BUYERS[rand(BUYERS.length)]);
       setTime(TIMES[rand(TIMES.length)]);
       setShow(true);
       timer.current = setTimeout(() => {
         setShow(false);
-        // wait ~5s before the next one (random feel)
-        timer.current = setTimeout(runCycle, 4000 + rand(4000));
+        // hidden gap so the popup reappears roughly every ~20s
+        timer.current = setTimeout(runCycle, 14000 + rand(4000));
       }, 5000);
     };
 
-    timer.current = setTimeout(runCycle, 3000);
+    // first one shows a few seconds after the page loads
+    timer.current = setTimeout(runCycle, 4000);
     return () => clearTimeout(timer.current);
   }, [enabled]);
 

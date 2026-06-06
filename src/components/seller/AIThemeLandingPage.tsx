@@ -592,7 +592,7 @@ export default function AIThemeLandingPage({ p, storeName, orderForm, setOrderFo
       {!disablePopups && isSectionOn("sticky-cta") && <StickyCtaBar p={p} accent={p.primaryColor} />}
 
       <PurchaseNotificationPopup
-        enabled={!disablePopups && p.sections?.includes("notification-popup")}
+        enabled
         accentColor={p.primaryColor}
       />
     </div>

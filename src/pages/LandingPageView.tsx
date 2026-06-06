@@ -1011,7 +1011,7 @@ const LandingPageView = () => {
         {p.sections.includes("sticky-cta") && <StickyCtaBar p={p} />}
 
         <PurchaseNotificationPopup
-          enabled={p.sections.includes("notification-popup")}
+          enabled
           accentColor={p.primaryColor}
         />
       </div>
@@ -1845,7 +1845,7 @@ const LandingPageView = () => {
       {p.sections.includes("sticky-cta") && <StickyCtaBar p={p} />}
 
       <PurchaseNotificationPopup
-        enabled={p.sections.includes("notification-popup")}
+        enabled
         accentColor={p.primaryColor}
       />
 

@@ -29,6 +29,7 @@ import { useToast } from "@/hooks/use-toast";
 import { API_BASE_URL } from '@/config/api';
 import AIThemeLandingPage from "@/components/seller/AIThemeLandingPage";
 import ProductDescriptionSection from "@/components/seller/ProductDescriptionSection";
+import PurchaseNotificationPopup from "@/components/seller/PurchaseNotificationPopup";
 import {
   SocialProofStats, GallerySection, BeforeAfterSection,
   CountdownSection, GuaranteeSection, FaqSection,
@@ -1064,6 +1065,7 @@ const LandingPageBuilder = ({ initialProductToEdit, onBack }: { initialProductTo
     if (p.template === "original") {
       return (
         <div className="h-full overflow-y-auto scrollbar-hide flex flex-col" style={{ backgroundColor: p.backgroundColor, fontFamily: p.fontFamily, color: tc }}>
+          <PurchaseNotificationPopup enabled accentColor={p.primaryColor} />
           {/* Header */}
           <div className="sticky top-0 z-10 flex items-center justify-between px-3 h-10 border-b bg-card/80 backdrop-blur-md">
             <div className="flex items-center gap-1.5 overflow-hidden">
@@ -1244,6 +1246,7 @@ const LandingPageBuilder = ({ initialProductToEdit, onBack }: { initialProductTo
 
     return (
       <div className="h-full overflow-y-auto scrollbar-hide" style={{ backgroundColor: p.backgroundColor, fontFamily: p.fontFamily, color: tc }}>
+        <PurchaseNotificationPopup enabled accentColor={p.primaryColor} />
         {/* Urgency Bar */}
         {(p.sections || []).includes("urgency-bar") && (
           <div className="py-2.5 px-4 text-center text-xs font-bold text-white" style={{ backgroundColor: p.primaryColor }}>
