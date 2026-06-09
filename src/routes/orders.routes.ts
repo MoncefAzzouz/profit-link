@@ -2,6 +2,10 @@ import { Router, Request, Response } from 'express';
 import { EcotrackService } from '../services/ecotrack.service';
 import { authenticateToken, AuthRequest, requireAdmin } from '../middleware/auth';
 import { prisma } from '../db';
+import { cache } from '../services/cache';
+
+// Admin overview/affiliate aggregates are cached server-side; bust them whenever orders change.
+const invalidateAdminStats = () => cache.invalidate('admin:');
 
 const router = Router();
 
@@ -112,8 +116,9 @@ router.post('/', async (req: Request, res: Response) => {
     });
 
     console.log(`✅ Order created successfully: ${order.id}`);
+    invalidateAdminStats();
 
-    res.status(201).json({ 
+    res.status(201).json({
       message: 'Order submitted successfully', 
       data: order,
       tracking: null
@@ -205,6 +210,7 @@ router.patch('/:id/status', async (req: Request, res: Response) => {
       }
     });
 
+    invalidateAdminStats();
     res.json({ message: 'Order status updated', data: updatedOrder });
   } catch (error) {
     res.status(500).json({ error: 'Failed to update order' });
@@ -247,6 +253,7 @@ router.post('/:id/push-ecotrack', async (req: Request, res: Response) => {
           status: 'SHIPPED' // Or a specific Ecotrack-linked status
         }
       });
+      invalidateAdminStats();
       return res.json({ message: 'Order sent to Ecotrack', tracking: response.tracking, data: updatedOrder });
     } else {
       return res.status(400).json({ error: 'Ecotrack API reported failure', details: response });
@@ -296,6 +303,7 @@ router.post('/:id/validate', async (req: Request, res: Response) => {
         where: { id: order.id },
         data: { status: 'SHIPPED' } // You might want a 'VALIDATED' status later
       });
+      invalidateAdminStats();
       return res.json({ message: 'Order validated/expedited successfully', data: response });
     } else {
       return res.status(400).json({ error: 'Ecotrack validation failed', details: response });

@@ -1,44 +1,45 @@
 import { Router, Response } from 'express';
 import { authenticateToken, AuthRequest, requireAdmin } from '../middleware/auth';
 import { prisma } from '../db';
+import { withCache } from '../services/cache';
 
 const router = Router();
 
 // GET /api/admin/dashboard (Admin overview statistics)
 router.get('/dashboard', authenticateToken, requireAdmin, async (req: AuthRequest, res: Response): Promise<any> => {
   try {
-    const now = new Date();
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    // Admin overview is the same for every admin (global), so cache it server-side
+    // for a few seconds — the heavy groupBy/aggregate over the whole Order table
+    // shouldn't re-run on every page view. Invalidated on order writes.
+    const payload = await withCache('admin:dashboard', 10_000, async () => {
+      const now = new Date();
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-    const [agg, confirmedOrders, totalAffiliates, distinctAffiliateRows, ordersThisMonth] = await Promise.all([
-      prisma.order.aggregate({
-        _sum: { totalAmount: true },
-        _count: { id: true },
-      }),
-      prisma.order.count({
-        where: { status: { in: ['CONFIRMED', 'SHIPPED', 'DELIVERED'] } },
-      }),
-      prisma.user.count({ where: { role: 'AFFILIATE' } }),
-      prisma.$queryRaw<{ count: bigint }[]>`SELECT COUNT(DISTINCT "affiliateId")::bigint AS count FROM "Order"`,
-      prisma.order.count({ where: { createdAt: { gte: startOfMonth } } }),
-    ]);
+      const [agg, confirmedOrders, totalAffiliates, distinctAffiliateRows, ordersThisMonth] = await Promise.all([
+        prisma.order.aggregate({
+          _sum: { totalAmount: true },
+          _count: { id: true },
+        }),
+        prisma.order.count({
+          where: { status: { in: ['CONFIRMED', 'SHIPPED', 'DELIVERED'] } },
+        }),
+        prisma.user.count({ where: { role: 'AFFILIATE' } }),
+        prisma.$queryRaw<{ count: bigint }[]>`SELECT COUNT(DISTINCT "affiliateId")::bigint AS count FROM "Order"`,
+        prisma.order.count({ where: { createdAt: { gte: startOfMonth } } }),
+      ]);
 
-    const totalRevenue = agg._sum.totalAmount || 0;
-    const totalOrders = agg._count.id;
-    const confirmationRate = totalOrders > 0
-      ? Math.round((confirmedOrders / totalOrders) * 100)
-      : 0;
-    const activeAffiliates = Number(distinctAffiliateRows[0]?.count ?? 0);
+      const totalRevenue = agg._sum.totalAmount || 0;
+      const totalOrders = agg._count.id;
+      const confirmationRate = totalOrders > 0
+        ? Math.round((confirmedOrders / totalOrders) * 100)
+        : 0;
+      const activeAffiliates = Number(distinctAffiliateRows[0]?.count ?? 0);
+
+      return { totalRevenue, totalOrders, confirmationRate, totalAffiliates, activeAffiliates, ordersThisMonth };
+    });
 
     res.set('Cache-Control', 'private, no-store');
-    res.json({
-      totalRevenue,
-      totalOrders,
-      confirmationRate,
-      totalAffiliates,
-      activeAffiliates,
-      ordersThisMonth,
-    });
+    res.json(payload);
   } catch (error) {
     console.error('Error fetching admin dashboard stats:', error);
     res.status(500).json({ error: 'Internal Server Error' });
@@ -104,60 +105,63 @@ router.patch('/withdrawals/:id', authenticateToken, requireAdmin, async (req: Au
 // GET /api/admin/affiliates (List all affiliates with stats)
 router.get('/affiliates', authenticateToken, requireAdmin, async (req: AuthRequest, res: Response): Promise<any> => {
   try {
-    // Aggregate per-affiliate stats DB-side (one query) instead of loading every order.
-    const [affiliates, statusCounts, deliveredSums] = await Promise.all([
-      prisma.user.findMany({
-        where: { role: 'AFFILIATE' },
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          createdAt: true,
-          storeName: true,
-        },
-      }),
-      prisma.order.groupBy({
-        by: ['affiliateId', 'status'],
-        _count: { _all: true },
-      }),
-      prisma.order.groupBy({
-        by: ['affiliateId'],
-        where: { status: 'DELIVERED' },
-        _sum: { commissionAmount: true },
-      }),
-    ]);
+    // Global (same for every admin) → cache server-side; invalidated on order writes.
+    const formatted = await withCache('admin:affiliates', 15_000, async () => {
+      // Aggregate per-affiliate stats DB-side (one query) instead of loading every order.
+      const [affiliates, statusCounts, deliveredSums] = await Promise.all([
+        prisma.user.findMany({
+          where: { role: 'AFFILIATE' },
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            createdAt: true,
+            storeName: true,
+          },
+        }),
+        prisma.order.groupBy({
+          by: ['affiliateId', 'status'],
+          _count: { _all: true },
+        }),
+        prisma.order.groupBy({
+          by: ['affiliateId'],
+          where: { status: 'DELIVERED' },
+          _sum: { commissionAmount: true },
+        }),
+      ]);
 
-    const totalsByAffiliate = new Map<string, { total: number; confirmed: number }>();
-    for (const row of statusCounts) {
-      const cur = totalsByAffiliate.get(row.affiliateId) ?? { total: 0, confirmed: 0 };
-      cur.total += row._count._all;
-      if (row.status === 'CONFIRMED' || row.status === 'SHIPPED' || row.status === 'DELIVERED') {
-        cur.confirmed += row._count._all;
+      const totalsByAffiliate = new Map<string, { total: number; confirmed: number }>();
+      for (const row of statusCounts) {
+        const cur = totalsByAffiliate.get(row.affiliateId) ?? { total: 0, confirmed: 0 };
+        cur.total += row._count._all;
+        if (row.status === 'CONFIRMED' || row.status === 'SHIPPED' || row.status === 'DELIVERED') {
+          cur.confirmed += row._count._all;
+        }
+        totalsByAffiliate.set(row.affiliateId, cur);
       }
-      totalsByAffiliate.set(row.affiliateId, cur);
-    }
 
-    const earningsByAffiliate = new Map<string, number>();
-    for (const row of deliveredSums) {
-      earningsByAffiliate.set(row.affiliateId, row._sum.commissionAmount ?? 0);
-    }
+      const earningsByAffiliate = new Map<string, number>();
+      for (const row of deliveredSums) {
+        earningsByAffiliate.set(row.affiliateId, row._sum.commissionAmount ?? 0);
+      }
 
-    const formatted = affiliates.map(a => {
-      const t = totalsByAffiliate.get(a.id) ?? { total: 0, confirmed: 0 };
-      const earnings = earningsByAffiliate.get(a.id) ?? 0;
-      const confirmationRate = t.total > 0 ? Math.round((t.confirmed / t.total) * 100) : 0;
-      return {
-        id: a.id,
-        name: a.name,
-        email: a.email,
-        storeName: a.storeName,
-        createdAt: a.createdAt,
-        totalOrders: t.total,
-        confirmedOrders: t.confirmed,
-        earnings,
-        confirmationRate,
-        status: 'active'
-      };
+      return affiliates.map(a => {
+        const t = totalsByAffiliate.get(a.id) ?? { total: 0, confirmed: 0 };
+        const earnings = earningsByAffiliate.get(a.id) ?? 0;
+        const confirmationRate = t.total > 0 ? Math.round((t.confirmed / t.total) * 100) : 0;
+        return {
+          id: a.id,
+          name: a.name,
+          email: a.email,
+          storeName: a.storeName,
+          createdAt: a.createdAt,
+          totalOrders: t.total,
+          confirmedOrders: t.confirmed,
+          earnings,
+          confirmationRate,
+          status: 'active'
+        };
+      });
     });
 
     res.set('Cache-Control', 'private, no-store');
