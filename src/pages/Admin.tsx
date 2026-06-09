@@ -40,6 +40,7 @@ const MonthlyBarChart = lazy(() => import("./AdminCharts").then(m => ({ default:
 const ChartFallback = () => <div className="w-full h-full animate-pulse bg-muted/40 rounded" />;
 import LandingPageBuilder from "@/components/seller/LandingPageBuilder";
 import { API_BASE_URL } from '@/config/api';
+import { clearSession } from '@/utils/session';
 
 
 type Tab = "overview" | "affiliates" | "join_requests" | "orders" | "products" | "categories" | "analytics" | "withdrawals" | "settings" | "shipping" | "landing_editor" | "landing_pages" | "levels" | "affiliate_profile";
@@ -204,8 +205,7 @@ const Admin = () => {
         navigate("/dashboard");
       }
     } catch (e) {
-      localStorage.removeItem("affiliate_user");
-      localStorage.removeItem("token");
+      clearSession();
       navigate("/auth");
     }
   }, [navigate, toast]);
@@ -295,6 +295,7 @@ const Admin = () => {
     setIsFetchingOrders(true);
     try {
       const res = await fetch(`${API_BASE_URL}/orders/all`, {
+        cache: 'no-store',
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {
@@ -505,6 +506,7 @@ const Admin = () => {
   const fetchCategories = async () => {
     try {
       const res = await fetch(`${API_BASE_URL}/products/categories/all`, {
+        cache: 'no-store',
         headers: { 'Authorization': `Bearer ${localStorage.getItem("token")}` }
       });
       if (res.ok) {
@@ -522,6 +524,7 @@ const Admin = () => {
     if (!token) return;
     try {
       const res = await fetch(`${API_BASE_URL}/products/all`, {
+        cache: 'no-store',
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {
@@ -1163,10 +1166,10 @@ const Admin = () => {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("affiliate_user");
-    localStorage.removeItem("token");
+    clearSession();
     toast({ title: "تم تسجيل الخروج" });
-    navigate("/");
+    // Hard redirect so all in-memory React/React-Query state is flushed too
+    window.location.href = "/";
   };
 
   return (

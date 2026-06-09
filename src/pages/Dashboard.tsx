@@ -56,6 +56,7 @@ import {
 } from "recharts";
 import { createAndersonShipment } from "@/services/andersonShipping";
 import { API_BASE_URL } from '@/config/api';
+import { clearSession } from '@/utils/session';
 import OverviewTab from "@/components/dashboard/OverviewTab";
 import OrdersTab from "@/components/dashboard/OrdersTab";
 import ProductsTab from "@/components/dashboard/ProductsTab";
@@ -299,6 +300,7 @@ const Dashboard = () => {
       if (!token) return;
       try {
         const res = await fetch(`${API_BASE_URL}/store/products`, {
+          cache: 'no-store',
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (res.ok) {
@@ -413,6 +415,7 @@ const Dashboard = () => {
       try {
         if (!token) return;
         const res = await fetch(`${API_BASE_URL}/store/settings`, {
+          cache: 'no-store',
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (res.ok) {
@@ -468,6 +471,7 @@ const Dashboard = () => {
     const fetchOrders = async () => {
       try {
         const res = await fetch(`${API_BASE_URL}/orders/affiliate`, {
+          cache: 'no-store',
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (res.ok) {
@@ -815,8 +819,7 @@ const Dashboard = () => {
   }, [user, navigate]);
 
   const handleLogout = () => {
-    localStorage.removeItem("affiliate_user");
-    localStorage.removeItem("token");
+    clearSession();
     toast({ title: "تم تسجيل الخروج" });
     // Force a full page reload to clear all React state and caches
     window.location.href = "/auth";

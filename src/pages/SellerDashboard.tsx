@@ -31,6 +31,7 @@ import {
 } from "@/data/mockSellerData";
 import { createAndersonShipment } from "@/services/andersonShipping";
 import { API_BASE_URL } from '@/config/api';
+import { clearSession } from '@/utils/session';
 
 
 type Tab = "overview" | "products" | "orders" | "earnings" | "withdrawals" | "affiliates" | "landing-pages" | "settings";
@@ -171,9 +172,9 @@ const SellerDashboard = () => {
   }, [navigate]);
 
   const handleLogout = () => {
-    localStorage.removeItem("seller_user");
+    clearSession();
     toast({ title: "تم تسجيل الخروج" });
-    navigate("/");
+    window.location.href = "/";
   };
 
   // Order Action Handlers
