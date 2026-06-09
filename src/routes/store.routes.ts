@@ -330,7 +330,7 @@ router.get('/pages', authenticateToken, async (req: AuthRequest, res: Response) 
     const limit = parseInt(req.query.limit as string) || 20;
     const skip = (page - 1) * limit;
 
-    res.set('Cache-Control', 'private, max-age=10, stale-while-revalidate=30');
+    res.set('Cache-Control', 'private, no-store');
 
     const [pages, total] = await Promise.all([
       prisma.landingPage.findMany({
@@ -395,7 +395,7 @@ router.get('/pages/all', authenticateToken, async (req: AuthRequest, res: Respon
     const limit = parseInt(req.query.limit as string) || 20;
     const skip = (page - 1) * limit;
 
-    res.set('Cache-Control', 'private, max-age=10, stale-while-revalidate=30');
+    res.set('Cache-Control', 'private, no-store');
 
     const [pages, total] = await Promise.all([
       prisma.landingPage.findMany({

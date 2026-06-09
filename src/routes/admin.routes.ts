@@ -30,7 +30,7 @@ router.get('/dashboard', authenticateToken, requireAdmin, async (req: AuthReques
       : 0;
     const activeAffiliates = Number(distinctAffiliateRows[0]?.count ?? 0);
 
-    res.set('Cache-Control', 'private, max-age=10, stale-while-revalidate=30');
+    res.set('Cache-Control', 'private, no-store');
     res.json({
       totalRevenue,
       totalOrders,
@@ -160,7 +160,7 @@ router.get('/affiliates', authenticateToken, requireAdmin, async (req: AuthReque
       };
     });
 
-    res.set('Cache-Control', 'private, max-age=15, stale-while-revalidate=60');
+    res.set('Cache-Control', 'private, no-store');
     res.json({ data: formatted });
   } catch (error) {
     console.error('Error fetching admin affiliates:', error);

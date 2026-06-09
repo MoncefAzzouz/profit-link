@@ -34,7 +34,7 @@ router.get('/dashboard', authenticateToken, async (req: AuthRequest, res: Respon
     const pendingEarnings = pendingAgg._sum.commissionAmount ?? 0;
     const totalEarnings = deliveredAgg._sum.commissionAmount ?? 0;
 
-    res.set('Cache-Control', 'private, max-age=10, stale-while-revalidate=30');
+    res.set('Cache-Control', 'private, no-store');
     res.json({
       totalOrders,
       confirmedOrders,
