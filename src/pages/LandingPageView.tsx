@@ -672,7 +672,7 @@ const LandingPageView = () => {
                             }`}
                           >
                             {bundle.image && (
-                              <img src={bundle.image} alt={bundle.name} className="w-12 h-12 rounded-lg object-cover border" />
+                              <img src={bundle.image} alt={bundle.name} loading="lazy" decoding="async" className="w-12 h-12 rounded-lg object-cover border" />
                             )}
                             <div className="flex-1 text-right">
                               <p className="font-bold text-sm">{bundle.name}</p>
@@ -929,13 +929,13 @@ const LandingPageView = () => {
                     <div className="rounded-2xl overflow-hidden border-2 border-red-300 shadow-lg">
                       <div className="bg-red-500 text-center py-2 text-sm font-bold text-white">قبل ❌</div>
                       <div className="aspect-square bg-muted flex items-center justify-center">
-                        {p.beforeAfterImages?.before ? <img src={p.beforeAfterImages.before} className="w-full h-full object-cover" /> : <Image className="w-12 h-12 opacity-20" />}
+                        {p.beforeAfterImages?.before ? <img src={p.beforeAfterImages.before} loading="lazy" decoding="async" className="w-full h-full object-cover" /> : <Image className="w-12 h-12 opacity-20" />}
                       </div>
                     </div>
                     <div className="rounded-2xl overflow-hidden border-2 shadow-lg" style={{ borderColor: p.primaryColor }}>
                       <div className="text-center py-2 text-sm font-bold text-white" style={{ backgroundColor: p.primaryColor }}>بعد ✅</div>
                       <div className="aspect-square bg-muted flex items-center justify-center">
-                        {p.beforeAfterImages?.after ? <img src={p.beforeAfterImages.after} className="w-full h-full object-cover" /> : <Image className="w-12 h-12 opacity-20" />}
+                        {p.beforeAfterImages?.after ? <img src={p.beforeAfterImages.after} loading="lazy" decoding="async" className="w-full h-full object-cover" /> : <Image className="w-12 h-12 opacity-20" />}
                       </div>
                     </div>
                   </div>
@@ -1197,7 +1197,7 @@ const LandingPageView = () => {
                 <motion.div key={i} initial={{ opacity: 0, scale: 0.9 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
                   className={`aspect-square overflow-hidden bg-muted border ${shadowMap[p.shadowIntensity]}`}
                   style={{ borderColor: isDark(p.backgroundColor) ? "#334155" : "#e2e8f0", borderRadius: br }}>
-                  <img src={img} alt={`Gallery ${i}`} className="w-full h-full object-cover hover:scale-110 transition-transform duration-500" />
+                  <img src={img} alt={`Gallery ${i}`} loading="lazy" decoding="async" className="w-full h-full object-cover hover:scale-110 transition-transform duration-500" />
                 </motion.div>
               ))}
             </div>
@@ -1237,13 +1237,13 @@ const LandingPageView = () => {
               <div className={`rounded-2xl overflow-hidden border-2 border-red-300 ${shadowMap[p.shadowIntensity]}`} style={{ borderRadius: br }}>
                 <div className="bg-red-500 text-center py-2 text-sm font-bold text-white">قبل ❌</div>
                 <div className="aspect-square bg-muted flex items-center justify-center">
-                  {p.beforeAfterImages.before ? <img src={p.beforeAfterImages.before} className="w-full h-full object-cover" /> : <Image className="w-12 h-12 opacity-20" />}
+                  {p.beforeAfterImages.before ? <img src={p.beforeAfterImages.before} loading="lazy" decoding="async" className="w-full h-full object-cover" /> : <Image className="w-12 h-12 opacity-20" />}
                 </div>
               </div>
               <div className={`rounded-2xl overflow-hidden border-2 ${shadowMap[p.shadowIntensity]}`} style={{ borderColor: p.primaryColor, borderRadius: br }}>
                 <div className="text-center py-2 text-sm font-bold text-white" style={{ backgroundColor: p.primaryColor }}>بعد ✅</div>
                 <div className="aspect-square bg-muted flex items-center justify-center">
-                  {p.beforeAfterImages.after ? <img src={p.beforeAfterImages.after} className="w-full h-full object-cover" /> : <Image className="w-12 h-12 opacity-20" />}
+                  {p.beforeAfterImages.after ? <img src={p.beforeAfterImages.after} loading="lazy" decoding="async" className="w-full h-full object-cover" /> : <Image className="w-12 h-12 opacity-20" />}
                 </div>
               </div>
             </div>
@@ -1564,7 +1564,7 @@ const LandingPageView = () => {
                               }`}
                             >
                               {bundle.image && (
-                                <img src={bundle.image} alt={bundle.name} className="w-12 h-12 rounded-lg object-cover border" />
+                                <img src={bundle.image} alt={bundle.name} loading="lazy" decoding="async" className="w-12 h-12 rounded-lg object-cover border" />
                               )}
                               <div className="flex-1 text-right">
                                 <p className="font-bold text-sm">{bundle.name}</p>

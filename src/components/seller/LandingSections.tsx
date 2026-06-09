@@ -105,7 +105,7 @@ export function GallerySection({ p, dark, accent, className = "" }: BaseProps) {
             className="aspect-square overflow-hidden bg-muted border shadow-sm"
             style={{ borderColor: cardBorder(r.dark), borderRadius: r.radius }}
           >
-            <img src={img} alt={`Gallery ${i}`} className="w-full h-full object-cover hover:scale-110 transition-transform duration-500" />
+            <img src={img} alt={`Gallery ${i}`} loading="lazy" decoding="async" className="w-full h-full object-cover hover:scale-110 transition-transform duration-500" />
           </motion.div>
         ))}
       </div>
@@ -155,13 +155,13 @@ export function BeforeAfterSection({ p, accent, className = "" }: BaseProps) {
         <div className="rounded-2xl overflow-hidden border-2 border-red-300 shadow-sm" style={{ borderRadius: r.radius }}>
           <div className="bg-red-500 text-center py-2 text-sm font-bold text-white">قبل ❌</div>
           <div className="aspect-square bg-muted flex items-center justify-center">
-            {imgs.before ? <img src={imgs.before} className="w-full h-full object-cover" /> : <ImageIcon className="w-12 h-12 opacity-20" />}
+            {imgs.before ? <img src={imgs.before} loading="lazy" decoding="async" className="w-full h-full object-cover" /> : <ImageIcon className="w-12 h-12 opacity-20" />}
           </div>
         </div>
         <div className="rounded-2xl overflow-hidden border-2 shadow-sm" style={{ borderColor: r.accent, borderRadius: r.radius }}>
           <div className="text-center py-2 text-sm font-bold text-white" style={{ backgroundColor: r.accent }}>بعد ✅</div>
           <div className="aspect-square bg-muted flex items-center justify-center">
-            {imgs.after ? <img src={imgs.after} className="w-full h-full object-cover" /> : <ImageIcon className="w-12 h-12 opacity-20" />}
+            {imgs.after ? <img src={imgs.after} loading="lazy" decoding="async" className="w-full h-full object-cover" /> : <ImageIcon className="w-12 h-12 opacity-20" />}
           </div>
         </div>
       </div>

@@ -38,6 +38,8 @@ export default function ProductDescriptionSection({
           <motion.img
             key={i}
             src={img}
+            loading="lazy"
+            decoding="async"
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}

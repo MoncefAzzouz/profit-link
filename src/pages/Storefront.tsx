@@ -312,6 +312,15 @@ const Storefront = () => {
         fontFamily: templateFontStack
       } as React.CSSProperties}
     >
+      {/* Load only the store's chosen font (+ Cormorant for the luxury template) instead of bundling every family globally */}
+      <link
+        href={`https://fonts.googleapis.com/css2?family=${
+          storeSettings.fontFamily === "Tajawal" ? "Tajawal"
+            : storeSettings.fontFamily === "IBM Plex Sans Arabic" ? "IBM+Plex+Sans+Arabic"
+            : "Cairo"
+        }:wght@300;400;500;600;700;800;900${isLuxury ? "&family=Cormorant+Garamond:wght@400;500;600;700" : ""}&display=swap`}
+        rel="stylesheet"
+      />
       {templateBgOverlay && <div className={cn("pointer-events-none absolute inset-0", templateBgOverlay)} aria-hidden="true" />}
       {/* Top Welcome Bar */}
       {storeSettings.welcomeBarText && (
@@ -689,7 +698,7 @@ const Storefront = () => {
             <div className="md:col-span-2 space-y-6">
               <div className="flex items-center gap-4">
                 <div className={cn("w-12 h-12 overflow-hidden", isLuxury ? "rounded-none" : "rounded-2xl shadow-md")}>
-                  <img src={storeSettings.storeLogo} alt={storeSettings.storeName} className="w-full h-full object-cover" />
+                  <img src={storeSettings.storeLogo} alt={storeSettings.storeName} loading="lazy" decoding="async" className="w-full h-full object-cover" />
                 </div>
                 <h3 className={tpl.footerHeading}>{storeSettings.storeName}</h3>
               </div>
@@ -898,6 +907,8 @@ const ProductCard = ({ product, index, viewMode, storeSettings, onQuickView, aff
           animate={{ scale: isHovered ? 1.1 : 1 }}
           transition={{ duration: 0.6 }}
           src={isHovered && product.images?.length > 1 ? product.images[1] : product.image}
+          loading="lazy"
+          decoding="async"
           className="w-full h-full object-cover"
           alt={product.name}
         />
@@ -1027,12 +1038,12 @@ const QuickViewModal = ({ isOpen, onOpenChange, product, storeSettings, affiliat
           {/* Gallery Sidebar */}
           <div className="lg:w-1/2 bg-muted/30 p-8 space-y-6 overflow-y-auto">
             <div className="aspect-square rounded-3xl overflow-hidden bg-white shadow-xl">
-              <img src={product.image} className="w-full h-full object-cover" />
+              <img src={product.image} loading="lazy" decoding="async" className="w-full h-full object-cover" />
             </div>
             <div className="grid grid-cols-4 gap-4">
               {product.images?.map((img: string, i: number) => (
                 <div key={i} className="aspect-square rounded-xl overflow-hidden border-2 border-transparent hover:border-primary transition-all cursor-pointer">
-                  <img src={img} className="w-full h-full object-cover" />
+                  <img src={img} loading="lazy" decoding="async" className="w-full h-full object-cover" />
                 </div>
               ))}
             </div>
