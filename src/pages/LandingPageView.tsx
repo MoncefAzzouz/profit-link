@@ -872,7 +872,7 @@ const LandingPageView = () => {
                    )}
                    <div className="flex justify-between text-sm">
                      <span className="opacity-60">التوصيل</span>
-                     <span className="font-medium">{orderForm.wilaya ? `${currentShipping.toLocaleString()} دج` : "اختر الولاية"}</span>
+                     <span className="font-medium">{orderForm.wilaya ? (currentShipping > 0 ? `${currentShipping.toLocaleString()} دج` : "مجاني") : "اختر الولاية"}</span>
                    </div>
                    <div className="flex justify-between font-black text-xl border-t border-border/50 pt-3 mt-2">
                      <span>المجموع</span>
@@ -1792,7 +1792,7 @@ const LandingPageView = () => {
                             )}
                             <div className="flex justify-between text-sm">
                               <span className="opacity-60">التوصيل</span>
-                              <span className="font-medium">{orderForm.wilaya ? `${currentShipping.toLocaleString()} دج` : "اختر الولاية"}</span>
+                              <span className="font-medium">{orderForm.wilaya ? (currentShipping > 0 ? `${currentShipping.toLocaleString()} دج` : "مجاني") : "اختر الولاية"}</span>
                             </div>
                             <div className="flex justify-between font-black text-xl border-t border-border/20 pt-3 mt-2">
                               <span>المجموع</span>
