@@ -52,8 +52,9 @@ function publicBaseUrl(req: AuthRequest): string {
   return `${proto}://${host}`;
 }
 
-// POST /api/upload/image (Admin: Upload product image → returns CDN-style URL)
-router.post('/image', authenticateToken, requireAdmin, upload.single('image'), async (req: AuthRequest, res: Response): Promise<any> => {
+// POST /api/upload/image (Any authenticated user → returns CDN-style URL)
+// Used by admins (product images) and affiliates (store logo/banner in تعديل متجري).
+router.post('/image', authenticateToken, upload.single('image'), async (req: AuthRequest, res: Response): Promise<any> => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No image file provided' });
