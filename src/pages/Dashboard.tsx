@@ -703,6 +703,15 @@ const Dashboard = () => {
 
       if (res.ok) {
         localStorage.setItem("affiliate_store_settings", JSON.stringify(storeSettings));
+        // Keep the cached user's store name in sync so معاينة/share links open the current store.
+        if (storeSettings.storeName) {
+          try {
+            const cached = JSON.parse(localStorage.getItem("affiliate_user") || "{}");
+            cached.storeName = storeSettings.storeName;
+            localStorage.setItem("affiliate_user", JSON.stringify(cached));
+            setUser((prev: any) => (prev ? { ...prev, storeName: storeSettings.storeName } : prev));
+          } catch { /* ignore */ }
+        }
         toast({
           title: "تم حفظ إعدادات المتجر! ✅",
           description: "تم تحديث مظهر متجرك العام بنجاح.",
