@@ -82,6 +82,11 @@ router.put('/settings', authenticateToken, async (req: AuthRequest, res: Respons
       }
     });
 
+    // Keep User.storeName in sync — the public storefront is resolved by it.
+    if (storeName && String(storeName).trim()) {
+      await prisma.user.update({ where: { id: affiliateId }, data: { storeName: String(storeName).trim() } });
+    }
+
     invalidateStoreCache();
     res.json({ message: 'Settings saved successfully', data: settings });
   } catch (error) {
@@ -100,6 +105,7 @@ router.get('/public/:storeName', async (req: Request, res: Response): Promise<an
         where: {
           OR: [
             { storeName: { equals: storeNameStr, mode: 'insensitive' } },
+            { storeSettings: { storeName: { equals: storeNameStr, mode: 'insensitive' } } },
             { id: storeNameStr }
           ],
           role: 'AFFILIATE'
