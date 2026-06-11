@@ -25,6 +25,7 @@ import {
   SheetTrigger 
 } from "@/components/ui/sheet";
 import { API_BASE_URL } from '@/config/api';
+import { injectPixels } from '@/utils/pixels';
 import {
   Dialog,
   DialogContent,
@@ -81,6 +82,7 @@ const Storefront = () => {
           setStoreSettings(json.data.storeInfo);
           setProducts(json.data.products);
           setAffiliateId(json.data.storeInfo.id);
+          injectPixels(json.data.storeInfo.pixels); // affiliate's Meta/TikTok pixel
         } else {
           toast({ title: "متجر غير موجود", variant: "destructive" });
         }

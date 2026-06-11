@@ -184,6 +184,9 @@ const templates = [
   { id: "viral_tiktok", name: "Neobrutalism", icon: "⚡", desc: "ألوان جريئة بحدود عريضة", preview: "from-[#FFE600] via-[#FFF9E5] to-[#FF3D7F]", tag: "✨ AI Premium" },
   { id: "organic_nature", name: "Aesop طبيعي", icon: "🌿", desc: "ألوان ترابية بأسلوب راقي", preview: "from-[#E8DFC9] via-[#F7F3EC] to-[#2A3A2A]", tag: "✨ AI Premium" },
   { id: "bold_sales", name: "Athletic مبيعات", icon: "💎", desc: "داكن قوي للتحويلات العالية", preview: "from-[#0F0F10] via-[#DC2626] to-[#FBBF24]", tag: "✨ AI Premium" },
+  { id: "royal_gold", name: "ذهبي ملكي", icon: "👑", desc: "أسود وذهبي فاخر بخط كلاسيكي", preview: "from-[#0B0B0C] via-[#1a1407] to-[#D4AF37]", tag: "✨ AI Premium" },
+  { id: "clean_tech", name: "آبل نظيف", icon: "💻", desc: "أبيض نظيف بلمسة زرقاء أنيقة", preview: "from-[#f5f5f7] via-white to-[#0071e3]", tag: "✨ AI Premium" },
+  { id: "aurora_glass", name: "جيل Z زجاجي", icon: "🫧", desc: "تدرجات وزجاجية عصرية", preview: "from-[#6D28D9] via-[#DB2777] to-[#F59E0B]", tag: "✨ AI Premium" },
   { id: "original", name: "الأصلي", icon: "💎", desc: "تصميم واجهة المتجر الكلاسيكي", preview: "from-blue-600 to-indigo-800", tag: "الأساسي" },
   { id: "modern", name: "عصري", icon: "✨", desc: "تصميم نظيف وأنيق", preview: "from-violet-600 to-indigo-700", tag: "شائع" },
   { id: "bold", name: "جريء", icon: "🔥", desc: "ألوان قوية وملفتة", preview: "from-orange-500 to-red-600", tag: "" },
@@ -2695,6 +2698,14 @@ const LandingPageBuilder = ({ initialProductToEdit, onBack }: { initialProductTo
                     <h4 className="font-black text-amber-900 dark:text-amber-200 text-sm">نصيحة احترافية 💡</h4>
                     <p className="text-[11px] text-amber-800/90 dark:text-amber-300/80 leading-relaxed">
                       أكثر من 80% من زبائنك يفتحون الصفحة عبر الهاتف. تحقّق دائماً من العرض في وضع "هاتف" قبل النشر.
+                    </p>
+                  </div>
+
+                  {/* Tracking note */}
+                  <div className="space-y-2 border-t border-border/50 pt-5">
+                    <Label className="text-xs font-bold opacity-70 uppercase tracking-wider">التتبع والبكسل</Label>
+                    <p className="text-[11px] text-muted-foreground leading-relaxed bg-muted/30 rounded-xl p-3">
+                      🎯 بكسل Meta و TikTok يُضبط مرّة واحدة من <span className="font-bold text-foreground">تعديل متجري ← التتبع والبيكسل</span> ويُطبَّق تلقائياً على كل صفحات الهبوط ومتجرك. لا حاجة لإضافته في كل صفحة.
                     </p>
                   </div>
 

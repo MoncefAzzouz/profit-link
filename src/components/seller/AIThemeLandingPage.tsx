@@ -32,6 +32,9 @@ const FONT_MAP: Record<string,string> = {
   viral_tiktok:'Space+Grotesk:wght@400;500;600;700',
   organic_nature:'Cormorant+Garamond:wght@400;500;600;700',
   bold_sales:'Inter:wght@400;500;600;700;800;900',
+  royal_gold:'Playfair+Display:wght@400;500;600;700;800;900',
+  clean_tech:'Inter:wght@400;500;600;700;800',
+  aurora_glass:'Space+Grotesk:wght@400;500;600;700',
 };
 
 const SECONDARY_FONT_MAP: Record<string,string> = {
@@ -42,6 +45,9 @@ const SECONDARY_FONT_MAP: Record<string,string> = {
   viral_tiktok:'Cairo:wght@600;700;800;900',
   organic_nature:'Almarai:wght@300;400;700',
   bold_sales:'Changa:wght@500;700;800',
+  royal_gold:'Cairo:wght@300;400;500;600;700',
+  clean_tech:'Cairo:wght@400;500;600;700',
+  aurora_glass:'Cairo:wght@400;500;600;700;800',
 };
 
 export default function AIThemeLandingPage({ p, storeName, orderForm, setOrderForm, handleOrder, quantity, setQuantity, wilayas, communes, shippingRate, selectedOffer, setSelectedOffer, selectedBundleId, setSelectedBundleId, orderSubmitted, countdown, disablePopups }: Props) {
@@ -54,8 +60,8 @@ export default function AIThemeLandingPage({ p, storeName, orderForm, setOrderFo
   const currentShipping = (selectedOffer?.freeDelivery || p.showFreeShipping) ? 0 : (orderForm.deliveryType === "home" ? shippingRate.home : shippingRate.desk);
   const totalPrice = (activePrice * quantity) + currentShipping;
   const discount = Math.round((1 - p.price / p.originalPrice) * 100);
-  const isCentered = ['soft_beauty','viral_tiktok','bold_sales'].includes(p.template);
-  const isDarkTheme = ['dark_futuristic','bold_sales'].includes(p.template);
+  const isCentered = ['soft_beauty','viral_tiktok','bold_sales','aurora_glass'].includes(p.template);
+  const isDarkTheme = ['dark_futuristic','bold_sales','royal_gold','aurora_glass'].includes(p.template);
   const primaryFont = FONT_MAP[p.template] || 'Inter:wght@400;500;600;700;800';
   const secondaryFont = SECONDARY_FONT_MAP[p.template] || 'Cairo:wght@400;500;600;700';
 
@@ -67,6 +73,9 @@ export default function AIThemeLandingPage({ p, storeName, orderForm, setOrderFo
     viral_tiktok: "'Space Grotesk', 'Cairo', sans-serif",
     organic_nature: "'Cormorant Garamond', 'Almarai', serif",
     bold_sales: "'Inter', 'Changa', sans-serif",
+    royal_gold: "'Playfair Display', 'Cairo', serif",
+    clean_tech: "'Inter', 'Cairo', sans-serif",
+    aurora_glass: "'Space Grotesk', 'Cairo', sans-serif",
   };
   const hFont = headlineFontFamily[p.template] || "'Inter', 'Cairo', sans-serif";
 
@@ -78,6 +87,9 @@ export default function AIThemeLandingPage({ p, storeName, orderForm, setOrderFo
     viral_tiktok: 'text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-[0.95] tracking-tighter uppercase',
     organic_nature: 'text-4xl sm:text-5xl lg:text-6xl font-light leading-[1.1] tracking-tight',
     bold_sales: 'text-4xl sm:text-5xl lg:text-6xl font-black leading-[0.95] tracking-tight uppercase',
+    royal_gold: 'text-4xl sm:text-5xl lg:text-6xl font-semibold leading-[1.05] tracking-tight',
+    clean_tech: 'text-4xl sm:text-5xl lg:text-6xl font-semibold leading-[1.05] tracking-tight',
+    aurora_glass: 'text-4xl sm:text-5xl lg:text-6xl font-bold leading-[1.0] tracking-tight',
   };
 
   const sectionTitleCls: Record<string,string> = {
@@ -87,6 +99,9 @@ export default function AIThemeLandingPage({ p, storeName, orderForm, setOrderFo
     viral_tiktok: 'text-3xl sm:text-4xl font-extrabold uppercase tracking-tighter',
     organic_nature: 'text-3xl sm:text-4xl font-light tracking-tight',
     bold_sales: 'text-3xl sm:text-4xl font-black uppercase tracking-tight',
+    royal_gold: 'text-3xl sm:text-4xl font-semibold tracking-tight',
+    clean_tech: 'text-3xl sm:text-4xl font-semibold tracking-tight',
+    aurora_glass: 'text-3xl sm:text-4xl font-bold tracking-tight',
   };
 
   // Body-section ordering: CSS `order` reads from p.sections array so the user
