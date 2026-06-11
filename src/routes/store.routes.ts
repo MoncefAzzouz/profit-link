@@ -21,6 +21,17 @@ export function invalidateLandingCache(pageId?: string) {
   cache.invalidate(PRODUCT_PAGE_PREFIX);
 }
 
+// Per-page pixel (builder) overrides the owner's account-level pixel (تعديل متجري).
+function mergePixels(pageConfig: any, storeSettings: any) {
+  const cfg = (pageConfig?.pixels as any) || {};
+  const acct = ((storeSettings?.config as any)?.pixels) || {};
+  return {
+    facebook: cfg.facebook || acct.facebook || '',
+    tiktok: cfg.tiktok || acct.tiktok || '',
+    snapchat: cfg.snapchat || acct.snapchat || '',
+  };
+}
+
 // GET /api/store/settings (Fetch affiliate store settings)
 router.get('/settings', authenticateToken, async (req: AuthRequest, res: Response): Promise<any> => {
   try {
@@ -88,6 +99,7 @@ router.put('/settings', authenticateToken, async (req: AuthRequest, res: Respons
     }
 
     invalidateStoreCache();
+    invalidateLandingCache(); // pixel/store changes apply to this affiliate's landing pages too
     res.json({ message: 'Settings saved successfully', data: settings });
   } catch (error) {
     console.error(error);
@@ -195,7 +207,8 @@ router.get('/pages/:id/public', async (req: Request, res: Response): Promise<any
               hasAffiliateGift: true,
               marketingOffers: true
             }
-          }
+          },
+          owner: { include: { storeSettings: true } }
         }
       });
       if (!page) return null;
@@ -206,6 +219,9 @@ router.get('/pages/:id/public', async (req: Request, res: Response): Promise<any
         productId: page.productId,
         ownerId: page.ownerId,
         status: page.status,
+        // Affiliate's account-level pixel (تعديل متجري) applies to all their pages;
+        // a per-page pixel set in the builder overrides it.
+        pixels: mergePixels(page.pageConfig, (page as any).owner?.storeSettings),
         // Authoritative values from Product table override pageConfig snapshot.
         ...(product?.commission != null && { commission: product.commission }),
         ...(product?.price != null && { price: product.price }),
@@ -261,6 +277,10 @@ router.get('/product-page/:productId/:affiliateId', async (req: Request, res: Re
       if (!page) return null;
       const product = (page as any).product;
 
+      // The affiliate driving the traffic owns the pixel — even when we fall back
+      // to the admin's default page. Resolve from the affiliate's account settings.
+      const affiliateSettings = await prisma.storeSettings.findUnique({ where: { affiliateId } });
+
       return {
         pageId: page.id,
         data: {
@@ -269,6 +289,7 @@ router.get('/product-page/:productId/:affiliateId', async (req: Request, res: Re
           productId: page.productId,
           ownerId: page.ownerId,
           status: page.status,
+          pixels: mergePixels(page.pageConfig, affiliateSettings),
           // Authoritative values from Product table override pageConfig snapshot.
           ...(product?.commission != null && { commission: product.commission }),
           ...(product?.price != null && { price: product.price }),
