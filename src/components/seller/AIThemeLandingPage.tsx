@@ -131,18 +131,21 @@ export default function AIThemeLandingPage({ p, storeName, orderForm, setOrderFo
         </button>
       </header>
 
-      {/* Announcement / Promo bar — reorderable via sections array (urgency-bar) */}
+      {/* Announcement / Promo bar — seller's urgency text running as a marquee */}
       {isSectionOn("urgency-bar") && (
-        <div style={{ order: sectionOrder("urgency-bar") }} className={`${t.promo} text-center px-3 sm:px-4 flex items-center justify-center gap-2 sm:gap-3 flex-wrap relative overflow-hidden text-[10px] sm:text-xs`}>
-          <Clock size={11} className="opacity-80 shrink-0"/>
-          <span>العرض ينتهي خلال</span>
-          <span className="num font-mono">{pad(countdown.hours)}:{pad(countdown.minutes)}:{pad(countdown.seconds)}</span>
-          {p.showFreeShipping && (
-            <>
-              <span className="opacity-60">•</span>
-              <span>شحن مجاني</span>
-            </>
-          )}
+        <div style={{ order: sectionOrder("urgency-bar") }} className={`${t.promo} relative overflow-hidden whitespace-nowrap`}>
+          <motion.div
+            className="inline-flex items-center gap-3 will-change-transform"
+            animate={{ x: ["100%", "-100%"] }}
+            transition={{ repeat: Infinity, duration: 18, ease: "linear" }}
+          >
+            <Clock size={11} className="opacity-80 shrink-0" />
+            <span>{p.urgencyText || "⏰ العرض ينتهي قريباً! تبقى عدد محدود"}</span>
+            <span className="opacity-50">•</span>
+            <span>{p.urgencyText || "⏰ العرض ينتهي قريباً! تبقى عدد محدود"}</span>
+            <span className="opacity-50">•</span>
+            <span>{p.urgencyText || "⏰ العرض ينتهي قريباً! تبقى عدد محدود"}</span>
+          </motion.div>
         </div>
       )}
 
@@ -316,6 +319,44 @@ export default function AIThemeLandingPage({ p, storeName, orderForm, setOrderFo
       {isSectionOn("faq") && (
         <section style={{ order: sectionOrder("faq") }} className="py-4">
           <FaqSection p={p} dark={isDarkTheme} accent={p.primaryColor} />
+        </section>
+      )}
+
+      {/* Bundle / offers showcase (عرض الحزمة) */}
+      {isSectionOn("bundle") && (p.bundles?.length > 0 || (p.hasMarketingOffers && p.marketingOffers?.length > 0)) && (
+        <section style={{ order: sectionOrder("bundle") }} className={`py-12 sm:py-16 lg:py-20 px-4 sm:px-6 ${t.sectionWhite}`}>
+          <div className="max-w-3xl mx-auto">
+            <div className={`text-center mb-7 sm:mb-10`}>
+              <div className={`inline-flex items-center gap-2 mb-3 ${t.accentBg}`}><Sparkles size={12}/> عروض خاصة</div>
+              <h2 className={`hfont ${sectionTitleCls[p.template]}`}>وفّر أكثر مع الحزم</h2>
+            </div>
+            <div className="space-y-3">
+              <div className={`flex justify-between items-center gap-3 p-4 sm:p-5 ${t.card}`}>
+                <span className="font-bold text-sm sm:text-base">المنتج الأساسي</span>
+                <span className="num font-bold text-sm sm:text-base shrink-0">{p.price.toLocaleString()} دج</span>
+              </div>
+              {p.bundles?.map((b: any) => (
+                <div key={b.id} className={`flex justify-between items-center gap-3 p-4 sm:p-5 ${t.card}`}>
+                  <div className="flex items-center gap-3 min-w-0">
+                    {b.image && <img src={b.image} alt={b.name} loading="lazy" decoding="async" className="w-11 h-11 rounded-lg object-cover shrink-0" />}
+                    <span className="font-bold text-sm sm:text-base truncate">{b.name}</span>
+                  </div>
+                  <span className="num font-bold text-sm sm:text-base shrink-0" style={{ color: p.primaryColor }}>{b.price.toLocaleString()} دج</span>
+                </div>
+              ))}
+              {p.marketingOffers?.map((o: any, i: number) => (
+                <div key={i} className={`flex justify-between items-center gap-3 p-4 sm:p-5 ${t.card}`}>
+                  <span className="font-bold text-sm sm:text-base truncate">{o.name}</span>
+                  <span className="num font-bold text-sm sm:text-base shrink-0" style={{ color: p.primaryColor }}>{o.price.toLocaleString()} دج</span>
+                </div>
+              ))}
+            </div>
+            <div className="text-center mt-7">
+              <button onClick={() => document.getElementById('order-form')?.scrollIntoView({ behavior: 'smooth' })} className={`${t.btnPrimary}`}>
+                اختر عرضك واطلب الآن
+              </button>
+            </div>
+          </div>
         </section>
       )}
 
@@ -604,7 +645,7 @@ export default function AIThemeLandingPage({ p, storeName, orderForm, setOrderFo
         <div className="text-[10px] sm:text-xs">© {new Date().getFullYear()} — جميع الحقوق محفوظة</div>
       </footer>
 
-      {!disablePopups && isSectionOn("sticky-cta") && <StickyCtaBar p={p} accent={p.primaryColor} />}
+      {isSectionOn("sticky-cta") && <StickyCtaBar p={p} accent={p.primaryColor} />}
 
       <PurchaseNotificationPopup
         enabled

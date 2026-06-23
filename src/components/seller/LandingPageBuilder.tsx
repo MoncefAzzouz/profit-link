@@ -29,6 +29,7 @@ import { useToast } from "@/hooks/use-toast";
 import { API_BASE_URL } from '@/config/api';
 import AIThemeLandingPage from "@/components/seller/AIThemeLandingPage";
 import ProductDescriptionSection from "@/components/seller/ProductDescriptionSection";
+import { uploadImage, uploadVideo } from "@/utils/uploadImage";
 import PurchaseNotificationPopup from "@/components/seller/PurchaseNotificationPopup";
 import {
   SocialProofStats, GallerySection, BeforeAfterSection,
@@ -1750,9 +1751,9 @@ const LandingPageBuilder = ({ initialProductToEdit, onBack }: { initialProductTo
                             input.onchange = (e: any) => {
                               const file = e.target.files?.[0];
                               if (file) {
-                                const reader = new FileReader();
-                                reader.onloadend = () => updatePage("heroImage", reader.result as string);
-                                reader.readAsDataURL(file);
+                                uploadImage(file)
+                                  .then((url) => updatePage("heroImage", url))
+                                  .catch((err) => toast({ title: "خطأ في رفع الصورة", description: err.message, variant: "destructive" }));
                               }
                             };
                             input.click();
@@ -1962,14 +1963,9 @@ const LandingPageBuilder = ({ initialProductToEdit, onBack }: { initialProductTo
                             input.onchange = (e: any) => {
                               const files = Array.from(e.target.files) as File[];
                               if (files.length > 0) {
-                                const readers = files.map(file => new Promise<string>((resolve) => {
-                                  const reader = new FileReader();
-                                  reader.onloadend = () => resolve(reader.result as string);
-                                  reader.readAsDataURL(file);
-                                }));
-                                Promise.all(readers).then(results => {
-                                  updatePage("galleryImages", [...(editingPage.galleryImages || []), ...results]);
-                                });
+                                Promise.all(files.map(uploadImage))
+                                  .then(results => updatePage("galleryImages", [...(editingPage.galleryImages || []), ...results]))
+                                  .catch((err) => toast({ title: "خطأ في رفع الصور", description: err.message, variant: "destructive" }));
                               }
                             };
                             input.click();
@@ -1995,9 +1991,9 @@ const LandingPageBuilder = ({ initialProductToEdit, onBack }: { initialProductTo
                           input.onchange = (e: any) => {
                             const file = e.target.files?.[0];
                             if (file) {
-                              const reader = new FileReader();
-                              reader.onloadend = () => updatePage("videoUrl", reader.result as string);
-                              reader.readAsDataURL(file);
+                              uploadVideo(file)
+                                .then((url) => updatePage("videoUrl", url))
+                                .catch((err) => toast({ title: "خطأ في رفع الفيديو", description: err.message, variant: "destructive" }));
                             }
                           };
                           input.click();
@@ -2042,9 +2038,9 @@ const LandingPageBuilder = ({ initialProductToEdit, onBack }: { initialProductTo
                               input.onchange = (e: any) => {
                                 const file = e.target.files?.[0];
                                 if (file) {
-                                  const reader = new FileReader();
-                                  reader.onloadend = () => updatePage("beforeAfterImages", { ...editingPage.beforeAfterImages, before: reader.result as string });
-                                  reader.readAsDataURL(file);
+                                  uploadImage(file)
+                                    .then((url) => updatePage("beforeAfterImages", { ...editingPage.beforeAfterImages, before: url }))
+                                    .catch((err) => toast({ title: "خطأ في رفع الصورة", description: err.message, variant: "destructive" }));
                                 }
                               };
                               input.click();
@@ -2068,9 +2064,9 @@ const LandingPageBuilder = ({ initialProductToEdit, onBack }: { initialProductTo
                               input.onchange = (e: any) => {
                                 const file = e.target.files?.[0];
                                 if (file) {
-                                  const reader = new FileReader();
-                                  reader.onloadend = () => updatePage("beforeAfterImages", { ...editingPage.beforeAfterImages, after: reader.result as string });
-                                  reader.readAsDataURL(file);
+                                  uploadImage(file)
+                                    .then((url) => updatePage("beforeAfterImages", { ...editingPage.beforeAfterImages, after: url }))
+                                    .catch((err) => toast({ title: "خطأ في رفع الصورة", description: err.message, variant: "destructive" }));
                                 }
                               };
                               input.click();
@@ -2207,14 +2203,9 @@ const LandingPageBuilder = ({ initialProductToEdit, onBack }: { initialProductTo
                                 input.onchange = (e: any) => {
                                   const files = Array.from(e.target.files) as File[];
                                   if (files.length > 0) {
-                                    const readers = files.map(file => new Promise<string>((resolve) => {
-                                      const reader = new FileReader();
-                                      reader.onloadend = () => resolve(reader.result as string);
-                                      reader.readAsDataURL(file);
-                                    }));
-                                    Promise.all(readers).then(results => {
-                                      updatePage("descriptionImages", [...(editingPage.descriptionImages || []), ...results]);
-                                    });
+                                    Promise.all(files.map(uploadImage))
+                                      .then(results => updatePage("descriptionImages", [...(editingPage.descriptionImages || []), ...results]))
+                                      .catch((err) => toast({ title: "خطأ في رفع الصور", description: err.message, variant: "destructive" }));
                                   }
                                 };
                                 input.click();
@@ -2366,13 +2357,13 @@ const LandingPageBuilder = ({ initialProductToEdit, onBack }: { initialProductTo
                                 input.onchange = (e: any) => {
                                   const file = e.target.files?.[0];
                                   if (file) {
-                                    const reader = new FileReader();
-                                    reader.onloadend = () => {
-                                      const newBundles = [...editingPage.bundles!];
-                                      newBundles[idx].image = reader.result as string;
-                                      updatePage("bundles", newBundles);
-                                    };
-                                    reader.readAsDataURL(file);
+                                    uploadImage(file)
+                                      .then((url) => {
+                                        const newBundles = [...editingPage.bundles!];
+                                        newBundles[idx].image = url;
+                                        updatePage("bundles", newBundles);
+                                      })
+                                      .catch((err) => toast({ title: "خطأ في رفع الصورة", description: err.message, variant: "destructive" }));
                                   }
                                 };
                                 input.click();
