@@ -3,7 +3,7 @@ import multer from 'multer';
 import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
-import { authenticateToken, AuthRequest, requireAdmin } from '../middleware/auth';
+import { authenticateToken, AuthRequest } from '../middleware/auth';
 
 const router = Router();
 
@@ -78,8 +78,8 @@ router.post('/image', authenticateToken, upload.single('image'), async (req: Aut
   }
 });
 
-// POST /api/upload/video (Admin: Upload product video → returns CDN-style URL)
-router.post('/video', authenticateToken, requireAdmin, uploadVideo.single('video'), async (req: AuthRequest, res: Response): Promise<any> => {
+// POST /api/upload/video (Any authenticated user → returns CDN-style URL)
+router.post('/video', authenticateToken, uploadVideo.single('video'), async (req: AuthRequest, res: Response): Promise<any> => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No video file provided' });
