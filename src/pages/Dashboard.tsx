@@ -3161,7 +3161,7 @@ const Dashboard = () => {
 
                 <div className="space-y-2">
                   <Label className="flex items-center gap-2 text-sm font-bold ml-1">
-                    <MapPin className="w-4 h-4 text-primary" /> العنوان بالتفصيل (اختياري)
+                    <MapPin className="w-4 h-4 text-primary" /> العنوان بالتفصيل {orderFormData.deliveryType === "home" ? "*" : "(اختياري)"}
                   </Label>
                   <Input
                     placeholder="رقم المنزل، الشارع، البلدية..."
@@ -3234,6 +3234,11 @@ const Dashboard = () => {
                       }
                       if (selectedProduct.availableSizes?.length > 0 && !orderFormData.selectedSize) {
                         toast({ title: "تنبيه", description: "يرجى اختيار العرض المطلوب", variant: "destructive" });
+                        return;
+                      }
+
+                      if (orderFormData.deliveryType === "home" && !orderFormData.address?.trim()) {
+                        toast({ title: "تنبيه", description: "يرجى إدخال العنوان بالتفصيل للتوصيل إلى المنزل", variant: "destructive" });
                         return;
                       }
 

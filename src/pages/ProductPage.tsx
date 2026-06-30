@@ -207,6 +207,15 @@ const ProductPage = () => {
       return;
     }
 
+    if (formData.deliveryType === "home" && !formData.address?.trim()) {
+      toast({
+        title: "تنبيه",
+        description: "يرجى إدخال العنوان بالتفصيل للتوصيل إلى المنزل",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const response = await fetch(`${API_BASE_URL}/orders`, {
@@ -667,7 +676,7 @@ const ProductPage = () => {
                 </div>
 
                 <div>
-                  <Label htmlFor="address">العنوان بالتفصيل (اختياري)</Label>
+                  <Label htmlFor="address">العنوان بالتفصيل {formData.deliveryType === "home" ? "*" : "(اختياري)"}</Label>
                   <Input
                     id="address"
                     value={formData.address}

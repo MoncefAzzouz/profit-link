@@ -300,6 +300,11 @@ const LandingPageView = () => {
       return;
     }
 
+    if (orderForm.deliveryType === "home" && !orderForm.address?.trim()) {
+      toast({ title: "تنبيه", description: "يرجى إدخال العنوان بالتفصيل للتوصيل إلى المنزل", variant: "destructive" });
+      return;
+    }
+
     const selectedBundle = p.bundles?.find(b => b.id === selectedBundleId);
     let activePrice = selectedBundle ? selectedBundle.price : p.price;
     let activeCommission = p.commission ?? 0;
@@ -774,10 +779,10 @@ const LandingPageView = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-sm font-bold opacity-70">العنوان بالتفصيل (اختياري)</label>
-                    <Input 
-                      placeholder="البلدية، الحي، الشارع..." 
-                      value={orderForm.address} 
+                    <label className="text-sm font-bold opacity-70">العنوان بالتفصيل {orderForm.deliveryType === "home" ? "*" : "(اختياري)"}</label>
+                    <Input
+                      placeholder="البلدية، الحي، الشارع..."
+                      value={orderForm.address}
                       onChange={e => setOrderForm(f => ({ ...f, address: e.target.value }))}
                       className="h-12 rounded-xl"
                     />
@@ -1676,10 +1681,10 @@ const LandingPageView = () => {
                     </div>
 
                     <div className="space-y-2">
-                      <label className="text-sm font-bold opacity-70">العنوان بالتفصيل (اختياري)</label>
-                      <Input 
-                        placeholder="البلدية، الحي، الشارع..." 
-                        value={orderForm.address} 
+                      <label className="text-sm font-bold opacity-70">العنوان بالتفصيل {orderForm.deliveryType === "home" ? "*" : "(اختياري)"}</label>
+                      <Input
+                        placeholder="البلدية، الحي، الشارع..."
+                        value={orderForm.address}
                         onChange={e => setOrderForm(f => ({ ...f, address: e.target.value }))}
                         className="h-12 rounded-xl"
                         style={{ borderRadius: `${Math.min(p.borderRadius, 16)}px`, borderColor: isDark(p.backgroundColor) ? "#334155" : "#d1d5db", backgroundColor: isDark(p.backgroundColor) ? "#1e293b" : "#fff", color: tc }}
