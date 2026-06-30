@@ -228,7 +228,8 @@ const ProductPage = () => {
           shippingFee: currentShippingPrice,
           stopDesk: formData.deliveryType === "office" ? 1 : 0,
           selectedColor: formData.selectedColor,
-          selectedSize: formData.selectedSize
+          selectedSize: formData.selectedSize,
+          selectedOffer: selectedOffer?.name ?? null
         })
 
       });

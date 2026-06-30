@@ -2021,6 +2021,7 @@ const Admin = () => {
                     <thead className="bg-slate-100/95 dark:bg-slate-800/60 border-b border-border/50">
                       <tr>
                         <th className="text-right p-4 font-semibold text-foreground">المنتج</th>
+                        <th className="text-right p-4 font-semibold text-foreground">العروض</th>
                         <th className="text-right p-4 font-semibold text-foreground">الزبون</th>
                         <th className="text-right p-4 font-semibold text-foreground">المسوّق</th>
                         <th className="text-right p-4 font-semibold text-foreground">عنوان التوصيل</th>
@@ -2032,7 +2033,7 @@ const Admin = () => {
                     <tbody className="divide-y divide-border">
                       {isFetchingOrders ? (
                         <tr>
-                          <td colSpan={7} className="p-12 text-center">
+                          <td colSpan={8} className="p-12 text-center">
                             <div className="flex flex-col items-center gap-3">
                               <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
                               <p className="text-muted-foreground animate-pulse">جاري جلب الطلبيات...</p>
@@ -2069,6 +2070,15 @@ const Admin = () => {
                                       </span>
                                     )}
                                   </div>
+                                )}
+                              </td>
+                              <td className="p-4">
+                                {order.selectedOffer ? (
+                                  <span className="inline-flex items-center px-2 py-1 rounded-md text-[11px] font-bold bg-orange-100 text-orange-700 border border-orange-200">
+                                    📦 {order.selectedOffer}
+                                  </span>
+                                ) : (
+                                  <span className="text-muted-foreground text-[11px]">-</span>
                                 )}
                               </td>
                               <td className="p-4">
@@ -2176,6 +2186,15 @@ const Admin = () => {
                             {status.label}
                           </span>
                         </div>
+
+                        {order.selectedOffer && (
+                          <div className="mt-2 p-2 bg-orange-50 dark:bg-orange-950 rounded-md border border-orange-200 dark:border-orange-800">
+                            <p className="text-[10px] text-muted-foreground mb-1">العروض</p>
+                            <span className="inline-flex items-center px-2 py-1 rounded-md text-[11px] font-bold bg-orange-100 text-orange-700 border border-orange-200">
+                              📦 {order.selectedOffer}
+                            </span>
+                          </div>
+                        )}
 
                         {(order.selectedColor || order.selectedSize) && (
                           <div className="flex flex-wrap gap-1.5">

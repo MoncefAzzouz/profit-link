@@ -969,9 +969,19 @@ const Dashboard = () => {
     setIsDetailDialogOpen(true);
   };
 
-  const openOrderForm = (product: any) => {
-    setSelectedProduct(product);
+  const openOrderForm = async (product: any) => {
+    setSelectedProduct(product); // show lightweight version immediately
     setIsOrderDialogOpen(true);
+    try {
+      // Fetch full product detail (includes colors/sizes that the list endpoint excludes)
+      const res = await fetch(`${API_BASE_URL}/products/${product.id}`);
+      const json = await res.json();
+      if (res.ok && json.data) {
+        setSelectedProduct((prev: any) => ({ ...prev, ...json.data }));
+      }
+    } catch {
+      // Keep the lightweight product if detail fetch fails
+    }
   };
 
   const clearFilters = () => {
