@@ -21,17 +21,6 @@ export function invalidateLandingCache(pageId?: string) {
   cache.invalidate(PRODUCT_PAGE_PREFIX);
 }
 
-// Per-page pixel (builder) overrides the owner's account-level pixel (تعديل متجري).
-function mergePixels(pageConfig: any, storeSettings: any) {
-  const cfg = (pageConfig?.pixels as any) || {};
-  const acct = ((storeSettings?.config as any)?.pixels) || {};
-  return {
-    facebook: cfg.facebook || acct.facebook || '',
-    tiktok: cfg.tiktok || acct.tiktok || '',
-    snapchat: cfg.snapchat || acct.snapchat || '',
-  };
-}
-
 // GET /api/store/settings (Fetch affiliate store settings)
 router.get('/settings', authenticateToken, async (req: AuthRequest, res: Response): Promise<any> => {
   try {
@@ -41,11 +30,11 @@ router.get('/settings', authenticateToken, async (req: AuthRequest, res: Respons
     const settings = await prisma.storeSettings.findUnique({
       where: { affiliateId }
     });
-    
+
     if (!settings) {
       return res.json({ message: 'No settings configured yet', data: null });
     }
-    
+
     // Return the combined settings object (merging top-level DB fields with the dynamic config JSON)
     const combinedSettings = {
       storeName: settings.storeName,
@@ -55,7 +44,7 @@ router.get('/settings', authenticateToken, async (req: AuthRequest, res: Respons
       templateId: settings.templateId,
       ...(typeof settings.config === 'object' && settings.config !== null ? settings.config : {})
     };
-    
+
     res.json({ data: combinedSettings });
   } catch (error) {
     console.error(error);
@@ -74,32 +63,26 @@ router.put('/settings', authenticateToken, async (req: AuthRequest, res: Respons
 
     const settings = await prisma.storeSettings.upsert({
       where: { affiliateId },
-      update: { 
-        storeName: storeName || '', 
-        logoUrl: storeLogo, 
-        primaryColor, 
-        fontFamily, 
-        templateId, 
+      update: {
+        storeName: storeName || '',
+        logoUrl: storeLogo,
+        primaryColor,
+        fontFamily,
+        templateId,
         config: restConfig // Save USPs, Hero, Social Links here
       },
-      create: { 
-        affiliateId, 
-        storeName: storeName || '', 
-        logoUrl: storeLogo, 
-        primaryColor, 
-        fontFamily, 
-        templateId, 
-        config: restConfig 
+      create: {
+        affiliateId,
+        storeName: storeName || '',
+        logoUrl: storeLogo,
+        primaryColor,
+        fontFamily,
+        templateId,
+        config: restConfig
       }
     });
 
-    // Keep User.storeName in sync — the public storefront is resolved by it.
-    if (storeName && String(storeName).trim()) {
-      await prisma.user.update({ where: { id: affiliateId }, data: { storeName: String(storeName).trim() } });
-    }
-
     invalidateStoreCache();
-    invalidateLandingCache(); // pixel/store changes apply to this affiliate's landing pages too
     res.json({ message: 'Settings saved successfully', data: settings });
   } catch (error) {
     console.error(error);
@@ -117,7 +100,6 @@ router.get('/public/:storeName', async (req: Request, res: Response): Promise<an
         where: {
           OR: [
             { storeName: { equals: storeNameStr, mode: 'insensitive' } },
-            { storeSettings: { storeName: { equals: storeNameStr, mode: 'insensitive' } } },
             { id: storeNameStr }
           ],
           role: 'AFFILIATE'
@@ -204,11 +186,9 @@ router.get('/pages/:id/public', async (req: Request, res: Response): Promise<any
               price: true,
               originalPrice: true,
               hasMarketingOffers: true,
-              hasAffiliateGift: true,
               marketingOffers: true
             }
-          },
-          owner: { include: { storeSettings: true } }
+          }
         }
       });
       if (!page) return null;
@@ -219,15 +199,11 @@ router.get('/pages/:id/public', async (req: Request, res: Response): Promise<any
         productId: page.productId,
         ownerId: page.ownerId,
         status: page.status,
-        // Affiliate's account-level pixel (تعديل متجري) applies to all their pages;
-        // a per-page pixel set in the builder overrides it.
-        pixels: mergePixels(page.pageConfig, (page as any).owner?.storeSettings),
         // Authoritative values from Product table override pageConfig snapshot.
         ...(product?.commission != null && { commission: product.commission }),
         ...(product?.price != null && { price: product.price }),
         ...(product?.originalPrice != null && { originalPrice: product.originalPrice }),
         hasMarketingOffers: product?.hasMarketingOffers || false,
-        hasAffiliateGift: product?.hasAffiliateGift || false,
         marketingOffers: product?.marketingOffers || []
       };
     });
@@ -263,23 +239,19 @@ router.get('/product-page/:productId/:affiliateId', async (req: Request, res: Re
       let page = await prisma.landingPage.findFirst({
         where: { productId, ownerId: affiliateId, status: 'published' },
         orderBy: { updatedAt: 'desc' },
-        include: { product: { select: { hasMarketingOffers: true, marketingOffers: true, hasAffiliateGift: true } } }
+        include: { product: { select: { hasMarketingOffers: true, marketingOffers: true } } }
       });
 
       if (!page) {
         page = await prisma.landingPage.findFirst({
           where: { productId, owner: { role: 'ADMIN' }, status: 'published' },
           orderBy: { updatedAt: 'desc' },
-          include: { product: { select: { commission: true, price: true, originalPrice: true, hasMarketingOffers: true, marketingOffers: true, hasAffiliateGift: true } } }
+          include: { product: { select: { commission: true, price: true, originalPrice: true, hasMarketingOffers: true, marketingOffers: true } } }
         });
       }
 
       if (!page) return null;
       const product = (page as any).product;
-
-      // The affiliate driving the traffic owns the pixel — even when we fall back
-      // to the admin's default page. Resolve from the affiliate's account settings.
-      const affiliateSettings = await prisma.storeSettings.findUnique({ where: { affiliateId } });
 
       return {
         pageId: page.id,
@@ -289,13 +261,11 @@ router.get('/product-page/:productId/:affiliateId', async (req: Request, res: Re
           productId: page.productId,
           ownerId: page.ownerId,
           status: page.status,
-          pixels: mergePixels(page.pageConfig, affiliateSettings),
           // Authoritative values from Product table override pageConfig snapshot.
           ...(product?.commission != null && { commission: product.commission }),
           ...(product?.price != null && { price: product.price }),
           ...(product?.originalPrice != null && { originalPrice: product.originalPrice }),
           hasMarketingOffers: product?.hasMarketingOffers || false,
-          hasAffiliateGift: product?.hasAffiliateGift || false,
           marketingOffers: product?.marketingOffers || []
         }
       };
@@ -324,7 +294,7 @@ router.get('/product-page/:productId/:affiliateId', async (req: Request, res: Re
 router.get('/pages/admin-default/:productId', authenticateToken, async (req: AuthRequest, res: Response): Promise<any> => {
   try {
     const { productId } = req.params;
-    
+
     // Find any landing page for this product owned by an ADMIN
     const adminPage = await prisma.landingPage.findFirst({
       where: {
@@ -357,7 +327,7 @@ router.get('/pages', authenticateToken, async (req: AuthRequest, res: Response) 
     const limit = parseInt(req.query.limit as string) || 20;
     const skip = (page - 1) * limit;
 
-    res.set('Cache-Control', 'private, no-store');
+    res.set('Cache-Control', 'private, max-age=10, stale-while-revalidate=30');
 
     const [pages, total] = await Promise.all([
       prisma.landingPage.findMany({
@@ -422,7 +392,7 @@ router.get('/pages/all', authenticateToken, async (req: AuthRequest, res: Respon
     const limit = parseInt(req.query.limit as string) || 20;
     const skip = (page - 1) * limit;
 
-    res.set('Cache-Control', 'private, no-store');
+    res.set('Cache-Control', 'private, max-age=10, stale-while-revalidate=30');
 
     const [pages, total] = await Promise.all([
       prisma.landingPage.findMany({
@@ -460,7 +430,7 @@ router.get('/pages/all', authenticateToken, async (req: AuthRequest, res: Respon
       };
     });
 
-    res.json({ 
+    res.json({
       data: summaryPages,
       pagination: { total, page, limit, pages: Math.ceil(total / limit) }
     });
@@ -480,7 +450,7 @@ router.get('/pages/:id', authenticateToken, async (req: AuthRequest, res: Respon
       where: { id: String(id) },
       include: {
         owner: { select: { id: true, name: true, storeName: true } },
-        product: { select: { hasMarketingOffers: true, marketingOffers: true, price: true, commission: true, hasAffiliateGift: true } }
+        product: { select: { hasMarketingOffers: true, marketingOffers: true, price: true, commission: true } }
       }
     });
 
@@ -498,7 +468,6 @@ router.get('/pages/:id', authenticateToken, async (req: AuthRequest, res: Respon
       pageConfig: {
         ...(page.pageConfig as any),
         hasMarketingOffers: (page as any).product?.hasMarketingOffers || false,
-        hasAffiliateGift: (page as any).product?.hasAffiliateGift || false,
         marketingOffers: (page as any).product?.marketingOffers || [],
         // Admin-authoritative price & commission — the affiliate cannot price below basePrice.
         basePrice: (page as any).product?.price ?? 0,
@@ -641,12 +610,12 @@ router.post('/generate-ai', async (req: Request, res: Response) => {
   try {
     const { imageBase64, mimeType, contextText } = req.body;
     console.log("AI Request received. Context:", contextText);
-    
+
     if (!process.env.GEMINI_API_KEY) {
       console.error("Missing GEMINI_API_KEY");
       return res.status(500).json({ error: 'GEMINI_API_KEY is missing from backend' });
     }
-    
+
     if (!imageBase64) {
       return res.status(400).json({ error: 'imageBase64 payload is required' });
     }
@@ -703,18 +672,18 @@ router.post('/generate-ai', async (req: Request, res: Response) => {
         }
       }
     ];
-    
+
 
     console.log("Calling Gemini API...");
     const result = await model.generateContent([prompt, ...imageParts]);
     const responseText = result.response.text();
     console.log("Raw Response from Gemini:", responseText);
-    
+
     // Clean potential markdown wrap
     const cleanedText = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
     const configData = JSON.parse(cleanedText);
 
-    res.status(200).json({ 
+    res.status(200).json({
       message: 'AI Generation Successful',
       config: configData
     });

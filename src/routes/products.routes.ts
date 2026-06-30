@@ -41,7 +41,6 @@ const productListSelect = {
   affiliatePrice: true,
   hasMarketingOffers: true,
   marketingOffers: true,
-  hasAffiliateGift: true,
   hasLandingPage: true,
   createdAt: true,
 } as const;
@@ -141,7 +140,7 @@ router.put('/categories/:id', authenticateToken, requireAdmin, async (req: AuthR
   try {
     const { id } = req.params;
     const { name, icon, isActive } = req.body;
-    
+
     const category = await prisma.category.update({
       where: { id: id as string },
       data: {
@@ -212,7 +211,7 @@ router.get('/all', authenticateToken, requireAdmin, async (req: AuthRequest, res
 // POST /api/products (Admin: Create new product)
 router.post('/', authenticateToken, requireAdmin, async (req: AuthRequest, res: Response): Promise<any> => {
   try {
-    const { name, description, notes, adText, price, originalPrice, commission, category, images, videoUrl, stock, isVisible, isTrend, isFeatured, features, wholesalePrice, affiliatePrice, hasColors, availableColors, hasSizes, availableSizes, showFreeShipping, hasBeforeAfter, beforeImage, afterImage, hasMarketingOffers, marketingOffers, hasLandingPage, hasAffiliateGift } = req.body;
+    const { name, description, notes, adText, price, originalPrice, commission, category, images, videoUrl, stock, isVisible, isTrend, isFeatured, features, wholesalePrice, affiliatePrice, hasColors, availableColors, hasSizes, availableSizes, showFreeShipping, hasBeforeAfter, beforeImage, afterImage, hasMarketingOffers, marketingOffers, hasLandingPage } = req.body;
     const image: string | undefined = req.body.image;
 
     if (!name || !price || !commission || !category) {
@@ -248,7 +247,6 @@ router.post('/', authenticateToken, requireAdmin, async (req: AuthRequest, res: 
         beforeImage: beforeImage || null,
         afterImage: afterImage || null,
         hasMarketingOffers: hasMarketingOffers || false,
-        hasAffiliateGift: hasAffiliateGift || false,
         marketingOffers: marketingOffers || [],
         hasLandingPage: hasLandingPage || false
       }
@@ -282,7 +280,7 @@ router.post('/', authenticateToken, requireAdmin, async (req: AuthRequest, res: 
                 heroImage: product.image,
                 galleryImages: product.images,
                 features: product.features.length > 0 ? product.features : ["جودة عالية مضمونة", "توصيل سريع لكل الولايات", "الدفع عند الاستلام", "ضمان الاستبدال والاسترجاع"],
-                sections: product.hasBeforeAfter 
+                sections: product.hasBeforeAfter
                   ? ["hero", "urgency-bar", "before-after", "features", "gallery", "social-proof", "reviews", "shipping", "cta"]
                   : ["hero", "urgency-bar", "features", "gallery", "social-proof", "reviews", "shipping", "cta"],
                 primaryColor: "#10b981",
@@ -311,7 +309,7 @@ router.post('/', authenticateToken, requireAdmin, async (req: AuthRequest, res: 
 router.put('/:id', authenticateToken, requireAdmin, async (req: AuthRequest, res: Response): Promise<any> => {
   try {
     const { id } = req.params;
-    const { name, description, notes, adText, price, originalPrice, commission, category, images, videoUrl, stock, isVisible, isTrend, isFeatured, features, status, wholesalePrice, affiliatePrice, hasColors, availableColors, hasSizes, availableSizes, showFreeShipping, hasBeforeAfter, beforeImage, afterImage, hasMarketingOffers, marketingOffers, hasLandingPage, hasAffiliateGift } = req.body;
+    const { name, description, notes, adText, price, originalPrice, commission, category, images, videoUrl, stock, isVisible, isTrend, isFeatured, features, status, wholesalePrice, affiliatePrice, hasColors, availableColors, hasSizes, availableSizes, showFreeShipping, hasBeforeAfter, beforeImage, afterImage, hasMarketingOffers, marketingOffers, hasLandingPage } = req.body;
     const image: string | undefined = req.body.image;
 
     const product = await prisma.product.update({
@@ -345,7 +343,6 @@ router.put('/:id', authenticateToken, requireAdmin, async (req: AuthRequest, res
         ...(beforeImage !== undefined && { beforeImage }),
         ...(afterImage !== undefined && { afterImage }),
         ...(hasMarketingOffers !== undefined && { hasMarketingOffers }),
-        ...(hasAffiliateGift !== undefined && { hasAffiliateGift }),
         ...(marketingOffers !== undefined && { marketingOffers }),
         ...(hasLandingPage !== undefined && { hasLandingPage })
       }
@@ -408,7 +405,7 @@ router.put('/:id/toggle-landing-page', authenticateToken, requireAdmin, async (r
   try {
     const { id } = req.params;
     const { hasLandingPage } = req.body;
-    
+
     if (typeof hasLandingPage !== 'boolean') {
       return res.status(400).json({ error: 'hasLandingPage must be a boolean' });
     }
@@ -512,14 +509,14 @@ router.post('/:id/generate-ai-landing-page', authenticateToken, requireAdmin, as
       const parts = product.image.split(',');
       const mimeType = parts[0].match(/:(.*?);/)?.[1] || 'image/jpeg';
       const base64Data = parts[1];
-      
+
       const imagePart = {
         inlineData: {
           data: base64Data,
           mimeType: mimeType
         }
       };
-      
+
       result = await model.generateContent([prompt, imagePart]);
     } else {
       result = await model.generateContent(prompt);
@@ -543,7 +540,6 @@ router.post('/:id/generate-ai-landing-page', authenticateToken, requireAdmin, as
       showFreeShipping: product.showFreeShipping,
       beforeAfterImages: product.hasBeforeAfter ? { before: product.beforeImage, after: product.afterImage } : { before: "", after: "" },
       hasMarketingOffers: product.hasMarketingOffers,
-      hasAffiliateGift: product.hasAffiliateGift,
       marketingOffers: product.hasMarketingOffers ? product.marketingOffers : []
     };
 
