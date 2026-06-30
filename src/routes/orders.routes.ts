@@ -233,7 +233,7 @@ router.post('/:id/push-ecotrack', async (req: Request, res: Response) => {
       reference: order.id,
       nom_client: order.customerName,
       telephone: order.customerPhone,
-      adresse: order.address,
+      adresse: (order.address && order.address.trim()) ? order.address : (order.commune || 'غير محدد'),
       code_wilaya: parseInt(String(order.wilaya), 10),
       commune: order.commune,
       montant: order.totalAmount,
